@@ -25,11 +25,15 @@ scanf("%d", &pulgadas);
 
 // primero sacamos el residuo y luego dividimos
 // al reves entonces 
+
+// lo hacemos primero con las yardas
+yardas = pulgadas / 36; 
+pulgadas %= 36;
+
 pies = pulgadas / 12;
 pulgadas %= 12;
 
-yardas = pulgadas / 36; 
-pulgadas %= 36;
+
 
 
 
