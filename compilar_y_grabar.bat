@@ -45,7 +45,7 @@ echo ------------------------------------------------------------ >> "%LOG%"
 :: BLOQUE 3: Compilar con gcc y capturar output
 :: ============================================================
 echo [OUTPUT DEL COMPILADOR] >> "%LOG%"
-gcc "%ARCHIVO_C%" -o "%ARCHIVO_EXE%" -Wall -Wextra 2>> "%LOG%"
+"C:\MinGW\bin\gcc.exe" "%ARCHIVO_C%" -o "%ARCHIVO_EXE%" -Wall -Wextra 2>> "%LOG%"
 set "EXIT_CODE=%errorlevel%"
 echo [EXIT CODE: %EXIT_CODE%] >> "%LOG%"
 
