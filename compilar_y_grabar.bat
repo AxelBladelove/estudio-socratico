@@ -25,7 +25,8 @@ set "ARCHIVO_C=%~f1"
 set "DIR_ARCHIVO=%~dp1"
 set "NOMBRE_BASE=%~n1"
 set "ARCHIVO_EXE=%~dp0_output.exe"
-set "LOG=%~dp0compiler_log.txt"
+set "LOG=%~dp0logs\%NOMBRE_BASE%.log"
+if not exist "%~dp0logs\" mkdir "%~dp0logs\"
 
 :: --- Timestamp para el commit ---
 set "TIMESTAMP=%date:~6,4%-%date:~3,2%-%date:~0,2%T%time:~0,2%h%time:~3,2%m%time:~6,2%s"

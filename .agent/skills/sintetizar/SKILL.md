@@ -10,6 +10,33 @@ description: >
 
 # Skill: Sintetizar Sesión
 
+## CONTEXTO — LEE ESTO ANTES DE ANALIZAR
+
+Este sistema existe para resolver un problema específico: **el estudiante no puede
+observarse a sí mismo objetivamente mientras codifica** porque su foco está en
+resolver el problema, no en documentar. Cuando está en modo de resolución rápida,
+cambia errores sin registrar por qué, prueba cosas sin entender qué corrigió, y
+al final no sabe qué aprendió. Tu rol es el del **observador externo objetivo**
+que el estudiante no puede ser por sí mismo.
+
+**Quién es el estudiante:**
+- Primer semestre, Ingeniería en Computación y Telemática, PUCMM
+- Curso: Fundamentos de Programación con el Prof. Alejandro Liz
+- Objetivo inmediato: dominar los conceptos del 2do Parcial de Liz, que evalúa:
+  - Funciones con memoria dinámica (`malloc`/`realloc`/`free`) sobre arrays de structs
+  - Funciones recursivas que operan sobre arrays de structs
+  - I/O de archivos binarios (`fread`/`fwrite`) sobre tipos struct
+  - Punteros a punteros (`TIPO **ptr`) para modificar arrays desde funciones
+- Plan de 38 días: 21 marzo → 28 abril 2026
+
+**Qué debe producir este análisis:**
+Una entrada en `errores.md` es útil si, en 3 semanas antes del examen, el estudiante
+la lee, enfrenta un ejercicio completamente diferente, y reconoce que el mismo modelo
+mental erróneo está en juego. Si la entrada solo describe el error específico de
+esta sesión, no sirve — eso ya está en el git log.
+
+---
+
 ## PROPÓSITO
 
 Eres un tutor socrático especializado en C. Tu única tarea ahora es analizar
@@ -19,45 +46,62 @@ registras con precisión quirúrgica qué pasó.
 
 ## PASO 1: Leer el Contrato Lógico
 
-Ejecuta este comando para ver el último archivo .c trabajado:
+Ejecuta estos comandos en orden para identificar el archivo .c trabajado:
 
 ```bash
-git show HEAD:./*.c 2>/dev/null || git log --name-only --format="" -1
+# 1. Ver qué archivos .c fueron modificados en los commits de hoy:
+git log --name-only --format="" --since="midnight" | grep '\.c$' | head -5
+
+# 2. Leer el archivo identificado (reemplaza <nombre> con el resultado anterior):
+git show HEAD:<nombre>.c
 ```
 
-Lee el bloque de comentario multilínea en la **primera línea** del archivo .c
-más reciente. Ese es el "Contrato Lógico" — el enunciado del ejercicio.
+Si no aparece ningún archivo .c en los commits de hoy, lee directamente los
+archivos .c presentes en el directorio raíz del proyecto.
 
-Si el archivo tiene múltiples comentarios al inicio, el Contrato Lógico es
-el PRIMERO que aparece después de los `#include`. Es el enunciado del problema.
+El Contrato Lógico es el bloque de comentario multilínea al INICIO del archivo,
+antes de cualquier código de implementación. Es el enunciado del ejercicio.
+Si hay varios comentarios, el Contrato Lógico es el primero.
 
-## PASO 2: Leer el Historial de Git
-
-Ejecuta:
+## PASO 2: Leer el Historial de Git (solo sesión de hoy)
 
 ```bash
-git log --oneline --all
+# Ver los commits de la sesión actual (desde medianoche):
+git log --oneline --since="midnight"
 ```
 
-Luego ejecuta para ver la evolución completa del código:
-
 ```bash
-git log --patch --all
+# Ver la evolución completa del código en la sesión:
+git log --patch --since="midnight"
 ```
 
 Busca los commits con prefijo `intento_`. El formato del mensaje es:
 `intento_YYYY-MM-DDTHH-MM-SS_exitN` donde N=0 es compilación exitosa y N≠0 es error.
 
+Si no hay commits desde medianoche pero el compiler_log.txt tiene contenido de hoy,
+úsalo como fuente principal (PASO 3) e ignora el git log.
+
 ## PASO 3: Leer el Log del Compilador
 
-Lee el archivo `compiler_log.txt` completo. Por cada bloque separado por
-`====` identifica:
+Cada ejercicio tiene su propio log en `logs/<nombre_del_ejercicio>.log`.
+Lee el log del archivo .c identificado en PASO 1. Por ejemplo, si el ejercicio
+es `ejercicio_01.c`, el log es `logs/ejercicio_01.log`.
+
+Para analizar solo la sesión de hoy, busca los bloques `INTENTO:` cuya
+fecha coincida con la fecha de hoy. Ignora bloques de sesiones anteriores.
+
+Por cada bloque separado por `====` del día de hoy identifica:
 
 - **El código fuente** en ese momento exacto
 - **El output del compilador** (errores de gcc, warnings)
 - **El exit code** (0 = éxito de compilación, otro = error)
 
 ## PASO 4: Evaluación Semántica
+
+**Antes de analizar la sesión, lee `errores.md`** para conocer los patrones ya
+documentados. Esto es crítico: si hoy aparece el mismo modelo mental erróneo que
+ya tiene Frecuencia ≥ 1, ese es el hallazgo más importante de la sesión — significa
+que el patrón persiste y el estudiante lo llevará al examen si no se aborda.
 
 Ejecuta este algoritmo interno de análisis:
 
@@ -83,18 +127,28 @@ Lee el archivo `errores.md` actual. **NUNCA borres filas existentes.**
 
 Para **cada error lógico significativo** encontrado en el análisis:
 
-### ¿El error ya existe en la tabla?
-- **SÍ**: Busca la fila por la columna "Error Lógico Cometido". 
-  Incrementa el número de "Frecuencia" en 1.
-- **NO**: Agrega una fila nueva al final de la tabla con estos campos:
+### ¿El error ya existe en errores.md?
+- **SÍ**: Busca la sección por el título o por "Cómo apareció". Incrementa el
+  número de **Frecuencia** en 1. No cambies el resto del contenido.
+- **NO**: Agrega una nueva sección al final del archivo con este formato:
 
-| Campo | Qué escribir |
-|---|---|
-| **Frecuencia** | 1 |
-| **Categoría** | Una de: `Punteros`, `Memoria Dinámica`, `Aritmética`, `Strings`, `Estructuras`, `I/O`, `Lógica de Control`, `Otro` |
-| **Concepto (Feynman)** | Explica el concepto como si el estudiante tuviera 12 años. Sin jerga. Máximo 2 oraciones. |
-| **Error Lógico Cometido** | Descripción exacta y específica del error. Ej: "Usó sizeof(ptr) en lugar de sizeof(struct) al reservar memoria con malloc" |
-| **Pista Socrática para el Futuro** | Una PREGUNTA que provoque pensamiento lateral. NO una respuesta. Ej: "¿Tus planos de construcción miden el espacio por el tamaño de la llave de la puerta o por lo que va adentro?" |
+```markdown
+## [Categoría] — [Título corto del patrón: 5-8 palabras, sin mencionar el ejercicio]
+**Frecuencia:** 1
+**Modelo mental roto:** [El concepto incorrecto que produce este error, generalizable a ejercicios futuros. Sin jerga. Máximo 2 oraciones. No describe el error de hoy — describe la creencia equivocada que lo causó.]
+**Cómo apareció hoy:** [Descripción precisa y específica de cómo se manifestó en esta sesión.]
+**Pista para cuando vuelva a aparecer:** [Una sola pregunta que active el modelo correcto. Funciona sin recordar este ejercicio. No revela la respuesta.]
+
+---
+```
+
+**Sobre el Título:** No menciones el ejercicio específico. El título identifica el patrón.
+- ❌ "Error al convertir pulgadas a yardas"
+- ✅ "Operaciones en orden incorrecto al descomponer unidades jerárquicas"
+
+**Sobre el Modelo mental roto:** No expliques cómo resolverlo. Expón la creencia falsa.
+- ❌ "Para descomponer correctamente, debes dividir primero y luego aplicar módulo."
+- ✅ "Cuando descompones un valor en unidades de diferente tamaño, el orden de extracción importa: hacerlo al revés destruye el valor original antes de poder usarlo para la parte siguiente."
 
 ### Errores que NO documentar:
 - Errores de sintaxis simples (punto y coma faltante, llave sin cerrar)
@@ -118,13 +172,15 @@ Después de actualizar `errores.md`, responde en el chat con este formato exacto
 ✅ Commits analizados: [N]
 🔴 Errores de compilación: [N]
 🟡 Errores lógicos (compiló pero falló): [N]
-🏆 Conceptos superados hoy: [lista breve]
+🏆 Conceptos que resolviste solo hoy: [lista breve]
 
-🧠 Mapeo de errores:
-- [Error 1]: [categoría] — [si es nuevo o actualizado con nueva frecuencia]
-- [Error 2]: [categoría] — [si es nuevo o actualizado]
+🧠 Errores documentados:
+- [Título corto del patrón]: [categoría] — NUEVO / FRECUENCIA [N→N+1]
+- [Título corto del patrón]: [categoría] — NUEVO / FRECUENCIA [N→N+1]
 
-📋 errores.md actualizado. Copia la tabla a Notion cuando quieras.
+⚠️ Patrones recurrentes (Frecuencia ≥ 2): [lista si los hay — estos son los más peligrosos para el examen]
+
+📋 errores.md actualizado.
 ```
 
 ## RESTRICCIONES ABSOLUTAS

@@ -14,7 +14,13 @@ a.out
 .DS_Store
 Thumbs.db
 
-# SÍ rastrear estos (son la telemetria del sistema):
-# compiler_log.txt  → historial de compilaciones
+# Archivos temporales del compilador (no son telemetría)
+gcc_err.txt
+gcc_err2.txt
+gcc_exit.txt
+gcc_test.txt
+
+# SÍ rastrear estos (son la telemetría del sistema):
+# logs/*.log        → un log por ejercicio, historial de compilaciones
 # errores.md        → base de conocimiento acumulativa
-# .historial_local.json → si se usa el modo JSON alternativo
+# compiler_log.txt está obsoleto — puede borrarse manualmente
