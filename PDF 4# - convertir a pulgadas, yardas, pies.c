@@ -15,6 +15,8 @@ int pies = 0;
 printf("Digite la cantidad de pulgadas que quieres convertir: ");
 scanf("%d", &pulgadas);
 
+yardas = 3 pies;
+
 //hay que imprimir la cantidad final
 printf("%d Yardas, %d pies y %d pulgadas\n", yardas, pies, pulgadas);
 
