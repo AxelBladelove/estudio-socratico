@@ -4,11 +4,9 @@
     {
       "label": "Compilar y Grabar (Sistema Socratico)",
       "type": "shell",
-      "command": "cmd",
+      "command": "${workspaceFolder}\\compilar_y_grabar.bat",
       "args": [
-        "/c",
-        "${workspaceFolder}\\compilar_y_grabar.bat",
-        "\"${file}\""
+        "${file}"
       ],
       "group": {
         "kind": "build",
