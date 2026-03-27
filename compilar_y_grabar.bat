@@ -77,7 +77,7 @@ echo.
 if %EXIT_CODE%==0 (
     echo [OK] Compilacion exitosa -^> Abriendo %NOMBRE_BASE%.exe en ventana externa...
     del "%ERRFILE%" >nul 2>&1
-    start "%NOMBRE_BASE% — Estudio Socratico" cmd /k ""%ARCHIVO_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
+    start "%NOMBRE_BASE% — Estudio Socratico" cmd /c ""%ARCHIVO_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
 ) else (
     echo [COMPILADOR] Errores detectados:
     echo.
