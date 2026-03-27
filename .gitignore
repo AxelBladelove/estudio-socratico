@@ -1,0 +1,20 @@
+# Ejecutables compilados
+*.exe
+*.out
+a.out
+
+# Objetos
+*.o
+*.obj
+
+# Archivos temporales de editores
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# SÍ rastrear estos (son la telemetria del sistema):
+# compiler_log.txt  → historial de compilaciones
+# errores.md        → base de conocimiento acumulativa
+# .historial_local.json → si se usa el modo JSON alternativo
