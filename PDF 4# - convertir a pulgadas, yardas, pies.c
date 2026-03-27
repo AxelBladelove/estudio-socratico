@@ -2,7 +2,7 @@
 pulgadas e imprima la misma longitud en yardas, pies y 
 pulgadas.  Por ejemplo, una longitud de 65 pulgadas sería 
 expresada como 1 yarda, 2 pies y 5 pulgadas. */ 
-
+#include <stdio.h>
 int main(){
 
 // lo primero es crear las variables donde vamos a almacenar los datos
