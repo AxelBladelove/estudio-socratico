@@ -58,21 +58,18 @@ set "EXIT_CODE=%errorlevel%"
 echo [EXIT CODE: %EXIT_CODE%] >> "%LOG%"
 
 :: ============================================================
-:: BLOQUE 4: Mostrar resultado al estudiante en terminal
+:: BLOQUE 4: Abrir el programa en ventana separada (estilo Code::Blocks)
 :: ============================================================
 echo.
 if %EXIT_CODE%==0 (
-    echo [OK] Compilacion exitosa ^^^> %NOMBRE_BASE%.exe
-    echo Ejecutando...
-    echo --------------------------------------------------------
-    "%ARCHIVO_EXE%"
-    echo --------------------------------------------------------
+    echo [OK] Compilacion exitosa -^> Abriendo %NOMBRE_BASE%.exe en ventana externa...
+    start "%NOMBRE_BASE% — Estudio Socratico" cmd /k ""%ARCHIVO_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
 ) else (
-    echo [COMPILADOR] Errores encontrados:
+    echo [COMPILADOR] Errores de compilacion:
     echo.
     "C:\MinGW\bin\gcc.exe" "%ARCHIVO_C%" -o "%ARCHIVO_EXE%" -std=c99 -Wall -Wextra
     echo.
-    echo Consulta compiler_log.txt para el historial completo.
+    echo [TIP] Revisa los errores arriba. Cuando lo soluciones, vuelve a presionar F9.
 )
 
 :: ============================================================
