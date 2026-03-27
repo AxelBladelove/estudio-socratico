@@ -1,5 +1,0 @@
-PDF 4# - convertir a pulgadas, yardas, pies.c: In function 'main':
-PDF 4# - convertir a pulgadas, yardas, pies.c:18:11: error: expected ';' before 'pies'
-   18 | yardas = 3 pies;
-      |           ^~~~~
-      |           ;
