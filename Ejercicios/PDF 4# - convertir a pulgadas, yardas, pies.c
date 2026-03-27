@@ -31,7 +31,7 @@ yardas = pulgadas / 36;
 pulgadas %= 36;
 
 pies = pulgadas / 12;
-pulgadas %= 12;
+pulgadas %= 1s2;
 
 
 
