@@ -64,7 +64,11 @@ if exist "%ARCHIVO_C%" (
 )
 echo.
 
-"C:\MinGW\bin\gcc.exe" "%ARCHIVO_C%" -o "%ARCHIVO_EXE%" -std=c99 -Wall -Wextra > "%ERRFILE%" 2>&1
+:: === SOLUCION === 
+:: El compilador cc1 interno requiere que sus DLLs estén en el PATH de Windows
+set "PATH=C:\msys64\mingw64\bin;%PATH%"
+
+"gcc.exe" "%ARCHIVO_C%" -o "%ARCHIVO_EXE%" -std=c99 -Wall -Wextra > "%ERRFILE%" 2>&1
 set "EXIT_CODE=%errorlevel%"
 
 echo [OUTPUT DEL COMPILADOR] >> "%LOG%"

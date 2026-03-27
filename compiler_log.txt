@@ -393,3 +393,17 @@ printf("%d Yardas, %d pies y %d pulgadas\n", yardas, pies, pulgadas);
 ------------------------------------------------------------ 
 [OUTPUT DEL COMPILADOR] 
 [EXIT CODE: 1] 
+ 
+============================================================ 
+INTENTO: /26/-00-ThT22h02m07s 
+ARCHIVO: c:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\PDF 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+The system cannot find the file specified.
+ 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+C:/msys64/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/bin/ld.exe: cannot find c:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\PDF: No such file or directory
+collect2.exe: error: ld returned 1 exit status
+[EXIT CODE: 1] 
