@@ -53,23 +53,18 @@ echo ------------------------------------------------------------ >> "%LOG%"
 :: BLOQUE 3: Compilar con gcc — diagnostico + captura completa
 :: ============================================================
 set "ERRFILE=%~dp0gcc_errors.txt"
+set "ARCHIVO_C_CORTO=%~nx1"
 
 echo.
-echo [DEBUG] Ruta del .c : "%ARCHIVO_C%"
-echo [DEBUG] Ruta del .exe: "%ARCHIVO_EXE%"
-if exist "%ARCHIVO_C%" (
-    echo [DEBUG] Archivo fuente: ENCONTRADO OK
-) else (
-    echo [DEBUG] Archivo fuente: === NO ENCONTRADO ===
-)
-echo.
-
 :: === SOLUCION === 
 :: El compilador cc1 interno requiere que sus DLLs estén en el PATH de Windows
 set "PATH=C:\msys64\mingw64\bin;%PATH%"
 
-"gcc.exe" "%ARCHIVO_C%" -o "%ARCHIVO_EXE%" -std=c99 -Wall -Wextra > "%ERRFILE%" 2>&1
+:: Nos movemos al directorio del archivo para que los errores de gcc solo muestren el nombre corto
+pushd "%DIR_ARCHIVO%"
+"gcc.exe" "%ARCHIVO_C_CORTO%" -o "%ARCHIVO_EXE%" -std=c99 -Wall -Wextra > "%ERRFILE%" 2>&1
 set "EXIT_CODE=%errorlevel%"
+popd
 
 echo [OUTPUT DEL COMPILADOR] >> "%LOG%"
 type "%ERRFILE%" >> "%LOG%"
