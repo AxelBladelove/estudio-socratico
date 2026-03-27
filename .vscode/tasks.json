@@ -8,7 +8,7 @@
       "args": [
         "/c",
         "${workspaceFolder}\\compilar_y_grabar.bat",
-        "${file}"
+        "\"${file}\""
       ],
       "group": {
         "kind": "build",
@@ -39,7 +39,7 @@
     {
       "label": "Ejecutar Binario",
       "type": "shell",
-      "command": "${workspaceFolder}\\${fileBasenameNoExtension}.exe",
+      "command": "${workspaceFolder}\\_output.exe",
       "group": "test",
       "presentation": {
         "reveal": "always",
