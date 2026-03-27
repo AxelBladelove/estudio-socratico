@@ -50,11 +50,14 @@ echo. >> "%LOG%"
 echo ------------------------------------------------------------ >> "%LOG%"
 
 :: ============================================================
-:: BLOQUE 3: Compilar con gcc y capturar output en el log
+:: BLOQUE 3: Compilar con gcc — capturar stderr en archivo temporal
 :: ============================================================
-echo [OUTPUT DEL COMPILADOR] >> "%LOG%"
-"C:\MinGW\bin\gcc.exe" "%ARCHIVO_C%" -o "%ARCHIVO_EXE%" -std=c99 -Wall -Wextra >> "%LOG%" 2>&1
+set "ERRFILE=%TEMP%\gcc_errors_%RANDOM%.txt"
+"C:\MinGW\bin\gcc.exe" "%ARCHIVO_C%" -o "%ARCHIVO_EXE%" -std=c99 -Wall -Wextra 2> "%ERRFILE%"
 set "EXIT_CODE=%errorlevel%"
+
+echo [OUTPUT DEL COMPILADOR] >> "%LOG%"
+type "%ERRFILE%" >> "%LOG%"
 echo [EXIT CODE: %EXIT_CODE%] >> "%LOG%"
 
 :: ============================================================
@@ -63,11 +66,13 @@ echo [EXIT CODE: %EXIT_CODE%] >> "%LOG%"
 echo.
 if %EXIT_CODE%==0 (
     echo [OK] Compilacion exitosa -^> Abriendo %NOMBRE_BASE%.exe en ventana externa...
+    del "%ERRFILE%" >nul 2>&1
     start "%NOMBRE_BASE% — Estudio Socratico" cmd /k ""%ARCHIVO_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
 ) else (
-    echo [COMPILADOR] Errores de compilacion:
+    echo [COMPILADOR] Errores detectados:
     echo.
-    "C:\MinGW\bin\gcc.exe" "%ARCHIVO_C%" -o "%ARCHIVO_EXE%" -std=c99 -Wall -Wextra
+    type "%ERRFILE%"
+    del "%ERRFILE%" >nul 2>&1
     echo.
     echo [TIP] Revisa los errores arriba. Cuando lo soluciones, vuelve a presionar F9.
 )
