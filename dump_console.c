@@ -1,0 +1,3 @@
+#include <windows.h>
+#include <stdio.h>
+int main(int argc, char* argv[]){ if(argc!=2) return 1; HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE); CONSOLE_SCREEN_BUFFER_INFO csbi; if(!GetConsoleScreenBufferInfo(h, &csbi)) return 1; FILE* f = fopen(argv[1], "a"); if(!f) return 1; fprintf(f, "\n[EJECUCION DEL USUARIO]\n"); for(int y=0; y<=csbi.dwCursorPosition.Y; y++){ char buf[1024] = {0}; DWORD read; COORD coord = {0, y}; ReadConsoleOutputCharacterA(h, buf, csbi.dwSize.X, coord, &read); int last = read - 1; while(last >= 0 && buf[last] == ' ') buf[last--] = 0; if(last >= 0) fprintf(f, "%s\n", buf); else fprintf(f, "\n"); } fprintf(f, "------------------------------------------------------------\n"); fclose(f); return 0; }

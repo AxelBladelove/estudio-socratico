@@ -1,6 +1,7 @@
 | Frecuencia | Categoría | Concepto (Feynman) | Error Lógico Cometido | Pista Socrática para el Futuro |
 | :--- | :--- | :--- | :--- | :--- |
 | — | — | — | — | — |
+| 1 | Aritmética | Para desglosar una cantidad total en partes jerárquicas (yardas, luego pies), debes extraer la unidad más grande primero. Además, siempre divides primero para saber "cuántos caben", y usas el módulo (`%`) después para saber "cuántos sobraron". | Intentó extraer la unidad menor (pies) antes que la mayor (yardas) quedándose sin valor para las yardas. Previamente aplicó el módulo (`%`) antes de la división, borrando el valor original prematuramente. | Si tienes una montaña de monedas, ¿intentas agruparlas primero en billetes grandes de 100 y con lo que sobra buscas billetes de 10, o sacas los billetes de 10 primero? |
 
 <!--
 INSTRUCCIONES PARA IA (NO BORRAR):
