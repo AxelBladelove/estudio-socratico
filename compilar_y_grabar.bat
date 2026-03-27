@@ -24,7 +24,7 @@ if "%~1"=="" (
 set "ARCHIVO_C=%~f1"
 set "DIR_ARCHIVO=%~dp1"
 set "NOMBRE_BASE=%~n1"
-set "ARCHIVO_EXE=%DIR_ARCHIVO%%NOMBRE_BASE%.exe"
+set "ARCHIVO_EXE=%~dp0_output.exe"
 set "LOG=%~dp0compiler_log.txt"
 
 :: --- Timestamp para el commit ---
