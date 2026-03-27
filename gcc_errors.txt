@@ -1,17 +1,17 @@
-c:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\PDF 4# - convertir a pulgadas, yardas, pies.c: In function 'main':
-c:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\PDF 4# - convertir a pulgadas, yardas, pies.c:15:1: error: implicit declaration of function 'printf' [-Wimplicit-function-declaration]
+C:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\PDF 4# - convertir a pulgadas, yardas, pies.c: In function 'main':
+C:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\PDF 4# - convertir a pulgadas, yardas, pies.c:15:1: error: implicit declaration of function 'printf' [-Wimplicit-function-declaration]
    15 | printf("Digite la cantidad de pulgadas que quieres convertir: ");
       | ^~~~~~
-c:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\PDF 4# - convertir a pulgadas, yardas, pies.c:1:1: note: include '<stdio.h>' or provide a declaration of 'printf'
+C:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\PDF 4# - convertir a pulgadas, yardas, pies.c:1:1: note: include '<stdio.h>' or provide a declaration of 'printf'
   +++ |+#include <stdio.h>
     1 | /*Haga un programa al cual se le digite una longitud expresada en
-c:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\PDF 4# - convertir a pulgadas, yardas, pies.c:15:1: warning: incompatible implicit declaration of built-in function 'printf' [-Wbuiltin-declaration-mismatch]
+C:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\PDF 4# - convertir a pulgadas, yardas, pies.c:15:1: warning: incompatible implicit declaration of built-in function 'printf' [-Wbuiltin-declaration-mismatch]
    15 | printf("Digite la cantidad de pulgadas que quieres convertir: ");
       | ^~~~~~
-c:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\PDF 4# - convertir a pulgadas, yardas, pies.c:15:1: note: include '<stdio.h>' or provide a declaration of 'printf'
-c:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\PDF 4# - convertir a pulgadas, yardas, pies.c:16:1: error: implicit declaration of function 'scanf' [-Wimplicit-function-declaration]
+C:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\PDF 4# - convertir a pulgadas, yardas, pies.c:15:1: note: include '<stdio.h>' or provide a declaration of 'printf'
+C:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\PDF 4# - convertir a pulgadas, yardas, pies.c:16:1: error: implicit declaration of function 'scanf' [-Wimplicit-function-declaration]
    16 | scanf("%d", &pulgadas);
       | ^~~~~
-c:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\PDF 4# - convertir a pulgadas, yardas, pies.c:16:1: note: include '<stdio.h>' or provide a declaration of 'scanf'
-c:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\PDF 4# - convertir a pulgadas, yardas, pies.c:16:1: warning: incompatible implicit declaration of built-in function 'scanf' [-Wbuiltin-declaration-mismatch]
-c:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\PDF 4# - convertir a pulgadas, yardas, pies.c:16:1: note: include '<stdio.h>' or provide a declaration of 'scanf'
+C:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\PDF 4# - convertir a pulgadas, yardas, pies.c:16:1: note: include '<stdio.h>' or provide a declaration of 'scanf'
+C:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\PDF 4# - convertir a pulgadas, yardas, pies.c:16:1: warning: incompatible implicit declaration of built-in function 'scanf' [-Wbuiltin-declaration-mismatch]
+C:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\PDF 4# - convertir a pulgadas, yardas, pies.c:16:1: note: include '<stdio.h>' or provide a declaration of 'scanf'
