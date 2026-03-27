@@ -50,10 +50,21 @@ echo. >> "%LOG%"
 echo ------------------------------------------------------------ >> "%LOG%"
 
 :: ============================================================
-:: BLOQUE 3: Compilar con gcc — capturar stderr en archivo temporal
+:: BLOQUE 3: Compilar con gcc — diagnostico + captura completa
 :: ============================================================
-set "ERRFILE=%TEMP%\gcc_errors_%RANDOM%.txt"
-"C:\MinGW\bin\gcc.exe" "%ARCHIVO_C%" -o "%ARCHIVO_EXE%" -std=c99 -Wall -Wextra 2> "%ERRFILE%"
+set "ERRFILE=%~dp0gcc_errors.txt"
+
+echo.
+echo [DEBUG] Ruta del .c : "%ARCHIVO_C%"
+echo [DEBUG] Ruta del .exe: "%ARCHIVO_EXE%"
+if exist "%ARCHIVO_C%" (
+    echo [DEBUG] Archivo fuente: ENCONTRADO OK
+) else (
+    echo [DEBUG] Archivo fuente: === NO ENCONTRADO ===
+)
+echo.
+
+"C:\MinGW\bin\gcc.exe" "%ARCHIVO_C%" -o "%ARCHIVO_EXE%" -std=c99 -Wall -Wextra > "%ERRFILE%" 2>&1
 set "EXIT_CODE=%errorlevel%"
 
 echo [OUTPUT DEL COMPILADOR] >> "%LOG%"
@@ -71,8 +82,11 @@ if %EXIT_CODE%==0 (
 ) else (
     echo [COMPILADOR] Errores detectados:
     echo.
-    type "%ERRFILE%"
-    del "%ERRFILE%" >nul 2>&1
+    if exist "%ERRFILE%" (
+        type "%ERRFILE%"
+    ) else (
+        echo [ERROR INTERNO] No se pudo crear el archivo de errores. Ruta: %ERRFILE%
+    )
     echo.
     echo [TIP] Revisa los errores arriba. Cuando lo soluciones, vuelve a presionar F9.
 )
