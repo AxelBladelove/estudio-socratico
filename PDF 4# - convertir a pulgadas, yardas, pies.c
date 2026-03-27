@@ -22,13 +22,14 @@ scanf("%d", &pulgadas);
 
 // ahora el programa dice que tiene que ser, la misma longitud, pero expresada en todas las unidades de medida
 // para ello necesito quedarme con los valores que sobran de cada division.
-pulgadas %= 12;
-// primero sacamos el residuo y luego dividimos
-pies = pulgadas / 12;
 
-pulgadas %= 36;
+// primero sacamos el residuo y luego dividimos
+// al reves entonces 
+pies = pulgadas / 12;
+pulgadas %= 12;
 
 yardas = pulgadas / 36; 
+pulgadas %= 36;
 
 
 
