@@ -20,7 +20,9 @@ gcc_err2.txt
 gcc_exit.txt
 gcc_test.txt
 
+# NO rastrear estos (son estado interno de maquina, no telemetria):
+logs/*/bloque_actual.txt
+
 # SÍ rastrear estos (son la telemetría del sistema):
-# logs/*.log        → un log por ejercicio, historial de compilaciones
-# errores.md        → base de conocimiento acumulativa
-# compiler_log.txt está obsoleto — puede borrarse manualmente
+# logs/<ejercicio>/bloqueN.log  → un log por bloque de 45 min por ejercicio
+# errores.md                    → base de conocimiento acumulativa

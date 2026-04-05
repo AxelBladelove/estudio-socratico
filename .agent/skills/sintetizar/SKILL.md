@@ -2,7 +2,7 @@
 name: sintetizar
 description: >
   Procesa el historial completo de compilaciones de la sesión de estudio.
-  Lee git log y compiler_log.txt, evalúa semánticamente los errores cometidos
+  Lee git log y los logs de bloque en logs/<ejercicio>_bloqueN.log, evalúa semánticamente los errores cometidos
   comparándolos con el Contrato Lógico del archivo .c, y actualiza errores.md
   con nuevas entradas o incrementando contadores de errores existentes.
   Se invoca UNA vez al final del bloque de estudio (consumo único de tokens).
@@ -78,23 +78,44 @@ git log --patch --since="midnight"
 Busca los commits con prefijo `intento_`. El formato del mensaje es:
 `intento_YYYY-MM-DDTHH-MM-SS_exitN` donde N=0 es compilación exitosa y N≠0 es error.
 
-Si no hay commits desde medianoche pero el compiler_log.txt tiene contenido de hoy,
+Si no hay commits desde medianoche pero el log del bloque más reciente
+(`logs/<nombre_ejercicio>/bloqueN.log`) tiene contenido de hoy,
 úsalo como fuente principal (PASO 3) e ignora el git log.
 
-## PASO 3: Leer el Log del Compilador
+## PASO 3: Leer el Log de la Sesión
 
-Cada ejercicio tiene su propio log en `logs/<nombre_del_ejercicio>.log`.
-Lee el log del archivo .c identificado en PASO 1. Por ejemplo, si el ejercicio
-es `ejercicio_01.c`, el log es `logs/ejercicio_01.log`.
+Los logs están organizados en **bloques de 45 minutos**. Cada vez que transcurren
+más de 45 minutos desde el inicio de un bloque, el sistema crea automáticamente
+un archivo nuevo. El esquema de archivos para un ejercicio es:
 
-Para analizar solo la sesión de hoy, busca los bloques `INTENTO:` cuya
-fecha coincida con la fecha de hoy. Ignora bloques de sesiones anteriores.
+    logs/<nombre_ejercicio>/bloque1.log   ← primer bloque registrado
+    logs/<nombre_ejercicio>/bloque2.log   ← segundo bloque
+    logs/<nombre_ejercicio>/bloqueN.log   ← el más reciente
 
-Por cada bloque separado por `====` del día de hoy identifica:
+El archivo `logs/<nombre_ejercicio>/bloque_actual.txt` es un marcador interno del
+sistema (número de bloque activo + timestamp de inicio). Ignóralo.
 
-- **El código fuente** en ese momento exacto
-- **El output del compilador** (errores de gcc, warnings)
-- **El exit code** (0 = éxito de compilación, otro = error)
+**Bloque a leer por defecto:** El de número más alto. Para identificarlo, enumera
+todos los archivos `logs/<nombre_ejercicio>/bloque*.log` excluyendo
+`bloque_actual.txt`, y selecciona el de mayor N.
+
+**Cuándo leer bloques anteriores (opcionales):**
+- Si el estudiante lo indica explícitamente ("analiza el bloque 2", "mira la sesión de ayer")
+- Si el bloque más reciente tiene menos de 3 intentos y necesitas más contexto para identificar patrones
+- Si quieres confirmar si un error recurrente ya existía en sesiones previas
+
+**Estructura interna de cada bloque:**
+Cada bloque contiene uno o más intentos, cada uno delimitado por `====`. Dentro de cada intento:
+
+    INTENTO: <timestamp>
+    ARCHIVO: <ruta del archivo .c>
+    [CODIGO FUENTE]
+    ... código fuente en ese momento exacto ...
+    [OUTPUT DEL COMPILADOR]
+    ... errores de gcc, warnings, o "(Compilacion limpia. Cero errores y advertencias.)" ...
+    [EXIT CODE: N]     ← 0 = compiló exitosamente, ≠0 = error de compilación
+
+Lee **todos** los intentos del bloque seleccionado en el PASO 4.
 
 ## PASO 4: Evaluación Semántica
 

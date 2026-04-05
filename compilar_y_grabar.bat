@@ -25,8 +25,29 @@ set "ARCHIVO_C=%~f1"
 set "DIR_ARCHIVO=%~dp1"
 set "NOMBRE_BASE=%~n1"
 set "ARCHIVO_EXE=%~dp0_output.exe"
-set "LOG=%~dp0logs\%NOMBRE_BASE%.log"
+
+:: --- Validar nombre base y extension ---
+if "%NOMBRE_BASE%"=="" (
+    echo [ERROR] No se pudo determinar el nombre del archivo. Verifica que la ruta sea valida.
+    exit /b 1
+)
+if /i not "%~x1"==".c" (
+    echo [ERROR] El archivo debe tener extension .c
+    echo Uso: compilar_y_grabar.bat mi_ejercicio.c
+    exit /b 1
+)
+
 if not exist "%~dp0logs\" mkdir "%~dp0logs\"
+if not exist "%~dp0logs\%NOMBRE_BASE%\" mkdir "%~dp0logs\%NOMBRE_BASE%\"
+
+:: --- Determinar numero de bloque (ventana de 45 minutos) ---
+:: Usa logs\<ejercicio>\bloque_actual.txt como marcador interno (ignorado por git).
+:: Formato del marcador: "<N> <timestamp-ISO>" donde N es el numero de bloque activo.
+:: Si han pasado mas de 45 minutos desde que empezo el bloque, N sube automaticamente.
+set "PS_MARKER=%~dp0logs\%NOMBRE_BASE%\bloque_actual.txt"
+set "BLOQUE_NUM=1"
+for /f "usebackq tokens=*" %%N in (`powershell -NoProfile -Command "$m=$env:PS_MARKER;$now=Get-Date;if(Test-Path -LiteralPath $m){$raw=Get-Content -LiteralPath $m;$i=$raw.IndexOf(' ');$n=[int]$raw.Substring(0,$i);$s=[datetime]$raw.Substring($i+1);if((New-TimeSpan -Start $s -End $now).TotalMinutes -gt 45){$n++;($n.ToString()+' '+$now.ToString('s'))|Set-Content -LiteralPath $m};$n}else{('1 '+$now.ToString('s'))|Set-Content -LiteralPath $m;1}"`) do set "BLOQUE_NUM=%%N"
+set "LOG=%~dp0logs\%NOMBRE_BASE%\bloque%BLOQUE_NUM%.log"
 
 :: --- Timestamp para el commit ---
 set "TIMESTAMP=%date:~6,4%-%date:~3,2%-%date:~0,2%T%time:~0,2%h%time:~3,2%m%time:~6,2%s"
@@ -69,6 +90,7 @@ popd
 
 echo [OUTPUT DEL COMPILADOR] >> "%LOG%"
 type "%ERRFILE%" >> "%LOG%"
+for %%A in ("%ERRFILE%") do if %%~zA equ 0 echo (Compilacion limpia. Cero errores y advertencias.) >> "%LOG%"
 echo [EXIT CODE: %EXIT_CODE%] >> "%LOG%"
 
 :: ============================================================
@@ -78,7 +100,7 @@ echo.
 if %EXIT_CODE%==0 (
     echo [OK] Compilacion exitosa -^> Abriendo %NOMBRE_BASE%.exe en ventana externa...
     del "%ERRFILE%" >nul 2>&1
-    start "%NOMBRE_BASE% — Estudio Socratico" cmd /c ""%ARCHIVO_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & "%~dp0\.agent\sys_dump_console.exe" "%LOG%" & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
+    start "%NOMBRE_BASE% — Estudio Socratico" cmd /c ""%ARCHIVO_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & "%~dp0.agent\sys_dump_console.exe" "%LOG%" & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
 ) else (
     echo [COMPILADOR] Errores detectados:
     echo.

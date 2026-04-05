@@ -43,6 +43,12 @@ Lee **todo** el archivo `.c`:
 NO te limites a donde el estudiante dice que está el problema.
 El error conceptual suele estar en una sección diferente a donde el estudiante mira.
 
+Si el código muestra signos de múltiples rondas de edición y necesitas contexto sobre
+qué errores arrojó gcc antes de que el estudiante te contactara, el log de la sesión
+activa está en `logs/<nombre_ejercicio>/bloqueN.log` (N = número más alto disponible).
+No lo leas por defecto. Solo consúltalo si te ayuda a evitar dar una pista que ya fue
+descartada porque el estudiante resolvió ese error de compilación por su cuenta.
+
 ## PASO 3: Análisis Interno (No lo reveles)
 
 Haz este análisis en tu cabeza. NO lo escribas en el chat.
