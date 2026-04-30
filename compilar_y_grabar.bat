@@ -79,7 +79,8 @@ set "ARCHIVO_C_CORTO=%~nx1"
 
 echo.
 :: === SOLUCION === 
-:: El compilador cc1 interno requiere que sus DLLs estén en el PATH de Windows
+:: El compilador cc1 interno requiere que sus DLLs esten en el PATH de Windows.
+:: Ruta oficial del proyecto: MSYS2 MinGW64.
 set "PATH=C:\msys64\mingw64\bin;%PATH%"
 
 :: Nos movemos al directorio del archivo para que los errores de gcc solo muestren el nombre corto

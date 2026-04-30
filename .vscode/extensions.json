@@ -1,0 +1,23 @@
+{
+  "recommendations": [
+    "openai.chatgpt",
+    "ms-vscode.cpptools",
+    "ms-vscode.cpp-devtools",
+    "ms-vscode.cmake-tools",
+    "ms-vscode.cpptools-extension-pack",
+    "formulahendry.code-runner",
+    "esbenp.prettier-vscode",
+    "eamodio.gitlens",
+    "mechatroner.rainbow-csv",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.debugpy",
+    "ms-python.vscode-python-envs",
+    "anthropic.claude-code",
+    "devnull-bootloader.openclaude-vscode",
+    "ms-vsliveshare.vsliveshare",
+    "ritwickdey.liveserver",
+    "tomoki1207.pdf",
+    "wix.vscode-import-cost"
+  ]
+}

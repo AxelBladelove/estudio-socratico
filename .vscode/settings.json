@@ -1,3 +1,14 @@
 {
-    "claude-code.enableAuthLogin": true
+  "editor.cursorBlinking": "expand",
+  "editor.cursorSmoothCaretAnimation": "on",
+  "editor.wordWrap": "on",
+  "editor.semanticHighlighting.enabled": true,
+  "C_Cpp.default.compilerPath": "C:/msys64/mingw64/bin/gcc.exe",
+  "security.workspace.trust.untrustedFiles": "open",
+  "claude-code.enableAuthLogin": true,
+  "claudeCode.preferredLocation": "panel",
+  "chat.viewSessions.orientation": "stacked",
+  "gitlens.ai.model": "vscode",
+  "git.enableSmartCommit": true,
+  "git.confirmSync": false
 }

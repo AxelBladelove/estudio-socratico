@@ -1,27 +1,65 @@
-# 🏛️ Sistema de Estudio Socrático
+# Sistema de Estudio Socratico
 
-**Arquitectura Híbrida Definitiva v4.0** — Fricción cero. Tokens mínimos. Documentación automática.
+**Arquitectura Hibrida v4.1** - VS Code listo. Multi-IA. Friccion baja.
+Documentacion automatica.
 
----
+## Que hace este sistema
 
-## ¿Qué hace este sistema?
+Convierte tu editor en una caja negra de estudio: cada vez que compilas, el
+sistema registra silenciosamente tu codigo y el resultado. Al final del bloque,
+una IA analiza la sesion completa y actualiza tu base de conocimiento de errores.
 
-Convierte Antigravity en una "caja negra de avión": cada vez que compilas, el sistema registra
-silenciosamente tu código y el resultado. Al final del bloque de estudio, la IA analiza toda
-la sesión de una sola vez y actualiza tu base de conocimiento de errores.
+Funciona con VS Code, Antigravity y cualquier asistente que pueda leer archivos
+del workspace: Codex en VS Code, OpenCode, Roo Code, Gemini, Claude u otro
+cliente con acceso a esta carpeta.
 
----
+## Instalacion Rapida
 
-## Setup Inicial (Solo una vez)
+La ruta oficial del proyecto es usar un gestor JS. Si tienes Node.js, ya tienes
+`npm` y normalmente tambien `npx`.
+
+```bash
+npm run setup
+```
+
+Tambien estan soportados:
+
+```bash
+pnpm run setup
+```
+
+```bash
+bun run setup
+```
+
+```bash
+npx --yes npm@latest run setup
+```
+
+El instalador asume que VS Code o Antigravity ya estan instalados. Verifica o
+instala Git y MSYS2/GCC, prepara las carpetas del proyecto, configura Git
+localmente, instala las extensiones recomendadas de VS Code y valida la
+configuracion del workspace. Se puede ejecutar varias veces sin romper la
+configuracion.
+
+Para ver lo que haria sin instalar nada:
+
+```bash
+npm run setup:dry
+```
+
+## Setup Manual
 
 ### 1. Requisitos
-- [gcc](https://www.mingw-w64.org/) instalado y en el PATH
-- [git](https://git-scm.com/download/win) instalado
-- La carpeta `estudio-socratico/` abierta como workspace en Antigravity
 
-### 2. Inicializar Git en el proyecto
+- `gcc` instalado y en el `PATH` (MinGW/MSYS2 en Windows).
+- `git` instalado.
+- La carpeta `estudio-socratico/` abierta como workspace en VS Code,
+  Antigravity o un editor compatible con tareas de VS Code.
 
-Abre la terminal en Antigravity (`Ctrl+\``) y ejecuta:
+### 2. Inicializar Git
+
+Abre la terminal integrada (`Ctrl+``) y ejecuta:
 
 ```bash
 git init
@@ -31,114 +69,128 @@ git add .
 git commit -m "setup_inicial"
 ```
 
-### 3. Asignar F5 o Ctrl+Shift+B como atajo de compilación
+### 3. Compilar con Ctrl+Shift+B
 
-El archivo `.vscode/tasks.json` ya está configurado. El atajo predeterminado para
-"Run Build Task" en Antigravity/VS Code es:
+El archivo `.vscode/tasks.json` ya esta configurado. El atajo predeterminado
+para "Run Build Task" en VS Code/Antigravity es:
 
-- **Windows**: `Ctrl+Shift+B`
+- Windows: `Ctrl+Shift+B`
 
-Para asignarlo a `F5` o cualquier otra tecla, ve a:
-`Archivo > Preferencias > Atajos de Teclado` → busca "Run Build Task" → cambia la tecla.
+Para asignarlo a `F5` o cualquier otra tecla en VS Code:
+`Archivo > Preferencias > Atajos de Teclado` -> busca "Run Build Task" ->
+cambia la tecla.
 
----
+### 4. Configurar tu IA preferida
+
+El repositorio trae instrucciones portables:
+
+| Herramienta | Archivo que debe leer |
+|---|---|
+| Codex en VS Code | `AGENTS.md` y `.vscode/codex-instructions.md` |
+| OpenCode / agentes compatibles | `AGENTS.md` |
+| Antigravity u otros clientes con skills | `.agent/skills/revisar/SKILL.md` y `.agent/skills/sintetizar/SKILL.md` |
+
+Si tu cliente no reconoce `@revisar` o `@sintetizar`, escribe:
+
+```text
+Lee AGENTS.md y ejecuta el protocolo revisar sobre el archivo C activo.
+```
+
+o:
+
+```text
+Lee AGENTS.md y ejecuta el protocolo sintetizar para la sesion de hoy.
+```
 
 ## Flujo de Trabajo Diario
 
-### 📄 Al comenzar un ejercicio nuevo
+### Al comenzar un ejercicio nuevo
 
-Crea un archivo `.c` (ej. `ejercicio_01.c`). La **línea 1 es sagrada**:
-el Contrato Lógico debe ser lo PRIMERO que escribes:
+Crea un archivo `.c`, por ejemplo `Ejercicios/ejercicio_01.c`. La linea 1 es
+importante: el Contrato Logico debe ser lo primero que escribes.
 
 ```c
-/* Ejercicio: Leer N números enteros usando memoria dinámica,
+/* Ejercicio: Leer N numeros enteros usando memoria dinamica,
    e imprimir la suma de los que sean primos. */
 
 #include <stdio.h>
 #include <stdlib.h>
-// ... tu código aquí
 ```
 
-### ⚡ Durante la codificación (Capa sin tokens)
+### Durante la codificacion
 
 1. Programa normalmente.
-2. Cuando quieras compilar y ejecutar: presiona **`Ctrl+Shift+B`**.
-3. El script hace tres cosas en silencio:
-   - Compila tu código con gcc
-   - Ejecuta el programa (si compiló bien)
-   - Registra todo en `compiler_log.txt` y hace un `git commit`
-4. Tú solo ves el resultado en la terminal. Sin latencia. Sin internet.
+2. Cuando quieras compilar y ejecutar, presiona `Ctrl+Shift+B`.
+3. El script compila con `gcc`, ejecuta el programa si compilo bien, registra
+   todo en `logs/<nombre_del_ejercicio>.log` y hace un commit automatico.
+4. Tu solo ves el resultado en la terminal. Sin latencia. Sin internet.
 
-> Repite este ciclo las veces que necesites. Cada intento queda grabado.
+Repite este ciclo las veces que necesites. Cada intento queda grabado.
 
-### 🤔 Si te quedas atascado (Mecanismo 1)
+### Si te quedas atascado
 
-Abre el chat lateral de Antigravity. Escribe simplemente:
+Abre el chat de tu IA. Si soporta skills, escribe:
 
-```
+```text
 @revisar
 ```
 
-La IA leerá tu código completo y te dará **una sola pista socrática abstracta**.
-No te dará código. No te dirá la línea del error. Te hará pensar.
+La IA leera tu codigo completo y te dara una pista socratica. Puede agregar una
+micro-explicacion tecnica si detecta que falta un concepto base, por ejemplo
+stack, heap, punteros, acumuladores o alcance. No te dara codigo ni te dira la
+linea exacta.
 
-### 📊 Al final del bloque de 45 minutos (Mecanismo 2)
+### Al final del bloque de estudio
 
-Abre el chat lateral de Antigravity. Escribe:
+Abre el chat de tu IA. Si soporta skills, escribe:
 
-```
+```text
 @sintetizar
 ```
 
-La IA analizará **todos tus commits de la sesión** y actualizará `errores.md`
-con los patrones de error encontrados. Un único consumo de tokens, una sola vez al día.
-
-### 📋 Exportar a Notion
-
-Abre `errores.md`. Copia la tabla completa. Pégala en Notion (detecta la tabla automáticamente).
-
----
+La IA analizara los commits y logs de la sesion, y actualizara `errores.md`
+con patrones de error reutilizables para estudiar antes del examen.
 
 ## Estructura del Proyecto
 
-```
+```text
 estudio-socratico/
-├── .vscode/tasks.json          ← NO tocar. Controla la compilación.
-├── .agent/skills/
-│   ├── sintetizar/SKILL.md     ← NO tocar. La IA lo lee al invocar @sintetizar.
-│   └── revisar/SKILL.md        ← NO tocar. La IA lo lee al invocar @revisar.
-├── compilar_y_grabar.bat       ← NO tocar. Es el espía local.
-├── errores.md                  ← Tu base de conocimiento acumulativa.
-├── compiler_log.txt            ← Auto-generado. La IA lo lee para sintetizar.
-├── .gitignore                  ← Excluye .exe y archivos temporales.
-└── ejercicio_01.c              ← TUS ARCHIVOS van aquí (en la raíz)
+|-- AGENTS.md                         Instrucciones portables para agentes IA
+|-- .vscode/codex-instructions.md     Instrucciones para Codex en VS Code
+|-- .vscode/tasks.json                Build con Ctrl+Shift+B
+|-- .agent/skills/
+|   |-- revisar/SKILL.md              Protocolo de pista socratica
+|   `-- sintetizar/SKILL.md           Protocolo de cierre de sesion
+|-- setup_laptop.ps1                  Instalador/verificador principal
+|-- package.json                      Atajos npm/pnpm/bun/npx: setup, setup:dry, check
+|-- compilar_y_grabar.bat             Script local de compilacion y telemetria
+|-- errores.md                        Base de conocimiento acumulativa
+|-- logs/*.log                        Historial por ejercicio
+|-- .gitignore                        Excluye ejecutables y temporales
+`-- Ejercicios/*.c                    Tus ejercicios
 ```
-
----
 
 ## Reglas del Sistema
 
-| Regla | Descripción |
+| Regla | Descripcion |
 |---|---|
-| **Contrato Lógico** | La línea 1 de todo `.c` DEBE ser el enunciado del ejercicio en comentario multilínea |
-| **F9 / Ctrl+Shift+B** | Único atajo para compilar. Nunca usar la terminal directa para gcc durante la sesión |
-| **@revisar** | Solo cuando estás atascado. No usarlo de forma rutinaria (gasta tokens) |
-| **@sintetizar** | Solo una vez al terminar el bloque. Nunca a mitad de sesión |
-| **errores.md** | No editar manualmente. Solo la IA lo modifica al sintetizar |
-
----
+| Contrato Logico | La linea 1 de todo `.c` debe ser el enunciado del ejercicio en comentario multilínea |
+| Ctrl+Shift+B | Atajo principal para compilar; evita usar `gcc` directo durante la sesion si quieres telemetria completa |
+| @revisar | Solo cuando estas atascado; no usarlo de forma rutinaria |
+| @sintetizar | Solo una vez al terminar el bloque; nunca a mitad de sesion |
+| errores.md | No editar manualmente durante la sesion; la IA lo modifica al sintetizar |
 
 ## Troubleshooting
 
 **El script no se ejecuta al presionar Ctrl+Shift+B:**
-→ Verifica que el workspace abierto sea la carpeta `estudio-socratico/`
+verifica que el workspace abierto sea la carpeta `estudio-socratico/`.
 
-**"gcc: command not found":**
-→ Instala MinGW y agrega `C:\mingw64\bin` a tu variable de entorno PATH
+**`gcc` no se encuentra:**
+instala MSYS2/MinGW y agrega `C:\msys64\mingw64\bin` o tu ruta de MinGW al
+`PATH`.
 
 **El git commit falla silenciosamente:**
-→ Ejecuta `git init` en la carpeta si aún no lo hiciste (ver Setup Inicial)
+ejecuta `git init` y configura `user.email` / `user.name`.
 
-**La IA no responde a @sintetizar o @revisar:**
-→ Los archivos SKILL.md deben estar en `.agent/skills/[nombre]/SKILL.md`
-→ Verifica que la carpeta `.agent` esté en la raíz del workspace
+**La IA no responde a `@sintetizar` o `@revisar`:**
+usa la frase "lee AGENTS.md y ejecuta el protocolo revisar/sintetizar".
