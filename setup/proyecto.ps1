@@ -30,6 +30,49 @@ function Ensure-ProjectFolders {
     }
 }
 
+function Ensure-AgentRuntimeTools {
+    param(
+        [string]$RepoRoot,
+        [switch]$SoloVerificar
+    )
+
+    $sourcePath = Join-Path $RepoRoot ".agent\sys_dump_console.c"
+    $binaryPath = Join-Path $RepoRoot ".agent\sys_dump_console.exe"
+    $gccPath = "C:\msys64\mingw64\bin\gcc.exe"
+
+    if (-not (Test-Path $sourcePath)) {
+        Write-SetupWarning "No existe .agent\sys_dump_console.c; se omitira el helper de consola."
+        return
+    }
+
+    if ($SoloVerificar) {
+        Write-SetupInfo "[SoloVerificar] Compilaria .agent\sys_dump_console.exe con GCC."
+        return
+    }
+
+    if (-not (Test-Path $gccPath)) {
+        throw "No se encontro gcc en $gccPath para compilar .agent\sys_dump_console.exe."
+    }
+
+    $needsBuild = $true
+    if ((Test-Path $binaryPath) -and ((Get-Item $binaryPath).LastWriteTimeUtc -ge (Get-Item $sourcePath).LastWriteTimeUtc)) {
+        $needsBuild = $false
+    }
+
+    if (-not $needsBuild) {
+        Write-SetupSuccess ".agent\sys_dump_console.exe ya esta actualizado."
+        return
+    }
+
+    Invoke-SetupCommand `
+        -FilePath $gccPath `
+        -Arguments @($sourcePath, "-o", $binaryPath, "-std=c99", "-Wall", "-Wextra") `
+        -Description "Compilando .agent\sys_dump_console.exe..." `
+        -SoloVerificar:$false
+
+    Write-SetupSuccess ".agent\sys_dump_console.exe listo."
+}
+
 function Configure-ProjectGit {
     param(
         [string]$RepoRoot,

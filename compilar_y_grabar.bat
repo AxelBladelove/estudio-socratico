@@ -76,12 +76,28 @@ echo ------------------------------------------------------------ >> "%LOG%"
 :: ============================================================
 set "ERRFILE=%~dp0gcc_errors.txt"
 set "ARCHIVO_C_CORTO=%~nx1"
+set "SYS_DUMP_SRC=%~dp0.agent\sys_dump_console.c"
+set "SYS_DUMP_EXE=%~dp0.agent\sys_dump_console.exe"
 
 echo.
 :: === SOLUCION === 
 :: El compilador cc1 interno requiere que sus DLLs esten en el PATH de Windows.
 :: Ruta oficial del proyecto: MSYS2 MinGW64.
 set "PATH=C:\msys64\mingw64\bin;%PATH%"
+
+if not exist "%SYS_DUMP_EXE%" (
+    if exist "%SYS_DUMP_SRC%" (
+        echo [INFO] Compilando helper local .agent\sys_dump_console.exe...
+        "gcc.exe" "%SYS_DUMP_SRC%" -o "%SYS_DUMP_EXE%" -std=c99 -Wall -Wextra >nul 2>&1
+        if exist "%SYS_DUMP_EXE%" (
+            echo [OK] Helper local listo.
+        ) else (
+            echo [AVISO] No se pudo compilar .agent\sys_dump_console.exe. Se omitira el volcado de consola.
+        )
+    ) else (
+        echo [AVISO] No existe .agent\sys_dump_console.c. Se omitira el volcado de consola.
+    )
+)
 
 :: Nos movemos al directorio del archivo para que los errores de gcc solo muestren el nombre corto
 pushd "%DIR_ARCHIVO%"
@@ -101,7 +117,11 @@ echo.
 if %EXIT_CODE%==0 (
     echo [OK] Compilacion exitosa -^> Abriendo %NOMBRE_BASE%.exe en ventana externa...
     del "%ERRFILE%" >nul 2>&1
-    start "%NOMBRE_BASE% — Estudio Socratico" cmd /c ""%ARCHIVO_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & "%~dp0.agent\sys_dump_console.exe" "%LOG%" & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
+    if exist "%SYS_DUMP_EXE%" (
+        start "%NOMBRE_BASE% — Estudio Socratico" cmd /c ""%ARCHIVO_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & "%SYS_DUMP_EXE%" "%LOG%" & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
+    ) else (
+        start "%NOMBRE_BASE% — Estudio Socratico" cmd /c ""%ARCHIVO_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & echo  [AVISO] No se pudo registrar el volcado de consola en el log. & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
+    )
 ) else (
     echo [COMPILADOR] Errores detectados:
     echo.

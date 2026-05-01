@@ -56,6 +56,9 @@ try {
     Write-SetupStep "Instalando y validando GCC"
     Ensure-GccToolchain -RepoRoot $RepoRoot -SoloVerificar:$SoloVerificar -SinWinget:$SinWinget
 
+    Write-SetupStep "Compilando herramientas locales del proyecto"
+    Ensure-AgentRuntimeTools -RepoRoot $RepoRoot -SoloVerificar:$SoloVerificar
+
     Write-SetupStep "Configurando VS Code"
     Configure-VSCode `
         -RepoRoot $RepoRoot `
