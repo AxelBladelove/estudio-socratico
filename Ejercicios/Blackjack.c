@@ -1,3 +1,4 @@
+
 /*Escribir un programa en C que simule un juego de “BlackJack” entre la computadora y un
 jugador. La computadora será quien repartirá las cartas.
 Las cartas se dan en orden, primero una carta a cada uno, después otra carta a cada uno. Se
@@ -71,10 +72,11 @@ int main()
 {
 
 
+char ascii = 'A';
 
-	for(int i = 0; i < 3; i ++){
+	for('A' = 1; 'A'< 'Z'; 'A'++){
 
-		printf("erick sucio\n");
+		printf(%c, ascii);
 	}
 
     return 0;

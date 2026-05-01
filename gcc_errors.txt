@@ -1,0 +1,13 @@
+Blackjack.c: In function 'main':
+Blackjack.c:77:17: error: lvalue required as left operand of assignment
+   77 |         for('A' = 1; 'A'< 'Z'; 'A'++){
+      |                 ^
+Blackjack.c:77:35: error: lvalue required as increment operand
+   77 |         for('A' = 1; 'A'< 'Z'; 'A'++){
+      |                                   ^~
+Blackjack.c:79:24: error: expected expression before '%' token
+   79 |                 printf(%c, ascii);
+      |                        ^
+Blackjack.c:75:6: warning: unused variable 'ascii' [-Wunused-variable]
+   75 | char ascii = 'A';
+      |      ^~~~~
