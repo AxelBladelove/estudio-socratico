@@ -15,42 +15,34 @@ cliente con acceso a esta carpeta.
 
 ## Instalacion Rapida
 
-La ruta oficial para una PC Windows vacia es el instalador nativo dentro de
-`setup/`.
-
-Puedes hacer doble click en:
-
-```text
-setup/instalar.cmd
-```
-
-O ejecutarlo desde la carpeta del proyecto:
+La ruta oficial para una PC Windows vacia es ejecutar el bootstrap nativo del
+repositorio desde la carpeta del proyecto:
 
 ```text
 Abre la terminal dentro de estudio-socratico/
 ```
 
-En `Command Prompt`:
+Si abriste `Command Prompt` dentro de la carpeta, ejecuta:
 
 ```bat
-setup\instalar.cmd
+winsetup
 ```
 
-En `PowerShell`:
+Si abriste `PowerShell` dentro de la carpeta por primera vez, ejecuta:
 
 ```powershell
-cmd /c setup\instalar.cmd
+cmd /c winsetup
+```
+
+Tambien se mantiene la compatibilidad directa con:
+
+```powershell
+.\setup.cmd
 ```
 
 Ese arranque nativo eleva permisos si hacen falta e instala o verifica Git,
 PowerShell, Node.js, Bun, Python, GitHub CLI, MSYS2/GCC, VS Code y las
 extensiones/configuracion del workspace en una sola corrida.
-
-Para ver lo que haria sin instalar ni modificar nada:
-
-```powershell
-cmd /c setup\instalar.cmd -SoloVerificar -SinWinget -SinExtensiones
-```
 
 Si ya tienes Node.js, entonces la ruta recomendada sigue siendo usar un gestor
 JS:
@@ -73,16 +65,16 @@ bun run setup
 npx --yes npm@latest run setup
 ```
 
-El modo verificacion tambien esta disponible desde npm:
-
-```bash
-npm run setup:dry
-```
-
 El instalador prepara las carpetas del proyecto, configura Git localmente,
 instala las extensiones recomendadas de VS Code, fija PowerShell como terminal
 predeterminada del workspace y valida la configuracion del proyecto. Se puede
 ejecutar varias veces sin romper la configuracion.
+
+Para ver lo que haria sin instalar nada:
+
+```bash
+npm run setup:dry
+```
 
 ## Setup Manual
 
@@ -197,14 +189,7 @@ estudio-socratico/
 |-- .agent/skills/
 |   |-- revisar/SKILL.md              Protocolo de pista socratica
 |   `-- sintetizar/SKILL.md           Protocolo de cierre de sesion
-|-- setup/                            Instalador Windows nuevo
-|   |-- instalar.cmd                  Entrada doble-clickable
-|   |-- instalar.ps1                  Orquestador principal
-|   |-- herramientas.ps1              Deteccion e instalacion con winget
-|   |-- gcc_msys2.ps1                 Toolchain C con MSYS2/GCC
-|   |-- vscode.ps1                    VS Code, terminal y extensiones
-|   |-- proyecto.ps1                  Git local y validacion del workspace
-|   `-- utilidades.ps1                Logs, PATH y ejecucion de comandos
+|-- setup_laptop.ps1                  Instalador/verificador principal
 |-- package.json                      Atajos npm/pnpm/bun/npx: setup, setup:dry, check
 |-- compilar_y_grabar.bat             Script local de compilacion y telemetria
 |-- errores.md                        Base de conocimiento acumulativa
