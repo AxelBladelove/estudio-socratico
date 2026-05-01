@@ -74,7 +74,7 @@ int main()
 
 	for(int i = 0; i < 3; i ++){
 
-		printf("erick sucio");
+		printf("erick sucio\n");
 	}
 
     return 0;
