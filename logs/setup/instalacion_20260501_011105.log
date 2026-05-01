@@ -1,0 +1,48 @@
+﻿=== Inicio setup 2026-05-01 01:11:05 ===
+
+==============================================
+  Estudio Socratico - Setup Windows
+==============================================
+[AVISO] Modo SoloVerificar activo: no se instalaran paquetes ni se modificara el sistema.
+[OK] Raiz del proyecto verificada.
+
+==> Preparando carpetas del proyecto
+
+==> Verificando herramientas base
+[OK] Git disponible: C:\Program Files\Git\cmd\git.exe
+[OK] PowerShell disponible: C:\Program Files\WindowsApps\Microsoft.PowerShell_7.6.1.0_x64__8wekyb3d8bbwe\pwsh.exe
+[OK] Node.js disponible: C:\Program Files\nodejs\node.exe
+[OK] Python disponible: C:\Users\axelb\AppData\Local\Programs\Python\Python311\python.exe
+[OK] GitHub CLI disponible: C:\Program Files\GitHub CLI\gh.exe
+[OK] MSYS2 disponible: C:\msys64\usr\bin\bash.exe
+[OK] VS Code disponible: C:\Users\axelb\AppData\Local\Programs\Microsoft VS Code\bin\code.cmd
+
+==> Configurando Git local
+[OK] Repositorio Git ya existe.
+[INFO] [SoloVerificar] Configurando user.name local...
+[INFO]   C:\Program Files\Git\cmd\git.exe config user.name Estudiante
+[INFO] [SoloVerificar] Configurando user.email local...
+[INFO]   C:\Program Files\Git\cmd\git.exe config user.email estudiante@estudio.local
+
+==> Instalando y validando GCC
+[INFO] [SoloVerificar] Instalaria GCC dentro de MSYS2 con pacman.
+
+==> Configurando VS Code
+[INFO] [SoloVerificar] Configuraria PowerShell 7 como perfil predeterminado en Windows Terminal.
+[AVISO] SinExtensiones activo; no se instalaran extensiones.
+
+==> Validando archivos del workspace
+[OK] .vscode\tasks.json es JSON valido.
+[OK] .vscode\settings.json es JSON valido.
+[OK] .vscode\extensions.json es JSON valido.
+
+==> Resumen final
+  Git: OK
+  PowerShell: OK
+  Node.js: OK
+  Python: OK
+  GitHub CLI: OK
+  MSYS2: OK
+  VS Code: OK
+[OK] Setup completado. Abre un .c en Ejercicios y presiona Ctrl+Shift+B.
+=== Fin setup 2026-05-01 01:11:05 ===

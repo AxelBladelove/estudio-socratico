@@ -5,6 +5,12 @@
   "editor.semanticHighlighting.enabled": true,
   "C_Cpp.default.compilerPath": "C:/msys64/mingw64/bin/gcc.exe",
   "security.workspace.trust.untrustedFiles": "open",
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "terminal.integrated.profiles.windows": {
+    "PowerShell": {
+      "source": "PowerShell"
+    }
+  },
   "claude-code.enableAuthLogin": true,
   "claudeCode.preferredLocation": "panel",
   "chat.viewSessions.orientation": "stacked",

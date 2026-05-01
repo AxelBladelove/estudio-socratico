@@ -4,8 +4,8 @@
   "private": true,
   "description": "Sistema de estudio socratico para Fundamentos de Programacion en C.",
   "scripts": {
-    "setup": "powershell -NoProfile -ExecutionPolicy Bypass -File ./setup_laptop.ps1",
-    "setup:dry": "powershell -NoProfile -ExecutionPolicy Bypass -File ./setup_laptop.ps1 -DryRun",
-    "check": "powershell -NoProfile -ExecutionPolicy Bypass -File ./setup_laptop.ps1 -DryRun -SkipWinget -SkipExtensions"
+    "setup": "setup\\instalar.cmd /sin-pausa",
+    "setup:dry": "setup\\instalar.cmd /sin-pausa -SoloVerificar",
+    "check": "setup\\instalar.cmd /sin-pausa -SoloVerificar -SinWinget -SinExtensiones"
   }
 }

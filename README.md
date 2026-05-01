@@ -15,8 +15,45 @@ cliente con acceso a esta carpeta.
 
 ## Instalacion Rapida
 
-La ruta oficial del proyecto es usar un gestor JS. Si tienes Node.js, ya tienes
-`npm` y normalmente tambien `npx`.
+La ruta oficial para una PC Windows vacia es el instalador nativo dentro de
+`setup/`.
+
+Puedes hacer doble click en:
+
+```text
+setup/instalar.cmd
+```
+
+O ejecutarlo desde la carpeta del proyecto:
+
+```text
+Abre la terminal dentro de estudio-socratico/
+```
+
+En `Command Prompt`:
+
+```bat
+setup\instalar.cmd
+```
+
+En `PowerShell`:
+
+```powershell
+cmd /c setup\instalar.cmd
+```
+
+Ese arranque nativo eleva permisos si hacen falta e instala o verifica Git,
+PowerShell, Node.js, Bun, Python, GitHub CLI, MSYS2/GCC, VS Code y las
+extensiones/configuracion del workspace en una sola corrida.
+
+Para ver lo que haria sin instalar ni modificar nada:
+
+```powershell
+cmd /c setup\instalar.cmd -SoloVerificar -SinWinget -SinExtensiones
+```
+
+Si ya tienes Node.js, entonces la ruta recomendada sigue siendo usar un gestor
+JS:
 
 ```bash
 npm run setup
@@ -36,17 +73,16 @@ bun run setup
 npx --yes npm@latest run setup
 ```
 
-El instalador asume que VS Code o Antigravity ya estan instalados. Verifica o
-instala Git y MSYS2/GCC, prepara las carpetas del proyecto, configura Git
-localmente, instala las extensiones recomendadas de VS Code y valida la
-configuracion del workspace. Se puede ejecutar varias veces sin romper la
-configuracion.
-
-Para ver lo que haria sin instalar nada:
+El modo verificacion tambien esta disponible desde npm:
 
 ```bash
 npm run setup:dry
 ```
+
+El instalador prepara las carpetas del proyecto, configura Git localmente,
+instala las extensiones recomendadas de VS Code, fija PowerShell como terminal
+predeterminada del workspace y valida la configuracion del proyecto. Se puede
+ejecutar varias veces sin romper la configuracion.
 
 ## Setup Manual
 
@@ -161,7 +197,14 @@ estudio-socratico/
 |-- .agent/skills/
 |   |-- revisar/SKILL.md              Protocolo de pista socratica
 |   `-- sintetizar/SKILL.md           Protocolo de cierre de sesion
-|-- setup_laptop.ps1                  Instalador/verificador principal
+|-- setup/                            Instalador Windows nuevo
+|   |-- instalar.cmd                  Entrada doble-clickable
+|   |-- instalar.ps1                  Orquestador principal
+|   |-- herramientas.ps1              Deteccion e instalacion con winget
+|   |-- gcc_msys2.ps1                 Toolchain C con MSYS2/GCC
+|   |-- vscode.ps1                    VS Code, terminal y extensiones
+|   |-- proyecto.ps1                  Git local y validacion del workspace
+|   `-- utilidades.ps1                Logs, PATH y ejecucion de comandos
 |-- package.json                      Atajos npm/pnpm/bun/npx: setup, setup:dry, check
 |-- compilar_y_grabar.bat             Script local de compilacion y telemetria
 |-- errores.md                        Base de conocimiento acumulativa
