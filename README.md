@@ -69,6 +69,12 @@ El instalador prepara las carpetas del proyecto, configura Git localmente,
 instala las extensiones recomendadas de VS Code, fija PowerShell como terminal
 predeterminada del workspace y valida la configuracion del proyecto. Se puede
 ejecutar varias veces sin romper la configuracion.
+El instalador asume que VS Code o Antigravity ya estan instalados. Verifica o
+instala Git y MSYS2/GCC, prepara las carpetas del proyecto, configura Git
+localmente, instala las extensiones recomendadas de VS Code y valida la
+configuracion del workspace. No sobrescribe tus ajustes personales de VS Code,
+incluyendo `workbench.colorCustomizations`, `editor.semanticHighlighting.enabled`
+y el tema activo. Se puede ejecutar varias veces sin romper la configuracion.
 
 Para ver lo que haria sin instalar nada:
 
