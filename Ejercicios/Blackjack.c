@@ -74,7 +74,7 @@ int main()
 
 char ascii = 'A';
 
-	for(ascii =; ascii < 300 ; ascii++){
+	for(ascii; ascii < 300 ; ascii++){
 
 		printf(" %c", ascii);
 	}

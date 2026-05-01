@@ -1,4 +1,0 @@
-Blackjack.c: In function 'main':
-Blackjack.c:77:20: error: expected expression before ';' token
-   77 |         for(ascii =; ascii < 300 ; ascii++){
-      |                    ^
