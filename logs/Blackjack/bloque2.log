@@ -1,3 +1,10 @@
+ 
+============================================================ 
+INTENTO: /01/-00-FrT05h37m14s 
+ARCHIVO: C:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\Ejercicios\Blackjack.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
 
 /*Escribir un programa en C que simule un juego de “BlackJack” entre la computadora y un
 jugador. La computadora será quien repartirá las cartas.
@@ -91,3 +98,11 @@ char ascii = 'A';
 
 
 
+ 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Blackjack.c: In function 'main':
+Blackjack.c:77:9: warning: statement with no effect [-Wunused-value]
+   77 |         for(ascii; ascii < 'Z'; ascii++){
+      |         ^~~
+[EXIT CODE: 0] 
