@@ -1,4 +1,0 @@
-Blackjack.c: In function 'main':
-Blackjack.c:77:17: error: lvalue required as left operand of assignment
-   77 |         for('A' = 1; 'A'< 'Z'; ascii++){
-      |                 ^
