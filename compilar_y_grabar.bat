@@ -5,12 +5,19 @@
 :: Cero tokens. Cero internet. Pura maquina local.
 :: ============================================================
 :: USO: compilar_y_grabar.bat <archivo.c>
+:: USO Live Share: compilar_y_grabar.bat --inline <archivo.c>
 :: Llamado automaticamente por tasks.json al presionar Ctrl+Shift+B
 :: Si no se pasa argumento, intenta compilar el .c mas recientemente modificado en Ejercicios/.
 :: Esto reduce friccion en terminales compartidas de Live Share.
 :: ============================================================
 
 setlocal enabledelayedexpansion
+
+set "RUN_INLINE=%ESTUDIO_INLINE_RUN%"
+if /i "%~1"=="--inline" (
+    set "RUN_INLINE=1"
+    shift
+)
 
 set "INPUT_PATH=%~1"
 if "%INPUT_PATH%"=="" (
@@ -168,16 +175,31 @@ for %%A in ("%ERRFILE%") do if %%~zA equ 0 echo (Compilacion limpia. Cero errore
 echo [EXIT CODE: %EXIT_CODE%] >> "%LOG%"
 
 :: ============================================================
-:: BLOQUE 4: Abrir el programa en ventana separada (estilo Code::Blocks)
+:: BLOQUE 4: Ejecutar el programa
 :: ============================================================
 echo.
 if %EXIT_CODE%==0 (
-    echo [OK] Compilacion exitosa -^> Abriendo %NOMBRE_BASE%.exe en ventana externa...
     del "%ERRFILE%" >nul 2>&1
-    if exist "%SYS_DUMP_EXE%" (
-        start "%NOMBRE_BASE% — Estudio Socratico" cmd /c ""%ARCHIVO_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & "%SYS_DUMP_EXE%" "%LOG%" & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
+    if "%RUN_INLINE%"=="1" (
+        echo [OK] Compilacion exitosa -^> Ejecutando %NOMBRE_BASE%.exe en esta terminal...
+        echo.
+        "%ARCHIVO_EXE%"
+        set "RUN_EXIT_CODE=!errorlevel!"
+        echo.
+        echo ================================
+        echo  Programa finalizado.
+        echo ================================
+        if exist "%SYS_DUMP_EXE%" (
+            echo [AVISO] El volcado automatico de consola solo esta disponible en ventana externa.
+            echo [AVISO] La salida interactiva ya quedo visible en esta terminal compartida.
+        )
     ) else (
-        start "%NOMBRE_BASE% — Estudio Socratico" cmd /c ""%ARCHIVO_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & echo  [AVISO] No se pudo registrar el volcado de consola en el log. & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
+        echo [OK] Compilacion exitosa -^> Abriendo %NOMBRE_BASE%.exe en ventana externa...
+        if exist "%SYS_DUMP_EXE%" (
+            start "%NOMBRE_BASE% — Estudio Socratico" cmd /c ""%ARCHIVO_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & "%SYS_DUMP_EXE%" "%LOG%" & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
+        ) else (
+            start "%NOMBRE_BASE% — Estudio Socratico" cmd /c ""%ARCHIVO_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & echo  [AVISO] No se pudo registrar el volcado de consola en el log. & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
+        )
     )
 ) else (
     echo [COMPILADOR] Errores detectados:
