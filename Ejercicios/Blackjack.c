@@ -66,20 +66,13 @@ jugador no haya perdido.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 
 int main()
 {
 
-
-char ascii = 'A';
-
-	for(ascii = 1; ascii < 100 ; ascii++){
-
-		printf(" %c", ascii);
-	}
-
-    return 0;
+return 0;
 }
 
 

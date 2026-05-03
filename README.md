@@ -1,57 +1,142 @@
 # Sistema de Estudio Socratico
 
-**Arquitectura Hibrida v4.1** - VS Code listo. Multi-IA. Friccion baja.
-Documentacion automatica.
+Framework local para estudiar Fundamentos de Programacion en C con telemetria,
+logs por bloque, base de errores acumulativa y protocolos de IA tipo tutor
+socratico.
+
+El proyecto esta pensado para usarse en Windows con VS Code o Antigravity,
+`gcc` y Git. Cada compilacion puede dejar rastro util para revisar despues que
+hiciste, que fallo y que modelo mental se repite.
 
 ## Que hace este sistema
 
-Convierte tu editor en una caja negra de estudio: cada vez que compilas, el
-sistema registra silenciosamente tu codigo y el resultado. Al final del bloque,
-una IA analiza la sesion completa y actualiza tu base de conocimiento de errores.
+- Compila el archivo `.c` activo con `Ctrl+Shift+B`.
+- Guarda telemetria por usuario en `usuarios/<usuario>/...`.
+- Organiza las sesiones en bloques de 45 minutos.
+- Hace commits automaticos etiquetados con usuario, timestamp, duracion y exit code.
+- Permite dos protocolos de IA:
+  - `@revisar`: una pista socratica breve, sin codigo.
+  - `@sintetizar`: cierre de sesion y actualizacion de la base de errores.
 
-Funciona con VS Code, Antigravity y cualquier asistente que pueda leer archivos
-del workspace: Codex en VS Code, OpenCode, Roo Code, Gemini, Claude u otro
-cliente con acceso a esta carpeta.
+## Conceptos Clave
+
+### Identidad Local: `.estudio_usuario`
+
+Cada clon local del repo debe tener un archivo `.estudio_usuario` con una sola
+linea: tu slug personal.
+
+Ejemplos:
+
+```text
+axel
+eric
+```
+
+Ese slug determina estas rutas:
+
+- `usuarios/<slug>/errores.md`
+- `usuarios/<slug>/logs/<ejercicio>/bloqueN.log`
+
+El archivo `.estudio_usuario` esta ignorado por Git: cada persona tiene el suyo.
+
+Si no existe, `compilar_y_grabar.bat` intenta derivarlo en este orden:
+
+1. `ESTUDIO_USUARIO`
+2. `git config github.user`
+3. `git config user.name`
+4. usuario de Windows
+
+Tambien crea `.estudio_usuario` automaticamente si hacia falta.
+
+### Telemetria Por Usuario
+
+El modelo actual del sistema es **usuario-centrico**. La telemetria primaria ya
+no vive en la raiz del repo, sino aqui:
+
+```text
+usuarios/<usuario>/errores.md
+usuarios/<usuario>/logs/<ejercicio>/bloque1.log
+usuarios/<usuario>/logs/<ejercicio>/bloque2.log
+usuarios/<usuario>/logs/<ejercicio>/bloqueN.log
+```
+
+Compatibilidad:
+
+- `errores.md` y `logs/` en la raiz se conservan como legado durante la migracion.
+- El script nuevo prioriza `usuarios/<usuario>/...`.
+- Si todavia no existe la telemetria por usuario, usa el legado como fuente
+  inicial cuando corresponde.
+
+### Bloques De 45 Minutos
+
+Las sesiones se agrupan automaticamente en bloques de 45 minutos.
+
+Ejemplo:
+
+```text
+usuarios/axel/logs/Blackjack/bloque1.log
+usuarios/axel/logs/Blackjack/bloque2.log
+```
+
+El archivo interno `bloque_actual.txt` guarda el numero de bloque activo y el
+timestamp de inicio del bloque. Ese archivo es interno y esta ignorado por Git.
+
+### Commits Automaticos
+
+Despues de cada compilacion, el sistema intenta crear un commit automatico con
+este formato:
+
+```text
+intento_<usuario>_YYYY-MM-DDTHH-mm-ss_<duracion>_exitN
+```
+
+Ejemplo:
+
+```text
+intento_axel_2026-05-02T18-42-11_01h28m_exit0
+```
+
+Significado:
+
+- `<usuario>`: slug local del clon.
+- `YYYY-MM-DDTHH-mm-ss`: hora real del intento.
+- `<duracion>`: tiempo acumulado del ejercicio desde el primer bloque detectado.
+- `exitN`: resultado de compilacion. `exit0` significa compilacion exitosa.
+
+El commit automatico no hace `git add -A` sobre todo el repo. Solo intenta
+agregar:
+
+- el archivo `.c` compilado
+- el log del ejercicio actual
+- el `errores.md` del usuario actual
 
 ## Instalacion Rapida
 
-La ruta oficial para una PC Windows vacia es ejecutar el bootstrap nativo del
-repositorio desde la carpeta del proyecto:
+### Opcion 1: Windows Nativo
 
-```text
-Abre la terminal dentro de estudio-socratico/
+Entrada recomendada:
+
+```bat
+setup\instalar.cmd
 ```
 
-Si abriste `Command Prompt` dentro de la carpeta, ejecuta:
+Tambien puedes abrir la carpeta del proyecto y ejecutar:
 
 ```bat
 winsetup
 ```
 
-Si abriste `PowerShell` dentro de la carpeta por primera vez, ejecuta:
+Si abriste PowerShell por primera vez en esa carpeta:
 
 ```powershell
 cmd /c winsetup
 ```
 
-Tambien se mantiene la compatibilidad directa con:
-
-```powershell
-.\setup.cmd
-```
-
-Ese arranque nativo eleva permisos si hacen falta e instala o verifica Git,
-PowerShell, Node.js, Bun, Python, GitHub CLI, MSYS2/GCC, VS Code y las
-extensiones/configuracion del workspace en una sola corrida.
-
-Si ya tienes Node.js, entonces la ruta recomendada sigue siendo usar un gestor
-JS:
+### Opcion 2: Scripts npm/pnpm/bun
 
 ```bash
 npm run setup
 ```
-
-Tambien estan soportados:
 
 ```bash
 pnpm run setup
@@ -61,87 +146,63 @@ pnpm run setup
 bun run setup
 ```
 
-```bash
-npx --yes npm@latest run setup
-```
-
-El instalador prepara las carpetas del proyecto, configura Git localmente,
-instala las extensiones recomendadas de VS Code, fija PowerShell como terminal
-predeterminada del workspace y valida la configuracion del proyecto. Se puede
-ejecutar varias veces sin romper la configuracion.
-El instalador asume que VS Code o Antigravity ya estan instalados. Verifica o
-instala Git y MSYS2/GCC, prepara las carpetas del proyecto, configura Git
-localmente, instala las extensiones recomendadas de VS Code y valida la
-configuracion del workspace. No sobrescribe tus ajustes personales de VS Code,
-incluyendo `workbench.colorCustomizations`, `editor.semanticHighlighting.enabled`
-y el tema activo. Se puede ejecutar varias veces sin romper la configuracion.
-
-Para ver lo que haria sin instalar nada:
+### Opcion 3: Verificacion Sin Cambios
 
 ```bash
 npm run setup:dry
+```
+
+o:
+
+```bat
+setup\instalar.cmd -SoloVerificar -SinWinget -SinExtensiones
 ```
 
 ## Setup Manual
 
 ### 1. Requisitos
 
-- `gcc` instalado y en el `PATH` (MinGW/MSYS2 en Windows).
 - `git` instalado.
-- La carpeta `estudio-socratico/` abierta como workspace en VS Code,
-  Antigravity o un editor compatible con tareas de VS Code.
+- `gcc` disponible en el `PATH` o en `C:\msys64\mingw64\bin`.
+- La carpeta `estudio-socratico/` abierta como workspace en VS Code o editor compatible con tareas.
 
 ### 2. Inicializar Git
-
-Abre la terminal integrada (`Ctrl+``) y ejecuta:
 
 ```bash
 git init
 git config user.email "tu-correo@users.noreply.github.com"
 git config user.name "tu-usuario-de-github"
+git config github.user "tu-usuario-de-github"
 git add .
 git commit -m "setup_inicial"
 ```
 
-### 3. Compilar con Ctrl+Shift+B
-
-El archivo `.vscode/tasks.json` ya esta configurado. El atajo predeterminado
-para "Run Build Task" en VS Code/Antigravity es:
-
-- Windows: `Ctrl+Shift+B`
-
-Para asignarlo a `F5` o cualquier otra tecla en VS Code:
-`Archivo > Preferencias > Atajos de Teclado` -> busca "Run Build Task" ->
-cambia la tecla.
-
-### 4. Configurar tu IA preferida
-
-El repositorio trae instrucciones portables:
-
-| Herramienta | Archivo que debe leer |
-|---|---|
-| Codex en VS Code | `AGENTS.md` y `.vscode/codex-instructions.md` |
-| OpenCode / agentes compatibles | `AGENTS.md` |
-| Antigravity u otros clientes con skills | `.agent/skills/revisar/SKILL.md` y `.agent/skills/sintetizar/SKILL.md` |
-
-Si tu cliente no reconoce `@revisar` o `@sintetizar`, escribe:
+### 3. Crear Tu Identidad Local Del Clon
 
 ```text
-Lee AGENTS.md y ejecuta el protocolo revisar sobre el archivo C activo.
+copy .estudio_usuario.example .estudio_usuario
 ```
 
-o:
+Luego edita `.estudio_usuario` y deja una sola linea con tu slug.
+
+Ejemplo:
 
 ```text
-Lee AGENTS.md y ejecuta el protocolo sintetizar para la sesion de hoy.
+axel
 ```
 
-## Flujo de Trabajo Diario
+### 4. Compilar Con `Ctrl+Shift+B`
 
-### Al comenzar un ejercicio nuevo
+La tarea ya esta definida en `.vscode/tasks.json`.
 
-Crea un archivo `.c`, por ejemplo `Ejercicios/ejercicio_01.c`. La linea 1 es
-importante: el Contrato Logico debe ser lo primero que escribes.
+## Flujo Diario
+
+### Al comenzar un ejercicio
+
+Crea un archivo `.c` dentro de `Ejercicios/`. La primera linea debe ser el
+Contrato Logico: el enunciado del ejercicio como comentario multilinea.
+
+Ejemplo:
 
 ```c
 /* Ejercicio: Leer N numeros enteros usando memoria dinamica,
@@ -154,157 +215,337 @@ importante: el Contrato Logico debe ser lo primero que escribes.
 ### Durante la codificacion
 
 1. Programa normalmente.
-2. Cuando quieras compilar y ejecutar, presiona `Ctrl+Shift+B`.
-3. El script compila con `gcc`, ejecuta el programa si compilo bien, registra
-   todo en `usuarios/<usuario>/logs/<nombre_del_ejercicio>/bloqueN.log`,
-   inicializa `usuarios/<usuario>/errores.md` y hace un commit automatico
-   etiquetado por usuario y duracion acumulada del ejercicio.
-4. Tu solo ves el resultado en la terminal. Sin latencia. Sin internet.
+2. Presiona `Ctrl+Shift+B` para compilar.
+3. El sistema:
+   - compila con `gcc`
+   - abre el ejecutable en una ventana aparte si compilo
+   - guarda log en `usuarios/<usuario>/logs/<ejercicio>/bloqueN.log`
+   - asegura que exista `usuarios/<usuario>/errores.md`
+   - hace un commit automatico si hay cambios rastreables
 
-Repite este ciclo las veces que necesites. Cada intento queda grabado.
+### Si te atascas
 
-### Si te quedas atascado
-
-Abre el chat de tu IA. Si soporta skills, escribe:
+Escribe:
 
 ```text
 @revisar
 ```
 
-La IA leera tu codigo completo y te dara una pista socratica. Puede agregar una
-micro-explicacion tecnica si detecta que falta un concepto base, por ejemplo
-stack, heap, punteros, acumuladores o alcance. No te dara codigo ni te dira la
-linea exacta.
+La IA debe leer:
+
+- `AGENTS.md`
+- `.agent/skills/revisar/SKILL.md`
+- `.estudio_usuario`
+- tu archivo `.c`
+- `usuarios/<slug>/errores.md`
+- y, si hace falta, el bloque mas reciente del ejercicio actual
+
+La respuesta debe ser una pista socratica breve, sin codigo C, sin nombres de
+variables, sin linea exacta.
 
 ### Al final del bloque de estudio
 
-Abre el chat de tu IA. Si soporta skills, escribe:
+Escribe:
 
 ```text
 @sintetizar
 ```
 
-La IA analizara los commits y logs de la sesion, y actualizara
-`usuarios/<usuario>/errores.md`
-con patrones de error reutilizables para estudiar antes del examen.
+La IA debe:
 
-Antes de empezar en una PC nueva, crea tu identidad local del clon copiando el
-archivo de ejemplo:
+- leer `AGENTS.md`
+- leer `.agent/skills/sintetizar/SKILL.md`
+- resolver el slug actual desde `.estudio_usuario`
+- analizar git log y logs del ejercicio
+- actualizar `usuarios/<slug>/errores.md`
 
-```text
-copy .estudio_usuario.example .estudio_usuario
-```
+## Git Y Colaboracion
 
-Luego deja una sola linea con tu slug, por ejemplo `axel` o `eric-gabriel`.
-Si no lo haces, el script intentara derivarlo desde `git config github.user`,
-`git config user.name` o el usuario de Windows.
+### Esquema recomendado de ramas
 
-## Estructura del Proyecto
+- `main`: base estable del sistema
+- `axel`: trabajo personal de Axel
+- `eric`: trabajo personal de Eric
+- `coop`: trabajo conjunto temporal
 
-```text
-estudio-socratico/
-|-- AGENTS.md                         Instrucciones portables para agentes IA
-|-- .vscode/codex-instructions.md     Instrucciones para Codex en VS Code
-|-- .vscode/tasks.json                Build con Ctrl+Shift+B
-|-- .agent/skills/
-|   |-- revisar/SKILL.md              Protocolo de pista socratica
-|   `-- sintetizar/SKILL.md           Protocolo de cierre de sesion
-|-- .estudio_usuario.example          Ejemplo de identidad local por clon
-|-- setup_laptop.ps1                  Instalador/verificador principal
-|-- package.json                      Atajos npm/pnpm/bun/npx: setup, setup:dry, check
-|-- compilar_y_grabar.bat             Script local de compilacion y telemetria
-|-- errores.template.md               Plantilla base para inicializar errores.md
-|-- usuarios/<usuario>/errores.md     Base de conocimiento acumulativa por usuario
-|-- usuarios/<usuario>/logs/*.log     Historial por ejercicio y por usuario
-|-- usuarios/README.md                Explica la telemetria personal
-|-- .gitignore                        Excluye ejecutables y temporales
-`-- Ejercicios/*.c                    Tus ejercicios
-```
+### Flujo minimo sugerido
 
-## Reglas del Sistema
-
-| Regla | Descripcion |
-|---|---|
-| Contrato Logico | La linea 1 de todo `.c` debe ser el enunciado del ejercicio en comentario multilínea |
-| Ctrl+Shift+B | Atajo principal para compilar; evita usar `gcc` directo durante la sesion si quieres telemetria completa |
-| @revisar | Solo cuando estas atascado; no usarlo de forma rutinaria |
-| @sintetizar | Solo una vez al terminar el bloque; nunca a mitad de sesion |
-| usuarios/<usuario>/errores.md | No editar manualmente durante la sesion; la IA lo modifica al sintetizar |
-
-## Colaboracion Minima Recomendada
-
-- Usa `main` solo como base estable del sistema.
-- Crea una rama larga por usuario, por ejemplo `study/axel` o `study/eric-gabriel`.
-- Usa ramas temporales `pair/...` cuando vayan a trabajar juntos en el mismo ejercicio.
-- Deja `.estudio_usuario` con tu slug para que los logs y `errores.md` queden separados por clon. Si no existe, el script usa primero `git config github.user` y luego `git config user.name`.
-
-## Flujo Git Minimo Para Aprender
-
-Crear tu rama personal desde la base:
+Crear tu rama personal desde `main`:
 
 ```bash
 git switch main
 git pull origin main
-git switch -c study/axel
+git switch -c axel
 ```
 
-- `git switch main`: te coloca en la rama base.
-- `git pull origin main`: trae la ultima version de GitHub.
-- `git switch -c study/axel`: crea tu rama personal y te mueve a ella.
+Subirla por primera vez:
 
-Ver en que rama estas y que cambiaste:
+```bash
+git push -u origin axel
+```
+
+Traer cambios nuevos de la base a tu rama:
+
+```bash
+git switch axel
+git fetch origin
+git merge origin/main
+```
+
+Crear una rama conjunta:
+
+```bash
+git switch axel
+git pull
+git switch -c coop
+git push -u origin coop
+```
+
+### Comandos Git basicos y que hace cada uno
+
+Ver estado actual:
 
 ```bash
 git status
 ```
 
-- Muestra la rama actual.
-- Muestra archivos modificados, nuevos o listos para commit.
-
-Subir tu rama por primera vez:
+Ver ramas locales:
 
 ```bash
-git push -u origin study/axel
+git branch
 ```
 
-- `push`: sube tus commits a GitHub.
-- `-u`: deja conectada tu rama local con la remota para futuros `git push` y `git pull` simples.
-
-Traer cambios nuevos de la base a tu rama:
+Ver ramas locales y remotas:
 
 ```bash
-git switch study/axel
+git branch -a
+```
+
+Cambiar de rama:
+
+```bash
+git switch main
+```
+
+Crear rama y cambiarte a ella:
+
+```bash
+git switch -c axel
+```
+
+Crear rama sin cambiarte:
+
+```bash
+git branch coop
+```
+
+Añadir todo lo modificado del directorio actual:
+
+```bash
+git add .
+```
+
+Añadir un archivo concreto:
+
+```bash
+git add compilar_y_grabar.bat
+```
+
+Hacer commit manual:
+
+```bash
+git commit -m "mensaje"
+```
+
+Descargar cambios remotos sin mezclarlos:
+
+```bash
 git fetch origin
-git merge origin/main
 ```
 
-- `fetch`: descarga cambios remotos sin mezclarlos todavia.
-- `merge origin/main`: mezcla la base actualizada dentro de tu rama.
-
-Crear una rama temporal para trabajar juntos:
+Descargar y mezclar directamente:
 
 ```bash
-git switch study/axel
 git pull
-git switch -c pair/axel-eric/blackjack
-git push -u origin pair/axel-eric/blackjack
 ```
 
-- Esa rama se usa para Live Share o trabajo conjunto en el mismo ejercicio.
-- Cuando terminen, se mezcla de vuelta a la rama que corresponda.
+Subir cambios al remoto:
+
+```bash
+git push
+```
+
+Subir una rama por primera vez y enlazarla:
+
+```bash
+git push -u origin axel
+```
+
+Renombrar la rama actual:
+
+```bash
+git branch -m axel
+```
+
+Renombrar otra rama:
+
+```bash
+git branch -m axel-vieja axel
+```
+
+Borrar una rama local:
+
+```bash
+git branch -d coop
+```
+
+Borrar una rama remota:
+
+```bash
+git push origin --delete coop
+```
+
+### Remotos
+
+Un remoto es la copia del repo en otro lugar, normalmente GitHub.
+
+Ejemplo:
+
+```bash
+git remote -v
+```
+
+Normalmente veras `origin` como nombre del remoto principal.
+
+## Estructura Del Proyecto
+
+```text
+estudio-socratico/
+|-- .agent/
+|   |-- skills/
+|   |   |-- revisar/SKILL.md
+|   |   `-- sintetizar/SKILL.md
+|   |-- sys_dump_console.c
+|   `-- sys_dump_console.exe
+|-- .vscode/
+|   |-- codex-instructions.md
+|   `-- tasks.json
+|-- setup/
+|   |-- instalar.cmd
+|   |-- instalar.ps1
+|   |-- herramientas.ps1
+|   |-- gcc_msys2.ps1
+|   |-- proyecto.ps1
+|   |-- utilidades.ps1
+|   |-- vscode.ps1
+|   `-- README.md
+|-- usuarios/
+|   |-- README.md
+|   `-- <usuario>/
+|       |-- errores.md
+|       `-- logs/
+|           `-- <ejercicio>/
+|               |-- bloque1.log
+|               |-- bloque2.log
+|               `-- bloque_actual.txt
+|-- Ejercicios/
+|-- AGENTS.md
+|-- compilar_y_grabar.bat
+|-- errores.template.md
+|-- errores.md                        legado durante migracion
+|-- logs/                             legado durante migracion
+|-- .estudio_usuario.example
+|-- package.json
+`-- README.md
+```
+
+## Migracion Desde El Modelo Legado
+
+Si vienes del modelo viejo, es normal que ya tengas estos archivos en la raiz:
+
+- `errores.md`
+- `logs/`
+
+No hace falta borrarlos de inmediato. El sistema nuevo ya prioriza
+`usuarios/<usuario>/...` y usa el legado solo como compatibilidad.
+
+### Migracion suave
+
+1. Crea tu identidad local:
+
+```text
+copy .estudio_usuario.example .estudio_usuario
+```
+
+2. Escribe tu slug en `.estudio_usuario`, por ejemplo:
+
+```text
+axel
+```
+
+3. Compila una vez con `Ctrl+Shift+B`.
+
+Eso hara que el sistema cree automaticamente:
+
+- `usuarios/axel/errores.md`
+- `usuarios/axel/logs/<ejercicio>/...`
+
+Si `usuarios/axel/errores.md` no existe todavia, el script lo inicializa desde
+`errores.md` legado o desde `errores.template.md`.
+
+### Que pasa con los logs viejos
+
+Los logs antiguos en `logs/` no se mueven solos. Se quedan como historial legado.
+Los intentos nuevos ya caen en `usuarios/<usuario>/logs/`.
+
+Si quieres migrarlos manualmente mas adelante, puedes copiar la carpeta del
+ejercicio viejo a tu carpeta de usuario correspondiente, pero no es obligatorio
+para empezar a usar el sistema nuevo.
+
+## Archivos Ignorados Por Git
+
+- `.estudio_usuario`
+- `*.exe`
+- `logs/<ejercicio>/bloque_actual.txt`
+- `usuarios/<usuario>/logs/<ejercicio>/bloque_actual.txt`
+- archivos temporales del compilador
+
+## Archivos Rastreados Por Git
+
+- `usuarios/<usuario>/logs/<ejercicio>/bloqueN.log`
+- `usuarios/<usuario>/errores.md`
+- scripts del sistema
+- skills
+- tareas de VS Code
+- documentacion
+
+## IA Soportada
+
+- Codex en VS Code: lee `AGENTS.md` y `.vscode/codex-instructions.md`
+- Antigravity/OpenCode y clientes con skills: usan `.agent/skills/revisar/SKILL.md` y `.agent/skills/sintetizar/SKILL.md`
+- Otros clientes: pueden trabajar si pueden leer el workspace y seguir `AGENTS.md`
 
 ## Troubleshooting
 
-**El script no se ejecuta al presionar Ctrl+Shift+B:**
+**El script no se ejecuta al presionar `Ctrl+Shift+B`:**
 verifica que el workspace abierto sea la carpeta `estudio-socratico/`.
 
 **`gcc` no se encuentra:**
-instala MSYS2/MinGW y agrega `C:\msys64\mingw64\bin` o tu ruta de MinGW al
+instala MSYS2/MinGW y agrega `C:\msys64\mingw64\bin` o tu ruta equivalente al
 `PATH`.
 
 **El git commit falla silenciosamente:**
-ejecuta `git init` y configura `user.email` / `user.name`. Si quieres etiquetas
-de commit mas claras por persona, crea `.estudio_usuario` con tu slug antes de compilar. Si usas GitHub, conviene que `user.name` o `github.user` coincidan con tu identidad real.
+ejecuta `git init` y configura `user.email`, `user.name` y, si quieres,
+`github.user`. Si quieres separar bien tu telemetria, crea `.estudio_usuario`
+antes de compilar.
 
 **La IA no responde a `@sintetizar` o `@revisar`:**
-usa la frase "lee AGENTS.md y ejecuta el protocolo revisar/sintetizar".
+usa la frase:
+
+```text
+Lee AGENTS.md y ejecuta el protocolo revisar/sintetizar.
+```
+
+**Tengo `errores.md` y `logs/` en la raiz:**
+se conservan como legado durante la migracion. El sistema nuevo ya prioriza
+`usuarios/<usuario>/...`.
