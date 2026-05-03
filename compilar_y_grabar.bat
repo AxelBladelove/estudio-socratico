@@ -6,28 +6,58 @@
 :: ============================================================
 :: USO: compilar_y_grabar.bat <archivo.c>
 :: Llamado automaticamente por tasks.json al presionar Ctrl+Shift+B
+:: Si no se pasa argumento, intenta compilar el .c mas recientemente modificado en Ejercicios/.
+:: Esto reduce friccion en terminales compartidas de Live Share.
 :: ============================================================
 
 setlocal enabledelayedexpansion
 
-:: --- Validar argumento ---
-if "%~1"=="" (
-    echo [ERROR] Debes pasar el nombre del archivo .c como argumento.
+set "INPUT_PATH=%~1"
+if "%INPUT_PATH%"=="" (
+    for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "$root=Join-Path $PWD 'Ejercicios'; if(Test-Path -LiteralPath $root){$file=Get-ChildItem -LiteralPath $root -Filter '*.c' | Sort-Object LastWriteTime -Descending | Select-Object -First 1; if($file){$file.FullName}}"`) do set "INPUT_PATH=%%I"
+)
+
+if "%INPUT_PATH%"=="" (
+    echo [ERROR] Debes pasar un archivo .c o tener al menos un .c dentro de Ejercicios\.
     echo Uso: compilar_y_grabar.bat mi_ejercicio.c
     exit /b 1
 )
 
-:: --- Resolver rutas absolutas correctamente ---
-:: %~f1 = ruta completa del archivo .c (aunque se pase relativo)
-:: %~dp1 = directorio del archivo (con backslash al final)
-:: %~n1  = nombre sin extension
-set "ARCHIVO_C=%~f1"
-set "DIR_ARCHIVO=%~dp1"
-set "NOMBRE_BASE=%~n1"
+if /i "%INPUT_PATH:~0,6%"=="vsls:/" (
+    set "INPUT_PATH=%INPUT_PATH:~6%"
+    set "INPUT_PATH=%INPUT_PATH:/=\%"
+    if "%INPUT_PATH:~0,1%"=="\" set "INPUT_PATH=%INPUT_PATH:~1%"
+    set "INPUT_PATH=%~dp0%INPUT_PATH%"
+)
+
+for %%I in ("%INPUT_PATH%") do (
+    set "ARCHIVO_C=%%~fI"
+    set "DIR_ARCHIVO=%%~dpI"
+    set "NOMBRE_BASE=%%~nI"
+    set "EXTENSION=%%~xI"
+)
+
+if "%NOMBRE_BASE%"=="" (
+    echo [ERROR] No se pudo determinar el nombre del archivo. Verifica que la ruta sea valida.
+    exit /b 1
+)
+
+if /i not "%EXTENSION%"==".c" (
+    echo [ERROR] El archivo debe tener extension .c
+    echo Uso: compilar_y_grabar.bat mi_ejercicio.c
+    exit /b 1
+)
+
+if not exist "%ARCHIVO_C%" (
+    echo [ERROR] No se encontro el archivo fuente: %ARCHIVO_C%
+    exit /b 1
+)
+
 set "ARCHIVO_EXE=%~dp0_output.exe"
 set "USUARIO_CONFIG=%~dp0.estudio_usuario"
 set "ERRORES_TEMPLATE=%~dp0errores.template.md"
 set "ERRORES_LEGACY=%~dp0errores.md"
+set "GCC_EXE="
 
 set "USUARIO_FUENTE="
 if exist "%USUARIO_CONFIG%" (
@@ -42,17 +72,6 @@ if not exist "%USUARIO_CONFIG%" > "%USUARIO_CONFIG%" echo %USUARIO_SLUG%
 set "USUARIO_DIR=%~dp0usuarios\%USUARIO_SLUG%"
 set "LOGS_ROOT=%USUARIO_DIR%\logs"
 set "ERRORES_FILE=%USUARIO_DIR%\errores.md"
-
-:: --- Validar nombre base y extension ---
-if "%NOMBRE_BASE%"=="" (
-    echo [ERROR] No se pudo determinar el nombre del archivo. Verifica que la ruta sea valida.
-    exit /b 1
-)
-if /i not "%~x1"==".c" (
-    echo [ERROR] El archivo debe tener extension .c
-    echo Uso: compilar_y_grabar.bat mi_ejercicio.c
-    exit /b 1
-)
 
 if not exist "%~dp0usuarios\" mkdir "%~dp0usuarios\"
 if not exist "%USUARIO_DIR%\" mkdir "%USUARIO_DIR%\"
@@ -103,20 +122,30 @@ echo ------------------------------------------------------------ >> "%LOG%"
 :: BLOQUE 3: Compilar con gcc — diagnostico + captura completa
 :: ============================================================
 set "ERRFILE=%~dp0gcc_errors.txt"
-set "ARCHIVO_C_CORTO=%~nx1"
+for %%I in ("%ARCHIVO_C%") do set "ARCHIVO_C_CORTO=%%~nxI"
 set "SYS_DUMP_SRC=%~dp0.agent\sys_dump_console.c"
 set "SYS_DUMP_EXE=%~dp0.agent\sys_dump_console.exe"
 
 echo.
-:: === SOLUCION === 
-:: El compilador cc1 interno requiere que sus DLLs esten en el PATH de Windows.
-:: Ruta oficial del proyecto: MSYS2 MinGW64.
-set "PATH=C:\msys64\mingw64\bin;%PATH%"
+:: === Resolver gcc de forma robusta ===
+for /f "usebackq delims=" %%G in (`where.exe gcc.exe 2^>nul`) do if not defined GCC_EXE set "GCC_EXE=%%G"
+if not defined GCC_EXE if exist "C:\msys64\mingw64\bin\gcc.exe" set "GCC_EXE=C:\msys64\mingw64\bin\gcc.exe"
+if not defined GCC_EXE if exist "C:\msys64\ucrt64\bin\gcc.exe" set "GCC_EXE=C:\msys64\ucrt64\bin\gcc.exe"
+if not defined GCC_EXE if exist "C:\msys64\clang64\bin\gcc.exe" set "GCC_EXE=C:\msys64\clang64\bin\gcc.exe"
+
+if not defined GCC_EXE (
+    echo [ERROR] No se encontro gcc.exe en PATH ni en rutas comunes de MSYS2.
+    echo [TIP] Instala GCC con setup\instalar.cmd o agrega tu compilador al PATH de Windows.
+    exit /b 1
+)
+
+for %%G in ("%GCC_EXE%") do set "GCC_DIR=%%~dpG"
+set "PATH=%GCC_DIR%;%PATH%"
 
 if not exist "%SYS_DUMP_EXE%" (
     if exist "%SYS_DUMP_SRC%" (
         echo [INFO] Compilando helper local .agent\sys_dump_console.exe...
-        "gcc.exe" "%SYS_DUMP_SRC%" -o "%SYS_DUMP_EXE%" -std=c99 -Wall -Wextra >nul 2>&1
+        "%GCC_EXE%" "%SYS_DUMP_SRC%" -o "%SYS_DUMP_EXE%" -std=c99 -Wall -Wextra >nul 2>&1
         if exist "%SYS_DUMP_EXE%" (
             echo [OK] Helper local listo.
         ) else (
@@ -129,7 +158,7 @@ if not exist "%SYS_DUMP_EXE%" (
 
 :: Nos movemos al directorio del archivo para que los errores de gcc solo muestren el nombre corto
 pushd "%DIR_ARCHIVO%"
-"gcc.exe" "%ARCHIVO_C_CORTO%" -o "%ARCHIVO_EXE%" -std=c99 -Wall -Wextra > "%ERRFILE%" 2>&1
+"%GCC_EXE%" "%ARCHIVO_C_CORTO%" -o "%ARCHIVO_EXE%" -std=c99 -Wall -Wextra > "%ERRFILE%" 2>&1
 set "EXIT_CODE=%errorlevel%"
 popd
 

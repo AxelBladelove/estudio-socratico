@@ -4,7 +4,7 @@
     {
       "label": "Compilar y Grabar (Sistema Socratico)",
       "type": "shell",
-      "command": "${workspaceFolder}\\compilar_y_grabar.bat",
+      "command": ".\\build.cmd",
       "args": [
         "${file}"
       ],
@@ -32,12 +32,12 @@
           "message": 5
         }
       },
-      "detail": "Compila el archivo .c activo, registra telemetria en usuarios/<usuario>/... y hace un commit automatico etiquetado por usuario."
+      "detail": "Compila el archivo .c activo con un wrapper tolerante a Live Share, registra telemetria en usuarios/<usuario>/... y hace un commit automatico etiquetado por usuario."
     },
     {
       "label": "Ejecutar Binario",
       "type": "shell",
-      "command": "${workspaceFolder}\\_output.exe",
+      "command": ".\\_output.exe",
       "group": "test",
       "presentation": {
         "reveal": "always",

@@ -99,6 +99,65 @@ function Install-VSCodeExtensions {
     }
 }
 
+function Set-VSCodeF9BuildKey {
+    param(
+        [switch]$SoloVerificar
+    )
+
+    $keybindingsPath = Join-Path $env:APPDATA "Code\User\keybindings.json"
+    $keybindingsDir = Split-Path -Parent $keybindingsPath
+
+    if ($SoloVerificar) {
+        Write-SetupInfo "[SoloVerificar] Configuraria F9 para ejecutar la tarea Compilar y Grabar en VS Code."
+        return
+    }
+
+    if (-not (Test-Path $keybindingsDir)) {
+        New-Item -ItemType Directory -Path $keybindingsDir -Force | Out-Null
+    }
+
+    $bindings = @()
+    if (Test-Path $keybindingsPath) {
+        $raw = Get-Content $keybindingsPath -Raw
+        if (-not [string]::IsNullOrWhiteSpace($raw)) {
+            try {
+                $bindings = @($raw | ConvertFrom-Json)
+            } catch {
+                Write-SetupWarning "No pude leer keybindings.json como JSON limpio; no modificare los atajos automaticamente."
+                return
+            }
+        }
+    }
+
+    $taskLabel = "Compilar y Grabar (Sistema Socratico)"
+    $existing = $bindings | Where-Object {
+        ($_.key -eq "f9") -and
+        ($_.command -eq "workbench.action.tasks.runTask") -and
+        ($_.args -eq $taskLabel)
+    } | Select-Object -First 1
+
+    if ($existing) {
+        Write-SetupSuccess "F9 ya ejecuta la tarea socratica en VS Code."
+        return
+    }
+
+    $bindings = @(
+        $bindings | Where-Object {
+            -not (($_.key -eq "f9") -and ($_.when -like "*editorLangId == c*"))
+        }
+    )
+
+    $bindings += [pscustomobject]@{
+        key = "f9"
+        command = "workbench.action.tasks.runTask"
+        args = $taskLabel
+        when = "editorTextFocus && editorLangId == c"
+    }
+
+    $bindings | ConvertTo-Json -Depth 20 | Set-Content -Path $keybindingsPath -Encoding utf8
+    Write-SetupSuccess "F9 ejecutara Compilar y Grabar para archivos C en VS Code."
+}
+
 function Configure-VSCode {
     param(
         [string]$RepoRoot,
@@ -109,5 +168,6 @@ function Configure-VSCode {
     )
 
     Set-TerminalDefaultPowerShell -PowerShellPath $PowerShellPath -SoloVerificar:$SoloVerificar
+    Set-VSCodeF9BuildKey -SoloVerificar:$SoloVerificar
     Install-VSCodeExtensions -RepoRoot $RepoRoot -CodePath $CodePath -SinExtensiones:$SinExtensiones -SoloVerificar:$SoloVerificar
 }

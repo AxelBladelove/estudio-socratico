@@ -1,0 +1,95 @@
+﻿=== Inicio setup 2026-05-02 23:48:06 ===
+
+==============================================
+  Estudio Socratico - Setup Windows
+==============================================
+[OK] Raiz del proyecto verificada.
+
+==> Preparando carpetas del proyecto
+
+==> Verificando herramientas base
+[OK] Git disponible: C:\Program Files\Git\cmd\git.exe
+[OK] PowerShell disponible: C:\Program Files\WindowsApps\Microsoft.PowerShell_7.6.1.0_x64__8wekyb3d8bbwe\pwsh.exe
+[OK] Node.js disponible: C:\Program Files\nodejs\node.exe
+[OK] Bun disponible: C:\Users\axelb\AppData\Local\Microsoft\WinGet\Links\bun.exe
+[OK] Python disponible: C:\Users\axelb\AppData\Local\Programs\Python\Python311\python.exe
+[OK] GitHub CLI disponible: C:\Program Files\GitHub CLI\gh.exe
+[OK] MSYS2 disponible: C:\msys64\usr\bin\bash.exe
+[OK] VS Code disponible: C:\Users\axelb\AppData\Local\Programs\Microsoft VS Code\bin\code.cmd
+
+==> Configurando Git local
+[OK] Repositorio Git ya existe.
+[INFO] Configurando user.name local...
+[INFO] Configurando user.email local...
+
+==> Instalando y validando GCC
+[INFO] Validando gcc...
+gcc.exe (Rev14, Built by MSYS2 project) 15.2.0
+Copyright (C) 2025 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+[OK] PATH de usuario ya contiene C:\msys64\mingw64\bin
+[OK] GCC disponible: C:\msys64\mingw64\bin\gcc.exe
+
+==> Compilando herramientas locales del proyecto
+[OK] .agent\sys_dump_console.exe ya esta actualizado.
+
+==> Configurando VS Code
+[OK] Windows Terminal abrira PowerShell por defecto.
+[INFO] Instalando extension VS Code: openai.chatgpt
+Installing extensions...
+Extension 'openai.chatgpt' v26.429.30905 is already installed. Use '--force' option to update to latest version or provide '@<version>' to install a specific version, for example: 'openai.chatgpt@1.2.3'.
+[INFO] Instalando extension VS Code: ms-vscode.cpptools-extension-pack
+Installing extensions...
+Extension 'ms-vscode.cpptools-extension-pack' v1.5.1 is already installed. Use '--force' option to update to latest version or provide '@<version>' to install a specific version, for example: 'ms-vscode.cpptools-extension-pack@1.2.3'.
+[INFO] Instalando extension VS Code: esbenp.prettier-vscode
+Installing extensions...
+Extension 'esbenp.prettier-vscode' v12.4.0 is already installed. Use '--force' option to update to latest version or provide '@<version>' to install a specific version, for example: 'esbenp.prettier-vscode@1.2.3'.
+[INFO] Instalando extension VS Code: mechatroner.rainbow-csv
+Installing extensions...
+Extension 'mechatroner.rainbow-csv' v3.24.1 is already installed. Use '--force' option to update to latest version or provide '@<version>' to install a specific version, for example: 'mechatroner.rainbow-csv@1.2.3'.
+[INFO] Instalando extension VS Code: ms-python.python
+Installing extensions...
+Extension 'ms-python.python' v2026.4.0 is already installed. Use '--force' option to update to latest version or provide '@<version>' to install a specific version, for example: 'ms-python.python@1.2.3'.
+[INFO] Instalando extension VS Code: ms-python.vscode-pylance
+Installing extensions...
+Extension 'ms-python.vscode-pylance' v2026.2.1 is already installed. Use '--force' option to update to latest version or provide '@<version>' to install a specific version, for example: 'ms-python.vscode-pylance@1.2.3'.
+[INFO] Instalando extension VS Code: ms-python.debugpy
+Installing extensions...
+Extension 'ms-python.debugpy' v2026.6.0 is already installed. Use '--force' option to update to latest version or provide '@<version>' to install a specific version, for example: 'ms-python.debugpy@1.2.3'.
+[INFO] Instalando extension VS Code: ms-python.vscode-python-envs
+Installing extensions...
+Extension 'ms-python.vscode-python-envs' v1.28.0 is already installed. Use '--force' option to update to latest version or provide '@<version>' to install a specific version, for example: 'ms-python.vscode-python-envs@1.2.3'.
+[INFO] Instalando extension VS Code: anthropic.claude-code
+Installing extensions...
+Extension 'anthropic.claude-code' v2.1.126 is already installed. Use '--force' option to update to latest version or provide '@<version>' to install a specific version, for example: 'anthropic.claude-code@1.2.3'.
+[INFO] Instalando extension VS Code: ms-vsliveshare.vsliveshare
+Installing extensions...
+Extension 'ms-vsliveshare.vsliveshare' v1.1.122 is already installed. Use '--force' option to update to latest version or provide '@<version>' to install a specific version, for example: 'ms-vsliveshare.vsliveshare@1.2.3'.
+[INFO] Instalando extension VS Code: ritwickdey.liveserver
+Installing extensions...
+Extension 'ritwickdey.liveserver' v5.7.10 is already installed. Use '--force' option to update to latest version or provide '@<version>' to install a specific version, for example: 'ritwickdey.liveserver@1.2.3'.
+[INFO] Instalando extension VS Code: tomoki1207.pdf
+Installing extensions...
+Extension 'tomoki1207.pdf' v1.2.2 is already installed. Use '--force' option to update to latest version or provide '@<version>' to install a specific version, for example: 'tomoki1207.pdf@1.2.3'.
+[INFO] Instalando extension VS Code: wix.vscode-import-cost
+Installing extensions...
+Extension 'wix.vscode-import-cost' v3.3.0 is already installed. Use '--force' option to update to latest version or provide '@<version>' to install a specific version, for example: 'wix.vscode-import-cost@1.2.3'.
+
+==> Validando archivos del workspace
+[OK] .vscode\tasks.json es JSON valido.
+[OK] .vscode\settings.json es JSON valido.
+[OK] .vscode\extensions.json es JSON valido.
+
+==> Resumen final
+  Git: OK
+  PowerShell: OK
+  Node.js: OK
+  Bun: OK
+  Python: OK
+  GitHub CLI: OK
+  MSYS2: OK
+  VS Code: OK
+[OK] Setup completado. Abre un .c en Ejercicios y presiona Ctrl+Shift+B.
+=== Fin setup 2026-05-02 23:48:10 ===
