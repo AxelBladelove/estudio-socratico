@@ -1,3 +1,10 @@
+ 
+============================================================ 
+INTENTO: 2026-05-03T02-11-20 
+ARCHIVO: C:\Users\erick\estudio-socratico\Ejercicios\Blackjack.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
 
 /*Escribir un programa en C que simule un juego de ‚ÄúBlackJack‚Äù entre la computadora y un
 jugador. La computadora ser√° quien repartir√° las cartas.
@@ -187,4 +194,42 @@ int sumacarta(int cartas[ ], int n)
    {
       total -= 10, cantA--;
    }
-}
+} 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Blackjack.c: In function 'main':
+Blackjack.c:99:8: warning: unused variable 'computadora' [-Wunused-variable]
+   99 |    int computadora[MAXCARTAREP];
+      |        ^~~~~~~~~~~
+Blackjack.c:98:8: warning: unused variable 'jugador' [-Wunused-variable]
+   98 |    int jugador[MAXCARTAREP];
+      |        ^~~~~~~
+Blackjack.c:97:8: warning: unused variable 'mazo' [-Wunused-variable]
+   97 |    int mazo[MAXCARTAS] = {0};
+      |        ^~~~
+Blackjack.c: In function 'showcart_xy':
+Blackjack.c:138:22: warning: unused parameter 'indice' [-Wunused-parameter]
+  138 | void showcart_xy(int indice, int px, int py)
+      |                  ~~~~^~~~~~
+Blackjack.c: In function 'sumacarta':
+Blackjack.c:190:1: warning: control reaches end of non-void function [-Wreturn-type]
+  190 | }
+      | ^
+[EXIT CODE: 0] 
+
+[EJECUCION DEL USUARIO]
+
+
+
+
+    ⁄ƒƒƒƒƒƒƒø
+    ≥       ≥
+    ≥       ≥
+    ≥       ≥
+    ≥       ≥
+    ≥       ≥
+    ¿ƒƒƒƒƒƒƒŸ
+================================
+ Programa finalizado.
+
+------------------------------------------------------------
