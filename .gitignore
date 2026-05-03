@@ -2,6 +2,7 @@
 *.exe
 *.out
 a.out
+*.pdf
 
 # Objetos
 *.o
