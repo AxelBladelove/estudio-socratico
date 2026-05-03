@@ -4,6 +4,10 @@
   "editor.wordWrap": "on",
   "editor.semanticHighlighting.enabled": true,
   "C_Cpp.default.compilerPath": "C:/msys64/mingw64/bin/gcc.exe",
+  "C_Cpp.default.includePath": [
+    "${workspaceFolder}/include",
+    "${default}"
+  ],
   "security.workspace.trust.untrustedFiles": "open",
   "terminal.integrated.defaultProfile.windows": "PowerShell",
   "terminal.integrated.profiles.windows": {

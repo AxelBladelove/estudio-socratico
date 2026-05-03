@@ -122,6 +122,7 @@ echo ------------------------------------------------------------ >> "%LOG%"
 :: BLOQUE 3: Compilar con gcc — diagnostico + captura completa
 :: ============================================================
 set "ERRFILE=%~dp0gcc_errors.txt"
+set "INCLUDE_DIR=%~dp0include"
 for %%I in ("%ARCHIVO_C%") do set "ARCHIVO_C_CORTO=%%~nxI"
 set "SYS_DUMP_SRC=%~dp0.agent\sys_dump_console.c"
 set "SYS_DUMP_EXE=%~dp0.agent\sys_dump_console.exe"
@@ -158,7 +159,7 @@ if not exist "%SYS_DUMP_EXE%" (
 
 :: Nos movemos al directorio del archivo para que los errores de gcc solo muestren el nombre corto
 pushd "%DIR_ARCHIVO%"
-"%GCC_EXE%" "%ARCHIVO_C_CORTO%" -o "%ARCHIVO_EXE%" -std=c99 -Wall -Wextra > "%ERRFILE%" 2>&1
+"%GCC_EXE%" "%ARCHIVO_C_CORTO%" -I "%INCLUDE_DIR%" -o "%ARCHIVO_EXE%" -std=c99 -Wall -Wextra > "%ERRFILE%" 2>&1
 set "EXIT_CODE=%errorlevel%"
 popd
 

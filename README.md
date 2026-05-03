@@ -195,6 +195,26 @@ axel
 
 La tarea ya esta definida en `.vscode/tasks.json`.
 
+### Compatibilidad Con `conio.h`
+
+El repo incluye una cabecera local en `include/conio.h` para ejercicios que
+pidan funciones clasicas de consola como:
+
+- `gotoxy(x, y)`
+- `clrscr()`
+- `getch()`, `getche()`, `kbhit()`
+- `textcolor()`, `textbackground()`, `normvideo()`
+
+En tus ejercicios puedes escribir:
+
+```c
+#include <conio.h>
+```
+
+Luego compila normalmente con `Ctrl+Shift+B`. El script ya pasa la carpeta
+`include/` a `gcc`, asi que no hace falta copiar librerias ni cambiar el
+comando de compilacion.
+
 ## Flujo Diario
 
 ### Al comenzar un ejercicio
