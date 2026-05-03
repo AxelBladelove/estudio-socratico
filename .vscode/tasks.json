@@ -32,7 +32,7 @@
           "message": 5
         }
       },
-      "detail": "Compila el archivo .c activo, registra el intento en compiler_log.txt y hace git commit automatico."
+      "detail": "Compila el archivo .c activo, registra telemetria en usuarios/<usuario>/... y hace un commit automatico etiquetado por usuario."
     },
     {
       "label": "Ejecutar Binario",

@@ -97,8 +97,8 @@ Abre la terminal integrada (`Ctrl+``) y ejecuta:
 
 ```bash
 git init
-git config user.email "estudiante@estudio.local"
-git config user.name "Estudiante"
+git config user.email "tu-correo@users.noreply.github.com"
+git config user.name "tu-usuario-de-github"
 git add .
 git commit -m "setup_inicial"
 ```
@@ -156,7 +156,9 @@ importante: el Contrato Logico debe ser lo primero que escribes.
 1. Programa normalmente.
 2. Cuando quieras compilar y ejecutar, presiona `Ctrl+Shift+B`.
 3. El script compila con `gcc`, ejecuta el programa si compilo bien, registra
-   todo en `logs/<nombre_del_ejercicio>.log` y hace un commit automatico.
+   todo en `usuarios/<usuario>/logs/<nombre_del_ejercicio>/bloqueN.log`,
+   inicializa `usuarios/<usuario>/errores.md` y hace un commit automatico
+   etiquetado por usuario y duracion acumulada del ejercicio.
 4. Tu solo ves el resultado en la terminal. Sin latencia. Sin internet.
 
 Repite este ciclo las veces que necesites. Cada intento queda grabado.
@@ -182,8 +184,20 @@ Abre el chat de tu IA. Si soporta skills, escribe:
 @sintetizar
 ```
 
-La IA analizara los commits y logs de la sesion, y actualizara `errores.md`
+La IA analizara los commits y logs de la sesion, y actualizara
+`usuarios/<usuario>/errores.md`
 con patrones de error reutilizables para estudiar antes del examen.
+
+Antes de empezar en una PC nueva, crea tu identidad local del clon copiando el
+archivo de ejemplo:
+
+```text
+copy .estudio_usuario.example .estudio_usuario
+```
+
+Luego deja una sola linea con tu slug, por ejemplo `axel` o `eric-gabriel`.
+Si no lo haces, el script intentara derivarlo desde `git config github.user`,
+`git config user.name` o el usuario de Windows.
 
 ## Estructura del Proyecto
 
@@ -195,11 +209,14 @@ estudio-socratico/
 |-- .agent/skills/
 |   |-- revisar/SKILL.md              Protocolo de pista socratica
 |   `-- sintetizar/SKILL.md           Protocolo de cierre de sesion
+|-- .estudio_usuario.example          Ejemplo de identidad local por clon
 |-- setup_laptop.ps1                  Instalador/verificador principal
 |-- package.json                      Atajos npm/pnpm/bun/npx: setup, setup:dry, check
 |-- compilar_y_grabar.bat             Script local de compilacion y telemetria
-|-- errores.md                        Base de conocimiento acumulativa
-|-- logs/*.log                        Historial por ejercicio
+|-- errores.template.md               Plantilla base para inicializar errores.md
+|-- usuarios/<usuario>/errores.md     Base de conocimiento acumulativa por usuario
+|-- usuarios/<usuario>/logs/*.log     Historial por ejercicio y por usuario
+|-- usuarios/README.md                Explica la telemetria personal
 |-- .gitignore                        Excluye ejecutables y temporales
 `-- Ejercicios/*.c                    Tus ejercicios
 ```
@@ -212,7 +229,69 @@ estudio-socratico/
 | Ctrl+Shift+B | Atajo principal para compilar; evita usar `gcc` directo durante la sesion si quieres telemetria completa |
 | @revisar | Solo cuando estas atascado; no usarlo de forma rutinaria |
 | @sintetizar | Solo una vez al terminar el bloque; nunca a mitad de sesion |
-| errores.md | No editar manualmente durante la sesion; la IA lo modifica al sintetizar |
+| usuarios/<usuario>/errores.md | No editar manualmente durante la sesion; la IA lo modifica al sintetizar |
+
+## Colaboracion Minima Recomendada
+
+- Usa `main` solo como base estable del sistema.
+- Crea una rama larga por usuario, por ejemplo `study/axel` o `study/eric-gabriel`.
+- Usa ramas temporales `pair/...` cuando vayan a trabajar juntos en el mismo ejercicio.
+- Deja `.estudio_usuario` con tu slug para que los logs y `errores.md` queden separados por clon. Si no existe, el script usa primero `git config github.user` y luego `git config user.name`.
+
+## Flujo Git Minimo Para Aprender
+
+Crear tu rama personal desde la base:
+
+```bash
+git switch main
+git pull origin main
+git switch -c study/axel
+```
+
+- `git switch main`: te coloca en la rama base.
+- `git pull origin main`: trae la ultima version de GitHub.
+- `git switch -c study/axel`: crea tu rama personal y te mueve a ella.
+
+Ver en que rama estas y que cambiaste:
+
+```bash
+git status
+```
+
+- Muestra la rama actual.
+- Muestra archivos modificados, nuevos o listos para commit.
+
+Subir tu rama por primera vez:
+
+```bash
+git push -u origin study/axel
+```
+
+- `push`: sube tus commits a GitHub.
+- `-u`: deja conectada tu rama local con la remota para futuros `git push` y `git pull` simples.
+
+Traer cambios nuevos de la base a tu rama:
+
+```bash
+git switch study/axel
+git fetch origin
+git merge origin/main
+```
+
+- `fetch`: descarga cambios remotos sin mezclarlos todavia.
+- `merge origin/main`: mezcla la base actualizada dentro de tu rama.
+
+Crear una rama temporal para trabajar juntos:
+
+```bash
+git switch study/axel
+git pull
+git switch -c pair/axel-eric/blackjack
+git push -u origin pair/axel-eric/blackjack
+```
+
+- Esa rama se usa para Live Share o trabajo conjunto en el mismo ejercicio.
+- Cuando terminen, se mezcla de vuelta a la rama que corresponda.
 
 ## Troubleshooting
 
@@ -224,7 +303,8 @@ instala MSYS2/MinGW y agrega `C:\msys64\mingw64\bin` o tu ruta de MinGW al
 `PATH`.
 
 **El git commit falla silenciosamente:**
-ejecuta `git init` y configura `user.email` / `user.name`.
+ejecuta `git init` y configura `user.email` / `user.name`. Si quieres etiquetas
+de commit mas claras por persona, crea `.estudio_usuario` con tu slug antes de compilar. Si usas GitHub, conviene que `user.name` o `github.user` coincidan con tu identidad real.
 
 **La IA no responde a `@sintetizar` o `@revisar`:**
 usa la frase "lee AGENTS.md y ejecuta el protocolo revisar/sintetizar".

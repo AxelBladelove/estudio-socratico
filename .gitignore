@@ -20,9 +20,15 @@ gcc_err2.txt
 gcc_exit.txt
 gcc_test.txt
 
+# Identidad local del clon (no se comparte)
+.estudio_usuario
+
 # NO rastrear estos (son estado interno de maquina, no telemetria):
 logs/*/bloque_actual.txt
+usuarios/*/logs/**/bloque_actual.txt
 
 # SÍ rastrear estos (son la telemetría del sistema):
 # logs/<ejercicio>/bloqueN.log  → un log por bloque de 45 min por ejercicio
 # errores.md                    → base de conocimiento acumulativa
+# usuarios/<usuario>/logs/<ejercicio>/bloqueN.log  → telemetría personal por usuario
+# usuarios/<usuario>/errores.md                    → base de conocimiento por usuario

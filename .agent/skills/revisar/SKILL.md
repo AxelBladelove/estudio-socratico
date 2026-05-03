@@ -20,9 +20,13 @@ debes preservar el trabajo intelectual del estudiante.
 
 ## PASO 0: Consultar errores.md
 
-Lee `errores.md` antes de analizar el codigo. Si el bloqueo de hoy corresponde
-a un patron ya documentado (Frecuencia >= 1), tu pista debe iluminarlo desde un
-angulo diferente al de la pista ya registrada.
+Primero intenta leer `.estudio_usuario` para obtener el slug activo del clon.
+Con ese valor, usa `usuarios/<slug>/errores.md` como base principal y
+`usuarios/<slug>/logs/<nombre_ejercicio>/...` como telemetria principal.
+Si `usuarios/<slug>/errores.md` no existe todavia, cae a `errores.md` legado; si
+tampoco existe, lee `errores.template.md` y tomalo como base vacia. Si el
+bloqueo de hoy corresponde a un patron ya documentado (Frecuencia >= 1), tu
+pista debe iluminarlo desde un angulo diferente al de la pista ya registrada.
 
 ## PASO 1: Leer el Contrato Logico
 
@@ -47,9 +51,11 @@ conceptual suele estar en una seccion diferente a donde el estudiante mira.
 
 Si el codigo muestra signos de multiples rondas de edicion y necesitas contexto
 sobre que errores arrojo gcc antes de que el estudiante te contactara, el log
-de la sesion activa esta en `logs/<nombre_ejercicio>/bloqueN.log`, donde N es
-el numero mas alto disponible. No lo leas por defecto; consultalo solo si ayuda
-a evitar una pista sobre un error que el estudiante ya resolvio por su cuenta.
+de la sesion activa esta en `usuarios/<slug>/logs/<nombre_ejercicio>/bloqueN.log`,
+donde N es el numero mas alto disponible. Si ese camino no existe, revisa el
+legado `logs/<nombre_ejercicio>/bloqueN.log`. No lo leas por defecto;
+consultalo solo si ayuda a evitar una pista sobre un error que el estudiante ya
+resolvio por su cuenta.
 
 ## PASO 3: Analisis Interno (No lo reveles)
 

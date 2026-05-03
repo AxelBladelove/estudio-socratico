@@ -2,8 +2,9 @@
 name: sintetizar
 description: >
   Procesa el historial completo de compilaciones de la sesión de estudio.
-  Lee git log y los logs de bloque en logs/<ejercicio>_bloqueN.log, evalúa semánticamente los errores cometidos
-  comparándolos con el Contrato Lógico del archivo .c, y actualiza errores.md
+  Lee git log y los logs de bloque en usuarios/<usuario>/logs/<ejercicio>/bloqueN.log,
+  evalúa semánticamente los errores cometidos comparándolos con el Contrato
+  Lógico del archivo .c, y actualiza usuarios/<usuario>/errores.md
   con nuevas entradas o incrementando contadores de errores existentes.
   Se invoca UNA vez al final del bloque de estudio (consumo único de tokens).
 ---
@@ -30,7 +31,7 @@ que el estudiante no puede ser por sí mismo.
 - Plan de 38 días: 21 marzo → 28 abril 2026
 
 **Qué debe producir este análisis:**
-Una entrada en `errores.md` es útil si, en 3 semanas antes del examen, el estudiante
+Una entrada en `usuarios/<usuario>/errores.md` es útil si, en 3 semanas antes del examen, el estudiante
 la lee, enfrenta un ejercicio completamente diferente, y reconoce que el mismo modelo
 mental erróneo está en juego. Si la entrada solo describe el error específico de
 esta sesión, no sirve — eso ya está en el git log.
@@ -76,7 +77,8 @@ git log --patch --since="midnight"
 ```
 
 Busca los commits con prefijo `intento_`. El formato del mensaje es:
-`intento_YYYY-MM-DDTHH-MM-SS_exitN` donde N=0 es compilación exitosa y N≠0 es error.
+`intento_<usuario>_YYYY-MM-DDTHH-mm-ss_exitN` donde N=0 es compilación exitosa y
+N≠0 es error.
 
 Si no hay commits desde medianoche pero el log del bloque más reciente
 (`logs/<nombre_ejercicio>/bloqueN.log`) tiene contenido de hoy,
@@ -84,20 +86,30 @@ Si no hay commits desde medianoche pero el log del bloque más reciente
 
 ## PASO 3: Leer el Log de la Sesión
 
-Los logs están organizados en **bloques de 45 minutos**. Cada vez que transcurren
+Los logs están organizados en **bloques de 45 minutos**. Primero resuelve el
+slug del usuario activo leyendo `.estudio_usuario`. Luego busca los logs en:
+
+  usuarios/<usuario>/logs/<nombre_ejercicio>/bloque1.log
+  usuarios/<usuario>/logs/<nombre_ejercicio>/bloque2.log
+  usuarios/<usuario>/logs/<nombre_ejercicio>/bloqueN.log
+
+Si esa ruta todavia no existe, cae al legado en la raiz:
+
+  logs/<nombre_ejercicio>/bloque1.log
+  logs/<nombre_ejercicio>/bloque2.log
+  logs/<nombre_ejercicio>/bloqueN.log
+
+Cada vez que transcurren
 más de 45 minutos desde el inicio de un bloque, el sistema crea automáticamente
 un archivo nuevo. El esquema de archivos para un ejercicio es:
 
-    logs/<nombre_ejercicio>/bloque1.log   ← primer bloque registrado
-    logs/<nombre_ejercicio>/bloque2.log   ← segundo bloque
-    logs/<nombre_ejercicio>/bloqueN.log   ← el más reciente
-
-El archivo `logs/<nombre_ejercicio>/bloque_actual.txt` es un marcador interno del
+El archivo `usuarios/<usuario>/logs/<nombre_ejercicio>/bloque_actual.txt` es un marcador interno del
 sistema (número de bloque activo + timestamp de inicio). Ignóralo.
 
 **Bloque a leer por defecto:** El de número más alto. Para identificarlo, enumera
-todos los archivos `logs/<nombre_ejercicio>/bloque*.log` excluyendo
-`bloque_actual.txt`, y selecciona el de mayor N.
+todos los archivos `usuarios/<usuario>/logs/<nombre_ejercicio>/bloque*.log`
+excluyendo `bloque_actual.txt`, y selecciona el de mayor N. Si no existen,
+repite el proceso sobre el legado `logs/<nombre_ejercicio>/bloque*.log`.
 
 **Cuándo leer bloques anteriores (opcionales):**
 - Si el estudiante lo indica explícitamente ("analiza el bloque 2", "mira la sesión de ayer")
@@ -119,10 +131,12 @@ Lee **todos** los intentos del bloque seleccionado en el PASO 4.
 
 ## PASO 4: Evaluación Semántica
 
-**Antes de analizar la sesión, lee `errores.md`** para conocer los patrones ya
+**Antes de analizar la sesión, lee `usuarios/<usuario>/errores.md`** para conocer los patrones ya
 documentados. Esto es crítico: si hoy aparece el mismo modelo mental erróneo que
 ya tiene Frecuencia ≥ 1, ese es el hallazgo más importante de la sesión — significa
 que el patrón persiste y el estudiante lo llevará al examen si no se aborda.
+Si `usuarios/<usuario>/errores.md` no existe todavía, crea una copia desde
+`errores.md` legado; si tampoco existe, usa `errores.template.md` como base vacía.
 
 Ejecuta este algoritmo interno de análisis:
 
@@ -144,11 +158,11 @@ Ejecuta este algoritmo interno de análisis:
 
 ## PASO 5: Actualizar errores.md
 
-Lee el archivo `errores.md` actual. **NUNCA borres filas existentes.**
+Lee el archivo `usuarios/<usuario>/errores.md` actual. **NUNCA borres filas existentes.**
 
 Para **cada error lógico significativo** encontrado en el análisis:
 
-### ¿El error ya existe en errores.md?
+### ¿El error ya existe en usuarios/<usuario>/errores.md?
 - **SÍ**: Busca la sección por el título o por "Cómo apareció". Incrementa el
   número de **Frecuencia** en 1. No cambies el resto del contenido.
 - **NO**: Agrega una nueva sección al final del archivo con este formato:
@@ -185,7 +199,7 @@ Para **cada error lógico significativo** encontrado en el análisis:
 
 ## PASO 6: Reporte al Estudiante
 
-Después de actualizar `errores.md`, responde en el chat con este formato exacto:
+Después de actualizar `usuarios/<usuario>/errores.md`, responde en el chat con este formato exacto:
 
 ```
 📊 SESIÓN SINTETIZADA
@@ -208,6 +222,6 @@ Después de actualizar `errores.md`, responde en el chat con este formato exacto
 
 - ❌ NO escribir código C en el chat
 - ❌ NO decirle al estudiante explícitamente cómo resolver el error
-- ❌ NO borrar ni reemplazar filas existentes en errores.md
+- ❌ NO borrar ni reemplazar filas existentes en `usuarios/<usuario>/errores.md`
 - ✅ SÍ actualizar la tabla con precisión
 - ✅ SÍ dar el reporte de la sesión
