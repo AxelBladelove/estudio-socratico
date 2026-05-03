@@ -67,14 +67,25 @@ jugador no haya perdido.
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <conio.h>
+
+#define MAXCARTAS 52
+
+int simbolocarta(int indice);
+int valorcarta(int indice);
+int tomarcarta(int mazo[ ]);
+void showcart_xy(int indice, int px, int py);
+int sumacarta(int cartas[ ], int n);
+
 
 
 int main()
 {
 
-return 0;
-}
+printf("%d", MAXCARTAS);
 
+return 0;    
+}
 
 
 
