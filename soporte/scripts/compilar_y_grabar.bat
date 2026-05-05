@@ -13,20 +13,23 @@
 
 setlocal enabledelayedexpansion
 
-<<<<<<< HEAD:compilar_y_grabar.bat
 set "RUN_INLINE=%ESTUDIO_INLINE_RUN%"
 if /i "%~1"=="--inline" (
     set "RUN_INLINE=1"
     shift
 )
-=======
+
 set "SCRIPT_DIR=%~dp0"
-for %%I in ("%SCRIPT_DIR%..\..") do set "REPO_ROOT=%%~fI"
->>>>>>> pair:soporte/scripts/compilar_y_grabar.bat
+set "REPO_ROOT=%CD%"
+if not exist "%REPO_ROOT%\AGENTS.md" (
+    pushd "%SCRIPT_DIR%..\.." >nul
+    set "REPO_ROOT=%CD%"
+    popd >nul
+)
 
 set "INPUT_PATH=%~1"
 if "%INPUT_PATH%"=="" (
-    for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "$root=Join-Path $PWD 'Ejercicios'; if(Test-Path -LiteralPath $root){$file=Get-ChildItem -LiteralPath $root -Filter '*.c' | Sort-Object LastWriteTime -Descending | Select-Object -First 1; if($file){$file.FullName}}"`) do set "INPUT_PATH=%%I"
+    for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "$root=Join-Path $env:REPO_ROOT 'Ejercicios'; if(Test-Path -LiteralPath $root){$file=Get-ChildItem -LiteralPath $root -Filter '*.c' | Sort-Object LastWriteTime -Descending | Select-Object -First 1; if($file){$file.FullName}}"`) do set "INPUT_PATH=%%I"
 )
 
 if "%INPUT_PATH%"=="" (
@@ -65,25 +68,21 @@ if not exist "%ARCHIVO_C%" (
     exit /b 1
 )
 
-<<<<<<< HEAD:compilar_y_grabar.bat
-set "OUTPUT_DIR=%~dp0.output"
-set "LATEST_EXE_FILE=%OUTPUT_DIR%\latest_exe.txt"
-set "USUARIO_CONFIG=%~dp0.estudio_usuario"
-set "ERRORES_TEMPLATE=%~dp0errores.template.md"
-set "ERRORES_LEGACY=%~dp0errores.md"
-=======
 set "RUNTIME_DIR=%REPO_ROOT%\soporte\runtime"
-set "ARCHIVO_EXE=%RUNTIME_DIR%\_output.exe"
+set "OUTPUT_DIR=%RUNTIME_DIR%\builds"
+set "LATEST_EXE_FILE=%RUNTIME_DIR%\latest_exe.txt"
 set "LAUNCH_SCRIPT=%TEMP%\estudio_socratico_launch.cmd"
 set "CMD_EXE=%SystemRoot%\System32\cmd.exe"
 set "CONSOLE_SUPPORT_DIR=%REPO_ROOT%\soporte\consola"
+set "OUTPUT_LAUNCHER_SRC=%CONSOLE_SUPPORT_DIR%\output_launcher.c"
+set "OUTPUT_LAUNCHER_EXE=%RUNTIME_DIR%\_output.exe"
 set "USUARIO_CONFIG=%REPO_ROOT%\.estudio_usuario"
 set "ERRORES_TEMPLATE=%REPO_ROOT%\errores.template.md"
 set "ERRORES_LEGACY=%REPO_ROOT%\errores.md"
->>>>>>> pair:soporte/scripts/compilar_y_grabar.bat
 set "GCC_EXE="
 
 if not exist "%RUNTIME_DIR%\" mkdir "%RUNTIME_DIR%\"
+if not exist "%OUTPUT_DIR%\" mkdir "%OUTPUT_DIR%\"
 
 set "USUARIO_FUENTE="
 if exist "%USUARIO_CONFIG%" (
@@ -106,12 +105,7 @@ set "USUARIO_DIR=%REPO_ROOT%\usuarios\%USUARIO_SLUG%"
 set "LOGS_ROOT=%USUARIO_DIR%\logs"
 set "ERRORES_FILE=%USUARIO_DIR%\errores.md"
 
-<<<<<<< HEAD:compilar_y_grabar.bat
-if not exist "%OUTPUT_DIR%\" mkdir "%OUTPUT_DIR%\"
-if not exist "%~dp0usuarios\" mkdir "%~dp0usuarios\"
-=======
 if not exist "%REPO_ROOT%\usuarios\" mkdir "%REPO_ROOT%\usuarios\"
->>>>>>> pair:soporte/scripts/compilar_y_grabar.bat
 if not exist "%USUARIO_DIR%\" mkdir "%USUARIO_DIR%\"
 if not exist "%LOGS_ROOT%\" mkdir "%LOGS_ROOT%\"
 if not exist "%LOGS_ROOT%\%NOMBRE_BASE%\" mkdir "%LOGS_ROOT%\%NOMBRE_BASE%\"
@@ -121,7 +115,7 @@ if not exist "%ERRORES_FILE%" (
     ) else if exist "%ERRORES_TEMPLATE%" (
         copy /Y "%ERRORES_TEMPLATE%" "%ERRORES_FILE%" >nul
     ) else (
-        > "%ERRORES_FILE%" echo ^<!-- Archivo de errores inicializado automaticamente. --^>
+        > "%ERRORES_FILE%" echo ^<^!-- Archivo de errores inicializado automaticamente. --^>
     )
 )
 
@@ -137,7 +131,7 @@ set "LOG=%LOGS_ROOT%\%NOMBRE_BASE%\bloque%BLOQUE_NUM%.log"
 :: --- Timestamp para el commit ---
 for /f "usebackq delims=" %%T in (`powershell -NoProfile -Command "(Get-Date).ToString('yyyy-MM-ddTHH-mm-ss')"`) do set "TIMESTAMP=%%T"
 set "ARCHIVO_EXE=%OUTPUT_DIR%\%NOMBRE_BASE%_%TIMESTAMP%.exe"
-for /f "usebackq delims=" %%D in (`powershell -NoProfile -Command "$userDir=Join-Path $PWD ('usuarios/' + $env:USUARIO_SLUG + '/logs/' + $env:NOMBRE_BASE);$legacyDir=Join-Path $PWD ('logs/' + $env:NOMBRE_BASE);$now=Get-Date;$start=$null;$candidate=$null;if(Test-Path -LiteralPath $userDir){$candidate=$userDir}elseif(Test-Path -LiteralPath $legacyDir){$candidate=$legacyDir};if($candidate){$firstLog=Get-ChildItem -LiteralPath $candidate -Filter 'bloque*.log' | Sort-Object Name | Select-Object -First 1;if($firstLog){$start=$firstLog.CreationTime}};if(-not $start){$start=$now};$span=New-TimeSpan -Start $start -End $now;if($span.TotalHours -ge 1){'{0:00}h{1:00}m' -f [int]$span.TotalHours,$span.Minutes}else{'{0:00}m' -f [int][Math]::Max(1,[Math]::Round($span.TotalMinutes))}"`) do set "DURACION_EJERCICIO=%%D"
+for /f "usebackq delims=" %%D in (`powershell -NoProfile -Command "$repo=$env:REPO_ROOT;$userDir=Join-Path $repo ('usuarios/' + $env:USUARIO_SLUG + '/logs/' + $env:NOMBRE_BASE);$legacyDir=Join-Path $repo ('logs/' + $env:NOMBRE_BASE);$now=Get-Date;$start=$null;$candidate=$null;if(Test-Path -LiteralPath $userDir){$candidate=$userDir}elseif(Test-Path -LiteralPath $legacyDir){$candidate=$legacyDir};if($candidate){$firstLog=Get-ChildItem -LiteralPath $candidate -Filter 'bloque*.log' | Sort-Object Name | Select-Object -First 1;if($firstLog){$start=$firstLog.CreationTime}};if(-not $start){$start=$now};$span=New-TimeSpan -Start $start -End $now;if($span.TotalHours -ge 1){'{0:00}h{1:00}m' -f [int]$span.TotalHours,$span.Minutes}else{'{0:00}m' -f [int][Math]::Max(1,[Math]::Round($span.TotalMinutes))}"`) do set "DURACION_EJERCICIO=%%D"
 
 :: ============================================================
 :: BLOQUE 1: Separador visual en el log
@@ -163,13 +157,6 @@ echo ------------------------------------------------------------ >> "%LOG%"
 set "ERRFILE=%RUNTIME_DIR%\gcc_errors.txt"
 set "INCLUDE_DIR=%REPO_ROOT%\include"
 for %%I in ("%ARCHIVO_C%") do set "ARCHIVO_C_CORTO=%%~nxI"
-<<<<<<< HEAD:compilar_y_grabar.bat
-set "SYS_DUMP_SRC=%~dp0.agent\sys_dump_console.c"
-set "SYS_DUMP_EXE=%~dp0.agent\sys_dump_console.exe"
-set "OUTPUT_LAUNCHER_SRC=%~dp0.agent\output_launcher.c"
-set "OUTPUT_LAUNCHER_EXE=%~dp0_output.exe"
-set "REBUILD_OUTPUT_LAUNCHER="
-=======
 set "SYS_DUMP_SRC=%CONSOLE_SUPPORT_DIR%\sys_dump_console.c"
 set "SYS_DUMP_EXE=%RUNTIME_DIR%\sys_dump_console.exe"
 set "WAIT_KEY_SRC=%CONSOLE_SUPPORT_DIR%\wait_any_key.c"
@@ -180,7 +167,11 @@ if not exist "%CONIO_SRC%" (
     echo [ERROR] No existe soporte\consola\conio.c. Verifica la integridad del repo.
     exit /b 1
 )
->>>>>>> pair:soporte/scripts/compilar_y_grabar.bat
+
+if not exist "%OUTPUT_LAUNCHER_SRC%" (
+    echo [ERROR] No existe soporte\consola\output_launcher.c. Verifica la integridad del repo.
+    exit /b 1
+)
 
 echo.
 :: === Resolver gcc de forma robusta ===
@@ -198,24 +189,9 @@ if not defined GCC_EXE (
 for %%G in ("%GCC_EXE%") do set "GCC_DIR=%%~dpG"
 set "PATH=%GCC_DIR%;%PATH%"
 
-if exist "%OUTPUT_LAUNCHER_SRC%" (
-    for /f "usebackq delims=" %%R in (`powershell -NoProfile -Command "$src=Get-Item -LiteralPath $env:OUTPUT_LAUNCHER_SRC; $exe=Get-Item -LiteralPath $env:OUTPUT_LAUNCHER_EXE -ErrorAction SilentlyContinue; if(-not $exe -or $src.LastWriteTimeUtc -gt $exe.LastWriteTimeUtc){'1'}"`) do set "REBUILD_OUTPUT_LAUNCHER=%%R"
-    if defined REBUILD_OUTPUT_LAUNCHER (
-        echo [INFO] Compilando launcher fijo _output.exe...
-        "%GCC_EXE%" "%OUTPUT_LAUNCHER_SRC%" -o "%OUTPUT_LAUNCHER_EXE%" -std=c99 -Wall -Wextra >nul 2>&1
-        if exist "%OUTPUT_LAUNCHER_EXE%" (
-            echo [OK] Launcher fijo listo.
-        ) else (
-            echo [ERROR] No se pudo compilar el launcher fijo _output.exe.
-            exit /b 1
-        )
-    )
-) else (
-    echo [ERROR] No existe .agent\output_launcher.c.
-    exit /b 1
-)
-
-if not exist "%SYS_DUMP_EXE%" (
+set "REBUILD_SYS_DUMP="
+for /f "usebackq delims=" %%R in (`powershell -NoProfile -Command "$src=Get-Item -LiteralPath $env:SYS_DUMP_SRC; $exe=Get-Item -LiteralPath $env:SYS_DUMP_EXE -ErrorAction SilentlyContinue; if(-not $exe -or $src.LastWriteTimeUtc -gt $exe.LastWriteTimeUtc){'1'}"`) do set "REBUILD_SYS_DUMP=%%R"
+if defined REBUILD_SYS_DUMP (
     if exist "%SYS_DUMP_SRC%" (
         echo [INFO] Compilando helper local soporte\runtime\sys_dump_console.exe...
         "%GCC_EXE%" "%SYS_DUMP_SRC%" -o "%SYS_DUMP_EXE%" -std=c99 -Wall -Wextra >nul 2>&1
@@ -229,7 +205,9 @@ if not exist "%SYS_DUMP_EXE%" (
     )
 )
 
-if not exist "%WAIT_KEY_EXE%" (
+set "REBUILD_WAIT_KEY="
+for /f "usebackq delims=" %%R in (`powershell -NoProfile -Command "$src=Get-Item -LiteralPath $env:WAIT_KEY_SRC; $exe=Get-Item -LiteralPath $env:WAIT_KEY_EXE -ErrorAction SilentlyContinue; if(-not $exe -or $src.LastWriteTimeUtc -gt $exe.LastWriteTimeUtc){'1'}"`) do set "REBUILD_WAIT_KEY=%%R"
+if defined REBUILD_WAIT_KEY (
     if exist "%WAIT_KEY_SRC%" (
         echo [INFO] Compilando helper local soporte\runtime\wait_any_key.exe...
         "%GCC_EXE%" "%WAIT_KEY_SRC%" -o "%WAIT_KEY_EXE%" -std=c99 -Wall -Wextra >nul 2>&1
@@ -240,6 +218,19 @@ if not exist "%WAIT_KEY_EXE%" (
         )
     ) else (
         echo [AVISO] No existe soporte\consola\wait_any_key.c. Se usara pause como respaldo.
+    )
+)
+
+set "REBUILD_OUTPUT_LAUNCHER="
+for /f "usebackq delims=" %%R in (`powershell -NoProfile -Command "$src=Get-Item -LiteralPath $env:OUTPUT_LAUNCHER_SRC; $exe=Get-Item -LiteralPath $env:OUTPUT_LAUNCHER_EXE -ErrorAction SilentlyContinue; if(-not $exe -or $src.LastWriteTimeUtc -gt $exe.LastWriteTimeUtc){'1'}"`) do set "REBUILD_OUTPUT_LAUNCHER=%%R"
+if defined REBUILD_OUTPUT_LAUNCHER (
+    echo [INFO] Compilando launcher local soporte\runtime\_output.exe...
+    "%GCC_EXE%" "%OUTPUT_LAUNCHER_SRC%" -o "%OUTPUT_LAUNCHER_EXE%" -std=c99 -Wall -Wextra >nul 2>&1
+    if exist "%OUTPUT_LAUNCHER_EXE%" (
+        echo [OK] Launcher local listo.
+    ) else (
+        echo [ERROR] No se pudo compilar soporte\runtime\_output.exe.
+        exit /b 1
     )
 )
 
@@ -260,16 +251,18 @@ echo [EXIT CODE: %EXIT_CODE%] >> "%LOG%"
 echo.
 if %EXIT_CODE%==0 (
     del "%ERRFILE%" >nul 2>&1
-<<<<<<< HEAD:compilar_y_grabar.bat
     > "%LATEST_EXE_FILE%" echo %ARCHIVO_EXE%
     if "%RUN_INLINE%"=="1" (
         echo [OK] Compilacion exitosa -^> Ejecutando %NOMBRE_BASE%.exe en esta terminal...
         echo.
-        "%OUTPUT_LAUNCHER_EXE%"
+        pushd "%REPO_ROOT%"
+        "%ARCHIVO_EXE%"
         set "RUN_EXIT_CODE=!errorlevel!"
+        popd
         echo.
         echo ================================
         echo  Programa finalizado.
+        if not "!RUN_EXIT_CODE!"=="0" echo  El programa devolvio codigo !RUN_EXIT_CODE!.
         echo ================================
         if exist "%SYS_DUMP_EXE%" (
             echo [AVISO] El volcado automatico de consola solo esta disponible en ventana externa.
@@ -277,34 +270,28 @@ if %EXIT_CODE%==0 (
         )
     ) else (
         echo [OK] Compilacion exitosa -^> Abriendo %NOMBRE_BASE%.exe en ventana externa...
-        if exist "%SYS_DUMP_EXE%" (
-            start "%NOMBRE_BASE% — Estudio Socratico" cmd /c ""%OUTPUT_LAUNCHER_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & "%SYS_DUMP_EXE%" "%LOG%" & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
-        ) else (
-            start "%NOMBRE_BASE% — Estudio Socratico" cmd /c ""%OUTPUT_LAUNCHER_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & echo  [AVISO] No se pudo registrar el volcado de consola en el log. & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
+        > "%LAUNCH_SCRIPT%" (
+            echo @echo off
+            echo chcp 437 ^>nul
+            echo "%ARCHIVO_EXE%"
+            echo echo.
+            echo echo ================================
+            echo echo  Programa finalizado.
+            if exist "%SYS_DUMP_EXE%" (
+                echo "%SYS_DUMP_EXE%" "%LOG%"
+            ) else (
+                echo echo  [AVISO] No se pudo registrar el volcado de consola en el log.
+            )
+            echo echo  Presiona cualquier tecla para cerrar esta ventana.
+            echo echo ================================
+            if exist "%WAIT_KEY_EXE%" (
+                echo "%WAIT_KEY_EXE%"
+            ) else (
+                echo pause ^>nul
+            )
         )
-=======
-    > "%LAUNCH_SCRIPT%" (
-        echo @echo off
-        echo chcp 437 ^>nul
-        echo "%ARCHIVO_EXE%"
-        echo echo.
-        echo echo ================================
-        echo echo  Programa finalizado.
-    if exist "%SYS_DUMP_EXE%" (
-        echo "%SYS_DUMP_EXE%" "%LOG%"
-    ) else (
-        echo echo  [AVISO] No se pudo registrar el volcado de consola en el log.
->>>>>>> pair:soporte/scripts/compilar_y_grabar.bat
+        start "%NOMBRE_BASE% - Estudio Socratico" "%CMD_EXE%" /d /c "%LAUNCH_SCRIPT%"
     )
-        echo echo  Presiona cualquier tecla para cerrar esta ventana.
-        echo echo ================================
-    if exist "%WAIT_KEY_EXE%" (
-        echo "%WAIT_KEY_EXE%"
-    ) else (
-        echo pause ^>nul
-    )
-    )
-    start "%NOMBRE_BASE% - Estudio Socratico" "%CMD_EXE%" /d /c "%LAUNCH_SCRIPT%"
 ) else (
     echo [COMPILADOR] Errores detectados:
     echo.

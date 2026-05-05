@@ -3,11 +3,36 @@
 #include <string.h>
 #include <windows.h>
 
+static int build_latest_path(char *buffer, size_t buffer_size)
+{
+    DWORD length = GetModuleFileNameA(NULL, buffer, (DWORD)buffer_size);
+    char *last_separator;
+
+    if (length == 0 || length >= buffer_size) {
+        return 1;
+    }
+
+    last_separator = strrchr(buffer, '\\');
+    if (last_separator == NULL) {
+        return 1;
+    }
+
+    strcpy(last_separator + 1, "latest_exe.txt");
+    return 0;
+}
+
 static int load_latest_target(char *buffer, size_t buffer_size)
 {
-    FILE *fp = fopen(".output\\latest_exe.txt", "r");
+    char latest_file[MAX_PATH * 4];
+    FILE *fp;
     size_t length;
 
+    if (build_latest_path(latest_file, sizeof(latest_file)) != 0) {
+        fprintf(stderr, "[ERROR] No se pudo resolver la ruta de latest_exe.txt.\n");
+        return 1;
+    }
+
+    fp = fopen(latest_file, "r");
     if (!fp) {
         fprintf(stderr, "[ERROR] No hay un binario compilado reciente. Compila primero.\n");
         return 1;

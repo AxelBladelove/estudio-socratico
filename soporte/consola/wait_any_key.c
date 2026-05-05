@@ -1,5 +1,23 @@
 #include <windows.h>
 
+static int estudio_es_tecla_modificadora(WORD virtual_key)
+{
+    switch (virtual_key) {
+    case VK_SHIFT:
+    case VK_CONTROL:
+    case VK_MENU:
+    case VK_LSHIFT:
+    case VK_RSHIFT:
+    case VK_LCONTROL:
+    case VK_RCONTROL:
+    case VK_LMENU:
+    case VK_RMENU:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
 int main(void)
 {
     HANDLE input = GetStdHandle(STD_INPUT_HANDLE);
@@ -23,7 +41,8 @@ int main(void)
             return 1;
         }
 
-        if (record.EventType == KEY_EVENT && record.Event.KeyEvent.bKeyDown) {
+        if (record.EventType == KEY_EVENT && record.Event.KeyEvent.bKeyDown &&
+            !estudio_es_tecla_modificadora(record.Event.KeyEvent.wVirtualKeyCode)) {
             return 0;
         }
     }

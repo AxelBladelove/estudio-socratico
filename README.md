@@ -489,6 +489,7 @@ estudio-socratico/
   |-- consola/
   |   |-- conio.c
   |   |-- console_cp437.h
+  |   |-- output_launcher.c
   |   |-- sys_dump_console.c
   |   `-- wait_any_key.c
   |-- runtime/                      generado localmente; ignorado por git

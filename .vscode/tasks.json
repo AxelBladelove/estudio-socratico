@@ -52,7 +52,7 @@
     {
       "label": "Compilar y Grabar (Live Share Terminal)",
       "type": "shell",
-      "command": ".\\build.cmd",
+      "command": ".\\soporte\\scripts\\build.cmd",
       "args": [
         "--inline",
         "${file}"
