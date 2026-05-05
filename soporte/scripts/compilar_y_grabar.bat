@@ -12,6 +12,9 @@
 
 setlocal enabledelayedexpansion
 
+set "SCRIPT_DIR=%~dp0"
+for %%I in ("%SCRIPT_DIR%..\..") do set "REPO_ROOT=%%~fI"
+
 set "INPUT_PATH=%~1"
 if "%INPUT_PATH%"=="" (
     for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "$root=Join-Path $PWD 'Ejercicios'; if(Test-Path -LiteralPath $root){$file=Get-ChildItem -LiteralPath $root -Filter '*.c' | Sort-Object LastWriteTime -Descending | Select-Object -First 1; if($file){$file.FullName}}"`) do set "INPUT_PATH=%%I"
@@ -27,7 +30,7 @@ if /i "%INPUT_PATH:~0,6%"=="vsls:/" (
     set "INPUT_PATH=%INPUT_PATH:~6%"
     set "INPUT_PATH=%INPUT_PATH:/=\%"
     if "%INPUT_PATH:~0,1%"=="\" set "INPUT_PATH=%INPUT_PATH:~1%"
-    set "INPUT_PATH=%~dp0%INPUT_PATH%"
+    set "INPUT_PATH=%REPO_ROOT%\%INPUT_PATH%"
 )
 
 for %%I in ("%INPUT_PATH%") do (
@@ -53,11 +56,17 @@ if not exist "%ARCHIVO_C%" (
     exit /b 1
 )
 
-set "ARCHIVO_EXE=%~dp0_output.exe"
-set "USUARIO_CONFIG=%~dp0.estudio_usuario"
-set "ERRORES_TEMPLATE=%~dp0errores.template.md"
-set "ERRORES_LEGACY=%~dp0errores.md"
+set "RUNTIME_DIR=%REPO_ROOT%\soporte\runtime"
+set "ARCHIVO_EXE=%RUNTIME_DIR%\_output.exe"
+set "LAUNCH_SCRIPT=%TEMP%\estudio_socratico_launch.cmd"
+set "CMD_EXE=%SystemRoot%\System32\cmd.exe"
+set "CONSOLE_SUPPORT_DIR=%REPO_ROOT%\soporte\consola"
+set "USUARIO_CONFIG=%REPO_ROOT%\.estudio_usuario"
+set "ERRORES_TEMPLATE=%REPO_ROOT%\errores.template.md"
+set "ERRORES_LEGACY=%REPO_ROOT%\errores.md"
 set "GCC_EXE="
+
+if not exist "%RUNTIME_DIR%\" mkdir "%RUNTIME_DIR%\"
 
 set "USUARIO_FUENTE="
 if exist "%USUARIO_CONFIG%" (
@@ -69,11 +78,11 @@ if "%USUARIO_FUENTE%"=="" (
 )
 for /f "usebackq delims=" %%U in (`powershell -NoProfile -Command "$raw=$env:USUARIO_FUENTE; if([string]::IsNullOrWhiteSpace($raw)){ $raw='usuario' }; $slug=$raw.ToLowerInvariant() -replace '[^a-z0-9]+','-'; $slug=$slug.Trim('-'); if([string]::IsNullOrWhiteSpace($slug)){ $slug='usuario' }; $slug"`) do set "USUARIO_SLUG=%%U"
 if not exist "%USUARIO_CONFIG%" > "%USUARIO_CONFIG%" echo %USUARIO_SLUG%
-set "USUARIO_DIR=%~dp0usuarios\%USUARIO_SLUG%"
+set "USUARIO_DIR=%REPO_ROOT%\usuarios\%USUARIO_SLUG%"
 set "LOGS_ROOT=%USUARIO_DIR%\logs"
 set "ERRORES_FILE=%USUARIO_DIR%\errores.md"
 
-if not exist "%~dp0usuarios\" mkdir "%~dp0usuarios\"
+if not exist "%REPO_ROOT%\usuarios\" mkdir "%REPO_ROOT%\usuarios\"
 if not exist "%USUARIO_DIR%\" mkdir "%USUARIO_DIR%\"
 if not exist "%LOGS_ROOT%\" mkdir "%LOGS_ROOT%\"
 if not exist "%LOGS_ROOT%\%NOMBRE_BASE%\" mkdir "%LOGS_ROOT%\%NOMBRE_BASE%\"
@@ -121,11 +130,19 @@ echo ------------------------------------------------------------ >> "%LOG%"
 :: ============================================================
 :: BLOQUE 3: Compilar con gcc — diagnostico + captura completa
 :: ============================================================
-set "ERRFILE=%~dp0gcc_errors.txt"
-set "INCLUDE_DIR=%~dp0include"
+set "ERRFILE=%RUNTIME_DIR%\gcc_errors.txt"
+set "INCLUDE_DIR=%REPO_ROOT%\include"
 for %%I in ("%ARCHIVO_C%") do set "ARCHIVO_C_CORTO=%%~nxI"
-set "SYS_DUMP_SRC=%~dp0.agent\sys_dump_console.c"
-set "SYS_DUMP_EXE=%~dp0.agent\sys_dump_console.exe"
+set "SYS_DUMP_SRC=%CONSOLE_SUPPORT_DIR%\sys_dump_console.c"
+set "SYS_DUMP_EXE=%RUNTIME_DIR%\sys_dump_console.exe"
+set "WAIT_KEY_SRC=%CONSOLE_SUPPORT_DIR%\wait_any_key.c"
+set "WAIT_KEY_EXE=%RUNTIME_DIR%\wait_any_key.exe"
+set "CONIO_SRC=%CONSOLE_SUPPORT_DIR%\conio.c"
+
+if not exist "%CONIO_SRC%" (
+    echo [ERROR] No existe soporte\consola\conio.c. Verifica la integridad del repo.
+    exit /b 1
+)
 
 echo.
 :: === Resolver gcc de forma robusta ===
@@ -145,21 +162,35 @@ set "PATH=%GCC_DIR%;%PATH%"
 
 if not exist "%SYS_DUMP_EXE%" (
     if exist "%SYS_DUMP_SRC%" (
-        echo [INFO] Compilando helper local .agent\sys_dump_console.exe...
+        echo [INFO] Compilando helper local soporte\runtime\sys_dump_console.exe...
         "%GCC_EXE%" "%SYS_DUMP_SRC%" -o "%SYS_DUMP_EXE%" -std=c99 -Wall -Wextra >nul 2>&1
         if exist "%SYS_DUMP_EXE%" (
             echo [OK] Helper local listo.
         ) else (
-            echo [AVISO] No se pudo compilar .agent\sys_dump_console.exe. Se omitira el volcado de consola.
+            echo [AVISO] No se pudo compilar soporte\runtime\sys_dump_console.exe. Se omitira el volcado de consola.
         )
     ) else (
-        echo [AVISO] No existe .agent\sys_dump_console.c. Se omitira el volcado de consola.
+        echo [AVISO] No existe soporte\consola\sys_dump_console.c. Se omitira el volcado de consola.
+    )
+)
+
+if not exist "%WAIT_KEY_EXE%" (
+    if exist "%WAIT_KEY_SRC%" (
+        echo [INFO] Compilando helper local soporte\runtime\wait_any_key.exe...
+        "%GCC_EXE%" "%WAIT_KEY_SRC%" -o "%WAIT_KEY_EXE%" -std=c99 -Wall -Wextra >nul 2>&1
+        if exist "%WAIT_KEY_EXE%" (
+            echo [OK] Helper de espera por tecla listo.
+        ) else (
+            echo [AVISO] No se pudo compilar soporte\runtime\wait_any_key.exe. Se usara pause como respaldo.
+        )
+    ) else (
+        echo [AVISO] No existe soporte\consola\wait_any_key.c. Se usara pause como respaldo.
     )
 )
 
 :: Nos movemos al directorio del archivo para que los errores de gcc solo muestren el nombre corto
 pushd "%DIR_ARCHIVO%"
-"%GCC_EXE%" "%ARCHIVO_C_CORTO%" -I "%INCLUDE_DIR%" -o "%ARCHIVO_EXE%" -std=c99 -Wall -Wextra > "%ERRFILE%" 2>&1
+"%GCC_EXE%" "%ARCHIVO_C_CORTO%" "%CONIO_SRC%" -I "%INCLUDE_DIR%" -o "%ARCHIVO_EXE%" -std=c99 -Wall -Wextra > "%ERRFILE%" 2>&1
 set "EXIT_CODE=%errorlevel%"
 popd
 
@@ -175,11 +206,27 @@ echo.
 if %EXIT_CODE%==0 (
     echo [OK] Compilacion exitosa -^> Abriendo %NOMBRE_BASE%.exe en ventana externa...
     del "%ERRFILE%" >nul 2>&1
+    > "%LAUNCH_SCRIPT%" (
+        echo @echo off
+        echo chcp 437 ^>nul
+        echo "%ARCHIVO_EXE%"
+        echo echo.
+        echo echo ================================
+        echo echo  Programa finalizado.
     if exist "%SYS_DUMP_EXE%" (
-        start "%NOMBRE_BASE% — Estudio Socratico" cmd /c ""%ARCHIVO_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & "%SYS_DUMP_EXE%" "%LOG%" & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
+        echo "%SYS_DUMP_EXE%" "%LOG%"
     ) else (
-        start "%NOMBRE_BASE% — Estudio Socratico" cmd /c ""%ARCHIVO_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & echo  [AVISO] No se pudo registrar el volcado de consola en el log. & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
+        echo echo  [AVISO] No se pudo registrar el volcado de consola en el log.
     )
+        echo echo  Presiona cualquier tecla para cerrar esta ventana.
+        echo echo ================================
+    if exist "%WAIT_KEY_EXE%" (
+        echo "%WAIT_KEY_EXE%"
+    ) else (
+        echo pause ^>nul
+    )
+    )
+    start "%NOMBRE_BASE% - Estudio Socratico" "%CMD_EXE%" /d /c "%LAUNCH_SCRIPT%"
 ) else (
     echo [COMPILADOR] Errores detectados:
     echo.
@@ -195,10 +242,10 @@ if %EXIT_CODE%==0 (
 :: ============================================================
 :: BLOQUE 5: Git commit automatico (el corazon de la telemetria)
 :: ============================================================
-cd /d "%~dp0"
-set "REL_ARCHIVO_C=%ARCHIVO_C:%~dp0=%"
-set "REL_LOG=%LOG:%~dp0=%"
-set "REL_ERRORES=%ERRORES_FILE:%~dp0=%"
+cd /d "%REPO_ROOT%"
+set "REL_ARCHIVO_C=%ARCHIVO_C:%REPO_ROOT%\=%"
+set "REL_LOG=%LOG:%REPO_ROOT%\=%"
+set "REL_ERRORES=%ERRORES_FILE:%REPO_ROOT%\=%"
 
 git add -- "%REL_ARCHIVO_C%" "%REL_LOG%" "%REL_ERRORES%" >nul 2>&1
 git diff --cached --quiet >nul 2>&1

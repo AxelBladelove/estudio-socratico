@@ -16,7 +16,7 @@ resuelva ejercicios por el.
 ## Flujo Local
 
 - El archivo activo `.c` se compila con `Ctrl+Shift+B` en VS Code/Antigravity.
-- La tarea llama a `compilar_y_grabar.bat <archivo.c>`.
+- La tarea llama a `soporte/scripts/compilar_y_grabar.bat <archivo.c>`.
 - La identidad local del clon vive en `.estudio_usuario` y determina `usuarios/<usuario>/...`.
 - Cada intento queda en `usuarios/<usuario>/logs/<nombre_del_ejercicio>/bloqueN.log`.
 - El script tambien hace commits automaticos con mensajes `intento_<usuario>_*_<duracion>_exitN` e inicializa `usuarios/<usuario>/errores.md` si hace falta.

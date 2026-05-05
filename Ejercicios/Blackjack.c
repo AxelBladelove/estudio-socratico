@@ -144,7 +144,7 @@ void showcart_xy(int indice, int px, int py)
    gotoxy(px,py+2);
    printf("%c%c%c%c%c%c%c%c%c", LV, ' ', ' ', ' ', ' ', ' ', ' ', ' ', LV);
    gotoxy(px,py+3);
-   printf("%c%c%c%c%c%c%c%c%c", LV, ' ', ' ', ' ',' ', ' ', ' ', ' ', LV);
+   printf("%c%c%c%c%c%c%c%c%c", LV, ' ', ' ', ' ',3 , ' ', ' ', ' ', LV);
    gotoxy(px,py+4);
    printf("%c%c%c%c%c%c%c%c%c", LV, ' ', ' ', ' ', ' ', ' ', ' ', ' ', LV);
    gotoxy(px,py+5);

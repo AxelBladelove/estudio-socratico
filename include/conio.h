@@ -1,175 +1,107 @@
-#ifndef ESTUDIO_SOCRATICO_CONIO_H
-#define ESTUDIO_SOCRATICO_CONIO_H
+/* A conio implementation for Mingw/Dev-C++.
+ *
+ * Written by:
+ * Hongli Lai <hongli@telekabel.nl>
+ * tkorrovi <tkorrovi@altavista.net> on 2002/02/26.
+ * Andrew Westcott <ajwestco@users.sourceforge.net>
+ *
+ * Offered for use in the public domain without any warranty.
+ */
 
-/*
-   Compatibilidad minima de conio.h para ejercicios de consola en Windows.
-   Permite usar gotoxy, clrscr, getch y algunas funciones comunes de Turbo C
-   compilando con GCC/MinGW.
-*/
-
-#ifdef _WIN32
+#ifndef _CONIO_H_
+#define _CONIO_H_
 
 #include <stdio.h>
 #include <windows.h>
 
-#ifndef BLACK
-#define BLACK 0
-#define BLUE 1
-#define GREEN 2
-#define CYAN 3
-#define RED 4
-#define MAGENTA 5
-#define BROWN 6
-#define LIGHTGRAY 7
-#define DARKGRAY 8
-#define LIGHTBLUE 9
-#define LIGHTGREEN 10
-#define LIGHTCYAN 11
-#define LIGHTRED 12
-#define LIGHTMAGENTA 13
-#define YELLOW 14
-#define WHITE 15
+#ifdef __cplusplus
+extern "C" {
 #endif
+
+#define BLINK 0
+
+typedef enum
+{
+    BLACK,
+    BLUE,
+    GREEN,
+    CYAN,
+    RED,
+    MAGENTA,
+    BROWN,
+    LIGHTGRAY,
+    DARKGRAY,
+    LIGHTBLUE,
+    LIGHTGREEN,
+    LIGHTCYAN,
+    LIGHTRED,
+    LIGHTMAGENTA,
+    YELLOW,
+    WHITE
+} COLORS;
+
+
+#define cgets _cgets
+#define cprintf _cprintf
+#define cputs _cputs
+#define cscanf _cscanf
+#define ScreenClear clrscr
+
+void clreol(void);
+void clrscr(void);
+
+int _conio_gettext(int left, int top, int right, int bottom,
+                   char *str);
+
+void delline(void);
+
+void gotoxy(int x, int y);
+void gotoxy(int x, int y);
+
+void puttext(int left, int top, int right, int bottom, char *str);
+
+void _setcursortype(int type);
+
+void textattr(int _attr);
+
+void textbackground(int color);
+
+void textcolor(int color);
+
+int wherex(void);
+
+int wherey(void);
+
+char *_cgets(char *);
+int _cprintf(const char *, ...);
+int _cputs(const char *);
+int _cscanf(char *, ...);
 
 int _getch(void);
 int _getche(void);
 int _kbhit(void);
+int _putch(int);
+int _ungetch(int);
+
+
+int getch(void);
+int getche(void);
+int kbhit(void);
+int putch(int);
+int ungetch(int);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 static inline HANDLE estudio_conio_stdout(void)
 {
     return GetStdHandle(STD_OUTPUT_HANDLE);
 }
 
-static inline WORD *estudio_conio_default_attr(void)
-{
-    static WORD attr = 7;
-    return &attr;
-}
+#include "../soporte/consola/console_cp437.h"
 
-static inline WORD *estudio_conio_current_attr(void)
-{
-    static WORD attr = 7;
-    return &attr;
-}
+#define printf estudio_printf
 
-static inline void estudio_conio_init_attr(void)
-{
-    static int initialized = 0;
-    CONSOLE_SCREEN_BUFFER_INFO info;
-
-    if (!initialized) {
-        if (GetConsoleScreenBufferInfo(estudio_conio_stdout(), &info)) {
-            *estudio_conio_default_attr() = info.wAttributes;
-            *estudio_conio_current_attr() = info.wAttributes;
-        }
-        initialized = 1;
-    }
-}
-
-static inline void gotoxy(int x, int y)
-{
-    COORD position;
-
-    if (x < 1) {
-        x = 1;
-    }
-    if (y < 1) {
-        y = 1;
-    }
-
-    position.X = (SHORT)(x - 1);
-    position.Y = (SHORT)(y - 1);
-    fflush(stdout);
-    SetConsoleCursorPosition(estudio_conio_stdout(), position);
-}
-
-static inline int wherex(void)
-{
-    CONSOLE_SCREEN_BUFFER_INFO info;
-
-    if (GetConsoleScreenBufferInfo(estudio_conio_stdout(), &info)) {
-        return info.dwCursorPosition.X + 1;
-    }
-    return 1;
-}
-
-static inline int wherey(void)
-{
-    CONSOLE_SCREEN_BUFFER_INFO info;
-
-    if (GetConsoleScreenBufferInfo(estudio_conio_stdout(), &info)) {
-        return info.dwCursorPosition.Y + 1;
-    }
-    return 1;
-}
-
-static inline void clrscr(void)
-{
-    HANDLE out = estudio_conio_stdout();
-    CONSOLE_SCREEN_BUFFER_INFO info;
-    DWORD cells;
-    DWORD written;
-    COORD home = {0, 0};
-
-    if (!GetConsoleScreenBufferInfo(out, &info)) {
-        return;
-    }
-
-    cells = (DWORD)info.dwSize.X * (DWORD)info.dwSize.Y;
-    FillConsoleOutputCharacterA(out, ' ', cells, home, &written);
-    FillConsoleOutputAttribute(out, info.wAttributes, cells, home, &written);
-    SetConsoleCursorPosition(out, home);
-}
-
-static inline void textattr(int attr)
-{
-    estudio_conio_init_attr();
-    *estudio_conio_current_attr() = (WORD)attr;
-    SetConsoleTextAttribute(estudio_conio_stdout(), *estudio_conio_current_attr());
-}
-
-static inline void textcolor(int color)
-{
-    estudio_conio_init_attr();
-    *estudio_conio_current_attr() =
-        (WORD)((*estudio_conio_current_attr() & 0xF0) | (color & 0x0F));
-    SetConsoleTextAttribute(estudio_conio_stdout(), *estudio_conio_current_attr());
-}
-
-static inline void textbackground(int color)
-{
-    estudio_conio_init_attr();
-    *estudio_conio_current_attr() =
-        (WORD)((*estudio_conio_current_attr() & 0x0F) | ((color & 0x0F) << 4));
-    SetConsoleTextAttribute(estudio_conio_stdout(), *estudio_conio_current_attr());
-}
-
-static inline void normvideo(void)
-{
-    estudio_conio_init_attr();
-    *estudio_conio_current_attr() = *estudio_conio_default_attr();
-    SetConsoleTextAttribute(estudio_conio_stdout(), *estudio_conio_default_attr());
-}
-
-static inline int getch(void)
-{
-    return _getch();
-}
-
-static inline int getche(void)
-{
-    return _getche();
-}
-
-static inline int kbhit(void)
-{
-    return _kbhit();
-}
-
-#else
-
-#error "Este conio.h local esta pensado para compilar en Windows con GCC/MinGW."
-
-#endif
-
-#endif
+#endif /* _CONIO_H_ */

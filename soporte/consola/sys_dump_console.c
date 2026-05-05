@@ -15,14 +15,13 @@ int main(int argc, char *argv[]) {
     if (GetConsoleScreenBufferInfo(hConsole, &csbi)) {
         COORD coord = {0, 0};
         DWORD charsRead;
-        char buffer[2048]; // Max console width
-        
+        char buffer[2048];
+
         fprintf(fp, "\n[EJECUCION DEL USUARIO]\n");
 
         for (int y = 0; y < csbi.dwCursorPosition.Y; y++) {
             coord.Y = y;
             if (ReadConsoleOutputCharacterA(hConsole, buffer, csbi.dwSize.X, coord, &charsRead)) {
-                // Trim trailing spaces for cleaner log
                 int lastChar = charsRead - 1;
                 while (lastChar >= 0 && buffer[lastChar] == ' ') {
                     lastChar--;
@@ -32,10 +31,10 @@ int main(int argc, char *argv[]) {
                 fprintf(fp, "%s\n", buffer);
             }
         }
-        
+
         fprintf(fp, "\n------------------------------------------------------------\n");
     }
-    
+
     fclose(fp);
     return 0;
 }

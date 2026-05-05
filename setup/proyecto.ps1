@@ -3,7 +3,8 @@ function Assert-ProjectRoot {
 
     $required = @(
         "AGENTS.md",
-        "compilar_y_grabar.bat",
+        "soporte\scripts\compilar_y_grabar.bat",
+        "soporte\scripts\build.cmd",
         ".vscode\tasks.json",
         ".agent\skills\revisar\SKILL.md",
         ".agent\skills\sintetizar\SKILL.md"
@@ -36,22 +37,27 @@ function Ensure-AgentRuntimeTools {
         [switch]$SoloVerificar
     )
 
-    $sourcePath = Join-Path $RepoRoot ".agent\sys_dump_console.c"
-    $binaryPath = Join-Path $RepoRoot ".agent\sys_dump_console.exe"
+    $sourcePath = Join-Path $RepoRoot "soporte\consola\sys_dump_console.c"
+    $runtimePath = Join-Path $RepoRoot "soporte\runtime"
+    $binaryPath = Join-Path $runtimePath "sys_dump_console.exe"
     $gccPath = "C:\msys64\mingw64\bin\gcc.exe"
 
     if (-not (Test-Path $sourcePath)) {
-        Write-SetupWarning "No existe .agent\sys_dump_console.c; se omitira el helper de consola."
+        Write-SetupWarning "No existe soporte\consola\sys_dump_console.c; se omitira el helper de consola."
         return
     }
 
     if ($SoloVerificar) {
-        Write-SetupInfo "[SoloVerificar] Compilaria .agent\sys_dump_console.exe con GCC."
+        Write-SetupInfo "[SoloVerificar] Compilaria soporte\runtime\sys_dump_console.exe con GCC."
         return
     }
 
+    if (-not (Test-Path $runtimePath)) {
+        New-Item -ItemType Directory -Path $runtimePath -Force | Out-Null
+    }
+
     if (-not (Test-Path $gccPath)) {
-        throw "No se encontro gcc en $gccPath para compilar .agent\sys_dump_console.exe."
+        throw "No se encontro gcc en $gccPath para compilar soporte\consola\sys_dump_console.exe."
     }
 
     $needsBuild = $true
@@ -60,17 +66,17 @@ function Ensure-AgentRuntimeTools {
     }
 
     if (-not $needsBuild) {
-        Write-SetupSuccess ".agent\sys_dump_console.exe ya esta actualizado."
+        Write-SetupSuccess "soporte\runtime\sys_dump_console.exe ya esta actualizado."
         return
     }
 
     Invoke-SetupCommand `
         -FilePath $gccPath `
         -Arguments @($sourcePath, "-o", $binaryPath, "-std=c99", "-Wall", "-Wextra") `
-        -Description "Compilando .agent\sys_dump_console.exe..." `
+        -Description "Compilando soporte\runtime\sys_dump_console.exe..." `
         -SoloVerificar:$false
 
-    Write-SetupSuccess ".agent\sys_dump_console.exe listo."
+    Write-SetupSuccess "soporte\runtime\sys_dump_console.exe listo."
 }
 
 function Configure-ProjectGit {
