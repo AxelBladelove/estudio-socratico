@@ -8,6 +8,10 @@ El proyecto esta pensado para usarse en Windows con VS Code o Antigravity,
 `gcc` y Git. Cada compilacion puede dejar rastro util para revisar despues que
 hiciste, que fallo y que modelo mental se repite.
 
+La identidad Git local del clon debe salir de tu usuario de GitHub. El setup
+usa `git config --local github.user` como fuente principal para `github.user`,
+`user.name` y, si hace falta, `user.email`.
+
 ## Que hace este sistema
 
 - Compila el archivo `.c` activo con `Ctrl+Shift+B`.

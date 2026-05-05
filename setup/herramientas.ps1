@@ -66,6 +66,7 @@ function Request-SetupElevationIfNeeded {
         [switch]$SinWinget,
         [switch]$Elevado,
         [switch]$SinExtensiones,
+        [AllowNull()][string]$GitHubUsuario,
         [string]$GitNombre,
         [string]$GitCorreo
     )
@@ -99,6 +100,7 @@ function Request-SetupElevationIfNeeded {
         "-ExecutionPolicy", "Bypass",
         "-File", $SetupScript,
         "-Elevado",
+        "-GitHubUsuario", $GitHubUsuario,
         "-GitNombre", $GitNombre,
         "-GitCorreo", $GitCorreo
     )

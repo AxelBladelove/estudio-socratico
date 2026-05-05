@@ -77,6 +77,13 @@ if "%USUARIO_FUENTE%"=="" (
     for /f "usebackq delims=" %%U in (`powershell -NoProfile -Command "$name=(git config github.user 2^>$null); if([string]::IsNullOrWhiteSpace($name)){ $name=(git config user.name 2^>$null) }; if([string]::IsNullOrWhiteSpace($name)){ $name=$env:USERNAME }; $name"`) do set "USUARIO_FUENTE=%%U"
 )
 for /f "usebackq delims=" %%U in (`powershell -NoProfile -Command "$raw=$env:USUARIO_FUENTE; if([string]::IsNullOrWhiteSpace($raw)){ $raw='usuario' }; $slug=$raw.ToLowerInvariant() -replace '[^a-z0-9]+','-'; $slug=$slug.Trim('-'); if([string]::IsNullOrWhiteSpace($slug)){ $slug='usuario' }; $slug"`) do set "USUARIO_SLUG=%%U"
+set "GIT_COMMIT_NAME=%USUARIO_SLUG%"
+set "GIT_COMMIT_EMAIL="
+for /f "usebackq delims=" %%U in (`git config --local --get user.email 2^>nul`) do if not defined GIT_COMMIT_EMAIL set "GIT_COMMIT_EMAIL=%%U"
+if not defined GIT_COMMIT_EMAIL (
+    for /f "usebackq delims=" %%U in (`git config --local --get github.user 2^>nul`) do if not defined GIT_COMMIT_EMAIL set "GIT_COMMIT_EMAIL=%%U@users.noreply.github.com"
+)
+if not defined GIT_COMMIT_EMAIL set "GIT_COMMIT_EMAIL=%USUARIO_SLUG%@users.noreply.github.com"
 if not exist "%USUARIO_CONFIG%" > "%USUARIO_CONFIG%" echo %USUARIO_SLUG%
 set "USUARIO_DIR=%REPO_ROOT%\usuarios\%USUARIO_SLUG%"
 set "LOGS_ROOT=%USUARIO_DIR%\logs"
@@ -250,7 +257,7 @@ set "REL_ERRORES=%ERRORES_FILE:%REPO_ROOT%\=%"
 git add -- "%REL_ARCHIVO_C%" "%REL_LOG%" "%REL_ERRORES%" >nul 2>&1
 git diff --cached --quiet >nul 2>&1
 if errorlevel 1 (
-    git commit -m "intento_%USUARIO_SLUG%_%TIMESTAMP%_%DURACION_EJERCICIO%_exit%EXIT_CODE%" >nul 2>&1
+    git -c "user.name=%GIT_COMMIT_NAME%" -c "user.email=%GIT_COMMIT_EMAIL%" commit -m "intento_%USUARIO_SLUG%_%TIMESTAMP%_%DURACION_EJERCICIO%_exit%EXIT_CODE%" >nul 2>&1
     if errorlevel 1 (
         echo [LOG] No se pudo crear el commit automatico. Verifica git status y la configuracion de Git.
     ) else (
