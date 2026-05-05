@@ -495,7 +495,8 @@ estudio-socratico/
   |-- runtime/                      generado localmente; ignorado por git
   `-- scripts/
     |-- build.cmd
-    `-- compilar_y_grabar.bat
+    |-- compilar_y_grabar.bat
+    `-- resolve_build_context.ps1
 ```
 
 ## Migracion Desde El Modelo Legado

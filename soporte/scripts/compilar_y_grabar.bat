@@ -74,12 +74,24 @@ set "LATEST_EXE_FILE=%RUNTIME_DIR%\latest_exe.txt"
 set "LAUNCH_SCRIPT=%TEMP%\estudio_socratico_launch.cmd"
 set "CMD_EXE=%SystemRoot%\System32\cmd.exe"
 set "CONSOLE_SUPPORT_DIR=%REPO_ROOT%\soporte\consola"
+set "BUILD_CONTEXT_SCRIPT=%SCRIPT_DIR%resolve_build_context.ps1"
 set "OUTPUT_LAUNCHER_SRC=%CONSOLE_SUPPORT_DIR%\output_launcher.c"
 set "OUTPUT_LAUNCHER_EXE=%RUNTIME_DIR%\_output.exe"
 set "USUARIO_CONFIG=%REPO_ROOT%\.estudio_usuario"
 set "ERRORES_TEMPLATE=%REPO_ROOT%\errores.template.md"
 set "ERRORES_LEGACY=%REPO_ROOT%\errores.md"
 set "GCC_EXE="
+set "ERRFILE=%RUNTIME_DIR%\gcc_errors.txt"
+set "INCLUDE_DIR=%REPO_ROOT%\include"
+for %%I in ("%ARCHIVO_C%") do set "ARCHIVO_C_CORTO=%%~nxI"
+set "SYS_DUMP_SRC=%CONSOLE_SUPPORT_DIR%\sys_dump_console.c"
+set "SYS_DUMP_EXE=%RUNTIME_DIR%\sys_dump_console.exe"
+set "WAIT_KEY_SRC=%CONSOLE_SUPPORT_DIR%\wait_any_key.c"
+set "WAIT_KEY_EXE=%RUNTIME_DIR%\wait_any_key.exe"
+set "CONIO_SRC=%CONSOLE_SUPPORT_DIR%\conio.c"
+set "CONIO_HEADER=%INCLUDE_DIR%\conio.h"
+set "CONSOLE_CP437_HEADER=%CONSOLE_SUPPORT_DIR%\console_cp437.h"
+set "CONIO_OBJ=%RUNTIME_DIR%\conio_support.o"
 
 if not exist "%RUNTIME_DIR%\" mkdir "%RUNTIME_DIR%\"
 if not exist "%OUTPUT_DIR%\" mkdir "%OUTPUT_DIR%\"
@@ -89,10 +101,14 @@ if exist "%USUARIO_CONFIG%" (
     for /f "usebackq delims=" %%U in ("%USUARIO_CONFIG%") do if not defined USUARIO_FUENTE set "USUARIO_FUENTE=%%U"
 )
 if "%USUARIO_FUENTE%"=="" set "USUARIO_FUENTE=%ESTUDIO_USUARIO%"
-if "%USUARIO_FUENTE%"=="" (
-    for /f "usebackq delims=" %%U in (`powershell -NoProfile -Command "$name=(git config github.user 2^>$null); if([string]::IsNullOrWhiteSpace($name)){ $name=(git config user.name 2^>$null) }; if([string]::IsNullOrWhiteSpace($name)){ $name=$env:USERNAME }; $name"`) do set "USUARIO_FUENTE=%%U"
+
+if not exist "%BUILD_CONTEXT_SCRIPT%" (
+    echo [ERROR] No existe soporte\scripts\resolve_build_context.ps1. Verifica la integridad del repo.
+    exit /b 1
 )
-for /f "usebackq delims=" %%U in (`powershell -NoProfile -Command "$raw=$env:USUARIO_FUENTE; if([string]::IsNullOrWhiteSpace($raw)){ $raw='usuario' }; $slug=$raw.ToLowerInvariant() -replace '[^a-z0-9]+','-'; $slug=$slug.Trim('-'); if([string]::IsNullOrWhiteSpace($slug)){ $slug='usuario' }; $slug"`) do set "USUARIO_SLUG=%%U"
+
+for /f "usebackq delims=" %%V in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%BUILD_CONTEXT_SCRIPT%" -RepoRoot "%REPO_ROOT%" -BaseName "%NOMBRE_BASE%" -UserSource "%USUARIO_FUENTE%" -SysDumpSrc "%SYS_DUMP_SRC%" -SysDumpExe "%SYS_DUMP_EXE%" -WaitKeySrc "%WAIT_KEY_SRC%" -WaitKeyExe "%WAIT_KEY_EXE%" -OutputLauncherSrc "%OUTPUT_LAUNCHER_SRC%" -OutputLauncherExe "%OUTPUT_LAUNCHER_EXE%" -ConioSrc "%CONIO_SRC%" -ConioHeader "%CONIO_HEADER%" -ConsoleCp437Header "%CONSOLE_CP437_HEADER%" -ConioObj "%CONIO_OBJ%"`) do set "%%V"
+
 set "GIT_COMMIT_NAME=%USUARIO_SLUG%"
 set "GIT_COMMIT_EMAIL="
 for /f "usebackq delims=" %%U in (`git config --local --get user.email 2^>nul`) do if not defined GIT_COMMIT_EMAIL set "GIT_COMMIT_EMAIL=%%U"
@@ -119,19 +135,9 @@ if not exist "%ERRORES_FILE%" (
     )
 )
 
-:: --- Determinar numero de bloque (ventana de 45 minutos) ---
-:: Usa logs\<ejercicio>\bloque_actual.txt como marcador interno (ignorado por git).
-:: Formato del marcador: "<N> <timestamp-ISO>" donde N es el numero de bloque activo.
-:: Si han pasado mas de 45 minutos desde que empezo el bloque, N sube automaticamente.
-set "PS_MARKER=%LOGS_ROOT%\%NOMBRE_BASE%\bloque_actual.txt"
-set "BLOQUE_NUM=1"
-for /f "usebackq tokens=*" %%N in (`powershell -NoProfile -Command "$m=$env:PS_MARKER;$now=Get-Date;if(Test-Path -LiteralPath $m){$raw=Get-Content -LiteralPath $m;$i=$raw.IndexOf(' ');$n=[int]$raw.Substring(0,$i);$s=[datetime]$raw.Substring($i+1);if((New-TimeSpan -Start $s -End $now).TotalMinutes -gt 45){$n++;($n.ToString()+' '+$now.ToString('s'))|Set-Content -LiteralPath $m};$n}else{('1 '+$now.ToString('s'))|Set-Content -LiteralPath $m;1}"`) do set "BLOQUE_NUM=%%N"
 set "LOG=%LOGS_ROOT%\%NOMBRE_BASE%\bloque%BLOQUE_NUM%.log"
 
-:: --- Timestamp para el commit ---
-for /f "usebackq delims=" %%T in (`powershell -NoProfile -Command "(Get-Date).ToString('yyyy-MM-ddTHH-mm-ss')"`) do set "TIMESTAMP=%%T"
 set "ARCHIVO_EXE=%OUTPUT_DIR%\%NOMBRE_BASE%_%TIMESTAMP%.exe"
-for /f "usebackq delims=" %%D in (`powershell -NoProfile -Command "$repo=$env:REPO_ROOT;$userDir=Join-Path $repo ('usuarios/' + $env:USUARIO_SLUG + '/logs/' + $env:NOMBRE_BASE);$legacyDir=Join-Path $repo ('logs/' + $env:NOMBRE_BASE);$now=Get-Date;$start=$null;$candidate=$null;if(Test-Path -LiteralPath $userDir){$candidate=$userDir}elseif(Test-Path -LiteralPath $legacyDir){$candidate=$legacyDir};if($candidate){$firstLog=Get-ChildItem -LiteralPath $candidate -Filter 'bloque*.log' | Sort-Object Name | Select-Object -First 1;if($firstLog){$start=$firstLog.CreationTime}};if(-not $start){$start=$now};$span=New-TimeSpan -Start $start -End $now;if($span.TotalHours -ge 1){'{0:00}h{1:00}m' -f [int]$span.TotalHours,$span.Minutes}else{'{0:00}m' -f [int][Math]::Max(1,[Math]::Round($span.TotalMinutes))}"`) do set "DURACION_EJERCICIO=%%D"
 
 :: ============================================================
 :: BLOQUE 1: Separador visual en el log
@@ -154,14 +160,6 @@ echo ------------------------------------------------------------ >> "%LOG%"
 :: ============================================================
 :: BLOQUE 3: Compilar con gcc — diagnostico + captura completa
 :: ============================================================
-set "ERRFILE=%RUNTIME_DIR%\gcc_errors.txt"
-set "INCLUDE_DIR=%REPO_ROOT%\include"
-for %%I in ("%ARCHIVO_C%") do set "ARCHIVO_C_CORTO=%%~nxI"
-set "SYS_DUMP_SRC=%CONSOLE_SUPPORT_DIR%\sys_dump_console.c"
-set "SYS_DUMP_EXE=%RUNTIME_DIR%\sys_dump_console.exe"
-set "WAIT_KEY_SRC=%CONSOLE_SUPPORT_DIR%\wait_any_key.c"
-set "WAIT_KEY_EXE=%RUNTIME_DIR%\wait_any_key.exe"
-set "CONIO_SRC=%CONSOLE_SUPPORT_DIR%\conio.c"
 
 if not exist "%CONIO_SRC%" (
     echo [ERROR] No existe soporte\consola\conio.c. Verifica la integridad del repo.
@@ -189,9 +187,7 @@ if not defined GCC_EXE (
 for %%G in ("%GCC_EXE%") do set "GCC_DIR=%%~dpG"
 set "PATH=%GCC_DIR%;%PATH%"
 
-set "REBUILD_SYS_DUMP="
-for /f "usebackq delims=" %%R in (`powershell -NoProfile -Command "$src=Get-Item -LiteralPath $env:SYS_DUMP_SRC; $exe=Get-Item -LiteralPath $env:SYS_DUMP_EXE -ErrorAction SilentlyContinue; if(-not $exe -or $src.LastWriteTimeUtc -gt $exe.LastWriteTimeUtc){'1'}"`) do set "REBUILD_SYS_DUMP=%%R"
-if defined REBUILD_SYS_DUMP (
+if "%REBUILD_SYS_DUMP%"=="1" (
     if exist "%SYS_DUMP_SRC%" (
         echo [INFO] Compilando helper local soporte\runtime\sys_dump_console.exe...
         "%GCC_EXE%" "%SYS_DUMP_SRC%" -o "%SYS_DUMP_EXE%" -std=c99 -Wall -Wextra >nul 2>&1
@@ -205,9 +201,7 @@ if defined REBUILD_SYS_DUMP (
     )
 )
 
-set "REBUILD_WAIT_KEY="
-for /f "usebackq delims=" %%R in (`powershell -NoProfile -Command "$src=Get-Item -LiteralPath $env:WAIT_KEY_SRC; $exe=Get-Item -LiteralPath $env:WAIT_KEY_EXE -ErrorAction SilentlyContinue; if(-not $exe -or $src.LastWriteTimeUtc -gt $exe.LastWriteTimeUtc){'1'}"`) do set "REBUILD_WAIT_KEY=%%R"
-if defined REBUILD_WAIT_KEY (
+if "%REBUILD_WAIT_KEY%"=="1" (
     if exist "%WAIT_KEY_SRC%" (
         echo [INFO] Compilando helper local soporte\runtime\wait_any_key.exe...
         "%GCC_EXE%" "%WAIT_KEY_SRC%" -o "%WAIT_KEY_EXE%" -std=c99 -Wall -Wextra >nul 2>&1
@@ -221,9 +215,7 @@ if defined REBUILD_WAIT_KEY (
     )
 )
 
-set "REBUILD_OUTPUT_LAUNCHER="
-for /f "usebackq delims=" %%R in (`powershell -NoProfile -Command "$src=Get-Item -LiteralPath $env:OUTPUT_LAUNCHER_SRC; $exe=Get-Item -LiteralPath $env:OUTPUT_LAUNCHER_EXE -ErrorAction SilentlyContinue; if(-not $exe -or $src.LastWriteTimeUtc -gt $exe.LastWriteTimeUtc){'1'}"`) do set "REBUILD_OUTPUT_LAUNCHER=%%R"
-if defined REBUILD_OUTPUT_LAUNCHER (
+if "%REBUILD_OUTPUT_LAUNCHER%"=="1" (
     echo [INFO] Compilando launcher local soporte\runtime\_output.exe...
     "%GCC_EXE%" "%OUTPUT_LAUNCHER_SRC%" -o "%OUTPUT_LAUNCHER_EXE%" -std=c99 -Wall -Wextra >nul 2>&1
     if exist "%OUTPUT_LAUNCHER_EXE%" (
@@ -234,9 +226,20 @@ if defined REBUILD_OUTPUT_LAUNCHER (
     )
 )
 
+if "%REBUILD_CONIO_OBJ%"=="1" (
+    echo [INFO] Compilando cache local soporte\runtime\conio_support.o...
+    "%GCC_EXE%" "%CONIO_SRC%" -I "%INCLUDE_DIR%" -c -o "%CONIO_OBJ%" -std=c99 -Wall -Wextra >nul 2>&1
+    if exist "%CONIO_OBJ%" (
+        echo [OK] Cache de conio lista.
+    ) else (
+        echo [ERROR] No se pudo compilar soporte\runtime\conio_support.o.
+        exit /b 1
+    )
+)
+
 :: Nos movemos al directorio del archivo para que los errores de gcc solo muestren el nombre corto
 pushd "%DIR_ARCHIVO%"
-"%GCC_EXE%" "%ARCHIVO_C_CORTO%" "%CONIO_SRC%" -I "%INCLUDE_DIR%" -o "%ARCHIVO_EXE%" -std=c99 -Wall -Wextra > "%ERRFILE%" 2>&1
+"%GCC_EXE%" "%ARCHIVO_C_CORTO%" "%CONIO_OBJ%" -I "%INCLUDE_DIR%" -o "%ARCHIVO_EXE%" -std=c99 -Wall -Wextra > "%ERRFILE%" 2>&1
 set "EXIT_CODE=%errorlevel%"
 popd
 
