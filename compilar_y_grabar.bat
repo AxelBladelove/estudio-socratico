@@ -60,7 +60,8 @@ if not exist "%ARCHIVO_C%" (
     exit /b 1
 )
 
-set "ARCHIVO_EXE=%~dp0_output.exe"
+set "OUTPUT_DIR=%~dp0.output"
+set "LATEST_EXE_FILE=%OUTPUT_DIR%\latest_exe.txt"
 set "USUARIO_CONFIG=%~dp0.estudio_usuario"
 set "ERRORES_TEMPLATE=%~dp0errores.template.md"
 set "ERRORES_LEGACY=%~dp0errores.md"
@@ -80,6 +81,7 @@ set "USUARIO_DIR=%~dp0usuarios\%USUARIO_SLUG%"
 set "LOGS_ROOT=%USUARIO_DIR%\logs"
 set "ERRORES_FILE=%USUARIO_DIR%\errores.md"
 
+if not exist "%OUTPUT_DIR%\" mkdir "%OUTPUT_DIR%\"
 if not exist "%~dp0usuarios\" mkdir "%~dp0usuarios\"
 if not exist "%USUARIO_DIR%\" mkdir "%USUARIO_DIR%\"
 if not exist "%LOGS_ROOT%\" mkdir "%LOGS_ROOT%\"
@@ -105,6 +107,7 @@ set "LOG=%LOGS_ROOT%\%NOMBRE_BASE%\bloque%BLOQUE_NUM%.log"
 
 :: --- Timestamp para el commit ---
 for /f "usebackq delims=" %%T in (`powershell -NoProfile -Command "(Get-Date).ToString('yyyy-MM-ddTHH-mm-ss')"`) do set "TIMESTAMP=%%T"
+set "ARCHIVO_EXE=%OUTPUT_DIR%\%NOMBRE_BASE%_%TIMESTAMP%.exe"
 for /f "usebackq delims=" %%D in (`powershell -NoProfile -Command "$userDir=Join-Path $PWD ('usuarios/' + $env:USUARIO_SLUG + '/logs/' + $env:NOMBRE_BASE);$legacyDir=Join-Path $PWD ('logs/' + $env:NOMBRE_BASE);$now=Get-Date;$start=$null;$candidate=$null;if(Test-Path -LiteralPath $userDir){$candidate=$userDir}elseif(Test-Path -LiteralPath $legacyDir){$candidate=$legacyDir};if($candidate){$firstLog=Get-ChildItem -LiteralPath $candidate -Filter 'bloque*.log' | Sort-Object Name | Select-Object -First 1;if($firstLog){$start=$firstLog.CreationTime}};if(-not $start){$start=$now};$span=New-TimeSpan -Start $start -End $now;if($span.TotalHours -ge 1){'{0:00}h{1:00}m' -f [int]$span.TotalHours,$span.Minutes}else{'{0:00}m' -f [int][Math]::Max(1,[Math]::Round($span.TotalMinutes))}"`) do set "DURACION_EJERCICIO=%%D"
 
 :: ============================================================
@@ -133,6 +136,9 @@ set "INCLUDE_DIR=%~dp0include"
 for %%I in ("%ARCHIVO_C%") do set "ARCHIVO_C_CORTO=%%~nxI"
 set "SYS_DUMP_SRC=%~dp0.agent\sys_dump_console.c"
 set "SYS_DUMP_EXE=%~dp0.agent\sys_dump_console.exe"
+set "OUTPUT_LAUNCHER_SRC=%~dp0.agent\output_launcher.c"
+set "OUTPUT_LAUNCHER_EXE=%~dp0_output.exe"
+set "REBUILD_OUTPUT_LAUNCHER="
 
 echo.
 :: === Resolver gcc de forma robusta ===
@@ -149,6 +155,23 @@ if not defined GCC_EXE (
 
 for %%G in ("%GCC_EXE%") do set "GCC_DIR=%%~dpG"
 set "PATH=%GCC_DIR%;%PATH%"
+
+if exist "%OUTPUT_LAUNCHER_SRC%" (
+    for /f "usebackq delims=" %%R in (`powershell -NoProfile -Command "$src=Get-Item -LiteralPath $env:OUTPUT_LAUNCHER_SRC; $exe=Get-Item -LiteralPath $env:OUTPUT_LAUNCHER_EXE -ErrorAction SilentlyContinue; if(-not $exe -or $src.LastWriteTimeUtc -gt $exe.LastWriteTimeUtc){'1'}"`) do set "REBUILD_OUTPUT_LAUNCHER=%%R"
+    if defined REBUILD_OUTPUT_LAUNCHER (
+        echo [INFO] Compilando launcher fijo _output.exe...
+        "%GCC_EXE%" "%OUTPUT_LAUNCHER_SRC%" -o "%OUTPUT_LAUNCHER_EXE%" -std=c99 -Wall -Wextra >nul 2>&1
+        if exist "%OUTPUT_LAUNCHER_EXE%" (
+            echo [OK] Launcher fijo listo.
+        ) else (
+            echo [ERROR] No se pudo compilar el launcher fijo _output.exe.
+            exit /b 1
+        )
+    )
+) else (
+    echo [ERROR] No existe .agent\output_launcher.c.
+    exit /b 1
+)
 
 if not exist "%SYS_DUMP_EXE%" (
     if exist "%SYS_DUMP_SRC%" (
@@ -181,10 +204,11 @@ echo [EXIT CODE: %EXIT_CODE%] >> "%LOG%"
 echo.
 if %EXIT_CODE%==0 (
     del "%ERRFILE%" >nul 2>&1
+    > "%LATEST_EXE_FILE%" echo %ARCHIVO_EXE%
     if "%RUN_INLINE%"=="1" (
         echo [OK] Compilacion exitosa -^> Ejecutando %NOMBRE_BASE%.exe en esta terminal...
         echo.
-        "%ARCHIVO_EXE%"
+        "%OUTPUT_LAUNCHER_EXE%"
         set "RUN_EXIT_CODE=!errorlevel!"
         echo.
         echo ================================
@@ -197,9 +221,9 @@ if %EXIT_CODE%==0 (
     ) else (
         echo [OK] Compilacion exitosa -^> Abriendo %NOMBRE_BASE%.exe en ventana externa...
         if exist "%SYS_DUMP_EXE%" (
-            start "%NOMBRE_BASE% — Estudio Socratico" cmd /c ""%ARCHIVO_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & "%SYS_DUMP_EXE%" "%LOG%" & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
+            start "%NOMBRE_BASE% — Estudio Socratico" cmd /c ""%OUTPUT_LAUNCHER_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & "%SYS_DUMP_EXE%" "%LOG%" & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
         ) else (
-            start "%NOMBRE_BASE% — Estudio Socratico" cmd /c ""%ARCHIVO_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & echo  [AVISO] No se pudo registrar el volcado de consola en el log. & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
+            start "%NOMBRE_BASE% — Estudio Socratico" cmd /c ""%OUTPUT_LAUNCHER_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & echo  [AVISO] No se pudo registrar el volcado de consola en el log. & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
         )
     )
 ) else (
