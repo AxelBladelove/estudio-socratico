@@ -37,7 +37,7 @@
     {
       "label": "Ejecutar Binario",
       "type": "shell",
-      "command": ".\\_output.exe",
+      "command": ".\\ejecutar_ultimo_binario.bat",
       "group": "test",
       "presentation": {
         "reveal": "always",

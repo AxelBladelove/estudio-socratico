@@ -1,3 +1,10 @@
+ 
+============================================================ 
+INTENTO: 2026-05-04T20-03-04 
+ARCHIVO: C:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\Ejercicios\Blackjack.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
 
 /*Escribir un programa en C que simule un juego de â€œBlackJackâ€ entre la computadora y un
 jugador. La computadora serÃ¡ quien repartirÃ¡ las cartas.
@@ -64,12 +71,10 @@ Computadora.
 4. Desde el â€œmainâ€ iniciar la iteraciÃ³n entre computador y jugador permitiendo seleccionar
 las cartas e indicando el total que van acumulando.
 5. Realizar las funciones showcart_xy y sumarcarta.
-
 6. Controlar las situaciones del juego:
 a. Indicar al jugador cuando pierde
 b. La computadora debe pedir una carta adicional siempre y cuando no sume 21 y el
 jugador no haya perdido.
-
 7. El jugador podrÃ¡ jugar cuantos juegos desee
 8. Al finalizar el juego se debe presentar la cantidad de juegos jugados, ganados y perdidos.*/ 
 
@@ -110,23 +115,7 @@ int main()
    int mazo[MAXCARTAS] = {0};
    int jugador[MAXCARTAREP];
    int computadora[MAXCARTAREP];
-   int cantcart_jugador = 0;
-   int cantcart_computadora = 0;
-   showcart_xy(1, 1, 1);
-
-
-   jugador [cantcart_jugador] = tomarcarta(mazo); 
-   cantcart_jugador += 1;
-   jugador [cantcart_jugador] = tomarcarta(mazo); 
-   cantcart_jugador += 1;
-
-   computadora[cantcart_computadora] = tomarcarta(mazo);
-   cantcart_computadora += 1;
-   computadora[cantcart_computadora] = tomarcarta(mazo);
-   cantcart_computadora += 1;
-   
-   sumacarta(jugador, cantcart_jugador);
-   sumacarta(computadora, cantcart_computadora);
+   showcart_xy(5, 5, 5);
 
    return 0;    
 }
@@ -200,11 +189,8 @@ int valcart(int indice)
    int val = valorcarta(indice);
 
    if ( val >= 10 )
-   {
       return 10;
-   }  
-   else
-      return val;
+   return val;
 }
 
 
@@ -227,6 +213,42 @@ int sumacarta(int cartas[ ], int n)
    {
       total -= 10, cantA--;
    }
+} 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Blackjack.c: In function 'main':
+Blackjack.c:110:8: warning: unused variable 'computadora' [-Wunused-variable]
+  110 |    int computadora[MAXCARTAREP];
+      |        ^~~~~~~~~~~
+Blackjack.c:109:8: warning: unused variable 'jugador' [-Wunused-variable]
+  109 |    int jugador[MAXCARTAREP];
+      |        ^~~~~~~
+Blackjack.c:108:8: warning: unused variable 'mazo' [-Wunused-variable]
+  108 |    int mazo[MAXCARTAS] = {0};
+      |        ^~~~
+Blackjack.c: In function 'showcart_xy':
+Blackjack.c:158:22: warning: unused parameter 'indice' [-Wunused-parameter]
+  158 | void showcart_xy(int indice, int px, int py)
+      |                  ~~~~^~~~~~
+Blackjack.c: In function 'sumacarta':
+Blackjack.c:209:1: warning: control reaches end of non-void function [-Wreturn-type]
+  209 | }
+      | ^
+[EXIT CODE: 0] 
 
-   return total;
-}
+[EJECUCION DEL USUARIO]
+
+
+
+
+    ÚÄÄÄÄÄÄÄ¿
+    ³       ³
+    ³       ³
+    ³      ³
+    ³       ³
+    ³       ³
+    ÀÄÄÄÄÄÄÄÙ
+================================
+ Programa finalizado.
+
+------------------------------------------------------------
