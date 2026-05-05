@@ -3,7 +3,8 @@ function Assert-ProjectRoot {
 
     $required = @(
         "AGENTS.md",
-        "compilar_y_grabar.bat",
+        "soporte\scripts\compilar_y_grabar.bat",
+        "soporte\scripts\build.cmd",
         ".vscode\tasks.json",
         ".agent\skills\revisar\SKILL.md",
         ".agent\skills\sintetizar\SKILL.md"
@@ -36,22 +37,27 @@ function Ensure-AgentRuntimeTools {
         [switch]$SoloVerificar
     )
 
-    $sourcePath = Join-Path $RepoRoot ".agent\sys_dump_console.c"
-    $binaryPath = Join-Path $RepoRoot ".agent\sys_dump_console.exe"
+    $sourcePath = Join-Path $RepoRoot "soporte\consola\sys_dump_console.c"
+    $runtimePath = Join-Path $RepoRoot "soporte\runtime"
+    $binaryPath = Join-Path $runtimePath "sys_dump_console.exe"
     $gccPath = "C:\msys64\mingw64\bin\gcc.exe"
 
     if (-not (Test-Path $sourcePath)) {
-        Write-SetupWarning "No existe .agent\sys_dump_console.c; se omitira el helper de consola."
+        Write-SetupWarning "No existe soporte\consola\sys_dump_console.c; se omitira el helper de consola."
         return
     }
 
     if ($SoloVerificar) {
-        Write-SetupInfo "[SoloVerificar] Compilaria .agent\sys_dump_console.exe con GCC."
+        Write-SetupInfo "[SoloVerificar] Compilaria soporte\runtime\sys_dump_console.exe con GCC."
         return
     }
 
+    if (-not (Test-Path $runtimePath)) {
+        New-Item -ItemType Directory -Path $runtimePath -Force | Out-Null
+    }
+
     if (-not (Test-Path $gccPath)) {
-        throw "No se encontro gcc en $gccPath para compilar .agent\sys_dump_console.exe."
+        throw "No se encontro gcc en $gccPath para compilar soporte\consola\sys_dump_console.exe."
     }
 
     $needsBuild = $true
@@ -60,23 +66,79 @@ function Ensure-AgentRuntimeTools {
     }
 
     if (-not $needsBuild) {
-        Write-SetupSuccess ".agent\sys_dump_console.exe ya esta actualizado."
+        Write-SetupSuccess "soporte\runtime\sys_dump_console.exe ya esta actualizado."
         return
     }
 
     Invoke-SetupCommand `
         -FilePath $gccPath `
         -Arguments @($sourcePath, "-o", $binaryPath, "-std=c99", "-Wall", "-Wextra") `
-        -Description "Compilando .agent\sys_dump_console.exe..." `
+        -Description "Compilando soporte\runtime\sys_dump_console.exe..." `
         -SoloVerificar:$false
 
-    Write-SetupSuccess ".agent\sys_dump_console.exe listo."
+    Write-SetupSuccess "soporte\runtime\sys_dump_console.exe listo."
+}
+
+function Resolve-ProjectGitIdentity {
+    param(
+        [string]$RepoRoot,
+        [AllowNull()][string]$GitPath,
+        [AllowNull()][string]$GitHubUsuario,
+        [AllowNull()][string]$GitNombre,
+        [AllowNull()][string]$GitCorreo
+    )
+
+    $configuredGitHubUser = $null
+    $configuredGitName = $null
+    $configuredGitEmail = $null
+
+    if ($GitPath -and (Test-Path (Join-Path $RepoRoot ".git"))) {
+        Push-Location $RepoRoot
+        try {
+            $configuredGitHubUser = (& $GitPath config --local --get github.user 2>$null | Select-Object -First 1)
+            $configuredGitName = (& $GitPath config --local --get user.name 2>$null | Select-Object -First 1)
+            $configuredGitEmail = (& $GitPath config --local --get user.email 2>$null | Select-Object -First 1)
+        } finally {
+            Pop-Location
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($GitHubUsuario)) {
+        $GitHubUsuario = $configuredGitHubUser
+    }
+
+    if ([string]::IsNullOrWhiteSpace($GitHubUsuario)) {
+        throw "No se encontro github.user. Configura tu usuario de GitHub con 'git config --local github.user <tu_usuario>' o ejecuta el setup pasando -GitHubUsuario <tu_usuario>."
+    }
+
+    if ([string]::IsNullOrWhiteSpace($GitNombre) -or ($GitNombre -eq "Estudiante")) {
+        if (-not [string]::IsNullOrWhiteSpace($configuredGitName) -and ($configuredGitName -ne "Estudiante")) {
+            $GitNombre = $configuredGitName
+        } else {
+            $GitNombre = $GitHubUsuario
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($GitCorreo) -or ($GitCorreo -eq "estudiante@estudio.local")) {
+        if (-not [string]::IsNullOrWhiteSpace($configuredGitEmail) -and ($configuredGitEmail -ne "estudiante@estudio.local")) {
+            $GitCorreo = $configuredGitEmail
+        } else {
+            $GitCorreo = ("{0}@users.noreply.github.com" -f $GitHubUsuario.ToLowerInvariant())
+        }
+    }
+
+    return @{
+        GitHubUsuario = $GitHubUsuario
+        GitNombre = $GitNombre
+        GitCorreo = $GitCorreo
+    }
 }
 
 function Configure-ProjectGit {
     param(
         [string]$RepoRoot,
         [AllowNull()][string]$GitPath,
+        [string]$GitHubUsuario,
         [string]$GitNombre,
         [string]$GitCorreo,
         [switch]$SoloVerificar
@@ -93,6 +155,7 @@ function Configure-ProjectGit {
         Write-SetupSuccess "Repositorio Git ya existe."
     }
 
+    Invoke-SetupCommand -FilePath $GitPath -Arguments @("config", "github.user", $GitHubUsuario) -Description "Configurando github.user local..." -SoloVerificar:$SoloVerificar
     Invoke-SetupCommand -FilePath $GitPath -Arguments @("config", "user.name", $GitNombre) -Description "Configurando user.name local..." -SoloVerificar:$SoloVerificar
     Invoke-SetupCommand -FilePath $GitPath -Arguments @("config", "user.email", $GitCorreo) -Description "Configurando user.email local..." -SoloVerificar:$SoloVerificar
 }

@@ -25,6 +25,9 @@ gcc_test.txt
 # Identidad local del clon (no se comparte)
 .estudio_usuario
 
+# Runtime local generado por el wrapper de compilacion
+soporte/runtime/
+
 # NO rastrear estos (son estado interno de maquina, no telemetria):
 logs/*/bloque_actual.txt
 usuarios/*/logs/**/bloque_actual.txt

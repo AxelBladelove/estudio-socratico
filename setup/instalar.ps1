@@ -3,8 +3,9 @@ param(
     [switch]$SinWinget,
     [switch]$SinExtensiones,
     [switch]$Elevado,
-    [string]$GitNombre = "Estudiante",
-    [string]$GitCorreo = "estudiante@estudio.local"
+    [AllowNull()][string]$GitHubUsuario,
+    [AllowNull()][string]$GitNombre,
+    [AllowNull()][string]$GitCorreo
 )
 
 $ErrorActionPreference = "Stop"
@@ -40,6 +41,7 @@ try {
         -SoloVerificar:$SoloVerificar `
         -SinWinget:$SinWinget `
         -Elevado:$Elevado `
+        -GitHubUsuario $GitHubUsuario `
         -GitNombre $GitNombre `
         -GitCorreo $GitCorreo `
         -SinExtensiones:$SinExtensiones
@@ -50,8 +52,21 @@ try {
     Write-SetupStep "Verificando herramientas base"
     $tools = Ensure-Tools -ToolSpecs $toolSpecs -SoloVerificar:$SoloVerificar -SinWinget:$SinWinget
 
+    $gitIdentity = Resolve-ProjectGitIdentity `
+        -RepoRoot $RepoRoot `
+        -GitPath $tools["Git"] `
+        -GitHubUsuario $GitHubUsuario `
+        -GitNombre $GitNombre `
+        -GitCorreo $GitCorreo
+
     Write-SetupStep "Configurando Git local"
-    Configure-ProjectGit -RepoRoot $RepoRoot -GitPath $tools["Git"] -GitNombre $GitNombre -GitCorreo $GitCorreo -SoloVerificar:$SoloVerificar
+    Configure-ProjectGit `
+        -RepoRoot $RepoRoot `
+        -GitPath $tools["Git"] `
+        -GitHubUsuario $gitIdentity["GitHubUsuario"] `
+        -GitNombre $gitIdentity["GitNombre"] `
+        -GitCorreo $gitIdentity["GitCorreo"] `
+        -SoloVerificar:$SoloVerificar
 
     Write-SetupStep "Instalando y validando GCC"
     Ensure-GccToolchain -RepoRoot $RepoRoot -SoloVerificar:$SoloVerificar -SinWinget:$SinWinget

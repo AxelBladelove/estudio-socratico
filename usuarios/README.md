@@ -19,7 +19,7 @@ Luego edita `.estudio_usuario` y deja una sola linea con tu slug, por ejemplo:
 axel
 ```
 
-Si el archivo no existe, `compilar_y_grabar.bat` lo crea automaticamente usando
+Si el archivo no existe, `soporte/scripts/compilar_y_grabar.bat` lo crea automaticamente usando
 `ESTUDIO_USUARIO`, `git config github.user`, `git user.name` o el usuario de Windows.
 
 Compatibilidad:

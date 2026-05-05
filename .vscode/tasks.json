@@ -4,7 +4,7 @@
     {
       "label": "Compilar y Grabar (Sistema Socratico)",
       "type": "shell",
-      "command": ".\\build.cmd",
+      "command": ".\\soporte\\scripts\\build.cmd",
       "args": [
         "${file}"
       ],
@@ -40,7 +40,7 @@
     {
       "label": "Ejecutar Binario",
       "type": "shell",
-      "command": ".\\_output.exe",
+      "command": ".\\soporte\\runtime\\_output.exe",
       "group": "test",
       "presentation": {
         "reveal": "always",

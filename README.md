@@ -8,6 +8,10 @@ El proyecto esta pensado para usarse en Windows con VS Code o Antigravity,
 `gcc` y Git. Cada compilacion puede dejar rastro util para revisar despues que
 hiciste, que fallo y que modelo mental se repite.
 
+La identidad Git local del clon debe salir de tu usuario de GitHub. El setup
+usa `git config --local github.user` como fuente principal para `github.user`,
+`user.name` y, si hace falta, `user.email`.
+
 ## Que hace este sistema
 
 - Compila el archivo `.c` activo con `Ctrl+Shift+B`.
@@ -39,7 +43,7 @@ Ese slug determina estas rutas:
 
 El archivo `.estudio_usuario` esta ignorado por Git: cada persona tiene el suyo.
 
-Si no existe, `compilar_y_grabar.bat` intenta derivarlo en este orden:
+Si no existe, `soporte/scripts/compilar_y_grabar.bat` intenta derivarlo en este orden:
 
 1. `ESTUDIO_USUARIO`
 2. `git config github.user`
@@ -368,7 +372,7 @@ git add .
 Añadir un archivo concreto:
 
 ```bash
-git add compilar_y_grabar.bat
+git add soporte/scripts/compilar_y_grabar.bat
 ```
 
 Hacer commit manual:
@@ -445,11 +449,16 @@ estudio-socratico/
 |   |-- skills/
 |   |   |-- revisar/SKILL.md
 |   |   `-- sintetizar/SKILL.md
-|   |-- sys_dump_console.c
-|   `-- sys_dump_console.exe
 |-- .vscode/
 |   |-- codex-instructions.md
 |   `-- tasks.json
+|-- soporte/
+|   |-- consola/
+|   |   |-- conio.c
+|   |   |-- console_cp437.h
+|   |   |-- sys_dump_console.c
+|   |   `-- wait_any_key.c
+|   `-- runtime/        (generado localmente; ignorado por git)
 |-- setup/
 |   |-- instalar.cmd
 |   |-- instalar.ps1
@@ -470,13 +479,22 @@ estudio-socratico/
 |               `-- bloque_actual.txt
 |-- Ejercicios/
 |-- AGENTS.md
-|-- compilar_y_grabar.bat
 |-- errores.template.md
 |-- errores.md                        legado durante migracion
 |-- logs/                             legado durante migracion
 |-- .estudio_usuario.example
 |-- package.json
-`-- README.md
+|-- README.md
+`-- soporte/
+  |-- consola/
+  |   |-- conio.c
+  |   |-- console_cp437.h
+  |   |-- sys_dump_console.c
+  |   `-- wait_any_key.c
+  |-- runtime/                      generado localmente; ignorado por git
+  `-- scripts/
+    |-- build.cmd
+    `-- compilar_y_grabar.bat
 ```
 
 ## Migracion Desde El Modelo Legado
