@@ -94,15 +94,4 @@ int ungetch(int);
 }
 #endif
 
-static inline HANDLE estudio_conio_stdout(void)
-{
-    return GetStdHandle(STD_OUTPUT_HANDLE);
-}
-
-#include "../soporte/consola/console_cp437.h"
-
-#define printf estudio_printf
-#define putchar estudio_putchar
-#define puts estudio_puts
-
 #endif /* _CONIO_H_ */

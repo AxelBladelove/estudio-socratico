@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include <windows.h>
 #include "conio.h"
 
@@ -206,8 +207,7 @@ void puttext(int left, int top, int right, int bottom, char *str)
 
     for (y = 0; y < height; y++) {
         for (x = 0; x < width; x++) {
-            unsigned char byte = str[n] ? (unsigned char)str[n++] : ' ';
-            buffer[(y * width) + x].Char.UnicodeChar = estudio_conio_map_cp437_byte(byte);
+            buffer[(y * width) + x].Char.AsciiChar = str[n] ? str[n++] : ' ';
             buffer[(y * width) + x].Attributes = conio_attr();
         }
     }
@@ -276,8 +276,14 @@ int wherey(void)
 
 int _putch(int character)
 {
-    unsigned char byte = (unsigned char)character;
-    return estudio_conio_write_cp437((const char *)&byte, 1) == 1 ? character : EOF;
+    char byte = (char)character;
+    DWORD written = 0;
+
+    if (WriteFile(conio_output(), &byte, 1, &written, NULL) && written == 1) {
+        return character;
+    }
+
+    return EOF;
 }
 
 int putch(int character)
@@ -291,7 +297,7 @@ int _cputs(const char *text)
         return EOF;
     }
 
-    return estudio_conio_write_cp437(text, strlen(text)) >= 0 ? 0 : EOF;
+    return fputs(text, stdout) >= 0 ? 0 : EOF;
 }
 
 int _cprintf(const char *format, ...)
@@ -300,7 +306,7 @@ int _cprintf(const char *format, ...)
     int written;
 
     va_start(args, format);
-    written = estudio_vprintf(format, args);
+    written = vprintf(format, args);
     va_end(args);
 
     return written;

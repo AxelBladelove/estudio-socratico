@@ -86,7 +86,6 @@ set "INCLUDE_DIR=%REPO_ROOT%\include"
 for %%I in ("%ARCHIVO_C%") do set "ARCHIVO_C_CORTO=%%~nxI"
 set "CONIO_SRC=%CONSOLE_SUPPORT_DIR%\conio.c"
 set "CONIO_HEADER=%INCLUDE_DIR%\conio.h"
-set "CONSOLE_CP437_HEADER=%CONSOLE_SUPPORT_DIR%\console_cp437.h"
 set "CONIO_OBJ=%RUNTIME_DIR%\conio_support.o"
 
 if not exist "%RUNTIME_DIR%\" mkdir "%RUNTIME_DIR%\"
@@ -119,7 +118,7 @@ if not exist "%FINALIZE_SCRIPT%" (
     exit /b 1
 )
 
-for /f "usebackq delims=" %%V in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%BUILD_CONTEXT_SCRIPT%" -RepoRoot "%REPO_ROOT%" -BaseName "%NOMBRE_BASE%" -UserSource "%USUARIO_FUENTE%" -OutputLauncherSrc "%OUTPUT_LAUNCHER_SRC%" -OutputLauncherExe "%OUTPUT_LAUNCHER_EXE%" -ConioSrc "%CONIO_SRC%" -ConioHeader "%CONIO_HEADER%" -ConsoleCp437Header "%CONSOLE_CP437_HEADER%" -ConioObj "%CONIO_OBJ%"`) do set "%%V"
+for /f "usebackq delims=" %%V in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%BUILD_CONTEXT_SCRIPT%" -RepoRoot "%REPO_ROOT%" -BaseName "%NOMBRE_BASE%" -UserSource "%USUARIO_FUENTE%" -OutputLauncherSrc "%OUTPUT_LAUNCHER_SRC%" -OutputLauncherExe "%OUTPUT_LAUNCHER_EXE%" -ConioSrc "%CONIO_SRC%" -ConioHeader "%CONIO_HEADER%" -ConioObj "%CONIO_OBJ%"`) do set "%%V"
 
 set "GIT_COMMIT_NAME=%GIT_AUTHOR_NAME%"
 set "GIT_COMMIT_EMAIL=%GIT_AUTHOR_EMAIL%"

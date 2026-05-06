@@ -20,9 +20,6 @@ param(
     [string]$ConioHeader,
 
     [Parameter(Mandatory = $true)]
-    [string]$ConsoleCp437Header,
-
-    [Parameter(Mandatory = $true)]
     [string]$ConioObj
 )
 
@@ -253,4 +250,4 @@ Write-Output ('BLOQUE_NUM=' + $blockNumber)
 Write-Output ('TIMESTAMP=' + $now.ToString('yyyy-MM-ddTHH-mm-ss'))
 Write-Output ('DURACION_EJERCICIO=' + $duration)
 Write-Output ('REBUILD_OUTPUT_LAUNCHER=' + (Test-RebuildNeeded -OutputPath $OutputLauncherExe -DependencyPaths @($OutputLauncherSrc)))
-Write-Output ('REBUILD_CONIO_OBJ=' + (Test-RebuildNeeded -OutputPath $ConioObj -DependencyPaths @($ConioSrc, $ConioHeader, $ConsoleCp437Header)))
+Write-Output ('REBUILD_CONIO_OBJ=' + (Test-RebuildNeeded -OutputPath $ConioObj -DependencyPaths @($ConioSrc, $ConioHeader)))
