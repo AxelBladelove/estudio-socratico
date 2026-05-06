@@ -182,11 +182,7 @@ void showcart_xy(int indice, int px, int py)
    gotoxy(px,py+2);
    printf("%c%c%c%c%c%c%c%c%c", LV, ' ', ' ', ' ', ' ', ' ', ' ', ' ', LV);
    gotoxy(px,py+3);
-<<<<<<< HEAD
-   printf("%c%c%c%c%c%c%c%c%c", LV, ' ', ' ', ' ',3 , ' ', ' ', ' ', LV);
-=======
    printf("%c%c%c%c%c%c%c%c%c", LV, ' ', ' ', ' ', 3, ' ', ' ', ' ', LV);
->>>>>>> 230d7abe59d85aa9572e85dc6d362512880a372d
    gotoxy(px,py+4);
    printf("%c%c%c%c%c%c%c%c%c", LV, ' ', ' ', ' ', ' ', ' ', ' ', ' ', LV);
    gotoxy(px,py+5);
