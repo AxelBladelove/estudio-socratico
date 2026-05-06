@@ -68,6 +68,7 @@ if not exist "%ARCHIVO_C%" (
     exit /b 1
 )
 
+<<<<<<< HEAD:soporte/scripts/compilar_y_grabar.bat
 set "RUNTIME_DIR=%REPO_ROOT%\soporte\runtime"
 set "OUTPUT_DIR=%RUNTIME_DIR%\builds"
 set "LATEST_EXE_FILE=%RUNTIME_DIR%\latest_exe.txt"
@@ -78,6 +79,13 @@ set "OUTPUT_LAUNCHER_EXE=%RUNTIME_DIR%\_output.exe"
 set "USUARIO_CONFIG=%REPO_ROOT%\.estudio_usuario"
 set "ERRORES_TEMPLATE=%REPO_ROOT%\errores.template.md"
 set "ERRORES_LEGACY=%REPO_ROOT%\errores.md"
+=======
+set "OUTPUT_DIR=%~dp0.output"
+set "LATEST_EXE_FILE=%OUTPUT_DIR%\latest_exe.txt"
+set "USUARIO_CONFIG=%~dp0.estudio_usuario"
+set "ERRORES_TEMPLATE=%~dp0errores.template.md"
+set "ERRORES_LEGACY=%~dp0errores.md"
+>>>>>>> 230d7abe59d85aa9572e85dc6d362512880a372d:compilar_y_grabar.bat
 set "GCC_EXE="
 set "ERRFILE=%RUNTIME_DIR%\gcc_errors.txt"
 set "INCLUDE_DIR=%REPO_ROOT%\include"
@@ -110,7 +118,12 @@ set "USUARIO_DIR=%REPO_ROOT%\usuarios\%USUARIO_SLUG%"
 set "LOGS_ROOT=%USUARIO_DIR%\logs"
 set "ERRORES_FILE=%USUARIO_DIR%\errores.md"
 
+<<<<<<< HEAD:soporte/scripts/compilar_y_grabar.bat
 if not exist "%REPO_ROOT%\usuarios\" mkdir "%REPO_ROOT%\usuarios\"
+=======
+if not exist "%OUTPUT_DIR%\" mkdir "%OUTPUT_DIR%\"
+if not exist "%~dp0usuarios\" mkdir "%~dp0usuarios\"
+>>>>>>> 230d7abe59d85aa9572e85dc6d362512880a372d:compilar_y_grabar.bat
 if not exist "%USUARIO_DIR%\" mkdir "%USUARIO_DIR%\"
 if not exist "%LOGS_ROOT%\" mkdir "%LOGS_ROOT%\"
 if not exist "%LOGS_ROOT%\%NOMBRE_BASE%\" mkdir "%LOGS_ROOT%\%NOMBRE_BASE%\"
@@ -126,7 +139,14 @@ if not exist "%ERRORES_FILE%" (
 
 set "LOG=%LOGS_ROOT%\%NOMBRE_BASE%\bloque%BLOQUE_NUM%.log"
 
+<<<<<<< HEAD:soporte/scripts/compilar_y_grabar.bat
 set "ARCHIVO_EXE=%OUTPUT_DIR%\%NOMBRE_BASE%_%TIMESTAMP%.exe"
+=======
+:: --- Timestamp para el commit ---
+for /f "usebackq delims=" %%T in (`powershell -NoProfile -Command "(Get-Date).ToString('yyyy-MM-ddTHH-mm-ss')"`) do set "TIMESTAMP=%%T"
+set "ARCHIVO_EXE=%OUTPUT_DIR%\%NOMBRE_BASE%_%TIMESTAMP%.exe"
+for /f "usebackq delims=" %%D in (`powershell -NoProfile -Command "$userDir=Join-Path $PWD ('usuarios/' + $env:USUARIO_SLUG + '/logs/' + $env:NOMBRE_BASE);$legacyDir=Join-Path $PWD ('logs/' + $env:NOMBRE_BASE);$now=Get-Date;$start=$null;$candidate=$null;if(Test-Path -LiteralPath $userDir){$candidate=$userDir}elseif(Test-Path -LiteralPath $legacyDir){$candidate=$legacyDir};if($candidate){$firstLog=Get-ChildItem -LiteralPath $candidate -Filter 'bloque*.log' | Sort-Object Name | Select-Object -First 1;if($firstLog){$start=$firstLog.CreationTime}};if(-not $start){$start=$now};$span=New-TimeSpan -Start $start -End $now;if($span.TotalHours -ge 1){'{0:00}h{1:00}m' -f [int]$span.TotalHours,$span.Minutes}else{'{0:00}m' -f [int][Math]::Max(1,[Math]::Round($span.TotalMinutes))}"`) do set "DURACION_EJERCICIO=%%D"
+>>>>>>> 230d7abe59d85aa9572e85dc6d362512880a372d:compilar_y_grabar.bat
 
 :: ============================================================
 :: BLOQUE 1: Separador visual en el log
@@ -149,6 +169,7 @@ echo ------------------------------------------------------------ >> "%LOG%"
 :: ============================================================
 :: BLOQUE 3: Compilar con gcc — diagnostico + captura completa
 :: ============================================================
+<<<<<<< HEAD:soporte/scripts/compilar_y_grabar.bat
 
 if not exist "%CONIO_SRC%" (
     echo [ERROR] No existe soporte\consola\conio.c. Verifica la integridad del repo.
@@ -159,6 +180,16 @@ if not exist "%OUTPUT_LAUNCHER_SRC%" (
     echo [ERROR] No existe soporte\consola\output_launcher.c. Verifica la integridad del repo.
     exit /b 1
 )
+=======
+set "ERRFILE=%~dp0gcc_errors.txt"
+set "INCLUDE_DIR=%~dp0include"
+for %%I in ("%ARCHIVO_C%") do set "ARCHIVO_C_CORTO=%%~nxI"
+set "SYS_DUMP_SRC=%~dp0.agent\sys_dump_console.c"
+set "SYS_DUMP_EXE=%~dp0.agent\sys_dump_console.exe"
+set "RUNNER_SRC=%~dp0.agent\codeblocks_console_runner.c"
+set "RUNNER_EXE=%~dp0.agent\codeblocks_console_runner.exe"
+set "REBUILD_RUNNER="
+>>>>>>> 230d7abe59d85aa9572e85dc6d362512880a372d:compilar_y_grabar.bat
 
 echo.
 :: === Resolver gcc de forma robusta ===
@@ -198,6 +229,21 @@ if "%REBUILD_CONIO_OBJ%"=="1" (
     )
 )
 
+if exist "%RUNNER_SRC%" (
+    for /f "usebackq delims=" %%R in (`powershell -NoProfile -Command "$src=Get-Item -LiteralPath $env:RUNNER_SRC; $exe=Get-Item -LiteralPath $env:RUNNER_EXE -ErrorAction SilentlyContinue; if(-not $exe -or $src.LastWriteTimeUtc -gt $exe.LastWriteTimeUtc){'1'}"`) do set "REBUILD_RUNNER=%%R"
+    if defined REBUILD_RUNNER (
+        echo [INFO] Compilando helper local .agent\codeblocks_console_runner.exe...
+        "%GCC_EXE%" "%RUNNER_SRC%" -o "%RUNNER_EXE%" -std=c99 -Wall -Wextra >nul 2>&1
+        if exist "%RUNNER_EXE%" (
+            echo [OK] Helper de consola listo.
+        ) else (
+            echo [AVISO] No se pudo compilar .agent\codeblocks_console_runner.exe. Se usara la ruta heredada.
+        )
+    )
+) else (
+    echo [AVISO] No existe .agent\codeblocks_console_runner.c. Se usara la ruta heredada.
+)
+
 :: Nos movemos al directorio del archivo para que los errores de gcc solo muestren el nombre corto
 pushd "%DIR_ARCHIVO%"
 "%GCC_EXE%" "%ARCHIVO_C_CORTO%" "%CONIO_OBJ%" -I "%INCLUDE_DIR%" -o "%ARCHIVO_EXE%" -std=c99 -Wall -Wextra > "%ERRFILE%" 2>&1
@@ -216,6 +262,7 @@ echo.
 if %EXIT_CODE%==0 (
     del "%ERRFILE%" >nul 2>&1
     > "%LATEST_EXE_FILE%" echo %ARCHIVO_EXE%
+<<<<<<< HEAD:soporte/scripts/compilar_y_grabar.bat
     if "%RUN_INLINE%"=="1" (
         echo [OK] Compilacion exitosa -^> Ejecutando %NOMBRE_BASE%.exe en esta terminal...
         echo.
@@ -229,6 +276,14 @@ if %EXIT_CODE%==0 (
         start "%NOMBRE_BASE% - Estudio Socratico" /wait /D "%REPO_ROOT%" "%OUTPUT_LAUNCHER_EXE%" --run "%ARCHIVO_EXE%" --log "%LOG%"
         set "RUN_EXIT_CODE=!errorlevel!"
         if not "!RUN_EXIT_CODE!"=="0" echo [RUN] El programa devolvio codigo !RUN_EXIT_CODE!.
+=======
+    if exist "%RUNNER_EXE%" (
+        start "%NOMBRE_BASE% - Estudio Socratico" "%RUNNER_EXE%" "%ARCHIVO_EXE%" "%LOG%" "%SYS_DUMP_EXE%"
+    ) else if exist "%SYS_DUMP_EXE%" (
+        start "%NOMBRE_BASE% — Estudio Socratico" cmd /c "chcp 437 >nul & "%ARCHIVO_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & "%SYS_DUMP_EXE%" "%LOG%" & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
+    ) else (
+        start "%NOMBRE_BASE% — Estudio Socratico" cmd /c "chcp 437 >nul & "%ARCHIVO_EXE%" & echo. & echo ================================ & echo  Programa finalizado. & echo  [AVISO] No se pudo registrar el volcado de consola en el log. & echo  Presiona cualquier tecla para cerrar esta ventana. & echo ================================ & pause > nul"
+>>>>>>> 230d7abe59d85aa9572e85dc6d362512880a372d:compilar_y_grabar.bat
     )
 ) else (
     echo [COMPILADOR] Errores detectados:

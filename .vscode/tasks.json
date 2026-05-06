@@ -40,7 +40,11 @@
     {
       "label": "Ejecutar Binario",
       "type": "shell",
+<<<<<<< HEAD
       "command": ".\\soporte\\runtime\\_output.exe",
+=======
+      "command": ".\\ejecutar_ultimo_binario.bat",
+>>>>>>> 230d7abe59d85aa9572e85dc6d362512880a372d
       "group": "test",
       "presentation": {
         "reveal": "always",
