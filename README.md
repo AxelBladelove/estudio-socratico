@@ -10,7 +10,9 @@ hiciste, que fallo y que modelo mental se repite.
 
 La identidad Git local del clon debe salir de tu usuario de GitHub. El setup
 usa `git config --local github.user` como fuente principal para `github.user`,
-`user.name` y, si hace falta, `user.email`.
+`user.name` y, si hace falta, `user.email`. Los commits automaticos usan esa
+identidad Git como autor; `.estudio_usuario` solo decide la carpeta de
+telemetria.
 
 ## Que hace este sistema
 
@@ -28,6 +30,10 @@ usa `git config --local github.user` como fuente principal para `github.user`,
 
 Cada clon local del repo debe tener un archivo `.estudio_usuario` con una sola
 linea: tu slug personal.
+
+Este archivo vive en la raiz a proposito: identifica el clon local completo.
+No se sube a GitHub. Si necesitas cambiar de usuario en una maquina, edita esa
+linea y los nuevos intentos pasaran a `usuarios/<slug>/...`.
 
 Ejemplos:
 
@@ -174,12 +180,23 @@ setup\instalar.cmd -SoloVerificar -SinWinget -SinExtensiones
 
 ```bash
 git init
-git config user.email "tu-correo@users.noreply.github.com"
 git config user.name "tu-usuario-de-github"
+git config user.email "tu-usuario-de-github@users.noreply.github.com"
 git config github.user "tu-usuario-de-github"
 git add .
 git commit -m "setup_inicial"
 ```
+
+Para este repo, usa configuracion local (`--local`) por clon. Ejemplo:
+
+```bash
+git config --local github.user AxelBladelove
+git config --local user.name AxelBladelove
+git config --local user.email AxelBladelove@users.noreply.github.com
+```
+
+Si GitHub no atribuye tus commits a tu cuenta, revisa que `user.email` sea un
+correo verificado en GitHub o tu correo noreply de GitHub.
 
 ### 3. Crear Tu Identidad Local Del Clon
 
@@ -242,10 +259,33 @@ Ejemplo:
 2. Presiona `Ctrl+Shift+B` para compilar.
 3. El sistema:
    - compila con `gcc`
-   - abre el ejecutable en una ventana aparte si compilo
+   - abre el ejecutable en una ventana aparte estilo Code::Blocks si compilo
    - guarda log en `usuarios/<usuario>/logs/<ejercicio>/bloqueN.log`
    - asegura que exista `usuarios/<usuario>/errores.md`
    - hace un commit automatico si hay cambios rastreables
+
+### Ejecucion Estilo Code::Blocks
+
+La tarea por defecto imita el flujo clasico de Code::Blocks:
+
+- compila desde el editor;
+- si la compilacion fue exitosa, abre una consola externa;
+- muestra el resultado del programa;
+- imprime `Process returned ... execution time ...`;
+- espera una tecla antes de cerrar.
+
+Mientras esa consola esta abierta, la tarea de build queda ocupada. Esto evita
+abrir muchas instancias por accidente y permite que el commit automatico ocurra
+despues de registrar la ejecucion en el log.
+
+Para Live Share existe una tarea separada:
+
+```text
+Compilar y Grabar (Live Share Terminal)
+```
+
+Esa tarea ejecuta el programa en la terminal compartida para que todos vean la
+misma salida sin compartir pantalla.
 
 ### Si te atascas
 
@@ -456,8 +496,9 @@ estudio-socratico/
 |   |-- consola/
 |   |   |-- conio.c
 |   |   |-- console_cp437.h
-|   |   |-- sys_dump_console.c
-|   |   `-- wait_any_key.c
+|   |   |-- output_launcher.c
+|   |   |-- sys_dump_console.c       (legado)
+|   |   `-- wait_any_key.c           (legado)
 |   `-- runtime/        (generado localmente; ignorado por git)
 |-- setup/
 |   |-- instalar.cmd
@@ -490,8 +531,8 @@ estudio-socratico/
   |   |-- conio.c
   |   |-- console_cp437.h
   |   |-- output_launcher.c
-  |   |-- sys_dump_console.c
-  |   `-- wait_any_key.c
+  |   |-- sys_dump_console.c        (legado)
+  |   `-- wait_any_key.c            (legado)
   |-- runtime/                      generado localmente; ignorado por git
   `-- scripts/
     |-- build.cmd
@@ -546,9 +587,13 @@ para empezar a usar el sistema nuevo.
 
 - `.estudio_usuario`
 - `*.exe`
+- `*.o` / `*.obj`
+- `.output/`
+- `soporte/runtime/`
 - `logs/<ejercicio>/bloque_actual.txt`
 - `usuarios/<usuario>/logs/<ejercicio>/bloque_actual.txt`
 - archivos temporales del compilador
+- artefactos locales de pruebas dentro de `.agent/`
 
 ## Archivos Rastreados Por Git
 
@@ -575,9 +620,11 @@ instala MSYS2/MinGW y agrega `C:\msys64\mingw64\bin` o tu ruta equivalente al
 `PATH`.
 
 **El git commit falla silenciosamente:**
-ejecuta `git init` y configura `user.email`, `user.name` y, si quieres,
-`github.user`. Si quieres separar bien tu telemetria, crea `.estudio_usuario`
-antes de compilar.
+ejecuta `git init` y configura `github.user`, `user.name` y `user.email` con
+`git config --local`. No uses valores genericos como `Estudiante` ni
+`estudiante@estudio.local`: el setup actual los rechaza como identidad vieja.
+Si quieres separar bien tu telemetria, crea `.estudio_usuario` antes de
+compilar.
 
 **La IA no responde a `@sintetizar` o `@revisar`:**
 usa la frase:

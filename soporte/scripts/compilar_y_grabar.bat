@@ -71,8 +71,6 @@ if not exist "%ARCHIVO_C%" (
 set "RUNTIME_DIR=%REPO_ROOT%\soporte\runtime"
 set "OUTPUT_DIR=%RUNTIME_DIR%\builds"
 set "LATEST_EXE_FILE=%RUNTIME_DIR%\latest_exe.txt"
-set "LAUNCH_SCRIPT=%TEMP%\estudio_socratico_launch.cmd"
-set "CMD_EXE=%SystemRoot%\System32\cmd.exe"
 set "CONSOLE_SUPPORT_DIR=%REPO_ROOT%\soporte\consola"
 set "BUILD_CONTEXT_SCRIPT=%SCRIPT_DIR%resolve_build_context.ps1"
 set "OUTPUT_LAUNCHER_SRC=%CONSOLE_SUPPORT_DIR%\output_launcher.c"
@@ -84,10 +82,6 @@ set "GCC_EXE="
 set "ERRFILE=%RUNTIME_DIR%\gcc_errors.txt"
 set "INCLUDE_DIR=%REPO_ROOT%\include"
 for %%I in ("%ARCHIVO_C%") do set "ARCHIVO_C_CORTO=%%~nxI"
-set "SYS_DUMP_SRC=%CONSOLE_SUPPORT_DIR%\sys_dump_console.c"
-set "SYS_DUMP_EXE=%RUNTIME_DIR%\sys_dump_console.exe"
-set "WAIT_KEY_SRC=%CONSOLE_SUPPORT_DIR%\wait_any_key.c"
-set "WAIT_KEY_EXE=%RUNTIME_DIR%\wait_any_key.exe"
 set "CONIO_SRC=%CONSOLE_SUPPORT_DIR%\conio.c"
 set "CONIO_HEADER=%INCLUDE_DIR%\conio.h"
 set "CONSOLE_CP437_HEADER=%CONSOLE_SUPPORT_DIR%\console_cp437.h"
@@ -107,15 +101,10 @@ if not exist "%BUILD_CONTEXT_SCRIPT%" (
     exit /b 1
 )
 
-for /f "usebackq delims=" %%V in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%BUILD_CONTEXT_SCRIPT%" -RepoRoot "%REPO_ROOT%" -BaseName "%NOMBRE_BASE%" -UserSource "%USUARIO_FUENTE%" -SysDumpSrc "%SYS_DUMP_SRC%" -SysDumpExe "%SYS_DUMP_EXE%" -WaitKeySrc "%WAIT_KEY_SRC%" -WaitKeyExe "%WAIT_KEY_EXE%" -OutputLauncherSrc "%OUTPUT_LAUNCHER_SRC%" -OutputLauncherExe "%OUTPUT_LAUNCHER_EXE%" -ConioSrc "%CONIO_SRC%" -ConioHeader "%CONIO_HEADER%" -ConsoleCp437Header "%CONSOLE_CP437_HEADER%" -ConioObj "%CONIO_OBJ%"`) do set "%%V"
+for /f "usebackq delims=" %%V in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%BUILD_CONTEXT_SCRIPT%" -RepoRoot "%REPO_ROOT%" -BaseName "%NOMBRE_BASE%" -UserSource "%USUARIO_FUENTE%" -OutputLauncherSrc "%OUTPUT_LAUNCHER_SRC%" -OutputLauncherExe "%OUTPUT_LAUNCHER_EXE%" -ConioSrc "%CONIO_SRC%" -ConioHeader "%CONIO_HEADER%" -ConsoleCp437Header "%CONSOLE_CP437_HEADER%" -ConioObj "%CONIO_OBJ%"`) do set "%%V"
 
-set "GIT_COMMIT_NAME=%USUARIO_SLUG%"
-set "GIT_COMMIT_EMAIL="
-for /f "usebackq delims=" %%U in (`git config --local --get user.email 2^>nul`) do if not defined GIT_COMMIT_EMAIL set "GIT_COMMIT_EMAIL=%%U"
-if not defined GIT_COMMIT_EMAIL (
-    for /f "usebackq delims=" %%U in (`git config --local --get github.user 2^>nul`) do if not defined GIT_COMMIT_EMAIL set "GIT_COMMIT_EMAIL=%%U@users.noreply.github.com"
-)
-if not defined GIT_COMMIT_EMAIL set "GIT_COMMIT_EMAIL=%USUARIO_SLUG%@users.noreply.github.com"
+set "GIT_COMMIT_NAME=%GIT_AUTHOR_NAME%"
+set "GIT_COMMIT_EMAIL=%GIT_AUTHOR_EMAIL%"
 if not exist "%USUARIO_CONFIG%" > "%USUARIO_CONFIG%" echo %USUARIO_SLUG%
 set "USUARIO_DIR=%REPO_ROOT%\usuarios\%USUARIO_SLUG%"
 set "LOGS_ROOT=%USUARIO_DIR%\logs"
@@ -187,34 +176,6 @@ if not defined GCC_EXE (
 for %%G in ("%GCC_EXE%") do set "GCC_DIR=%%~dpG"
 set "PATH=%GCC_DIR%;%PATH%"
 
-if "%REBUILD_SYS_DUMP%"=="1" (
-    if exist "%SYS_DUMP_SRC%" (
-        echo [INFO] Compilando helper local soporte\runtime\sys_dump_console.exe...
-        "%GCC_EXE%" "%SYS_DUMP_SRC%" -o "%SYS_DUMP_EXE%" -std=c99 -Wall -Wextra >nul 2>&1
-        if exist "%SYS_DUMP_EXE%" (
-            echo [OK] Helper local listo.
-        ) else (
-            echo [AVISO] No se pudo compilar soporte\runtime\sys_dump_console.exe. Se omitira el volcado de consola.
-        )
-    ) else (
-        echo [AVISO] No existe soporte\consola\sys_dump_console.c. Se omitira el volcado de consola.
-    )
-)
-
-if "%REBUILD_WAIT_KEY%"=="1" (
-    if exist "%WAIT_KEY_SRC%" (
-        echo [INFO] Compilando helper local soporte\runtime\wait_any_key.exe...
-        "%GCC_EXE%" "%WAIT_KEY_SRC%" -o "%WAIT_KEY_EXE%" -std=c99 -Wall -Wextra >nul 2>&1
-        if exist "%WAIT_KEY_EXE%" (
-            echo [OK] Helper de espera por tecla listo.
-        ) else (
-            echo [AVISO] No se pudo compilar soporte\runtime\wait_any_key.exe. Se usara pause como respaldo.
-        )
-    ) else (
-        echo [AVISO] No existe soporte\consola\wait_any_key.c. Se usara pause como respaldo.
-    )
-)
-
 if "%REBUILD_OUTPUT_LAUNCHER%"=="1" (
     echo [INFO] Compilando launcher local soporte\runtime\_output.exe...
     "%GCC_EXE%" "%OUTPUT_LAUNCHER_SRC%" -o "%OUTPUT_LAUNCHER_EXE%" -std=c99 -Wall -Wextra >nul 2>&1
@@ -259,41 +220,15 @@ if %EXIT_CODE%==0 (
         echo [OK] Compilacion exitosa -^> Ejecutando %NOMBRE_BASE%.exe en esta terminal...
         echo.
         pushd "%REPO_ROOT%"
-        "%ARCHIVO_EXE%"
+        "%OUTPUT_LAUNCHER_EXE%" --run "%ARCHIVO_EXE%"
         set "RUN_EXIT_CODE=!errorlevel!"
         popd
-        echo.
-        echo ================================
-        echo  Programa finalizado.
-        if not "!RUN_EXIT_CODE!"=="0" echo  El programa devolvio codigo !RUN_EXIT_CODE!.
-        echo ================================
-        if exist "%SYS_DUMP_EXE%" (
-            echo [AVISO] El volcado automatico de consola solo esta disponible en ventana externa.
-            echo [AVISO] La salida interactiva ya quedo visible en esta terminal compartida.
-        )
+        if not "!RUN_EXIT_CODE!"=="0" echo [RUN] El programa devolvio codigo !RUN_EXIT_CODE!.
     ) else (
-        echo [OK] Compilacion exitosa -^> Abriendo %NOMBRE_BASE%.exe en ventana externa...
-        > "%LAUNCH_SCRIPT%" (
-            echo @echo off
-            echo chcp 437 ^>nul
-            echo "%ARCHIVO_EXE%"
-            echo echo.
-            echo echo ================================
-            echo echo  Programa finalizado.
-            if exist "%SYS_DUMP_EXE%" (
-                echo "%SYS_DUMP_EXE%" "%LOG%"
-            ) else (
-                echo echo  [AVISO] No se pudo registrar el volcado de consola en el log.
-            )
-            echo echo  Presiona cualquier tecla para cerrar esta ventana.
-            echo echo ================================
-            if exist "%WAIT_KEY_EXE%" (
-                echo "%WAIT_KEY_EXE%"
-            ) else (
-                echo pause ^>nul
-            )
-        )
-        start "%NOMBRE_BASE% - Estudio Socratico" "%CMD_EXE%" /d /c "%LAUNCH_SCRIPT%"
+        echo [OK] Compilacion exitosa -^> Abriendo %NOMBRE_BASE%.exe en ventana externa estilo Code::Blocks...
+        start "%NOMBRE_BASE% - Estudio Socratico" /wait /D "%REPO_ROOT%" "%OUTPUT_LAUNCHER_EXE%" --run "%ARCHIVO_EXE%" --log "%LOG%"
+        set "RUN_EXIT_CODE=!errorlevel!"
+        if not "!RUN_EXIT_CODE!"=="0" echo [RUN] El programa devolvio codigo !RUN_EXIT_CODE!.
     )
 ) else (
     echo [COMPILADOR] Errores detectados:
@@ -330,5 +265,4 @@ if errorlevel 1 (
 
 echo.
 
-endlocal
-exit /b %EXIT_CODE%
+endlocal & exit /b %EXIT_CODE%

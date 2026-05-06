@@ -8,45 +8,72 @@ param(
     [string]$UserSource,
 
     [Parameter(Mandatory = $true)]
-    [string]$SysDumpSrc,
-
-    [Parameter(Mandatory = $true)]
-    [string]$SysDumpExe,
-
-    [Parameter(Mandatory = $true)]
-    [string]$WaitKeySrc,
-
-    [Parameter(Mandatory = $true)]
-    [string]$WaitKeyExe,
-
-    [Parameter(Mandatory = $true)]
     [string]$OutputLauncherSrc,
 
     [Parameter(Mandatory = $true)]
-    [string]$OutputLauncherExe
-
-    ,
+    [string]$OutputLauncherExe,
 
     [Parameter(Mandatory = $true)]
-    [string]$ConioSrc
-
-    ,
+    [string]$ConioSrc,
 
     [Parameter(Mandatory = $true)]
-    [string]$ConioHeader
-
-    ,
+    [string]$ConioHeader,
 
     [Parameter(Mandatory = $true)]
-    [string]$ConsoleCp437Header
-
-    ,
+    [string]$ConsoleCp437Header,
 
     [Parameter(Mandatory = $true)]
     [string]$ConioObj
 )
 
 $ErrorActionPreference = 'Stop'
+
+function Test-UsableIdentityValue {
+    param([AllowNull()][string]$Value)
+
+    if ([string]::IsNullOrWhiteSpace($Value)) {
+        return $false
+    }
+
+    $trimmed = $Value.Trim()
+    $badValues = @(
+        'Estudiante',
+        'estudiante',
+        'estudiante@estudio.local',
+        '2>',
+        '2^>',
+        'nul',
+        'null'
+    )
+
+    if ($badValues -contains $trimmed) {
+        return $false
+    }
+
+    if ($trimmed -match '\^?>|^2\^?>$') {
+        return $false
+    }
+
+    return $true
+}
+
+function Get-GitConfigValue {
+    param(
+        [string]$Root,
+        [string]$Name
+    )
+
+    try {
+        $value = (& git -C $Root config --local --get $Name 2>$null | Select-Object -First 1)
+        if (Test-UsableIdentityValue -Value $value) {
+            return $value.Trim()
+        }
+    }
+    catch {
+    }
+
+    return $null
+}
 
 function Get-UserSlug {
     param(
@@ -55,16 +82,16 @@ function Get-UserSlug {
     )
 
     $value = $RawName
-    if ([string]::IsNullOrWhiteSpace($value)) {
-        $value = git -C $Root config github.user 2>$null
+    if (-not (Test-UsableIdentityValue -Value $value)) {
+        $value = Get-GitConfigValue -Root $Root -Name 'github.user'
     }
-    if ([string]::IsNullOrWhiteSpace($value)) {
-        $value = git -C $Root config user.name 2>$null
+    if (-not (Test-UsableIdentityValue -Value $value)) {
+        $value = Get-GitConfigValue -Root $Root -Name 'user.name'
     }
-    if ([string]::IsNullOrWhiteSpace($value)) {
+    if (-not (Test-UsableIdentityValue -Value $value)) {
         $value = $env:USERNAME
     }
-    if ([string]::IsNullOrWhiteSpace($value)) {
+    if (-not (Test-UsableIdentityValue -Value $value)) {
         $value = 'usuario'
     }
 
@@ -75,6 +102,38 @@ function Get-UserSlug {
     }
 
     return $slug
+}
+
+function Get-GitAuthor {
+    param(
+        [string]$Root,
+        [string]$Slug
+    )
+
+    $githubUser = Get-GitConfigValue -Root $Root -Name 'github.user'
+    $name = Get-GitConfigValue -Root $Root -Name 'user.name'
+    $email = Get-GitConfigValue -Root $Root -Name 'user.email'
+
+    if (-not (Test-UsableIdentityValue -Value $name)) {
+        $name = $githubUser
+    }
+    if (-not (Test-UsableIdentityValue -Value $name)) {
+        $name = $Slug
+    }
+
+    if (-not (Test-UsableIdentityValue -Value $email)) {
+        if (Test-UsableIdentityValue -Value $githubUser) {
+            $email = ('{0}@users.noreply.github.com' -f $githubUser)
+        }
+        else {
+            $email = ('{0}@users.noreply.github.com' -f $Slug)
+        }
+    }
+
+    return @{
+        Name = $name
+        Email = $email
+    }
 }
 
 function Get-BlockNumber {
@@ -182,15 +241,16 @@ function Test-RebuildNeeded {
 
 $now = Get-Date
 $slug = Get-UserSlug -RawName $UserSource -Root $RepoRoot
+$gitAuthor = Get-GitAuthor -Root $RepoRoot -Slug $slug
 $markerFile = Join-Path $RepoRoot ('usuarios/' + $slug + '/logs/' + $BaseName + '/bloque_actual.txt')
 $blockNumber = Get-BlockNumber -MarkerFile $markerFile -Now $now
 $duration = Get-ExerciseDuration -Root $RepoRoot -Slug $slug -ExerciseName $BaseName -Now $now
 
 Write-Output ('USUARIO_SLUG=' + $slug)
+Write-Output ('GIT_AUTHOR_NAME=' + $gitAuthor.Name)
+Write-Output ('GIT_AUTHOR_EMAIL=' + $gitAuthor.Email)
 Write-Output ('BLOQUE_NUM=' + $blockNumber)
 Write-Output ('TIMESTAMP=' + $now.ToString('yyyy-MM-ddTHH-mm-ss'))
 Write-Output ('DURACION_EJERCICIO=' + $duration)
-Write-Output ('REBUILD_SYS_DUMP=' + (Test-RebuildNeeded -OutputPath $SysDumpExe -DependencyPaths @($SysDumpSrc)))
-Write-Output ('REBUILD_WAIT_KEY=' + (Test-RebuildNeeded -OutputPath $WaitKeyExe -DependencyPaths @($WaitKeySrc)))
 Write-Output ('REBUILD_OUTPUT_LAUNCHER=' + (Test-RebuildNeeded -OutputPath $OutputLauncherExe -DependencyPaths @($OutputLauncherSrc)))
 Write-Output ('REBUILD_CONIO_OBJ=' + (Test-RebuildNeeded -OutputPath $ConioObj -DependencyPaths @($ConioSrc, $ConioHeader, $ConsoleCp437Header)))

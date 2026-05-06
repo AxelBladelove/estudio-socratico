@@ -4,6 +4,8 @@
 a.out
 *.pdf
 .pdf
+!adjuntar/*.pdf
+!adjuntar/**/*.pdf
 
 # Objetos
 *.o
@@ -27,6 +29,15 @@ gcc_test.txt
 
 # Runtime local generado por el wrapper de compilacion
 soporte/runtime/
+.output/
+
+# Artefactos locales de pruebas de agentes
+.agent/*.exe
+.agent/*.bmp
+.agent/*_probe*.c
+.agent/*_probe*.log
+.agent/windows_console_launcher.*
+.agent/start_windows_console_launcher.ps1
 
 # NO rastrear estos (son estado interno de maquina, no telemetria):
 logs/*/bloque_actual.txt

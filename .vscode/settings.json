@@ -15,6 +15,13 @@
       "source": "PowerShell"
     }
   },
+  "files.exclude": {
+    "**/*.exe": true,
+    "**/*.o": true,
+    "**/*.obj": true,
+    ".output": true,
+    "soporte/runtime": true
+  },
   "claude-code.enableAuthLogin": true,
   "claudeCode.preferredLocation": "panel",
   "chat.viewSessions.orientation": "stacked",

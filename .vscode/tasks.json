@@ -35,7 +35,7 @@
           "message": 5
         }
       },
-      "detail": "Compila el archivo .c activo con un wrapper tolerante a Live Share, registra telemetria en usuarios/<usuario>/... y hace un commit automatico etiquetado por usuario."
+      "detail": "Compila el archivo .c activo, ejecuta en una consola externa estilo Code::Blocks, registra telemetria en usuarios/<usuario>/... y hace un commit automatico etiquetado por usuario."
     },
     {
       "label": "Ejecutar Binario",
@@ -47,7 +47,7 @@
         "panel": "shared",
         "clear": false
       },
-      "detail": "Ejecuta el ultimo binario compilado sin recompilar."
+      "detail": "Ejecuta el ultimo binario compilado sin recompilar, usando el runner estilo Code::Blocks."
     },
     {
       "label": "Compilar y Grabar (Live Share Terminal)",

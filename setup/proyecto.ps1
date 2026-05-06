@@ -37,18 +37,24 @@ function Ensure-AgentRuntimeTools {
         [switch]$SoloVerificar
     )
 
-    $sourcePath = Join-Path $RepoRoot "soporte\consola\sys_dump_console.c"
     $runtimePath = Join-Path $RepoRoot "soporte\runtime"
-    $binaryPath = Join-Path $runtimePath "sys_dump_console.exe"
+    $launcherSource = Join-Path $RepoRoot "soporte\consola\output_launcher.c"
+    $launcherBinary = Join-Path $runtimePath "_output.exe"
+    $conioSource = Join-Path $RepoRoot "soporte\consola\conio.c"
+    $conioObject = Join-Path $runtimePath "conio_support.o"
+    $includeDir = Join-Path $RepoRoot "include"
+    $conioHeader = Join-Path $includeDir "conio.h"
+    $cp437Header = Join-Path $RepoRoot "soporte\consola\console_cp437.h"
     $gccPath = "C:\msys64\mingw64\bin\gcc.exe"
 
-    if (-not (Test-Path $sourcePath)) {
-        Write-SetupWarning "No existe soporte\consola\sys_dump_console.c; se omitira el helper de consola."
-        return
+    foreach ($required in @($launcherSource, $conioSource, $conioHeader, $cp437Header)) {
+        if (-not (Test-Path $required)) {
+            throw "Falta archivo requerido para compilar runtime local: $required"
+        }
     }
 
     if ($SoloVerificar) {
-        Write-SetupInfo "[SoloVerificar] Compilaria soporte\runtime\sys_dump_console.exe con GCC."
+        Write-SetupInfo "[SoloVerificar] Compilaria soporte\runtime\_output.exe y soporte\runtime\conio_support.o con GCC."
         return
     }
 
@@ -57,26 +63,78 @@ function Ensure-AgentRuntimeTools {
     }
 
     if (-not (Test-Path $gccPath)) {
-        throw "No se encontro gcc en $gccPath para compilar soporte\consola\sys_dump_console.exe."
+        throw "No se encontro gcc en $gccPath para compilar el runtime local."
     }
 
-    $needsBuild = $true
-    if ((Test-Path $binaryPath) -and ((Get-Item $binaryPath).LastWriteTimeUtc -ge (Get-Item $sourcePath).LastWriteTimeUtc)) {
-        $needsBuild = $false
+    $needsLauncherBuild = $true
+    if ((Test-Path $launcherBinary) -and ((Get-Item $launcherBinary).LastWriteTimeUtc -ge (Get-Item $launcherSource).LastWriteTimeUtc)) {
+        $needsLauncherBuild = $false
     }
 
-    if (-not $needsBuild) {
-        Write-SetupSuccess "soporte\runtime\sys_dump_console.exe ya esta actualizado."
-        return
+    $needsConioBuild = $true
+    if (Test-Path $conioObject) {
+        $objectTime = (Get-Item $conioObject).LastWriteTimeUtc
+        $latestDependencyTime = @($conioSource, $conioHeader, $cp437Header) |
+            ForEach-Object { (Get-Item $_).LastWriteTimeUtc } |
+            Sort-Object -Descending |
+            Select-Object -First 1
+        if ($objectTime -ge $latestDependencyTime) {
+            $needsConioBuild = $false
+        }
     }
 
-    Invoke-SetupCommand `
-        -FilePath $gccPath `
-        -Arguments @($sourcePath, "-o", $binaryPath, "-std=c99", "-Wall", "-Wextra") `
-        -Description "Compilando soporte\runtime\sys_dump_console.exe..." `
-        -SoloVerificar:$false
+    if ($needsLauncherBuild) {
+        Invoke-SetupCommand `
+            -FilePath $gccPath `
+            -Arguments @($launcherSource, "-o", $launcherBinary, "-std=c99", "-Wall", "-Wextra") `
+            -Description "Compilando soporte\runtime\_output.exe..." `
+            -SoloVerificar:$false
 
-    Write-SetupSuccess "soporte\runtime\sys_dump_console.exe listo."
+        Write-SetupSuccess "soporte\runtime\_output.exe listo."
+    } else {
+        Write-SetupSuccess "soporte\runtime\_output.exe ya esta actualizado."
+    }
+
+    if ($needsConioBuild) {
+        Invoke-SetupCommand `
+            -FilePath $gccPath `
+            -Arguments @($conioSource, "-I", $includeDir, "-c", "-o", $conioObject, "-std=c99", "-Wall", "-Wextra") `
+            -Description "Compilando soporte\runtime\conio_support.o..." `
+            -SoloVerificar:$false
+
+        Write-SetupSuccess "soporte\runtime\conio_support.o listo."
+    } else {
+        Write-SetupSuccess "soporte\runtime\conio_support.o ya esta actualizado."
+    }
+}
+
+function Test-UsableGitIdentityValue {
+    param([AllowNull()][string]$Value)
+
+    if ([string]::IsNullOrWhiteSpace($Value)) {
+        return $false
+    }
+
+    $trimmed = $Value.Trim()
+    $badValues = @(
+        "Estudiante",
+        "estudiante",
+        "estudiante@estudio.local",
+        "2>",
+        "2^>",
+        "nul",
+        "null"
+    )
+
+    if ($badValues -contains $trimmed) {
+        return $false
+    }
+
+    if ($trimmed -match "\^?>|^2\^?>$") {
+        return $false
+    }
+
+    return $true
 }
 
 function Resolve-ProjectGitIdentity {
@@ -103,27 +161,27 @@ function Resolve-ProjectGitIdentity {
         }
     }
 
-    if ([string]::IsNullOrWhiteSpace($GitHubUsuario)) {
+    if (-not (Test-UsableGitIdentityValue -Value $GitHubUsuario)) {
         $GitHubUsuario = $configuredGitHubUser
     }
 
-    if ([string]::IsNullOrWhiteSpace($GitHubUsuario)) {
+    if (-not (Test-UsableGitIdentityValue -Value $GitHubUsuario)) {
         throw "No se encontro github.user. Configura tu usuario de GitHub con 'git config --local github.user <tu_usuario>' o ejecuta el setup pasando -GitHubUsuario <tu_usuario>."
     }
 
-    if ([string]::IsNullOrWhiteSpace($GitNombre) -or ($GitNombre -eq "Estudiante")) {
-        if (-not [string]::IsNullOrWhiteSpace($configuredGitName) -and ($configuredGitName -ne "Estudiante")) {
+    if (-not (Test-UsableGitIdentityValue -Value $GitNombre)) {
+        if (Test-UsableGitIdentityValue -Value $configuredGitName) {
             $GitNombre = $configuredGitName
         } else {
             $GitNombre = $GitHubUsuario
         }
     }
 
-    if ([string]::IsNullOrWhiteSpace($GitCorreo) -or ($GitCorreo -eq "estudiante@estudio.local")) {
-        if (-not [string]::IsNullOrWhiteSpace($configuredGitEmail) -and ($configuredGitEmail -ne "estudiante@estudio.local")) {
+    if (-not (Test-UsableGitIdentityValue -Value $GitCorreo)) {
+        if (Test-UsableGitIdentityValue -Value $configuredGitEmail) {
             $GitCorreo = $configuredGitEmail
         } else {
-            $GitCorreo = ("{0}@users.noreply.github.com" -f $GitHubUsuario.ToLowerInvariant())
+            $GitCorreo = ("{0}@users.noreply.github.com" -f $GitHubUsuario)
         }
     }
 
