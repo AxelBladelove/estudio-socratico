@@ -94,4 +94,12 @@ int ungetch(int);
 }
 #endif
 
+#include "estudio_stdio_cp437.h"
+
+#ifndef ESTUDIO_CONIO_IMPLEMENTATION
+#define printf estudio_printf
+#define putchar estudio_putchar
+#define puts estudio_puts
+#endif
+
 #endif /* _CONIO_H_ */

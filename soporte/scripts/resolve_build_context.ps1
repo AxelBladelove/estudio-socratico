@@ -250,4 +250,5 @@ Write-Output ('BLOQUE_NUM=' + $blockNumber)
 Write-Output ('TIMESTAMP=' + $now.ToString('yyyy-MM-ddTHH-mm-ss'))
 Write-Output ('DURACION_EJERCICIO=' + $duration)
 Write-Output ('REBUILD_OUTPUT_LAUNCHER=' + (Test-RebuildNeeded -OutputPath $OutputLauncherExe -DependencyPaths @($OutputLauncherSrc)))
-Write-Output ('REBUILD_CONIO_OBJ=' + (Test-RebuildNeeded -OutputPath $ConioObj -DependencyPaths @($ConioSrc, $ConioHeader)))
+$stdioHeader = Join-Path (Split-Path -Parent $ConioHeader) 'estudio_stdio_cp437.h'
+Write-Output ('REBUILD_CONIO_OBJ=' + (Test-RebuildNeeded -OutputPath $ConioObj -DependencyPaths @($ConioSrc, $ConioHeader, $stdioHeader)))

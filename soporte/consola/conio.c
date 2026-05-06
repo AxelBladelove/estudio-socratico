@@ -16,6 +16,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <windows.h>
+#define ESTUDIO_CONIO_IMPLEMENTATION
 #include "conio.h"
 
 #ifdef __cplusplus
@@ -276,14 +277,7 @@ int wherey(void)
 
 int _putch(int character)
 {
-    char byte = (char)character;
-    DWORD written = 0;
-
-    if (WriteFile(conio_output(), &byte, 1, &written, NULL) && written == 1) {
-        return character;
-    }
-
-    return EOF;
+    return estudio_putchar(character);
 }
 
 int putch(int character)
@@ -297,7 +291,7 @@ int _cputs(const char *text)
         return EOF;
     }
 
-    return fputs(text, stdout) >= 0 ? 0 : EOF;
+    return estudio_write_cp437(text, strlen(text)) >= 0 ? 0 : EOF;
 }
 
 int _cprintf(const char *format, ...)
@@ -306,7 +300,7 @@ int _cprintf(const char *format, ...)
     int written;
 
     va_start(args, format);
-    written = vprintf(format, args);
+    written = estudio_vprintf(format, args);
     va_end(args);
 
     return written;
