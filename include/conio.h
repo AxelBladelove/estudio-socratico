@@ -56,7 +56,6 @@ int _conio_gettext(int left, int top, int right, int bottom,
 void delline(void);
 
 void gotoxy(int x, int y);
-void gotoxy(int x, int y);
 
 void puttext(int left, int top, int right, int bottom, char *str);
 
@@ -103,5 +102,7 @@ static inline HANDLE estudio_conio_stdout(void)
 #include "../soporte/consola/console_cp437.h"
 
 #define printf estudio_printf
+#define putchar estudio_putchar
+#define puts estudio_puts
 
 #endif /* _CONIO_H_ */

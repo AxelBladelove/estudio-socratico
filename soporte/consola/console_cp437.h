@@ -3,6 +3,7 @@
 
 #include <stdarg.h>
 #include <stdlib.h>
+#include <string.h>
 
 static inline int estudio_conio_stdout_is_console(void)
 {
@@ -14,28 +15,27 @@ static inline int estudio_conio_stdout_is_console(void)
 
 static inline WCHAR estudio_conio_map_cp437_byte(unsigned char byte)
 {
+    static const WCHAR cp437_low[32] = {
+        0x0000, 0x263A, 0x263B, 0x2665, 0x2666, 0x2663, 0x2660, 0x2022,
+        0x25D8, 0x25CB, 0x25D9, 0x2642, 0x2640, 0x266A, 0x266B, 0x263C,
+        0x25BA, 0x25C4, 0x2195, 0x203C, 0x00B6, 0x00A7, 0x25AC, 0x21A8,
+        0x2191, 0x2193, 0x2192, 0x2190, 0x221F, 0x2194, 0x25B2, 0x25BC
+    };
     char single[2];
     WCHAR wide = L'?';
 
     switch (byte) {
-    case '\a':
     case '\b':
-    case '\f':
     case '\n':
     case '\r':
     case '\t':
-    case '\v':
         return (WCHAR)byte;
-    case 3:
-        return 0x2665;
-    case 4:
-        return 0x2666;
-    case 5:
-        return 0x2663;
-    case 6:
-        return 0x2660;
     default:
         break;
+    }
+
+    if (byte > 0 && byte < 32) {
+        return cp437_low[byte];
     }
 
     if (byte < 128) {
@@ -118,6 +118,25 @@ static inline int estudio_printf(const char *format, ...)
     written = estudio_vprintf(format, args);
     va_end(args);
     return written;
+}
+
+static inline int estudio_putchar(int character)
+{
+    unsigned char byte = (unsigned char)character;
+    return estudio_conio_write_cp437((const char *)&byte, 1) == 1 ? character : EOF;
+}
+
+static inline int estudio_puts(const char *text)
+{
+    if (text == NULL) {
+        return EOF;
+    }
+
+    if (estudio_conio_write_cp437(text, strlen(text)) < 0) {
+        return EOF;
+    }
+
+    return estudio_conio_write_cp437("\n", 1) == 1 ? 0 : EOF;
 }
 
 #endif

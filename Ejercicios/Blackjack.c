@@ -51,12 +51,12 @@ void showcart_xy(int indice, int px, int py), que imprime de forma gráfica, en 
 en “px” y “py”, la carta que se encuentra en el índice “indice” [0,51].
 
 int sumacarta(int cartas[ ], int n), que retorna la suma de “n” cartas en el arreglo “cartas” que
-contiene los índices de las cartas asignadas. Así,si se llama con las cartas contenidas en el arreglo
 de cartas de jugador “jugador” o de la computadora “computadora” se tendría el total de la
 suma óptima de las mismas. Es decir, que busque no pasarse de 21 puntos.
 
 Se requiere:
 
+contiene los índices de las cartas asignadas. Así,si se llama con las cartas contenidas en el arreglo
 1. Definición de las macros identificadas
 2. Realización del “main” que incluye declaración de los arreglos mazo, Jugador y
 Computadora.
@@ -64,7 +64,6 @@ Computadora.
 4. Desde el “main” iniciar la iteración entre computador y jugador permitiendo seleccionar
 las cartas e indicando el total que van acumulando.
 5. Realizar las funciones showcart_xy y sumarcarta.
-
 6. Controlar las situaciones del juego:
 a. Indicar al jugador cuando pierde
 b. La computadora debe pedir una carta adicional siempre y cuando no sume 21 y el
@@ -112,8 +111,6 @@ int main()
    int computadora[MAXCARTAREP];
    int cantcart_jugador = 0;
    int cantcart_computadora = 0;
-   showcart_xy(1, 1, 1);
-
 
    jugador [cantcart_jugador] = tomarcarta(mazo); 
    cantcart_jugador += 1;
@@ -128,6 +125,23 @@ int main()
    sumacarta(jugador, cantcart_jugador);
    sumacarta(computadora, cantcart_computadora);
 
+   //showcart_xy(1, 2, 1);
+   //showcart_xy(1, 14, 1);
+   //showcart_xy(1, 2, 20);
+
+
+   for (int i = 0; i < cantcart_computadora; i++)
+   {
+      showcart_xy(computadora[i], (2 + (i * 10)), 1);
+   }
+
+   for (int i = 0; i < cantcart_jugador; i++)
+   {
+      showcart_xy(jugador[i], (2 + (i * 10)), 20);
+   }
+
+    
+
    return 0;    
 }
 
@@ -137,6 +151,7 @@ int main()
 
 int simbolocarta(int indice)
 {    
+
    return indice % 4; 
 }
 
@@ -178,7 +193,7 @@ void showcart_xy(int indice, int px, int py)
    gotoxy(px,py);
    printf("%c%c%c%c%c%c%c%c%c", ESI, LH, LH, LH, LH, LH, LH, LH, ESD);
    gotoxy(px,py+1);
-   printf("%c%c%c%c%c%c%c%c%c", LV, ' ', ' ', ' ', ' ', ' ', ' ', ' ', LV);
+   printf("%c%-2d%c%c%c%c%c%c%c", LV,valorcarta(indice),' ', ' ', ' ', ' ', ' ', ' ', LV);
    gotoxy(px,py+2);
    printf("%c%c%c%c%c%c%c%c%c", LV, ' ', ' ', ' ', ' ', ' ', ' ', ' ', LV);
    gotoxy(px,py+3);
@@ -186,7 +201,7 @@ void showcart_xy(int indice, int px, int py)
    gotoxy(px,py+4);
    printf("%c%c%c%c%c%c%c%c%c", LV, ' ', ' ', ' ', ' ', ' ', ' ', ' ', LV);
    gotoxy(px,py+5);
-   printf("%c%c%c%c%c%c%c%c%c", LV, ' ', ' ', ' ', ' ', ' ', ' ', ' ', LV);
+   printf("%c%c%c%c%c%c%c%d%c", LV, ' ', ' ', ' ', ' ', ' ',' ',valorcarta(indice), LV);
    gotoxy(px,py+6);
    printf("%c%c%c%c%c%c%c%c%c", EII, LH, LH, LH, LH, LH, LH, LH, EID);
 
