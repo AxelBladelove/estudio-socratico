@@ -248,20 +248,24 @@ if %EXIT_CODE%==0 (
         popd
         if not "!RUN_EXIT_CODE!"=="0" echo [RUN] El programa devolvio codigo !RUN_EXIT_CODE!.
     ) else (
-        set "RUNNER_CMD=%RUNTIME_DIR%\run_%TIMESTAMP%.cmd"
+        set "RUNNER_PS1=%RUNTIME_DIR%\run_%TIMESTAMP%.ps1"
         > "%RUN_LOCK_FILE%" echo STARTING
-        > "!RUNNER_CMD!" echo @echo off
-        >> "!RUNNER_CMD!" echo setlocal
-        >> "!RUNNER_CMD!" echo cd /d "%REPO_ROOT%"
-        >> "!RUNNER_CMD!" echo start "%NOMBRE_BASE% - Estudio Socratico" /wait /D "%REPO_ROOT%" "%OUTPUT_LAUNCHER_EXE%" --run "%ARCHIVO_EXE%" --log "%LOG%"
-        >> "!RUNNER_CMD!" echo set "RUN_EXIT_CODE=%%errorlevel%%"
-        >> "!RUNNER_CMD!" echo if not "%%RUN_EXIT_CODE%%"=="0" echo [RUN] El programa devolvio codigo %%RUN_EXIT_CODE%%.
-        >> "!RUNNER_CMD!" echo call "%FINALIZE_SCRIPT%" "%REPO_ROOT%" "%ARCHIVO_C%" "%LOG%" "%ERRORES_FILE%" "%GIT_COMMIT_NAME%" "%GIT_COMMIT_EMAIL%" "%COMMIT_MSG%" "%RUN_LOCK_FILE%"
-        >> "!RUNNER_CMD!" echo del "%%~f0" ^>nul 2^>^&1
-        >> "!RUNNER_CMD!" echo endlocal ^& exit /b %%RUN_EXIT_CODE%%
+        > "!RUNNER_PS1!" echo $ErrorActionPreference = 'Continue'
+        >> "!RUNNER_PS1!" echo $runExitCode = 1
+        >> "!RUNNER_PS1!" echo try {
+        >> "!RUNNER_PS1!" echo     Set-Location -LiteralPath '%REPO_ROOT%'
+        >> "!RUNNER_PS1!" echo     $program = Start-Process -FilePath '%OUTPUT_LAUNCHER_EXE%' -ArgumentList @^('--run', '%ARCHIVO_EXE%', '--log', '%LOG%'^) -WorkingDirectory '%REPO_ROOT%' -WindowStyle Normal -Wait -PassThru
+        >> "!RUNNER_PS1!" echo     if ^($null -ne $program.ExitCode^) { $runExitCode = $program.ExitCode } else { $runExitCode = 0 }
+        >> "!RUNNER_PS1!" echo     if ^($runExitCode -ne 0^) { Write-Host "[RUN] El programa devolvio codigo $runExitCode." }
+        >> "!RUNNER_PS1!" echo     ^& '%FINALIZE_SCRIPT%' '%REPO_ROOT%' '%ARCHIVO_C%' '%LOG%' '%ERRORES_FILE%' '%GIT_COMMIT_NAME%' '%GIT_COMMIT_EMAIL%' '%COMMIT_MSG%' '%RUN_LOCK_FILE%'
+        >> "!RUNNER_PS1!" echo } finally {
+        >> "!RUNNER_PS1!" echo     Remove-Item -LiteralPath '%RUN_LOCK_FILE%' -Force -ErrorAction SilentlyContinue
+        >> "!RUNNER_PS1!" echo     Remove-Item -LiteralPath $PSCommandPath -Force -ErrorAction SilentlyContinue
+        >> "!RUNNER_PS1!" echo }
+        >> "!RUNNER_PS1!" echo exit $runExitCode
 
         set "RUNNER_PID="
-        for /f "usebackq delims=" %%P in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$q=[char]34; $p=Start-Process -FilePath $env:ComSpec -ArgumentList @('/d','/c',($q + $env:RUNNER_CMD + $q)) -WindowStyle Hidden -PassThru; $p.Id"`) do set "RUNNER_PID=%%P"
+        for /f "usebackq delims=" %%P in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$p=Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',$env:RUNNER_PS1) -WindowStyle Hidden -PassThru; $p.Id"`) do set "RUNNER_PID=%%P"
         if defined RUNNER_PID (
             > "%RUN_LOCK_FILE%" echo !RUNNER_PID!
             set "DEFER_COMMIT=1"
