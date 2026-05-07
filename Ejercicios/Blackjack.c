@@ -86,10 +86,12 @@ jugador no haya perdido.
 #define EII 192
 #define EID 217
 #define LV 179
-#define CORAZON 3
-#define DIAMANTE 4
-#define TREBOL 5
-#define PICA 6
+#define REPARTO_INICIAL 2
+#define RESULTADO_NINGUNO 0
+#define RESULTADO_GANADO 1
+#define RESULTADO_PERDIDO 2
+#define RESULTADO_EMPATE 3
+#define SIMBOLO_ASCII_INICIAL 3
 
 
 int randrange(int liminf, int limsup);
@@ -99,6 +101,8 @@ int tomarcarta(int mazo[ ]);
 void showcart_xy(int indice, int px, int py);
 int sumacarta(int cartas[ ], int n);
 int valcart(int indice);
+void showpoints_xy(int points, int px, int py);
+void showbuttons_xy(void);
 
 
 
@@ -106,41 +110,186 @@ int main()
 {
    srand(time(NULL));
 
-   int mazo[MAXCARTAS] = {0};
-   int jugador[MAXCARTAREP];
-   int computadora[MAXCARTAREP];
-   int cantcart_jugador = 0;
-   int cantcart_computadora = 0;
+   int manos_jugadas = 0;
+   int manos_ganadas = 0;
+   int manos_perdidas = 0;
+   char tecla;
+   int jugando = 1;
 
-   jugador [cantcart_jugador] = tomarcarta(mazo); 
-   cantcart_jugador += 1;
-   jugador [cantcart_jugador] = tomarcarta(mazo); 
-   cantcart_jugador += 1;
-
-   computadora[cantcart_computadora] = tomarcarta(mazo);
-   cantcart_computadora += 1;
-   computadora[cantcart_computadora] = tomarcarta(mazo);
-   cantcart_computadora += 1;
-   
-   sumacarta(jugador, cantcart_jugador);
-   sumacarta(computadora, cantcart_computadora);
-
-   //showcart_xy(1, 2, 1);
-   //showcart_xy(1, 14, 1);
-   //showcart_xy(1, 2, 20);
-
-
-   for (int i = 0; i < cantcart_computadora; i++)
+   while (jugando == 1)
    {
-      showcart_xy(computadora[i], (2 + (i * 10)), 1);
+      system("cls");
+
+      int mazo[MAXCARTAS] = {0};
+      int jugador[MAXCARTAREP];
+      int computadora[MAXCARTAREP];
+      int cantcart_jugador = 0;
+      int cantcart_computadora = 0;
+      int puntos_jugador = 0;
+      int puntos_computadora = 0;
+      int mano_actual = 1;
+      int resultado_mano = RESULTADO_NINGUNO;
+
+      for (int i = 0; i < REPARTO_INICIAL; i++)
+      {
+         computadora[cantcart_computadora] = tomarcarta(mazo);
+         showcart_xy(computadora[cantcart_computadora], (2 + (cantcart_computadora * 10)), 1);
+         cantcart_computadora += 1;
+         puntos_computadora = sumacarta(computadora, cantcart_computadora);
+         showpoints_xy(puntos_computadora, 1, 9);
+
+         Sleep(700);
+
+         jugador[cantcart_jugador] = tomarcarta(mazo);
+         showcart_xy(jugador[cantcart_jugador], (2 + (cantcart_jugador * 10)), 20);
+         cantcart_jugador += 1;
+         puntos_jugador = sumacarta(jugador, cantcart_jugador);
+         showpoints_xy(puntos_jugador, 1, 28);
+
+         Sleep(700);
+      }
+
+      if (puntos_jugador == BLACKJACK && puntos_computadora == BLACKJACK)
+      {
+         manos_jugadas++;
+         resultado_mano = RESULTADO_EMPATE;
+         mano_actual = 0;
+      }
+      else if (puntos_computadora == BLACKJACK)
+      {
+         manos_jugadas++;
+         manos_perdidas++;
+         resultado_mano = RESULTADO_PERDIDO;
+         mano_actual = 0;
+      }
+      else if (puntos_jugador == BLACKJACK)
+      {
+         manos_jugadas++;
+         manos_ganadas++;
+         resultado_mano = RESULTADO_GANADO;
+         mano_actual = 0;
+      }
+
+      while (mano_actual == 1)
+      {
+         showbuttons_xy();
+
+         gotoxy(1, 31);
+         tecla = getch();
+
+         switch (tecla)
+         {
+         case 'e':
+         case 'E':
+            jugador[cantcart_jugador] = tomarcarta(mazo);
+            showcart_xy(jugador[cantcart_jugador], (2 + (cantcart_jugador * 10)), 20);
+            cantcart_jugador += 1;
+            puntos_jugador = sumacarta(jugador, cantcart_jugador);
+            showpoints_xy(puntos_jugador, 1, 28);
+
+            if (puntos_jugador == BLACKJACK)
+            {
+               manos_jugadas++;
+               manos_ganadas++;
+               resultado_mano = RESULTADO_GANADO;
+               mano_actual = 0;
+            }
+            else if (puntos_jugador > BLACKJACK)
+            {
+               manos_jugadas++;
+               manos_perdidas++;
+               resultado_mano = RESULTADO_PERDIDO;
+               mano_actual = 0;
+            }
+            break;
+
+         case 'r':
+         case 'R':
+            while (puntos_computadora < BLACKJACK && puntos_computadora < puntos_jugador)
+            {
+               computadora[cantcart_computadora] = tomarcarta(mazo);
+               showcart_xy(computadora[cantcart_computadora], (2 + (cantcart_computadora * 10)), 1);
+               cantcart_computadora += 1;
+               puntos_computadora = sumacarta(computadora, cantcart_computadora);
+               showpoints_xy(puntos_computadora, 1, 9);
+
+               Sleep(700);
+            }
+
+            if (puntos_computadora > BLACKJACK || puntos_jugador > puntos_computadora)
+            {
+               manos_ganadas++;
+               resultado_mano = RESULTADO_GANADO;
+            }
+            else if (puntos_jugador == puntos_computadora)
+            {
+               resultado_mano = RESULTADO_EMPATE;
+            }
+            else
+            {
+               manos_perdidas++;
+               resultado_mano = RESULTADO_PERDIDO;
+            }
+
+            manos_jugadas++;
+            mano_actual = 0;
+            break;
+
+         case 'q':
+         case 'Q':
+            jugando = 0;
+            mano_actual = 0;
+            break;
+
+         default:
+            gotoxy(1, 31);
+            printf("Tecla invalida, usa E, R o Q\n\n");
+            break;
+         }
+      }
+
+      if (jugando == 1)
+      {
+         gotoxy(1, 30);
+
+         printf("Jugadas: %d  Ganadas: %d  Perdidas: %d\n", manos_jugadas, manos_ganadas, manos_perdidas);
+
+         if (resultado_mano == RESULTADO_GANADO)
+         {
+            printf("Resultado: Ganaste la mano\n\n");
+         }
+         else if (resultado_mano == RESULTADO_PERDIDO)
+         {
+            printf("Resultado: Perdiste la mano\n\n");
+         }
+         else if (resultado_mano == RESULTADO_EMPATE)
+         {
+            printf("Resultado: Empate\n\n");
+         }
+
+         printf("Presiona A para jugar otra mano o D para salir\n");
+
+         do
+         {
+            tecla = getch();
+
+            if (tecla == 'd' || tecla == 'D')
+            {
+               jugando = 0;
+            }
+            else if (tecla != 'a' && tecla != 'A')
+            {
+               printf("Tecla invalida. Usa A o D\n");
+            }
+
+         } while (tecla != 'a' && tecla != 'A' && tecla != 'd' && tecla != 'D');
+      }
    }
 
-   for (int i = 0; i < cantcart_jugador; i++)
-   {
-      showcart_xy(jugador[i], (2 + (i * 10)), 20);
-   }
+   gotoxy(1, 30);
+   printf("Resumen final -> Jugadas: %d  Ganadas: %d  Perdidas: %d\n", manos_jugadas, manos_ganadas, manos_perdidas);
 
-    
+   gotoxy(1, 31);
 
    return 0;    
 }
@@ -149,23 +298,38 @@ int main()
 
 
 
+/*
+   Función: simbolocarta
+   Argumentos: int indice. Indica la posición de la carta en el mazo.
+   Objetivo: Determinar el símbolo correspondiente a la carta indicada.
+   Retorno: Valor entero que representa el símbolo de la carta.
+*/
 int simbolocarta(int indice)
-{    
-
-   return indice % 4; 
+{
+   return indice % 4;
 }
 
 
-
+/*
+   Función: valorcarta
+   Argumentos: int indice. Indica la posición de la carta en el mazo.
+   Objetivo: Determinar el valor original de la carta según su índice.
+   Retorno: Valor entero entre 1 y 13.
+*/
 int valorcarta(int indice)
-{      
+{
    return (indice / 4) + 1;
 }
 
 
-
-int tomarcarta (int mazo[])
-{  
+/*
+   Función: tomarcarta
+   Argumentos: int mazo[]. Arreglo que indica cuáles cartas ya fueron repartidas.
+   Objetivo: Seleccionar una carta disponible al azar y marcarla como repartida.
+   Retorno: Índice entero de la carta tomada.
+*/
+int tomarcarta(int mazo[])
+{
    int indice;
    do
    {
@@ -176,60 +340,99 @@ int tomarcarta (int mazo[])
 }
 
 
-
-
-
+/*
+   Función: randrange
+   Argumentos: int liminf, int limsup. Límites inferior y superior del rango.
+   Objetivo: Generar un número aleatorio dentro del rango indicado.
+   Retorno: Valor entero aleatorio entre liminf y limsup.
+*/
 int randrange(int liminf, int limsup)
 {
    return (rand() % (limsup - liminf + 1)) + liminf;
 }
 
 
-
-
-
+/*
+   Función: showcart_xy
+   Argumentos: int indice, int px, int py. Indican la carta y la posición.
+   Objetivo: Dibujar en pantalla la carta indicada en las coordenadas dadas.
+   Retorno: Ninguno.
+*/
 void showcart_xy(int indice, int px, int py)
 {
-   gotoxy(px,py);
+   gotoxy(px, py);
    printf("%c%c%c%c%c%c%c%c%c", ESI, LH, LH, LH, LH, LH, LH, LH, ESD);
-   gotoxy(px,py+1);
-   printf("%c%-2d%c%c%c%c%c%c%c", LV,valorcarta(indice),' ', ' ', ' ', ' ', ' ', ' ', LV);
-   gotoxy(px,py+2);
+   gotoxy(px, py + 1);
+   if (valorcarta(indice) == 1)
+   {
+      printf("%c%-2c     %c", LV, 'A', LV);
+   }
+   else
+   {
+      printf("%c%-2d     %c", LV, valcart(indice), LV);
+   }
+
+   gotoxy(px, py + 2);
    printf("%c%c%c%c%c%c%c%c%c", LV, ' ', ' ', ' ', ' ', ' ', ' ', ' ', LV);
-   gotoxy(px,py+3);
-   printf("%c%c%c%c%c%c%c%c%c", LV, ' ', ' ', ' ', 3, ' ', ' ', ' ', LV);
-   gotoxy(px,py+4);
+   gotoxy(px, py + 3);
+   if (valorcarta(indice) == 1)
+   {
+      printf("%c   %c   %c", LV, 'A', LV);
+   }
+   else
+   {
+      printf("%c   %c   %c", LV, (simbolocarta(indice) + SIMBOLO_ASCII_INICIAL), LV);
+   }
+
+   gotoxy(px, py + 4);
    printf("%c%c%c%c%c%c%c%c%c", LV, ' ', ' ', ' ', ' ', ' ', ' ', ' ', LV);
-   gotoxy(px,py+5);
-   printf("%c%c%c%c%c%c%c%d%c", LV, ' ', ' ', ' ', ' ', ' ',' ',valorcarta(indice), LV);
-   gotoxy(px,py+6);
+   gotoxy(px, py + 5);
+   if (valorcarta(indice) == 1)
+   {
+      printf("%c     %2c%c", LV, 'A', LV);
+   }
+   else
+   {
+      printf("%c     %2d%c", LV, valcart(indice), LV);
+   }
+
+   gotoxy(px, py + 6);
    printf("%c%c%c%c%c%c%c%c%c", EII, LH, LH, LH, LH, LH, LH, LH, EID);
-
-
-   
 }
 
 
+/*
+   Función: valcart
+   Argumentos: int indice. Indica la posición de la carta en el mazo.
+   Objetivo: Convertir el valor original de la carta al valor usado en Blackjack.
+   Retorno: Valor entero de la carta para el juego.
+*/
 int valcart(int indice)
 {
    int val = valorcarta(indice);
 
-   if ( val >= 10 )
+   if (val >= 10)
    {
       return 10;
-   }  
+   }
    else
       return val;
 }
 
 
+/*
+   Función: sumacarta
+   Argumentos: int cartas[], int n. Arreglo de cartas y cantidad a sumar.
+   Objetivo: Calcular el total óptimo de una mano sin pasarse de 21 si es posible.
+   Retorno: Suma entera de los puntos de la mano.
+*/
 int sumacarta(int cartas[ ], int n)
 {
    int total = 0, cantA = 0, valorcart;
    for (int ind = 0; ind < n; ind++)
    {
       valorcart = valcart(cartas[ind]);
-      if ( valorcart == 1)
+      if (valorcart == 1)
       {
          cantA++;
          total += valorcart + 10;
@@ -238,10 +441,55 @@ int sumacarta(int cartas[ ], int n)
          total += valorcart;
    }
 
-   while ( total > BLACKJACK && (cantA > 0))
+   while (total > BLACKJACK && (cantA > 0))
    {
       total -= 10, cantA--;
    }
 
    return total;
+}
+
+
+/*
+   Función: showpoints_xy
+   Argumentos: int points, int px, int py. Puntos y posición en pantalla.
+   Objetivo: Mostrar los puntos del jugador o la computadora.
+   Retorno: Ninguno.
+*/
+void showpoints_xy(int points, int px, int py)
+{
+   if (py == 9)
+   {
+      gotoxy(px, py);
+      printf("Puntos Computadora: %d\n", points);
+   }
+   else
+   {
+      gotoxy(px, py);
+      printf("Puntos jugador: %d\n", points);
+   }
+
+   return;
+}
+
+
+/*
+   Función: showbuttons_xy
+   Argumentos: Ninguno.
+   Objetivo: Mostrar las opciones disponibles para el jugador.
+   Retorno: Ninguno.
+*/
+void showbuttons_xy(void)
+{
+   gotoxy(1, 14);
+
+   printf("Pedir carta: E");
+
+   gotoxy(20, 14);
+
+   printf("Plantarse: R");
+
+   gotoxy(40, 14);
+
+   printf("Salir del juego: Q");
 }

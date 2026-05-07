@@ -66,9 +66,12 @@ function Request-SetupElevationIfNeeded {
         [switch]$SinWinget,
         [switch]$Elevado,
         [switch]$SinExtensiones,
+        [switch]$SinOnboarding,
+        [switch]$SinRamaUsuario,
+        [AllowNull()][string]$UsuarioSlug,
         [AllowNull()][string]$GitHubUsuario,
-        [string]$GitNombre,
-        [string]$GitCorreo
+        [AllowNull()][string]$GitNombre,
+        [AllowNull()][string]$GitCorreo
     )
 
     if ($Elevado -and (-not (Test-IsAdministrator))) {
@@ -100,6 +103,7 @@ function Request-SetupElevationIfNeeded {
         "-ExecutionPolicy", "Bypass",
         "-File", $SetupScript,
         "-Elevado",
+        "-UsuarioSlug", $UsuarioSlug,
         "-GitHubUsuario", $GitHubUsuario,
         "-GitNombre", $GitNombre,
         "-GitCorreo", $GitCorreo
@@ -107,6 +111,12 @@ function Request-SetupElevationIfNeeded {
 
     if ($SinExtensiones) {
         $args += "-SinExtensiones"
+    }
+    if ($SinOnboarding) {
+        $args += "-SinOnboarding"
+    }
+    if ($SinRamaUsuario) {
+        $args += "-SinRamaUsuario"
     }
 
     $powershell = Resolve-SetupTool -CommandName "pwsh" -Candidates @("$env:ProgramFiles\PowerShell\7\pwsh.exe")

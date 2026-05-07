@@ -1,29 +1,30 @@
 # Datos Por Usuario
 
-Cada clon local del proyecto debe tener un identificador de usuario en
-`.estudio_usuario` (archivo local, ignorado por Git). Ese valor determina la
-telemetria personal que se guarda en:
+Esta carpeta guarda el historial de estudio de cada persona.
 
-- `usuarios/<usuario>/errores.md`
-- `usuarios/<usuario>/logs/<ejercicio>/bloqueN.log`
-
-Ejemplo rapido en Windows:
-
-```text
-copy .estudio_usuario.example .estudio_usuario
-```
-
-Luego edita `.estudio_usuario` y deja una sola linea con tu slug, por ejemplo:
+Cada clon local tiene un archivo `.estudio_usuario` en la raiz. Ese archivo
+contiene un nombre corto, por ejemplo:
 
 ```text
 axel
 ```
 
-Si el archivo no existe, `soporte/scripts/compilar_y_grabar.bat` lo crea automaticamente usando
-`ESTUDIO_USUARIO`, `git config github.user`, `git user.name` o el usuario de Windows.
+Con ese valor, el framework usa:
 
-Compatibilidad:
+```text
+usuarios/axel/errores.md
+usuarios/axel/logs/<ejercicio>/bloqueN.log
+```
 
-- `errores.md` y `logs/` en la raiz se conservan como legado mientras se migra.
-- El script nuevo prioriza `usuarios/<usuario>/...` y solo usa el legado como
-  fuente inicial si la telemetria por usuario todavia no existe.
+## En La Version 1.0
+
+Los `errores.md` salen vacios y los logs historicos no se incluyen. Cada
+estudiante genera su propio historial al compilar.
+
+## Que Va Aqui
+
+- `errores.md`: patrones de aprendizaje del estudiante.
+- `logs/`: intentos guardados por ejercicio y bloque.
+
+No borres esta carpeta desde una IA o script salvo que el usuario lo pida
+explicitamente.

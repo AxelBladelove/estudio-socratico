@@ -3,6 +3,9 @@ param(
     [switch]$SinWinget,
     [switch]$SinExtensiones,
     [switch]$Elevado,
+    [switch]$SinOnboarding,
+    [switch]$SinRamaUsuario,
+    [AllowNull()][string]$UsuarioSlug,
     [AllowNull()][string]$GitHubUsuario,
     [AllowNull()][string]$GitNombre,
     [AllowNull()][string]$GitCorreo
@@ -21,8 +24,12 @@ $LogDir = Join-Path $RepoRoot "logs\setup"
 . (Join-Path $SetupDir "proyecto.ps1")
 
 Set-Location $RepoRoot
-New-SetupDirectory -Path $LogDir -SoloVerificar:$SoloVerificar
-Start-SetupLog -Path (Join-Path $LogDir ("instalacion_{0}.log" -f (Get-Date -Format "yyyyMMdd_HHmmss")))
+if ($SoloVerificar) {
+    New-SetupDirectory -Path $LogDir -SoloVerificar:$true
+} else {
+    New-SetupDirectory -Path $LogDir
+    Start-SetupLog -Path (Join-Path $LogDir ("instalacion_{0}.log" -f (Get-Date -Format "yyyyMMdd_HHmmss")))
+}
 
 try {
     Write-SetupTitle "Estudio Socratico - Setup Windows"
@@ -33,6 +40,25 @@ try {
 
     Assert-ProjectRoot -RepoRoot $RepoRoot
 
+    $preGitPath = Resolve-SetupTool `
+        -CommandName "git" `
+        -Candidates @("$env:ProgramFiles\Git\cmd\git.exe", "${env:ProgramFiles(x86)}\Git\cmd\git.exe")
+
+    $setupIdentity = Resolve-ProjectOnboarding `
+        -RepoRoot $RepoRoot `
+        -GitPath $preGitPath `
+        -UsuarioSlug $UsuarioSlug `
+        -GitHubUsuario $GitHubUsuario `
+        -GitNombre $GitNombre `
+        -GitCorreo $GitCorreo `
+        -SoloVerificar:$SoloVerificar `
+        -SinOnboarding:$SinOnboarding
+
+    $UsuarioSlug = $setupIdentity["UsuarioSlug"]
+    $GitHubUsuario = $setupIdentity["GitHubUsuario"]
+    $GitNombre = $setupIdentity["GitNombre"]
+    $GitCorreo = $setupIdentity["GitCorreo"]
+
     $toolSpecs = Get-ToolSpecs
     Request-SetupElevationIfNeeded `
         -ToolSpecs $toolSpecs `
@@ -41,9 +67,12 @@ try {
         -SoloVerificar:$SoloVerificar `
         -SinWinget:$SinWinget `
         -Elevado:$Elevado `
+        -UsuarioSlug $UsuarioSlug `
         -GitHubUsuario $GitHubUsuario `
         -GitNombre $GitNombre `
         -GitCorreo $GitCorreo `
+        -SinOnboarding:$SinOnboarding `
+        -SinRamaUsuario:$SinRamaUsuario `
         -SinExtensiones:$SinExtensiones
 
     Write-SetupStep "Preparando carpetas del proyecto"
@@ -52,21 +81,22 @@ try {
     Write-SetupStep "Verificando herramientas base"
     $tools = Ensure-Tools -ToolSpecs $toolSpecs -SoloVerificar:$SoloVerificar -SinWinget:$SinWinget
 
-    $gitIdentity = Resolve-ProjectGitIdentity `
-        -RepoRoot $RepoRoot `
-        -GitPath $tools["Git"] `
-        -GitHubUsuario $GitHubUsuario `
-        -GitNombre $GitNombre `
-        -GitCorreo $GitCorreo
-
     Write-SetupStep "Configurando Git local"
     Configure-ProjectGit `
         -RepoRoot $RepoRoot `
         -GitPath $tools["Git"] `
-        -GitHubUsuario $gitIdentity["GitHubUsuario"] `
-        -GitNombre $gitIdentity["GitNombre"] `
-        -GitCorreo $gitIdentity["GitCorreo"] `
+        -GitHubUsuario $GitHubUsuario `
+        -GitNombre $GitNombre `
+        -GitCorreo $GitCorreo `
         -SoloVerificar:$SoloVerificar
+
+    Write-SetupStep "Preparando carpeta y rama del estudiante"
+    Initialize-ProjectUser `
+        -RepoRoot $RepoRoot `
+        -GitPath $tools["Git"] `
+        -UsuarioSlug $UsuarioSlug `
+        -SoloVerificar:$SoloVerificar `
+        -SinRamaUsuario:$SinRamaUsuario
 
     Write-SetupStep "Instalando y validando GCC"
     Ensure-GccToolchain -RepoRoot $RepoRoot -SoloVerificar:$SoloVerificar -SinWinget:$SinWinget
@@ -87,7 +117,7 @@ try {
 
     Write-SetupStep "Resumen final"
     Write-SetupReport -Tools $tools
-    Write-SetupSuccess "Setup completado. Abre un .c en Ejercicios y presiona Ctrl+Shift+B."
+    Write-SetupSuccess "Setup completado. Abre un .c en Ejercicios y presiona F9."
     Stop-SetupLog
     exit 0
 } catch {

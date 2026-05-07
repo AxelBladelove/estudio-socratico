@@ -7,6 +7,7 @@ function Assert-ProjectRoot {
         "soporte\scripts\build.cmd",
         ".vscode\tasks.json",
         ".agent\skills\revisar\SKILL.md",
+        ".agent\skills\ver\SKILL.md",
         ".agent\skills\sintetizar\SKILL.md"
     )
 
@@ -26,7 +27,7 @@ function Ensure-ProjectFolders {
         [switch]$SoloVerificar
     )
 
-    foreach ($folder in @("logs", "Ejercicios")) {
+    foreach ($folder in @("logs", "Ejercicios", "usuarios")) {
         New-SetupDirectory -Path (Join-Path $RepoRoot $folder) -SoloVerificar:$SoloVerificar
     }
 }
@@ -44,7 +45,7 @@ function Ensure-AgentRuntimeTools {
     $conioObject = Join-Path $runtimePath "conio_support.o"
     $includeDir = Join-Path $RepoRoot "include"
     $conioHeader = Join-Path $includeDir "conio.h"
-    $cp437Header = Join-Path $RepoRoot "soporte\consola\console_cp437.h"
+    $cp437Header = Join-Path $includeDir "estudio_stdio_cp437.h"
     $gccPath = "C:\msys64\mingw64\bin\gcc.exe"
 
     foreach ($required in @($launcherSource, $conioSource, $conioHeader, $cp437Header)) {
@@ -137,6 +138,181 @@ function Test-UsableGitIdentityValue {
     return $true
 }
 
+function ConvertTo-ProjectUserSlug {
+    param([AllowNull()][string]$Value)
+
+    if ([string]::IsNullOrWhiteSpace($Value)) {
+        return "usuario"
+    }
+
+    $slug = $Value.Trim().ToLowerInvariant() -replace '[^a-z0-9]+', '-'
+    $slug = $slug.Trim('-')
+    if ([string]::IsNullOrWhiteSpace($slug)) {
+        return "usuario"
+    }
+
+    return $slug
+}
+
+function Get-ProjectGitConfigValue {
+    param(
+        [string]$RepoRoot,
+        [AllowNull()][string]$GitPath,
+        [string]$Name
+    )
+
+    if (-not $GitPath) {
+        return $null
+    }
+
+    if (-not (Test-Path (Join-Path $RepoRoot ".git"))) {
+        return $null
+    }
+
+    Push-Location $RepoRoot
+    try {
+        $value = (& $GitPath config --local --get $Name 2>$null | Select-Object -First 1)
+        if (Test-UsableGitIdentityValue -Value $value) {
+            return $value.Trim()
+        }
+    } catch {
+    } finally {
+        Pop-Location
+    }
+
+    return $null
+}
+
+function Get-ProjectCurrentUserSlug {
+    param([string]$RepoRoot)
+
+    $path = Join-Path $RepoRoot ".estudio_usuario"
+    if (-not (Test-Path $path)) {
+        return $null
+    }
+
+    $value = (Get-Content -LiteralPath $path -ErrorAction SilentlyContinue | Select-Object -First 1)
+    if (Test-UsableGitIdentityValue -Value $value) {
+        return (ConvertTo-ProjectUserSlug -Value $value)
+    }
+
+    return $null
+}
+
+function Read-SetupValue {
+    param(
+        [string]$Prompt,
+        [AllowNull()][string]$DefaultValue,
+        [switch]$Required
+    )
+
+    do {
+        $suffix = ""
+        if (Test-UsableGitIdentityValue -Value $DefaultValue) {
+            $suffix = " [$DefaultValue]"
+        }
+
+        $value = Read-Host "$Prompt$suffix"
+        if ([string]::IsNullOrWhiteSpace($value)) {
+            $value = $DefaultValue
+        }
+
+        if ((-not $Required) -or (Test-UsableGitIdentityValue -Value $value)) {
+            return $value
+        }
+
+        Write-SetupWarning "Ese valor no parece util para esta configuracion."
+    } while ($true)
+}
+
+function Resolve-ProjectOnboarding {
+    param(
+        [string]$RepoRoot,
+        [AllowNull()][string]$GitPath,
+        [AllowNull()][string]$UsuarioSlug,
+        [AllowNull()][string]$GitHubUsuario,
+        [AllowNull()][string]$GitNombre,
+        [AllowNull()][string]$GitCorreo,
+        [switch]$SoloVerificar,
+        [switch]$SinOnboarding
+    )
+
+    $configuredGitHubUser = Get-ProjectGitConfigValue -RepoRoot $RepoRoot -GitPath $GitPath -Name "github.user"
+    $configuredGitName = Get-ProjectGitConfigValue -RepoRoot $RepoRoot -GitPath $GitPath -Name "user.name"
+    $configuredGitEmail = Get-ProjectGitConfigValue -RepoRoot $RepoRoot -GitPath $GitPath -Name "user.email"
+    $configuredSlug = Get-ProjectCurrentUserSlug -RepoRoot $RepoRoot
+
+    if (-not (Test-UsableGitIdentityValue -Value $UsuarioSlug)) {
+        $UsuarioSlug = $configuredSlug
+    }
+    if (-not (Test-UsableGitIdentityValue -Value $GitHubUsuario)) {
+        $GitHubUsuario = $configuredGitHubUser
+    }
+    if (-not (Test-UsableGitIdentityValue -Value $GitNombre)) {
+        $GitNombre = $configuredGitName
+    }
+    if (-not (Test-UsableGitIdentityValue -Value $GitCorreo)) {
+        $GitCorreo = $configuredGitEmail
+    }
+
+    $defaultSlugSeed = $UsuarioSlug
+    if (-not (Test-UsableGitIdentityValue -Value $defaultSlugSeed)) {
+        $defaultSlugSeed = $GitHubUsuario
+    }
+    if (-not (Test-UsableGitIdentityValue -Value $defaultSlugSeed)) {
+        $defaultSlugSeed = $env:USERNAME
+    }
+    $defaultSlug = ConvertTo-ProjectUserSlug -Value $defaultSlugSeed
+
+    $hasCompleteInput = (
+        (Test-UsableGitIdentityValue -Value $UsuarioSlug) -and
+        (Test-UsableGitIdentityValue -Value $GitHubUsuario) -and
+        (Test-UsableGitIdentityValue -Value $GitNombre) -and
+        (Test-UsableGitIdentityValue -Value $GitCorreo)
+    )
+
+    if ((-not $SoloVerificar) -and (-not $SinOnboarding) -and (-not $hasCompleteInput)) {
+        Write-SetupStep "Configurando tu usuario de estudio"
+        Write-SetupInfo "Estos datos solo se guardan en este clon local."
+
+        $UsuarioSlug = Read-SetupValue -Prompt "Nombre corto para tu carpeta y rama (ej. axel)" -DefaultValue $defaultSlug -Required
+        $UsuarioSlug = ConvertTo-ProjectUserSlug -Value $UsuarioSlug
+
+        $GitHubUsuario = Read-SetupValue -Prompt "Usuario de GitHub para commits y ramas" -DefaultValue $GitHubUsuario -Required
+        if (-not (Test-UsableGitIdentityValue -Value $GitNombre)) {
+            $GitNombre = $GitHubUsuario
+        }
+        $GitNombre = Read-SetupValue -Prompt "Nombre que aparecera en los commits" -DefaultValue $GitNombre -Required
+
+        if (-not (Test-UsableGitIdentityValue -Value $GitCorreo)) {
+            $GitCorreo = ("{0}@users.noreply.github.com" -f $GitHubUsuario)
+        }
+        $GitCorreo = Read-SetupValue -Prompt "Correo para commits (usa uno verificado o noreply de GitHub)" -DefaultValue $GitCorreo -Required
+    }
+
+    if (-not (Test-UsableGitIdentityValue -Value $UsuarioSlug)) {
+        $UsuarioSlug = $defaultSlug
+    }
+    $UsuarioSlug = ConvertTo-ProjectUserSlug -Value $UsuarioSlug
+
+    if (-not (Test-UsableGitIdentityValue -Value $GitHubUsuario)) {
+        $GitHubUsuario = $UsuarioSlug
+    }
+    if (-not (Test-UsableGitIdentityValue -Value $GitNombre)) {
+        $GitNombre = $GitHubUsuario
+    }
+    if (-not (Test-UsableGitIdentityValue -Value $GitCorreo)) {
+        $GitCorreo = ("{0}@users.noreply.github.com" -f $GitHubUsuario)
+    }
+
+    return @{
+        UsuarioSlug = $UsuarioSlug
+        GitHubUsuario = $GitHubUsuario.Trim()
+        GitNombre = $GitNombre.Trim()
+        GitCorreo = $GitCorreo.Trim()
+    }
+}
+
 function Resolve-ProjectGitIdentity {
     param(
         [string]$RepoRoot,
@@ -216,6 +392,100 @@ function Configure-ProjectGit {
     Invoke-SetupCommand -FilePath $GitPath -Arguments @("config", "github.user", $GitHubUsuario) -Description "Configurando github.user local..." -SoloVerificar:$SoloVerificar
     Invoke-SetupCommand -FilePath $GitPath -Arguments @("config", "user.name", $GitNombre) -Description "Configurando user.name local..." -SoloVerificar:$SoloVerificar
     Invoke-SetupCommand -FilePath $GitPath -Arguments @("config", "user.email", $GitCorreo) -Description "Configurando user.email local..." -SoloVerificar:$SoloVerificar
+}
+
+function Test-ProjectGitRefExists {
+    param(
+        [string]$RepoRoot,
+        [string]$GitPath,
+        [string]$RefName
+    )
+
+    Push-Location $RepoRoot
+    try {
+        & $GitPath show-ref --verify --quiet $RefName
+        return ($LASTEXITCODE -eq 0)
+    } finally {
+        Pop-Location
+    }
+}
+
+function Initialize-ProjectUser {
+    param(
+        [string]$RepoRoot,
+        [AllowNull()][string]$GitPath,
+        [string]$UsuarioSlug,
+        [switch]$SoloVerificar,
+        [switch]$SinRamaUsuario
+    )
+
+    $usuarioDir = Join-Path $RepoRoot ("usuarios\" + $UsuarioSlug)
+    $logsDir = Join-Path $usuarioDir "logs"
+    $erroresPath = Join-Path $usuarioDir "errores.md"
+    $usuarioConfig = Join-Path $RepoRoot ".estudio_usuario"
+
+    if ($SoloVerificar) {
+        Write-SetupInfo "[SoloVerificar] Escribiria .estudio_usuario con '$UsuarioSlug'."
+        Write-SetupInfo "[SoloVerificar] Prepararia usuarios\$UsuarioSlug\errores.md vacio si no existe."
+    } else {
+        if (-not (Test-Path $usuarioDir)) {
+            New-Item -ItemType Directory -Path $usuarioDir -Force | Out-Null
+        }
+        if (-not (Test-Path $logsDir)) {
+            New-Item -ItemType Directory -Path $logsDir -Force | Out-Null
+        }
+        Set-Content -LiteralPath $usuarioConfig -Value $UsuarioSlug -NoNewline -Encoding ascii
+        if (-not (Test-Path $erroresPath)) {
+            New-Item -ItemType File -Path $erroresPath -Force | Out-Null
+        }
+        Write-SetupSuccess "Usuario local activo: $UsuarioSlug."
+    }
+
+    if ($SinRamaUsuario) {
+        Write-SetupWarning "SinRamaUsuario activo; no se cambiara de rama."
+        return
+    }
+
+    if (-not $GitPath) {
+        Write-SetupWarning "Git no esta confirmado; no se preparara la rama personal."
+        return
+    }
+
+    if (-not (Test-Path (Join-Path $RepoRoot ".git"))) {
+        Write-SetupWarning "El repositorio Git aun no existe; no se preparara la rama personal."
+        return
+    }
+
+    if ($SoloVerificar) {
+        Write-SetupInfo "[SoloVerificar] Prepararia o cambiaria a la rama '$UsuarioSlug'."
+        return
+    }
+
+    Push-Location $RepoRoot
+    try {
+        $currentBranch = (& $GitPath branch --show-current 2>$null | Select-Object -First 1)
+    } finally {
+        Pop-Location
+    }
+
+    if ($currentBranch -eq $UsuarioSlug) {
+        Write-SetupSuccess "Ya estas en la rama personal '$UsuarioSlug'."
+        return
+    }
+
+    try {
+        if (Test-ProjectGitRefExists -RepoRoot $RepoRoot -GitPath $GitPath -RefName ("refs/heads/" + $UsuarioSlug)) {
+            Invoke-SetupCommand -FilePath $GitPath -Arguments @("switch", $UsuarioSlug) -Description "Cambiando a la rama personal $UsuarioSlug..." -SoloVerificar:$false
+        } elseif (Test-ProjectGitRefExists -RepoRoot $RepoRoot -GitPath $GitPath -RefName ("refs/remotes/origin/" + $UsuarioSlug)) {
+            Invoke-SetupCommand -FilePath $GitPath -Arguments @("switch", "-c", $UsuarioSlug, "--track", ("origin/" + $UsuarioSlug)) -Description "Conectando rama local $UsuarioSlug con origin/$UsuarioSlug..." -SoloVerificar:$false
+        } else {
+            Invoke-SetupCommand -FilePath $GitPath -Arguments @("switch", "-c", $UsuarioSlug) -Description "Creando rama personal $UsuarioSlug..." -SoloVerificar:$false
+        }
+        Write-SetupSuccess "Rama personal lista: $UsuarioSlug."
+    } catch {
+        Write-SetupWarning "No pude cambiar a la rama personal automaticamente: $($_.Exception.Message)"
+        Write-SetupInfo "Cuando tengas limpio tu trabajo local, ejecuta: git switch -c $UsuarioSlug"
+    }
 }
 
 function Test-WorkspaceJson {

@@ -18,7 +18,7 @@ a.out
 .DS_Store
 Thumbs.db
 
-# Archivos temporales del compilador (no son telemetría)
+# Archivos temporales del compilador (no son telemetria)
 gcc_err.txt
 gcc_err2.txt
 gcc_exit.txt
@@ -32,6 +32,7 @@ _tmp_*.txt
 # Runtime local generado por el wrapper de compilacion
 soporte/runtime/
 .output/
+logs/setup/
 
 # Artefactos locales de pruebas de agentes
 .agent/*.exe
@@ -45,8 +46,6 @@ soporte/runtime/
 logs/*/bloque_actual.txt
 usuarios/*/logs/**/bloque_actual.txt
 
-# SÍ rastrear estos (son la telemetría del sistema):
-# logs/<ejercicio>/bloqueN.log  → un log por bloque de 45 min por ejercicio
-# errores.md                    → base de conocimiento acumulativa
-# usuarios/<usuario>/logs/<ejercicio>/bloqueN.log  → telemetría personal por usuario
-# usuarios/<usuario>/errores.md                    → base de conocimiento por usuario
+# SI rastrear estos cuando existan (son telemetria de estudio):
+# usuarios/<usuario>/logs/<ejercicio>/bloqueN.log
+# usuarios/<usuario>/errores.md
