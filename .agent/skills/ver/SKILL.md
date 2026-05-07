@@ -46,9 +46,47 @@ Usa la linea indicada para decidir que explicar.
 - Si la linea coincide con un `for`, `while` o `do`, explica ese ciclo completo.
 - Si la linea cae dentro de un ciclo, usa el ciclo mas interno.
 - Si la linea cae dentro de otra funcion, explica la funcion completa.
+- Si la linea apunta a una instruccion normal, declaracion, asignacion,
+  llamada, operacion con punteros, acceso a arreglo, acceso a `struct`,
+  operacion de archivo o expresion parecida, explica la unidad logica que
+  empieza en el primer texto real de esa linea y termina cuando termina la
+  intencion de esa instruccion.
 
 Cuando haya duda entre una funcion y un ciclo, elige el bloque mas pequeno que
 explique bien lo que el estudiante senalo.
+
+## Lineas Sueltas Y Unidad Logica
+
+Una linea no siempre representa una funcion o un ciclo. A veces el estudiante
+quiere entender una sola accion de C, por ejemplo una declaracion de puntero, una
+reserva de memoria, una asignacion, una comparacion, una llamada a funcion o un
+acceso a un arreglo.
+
+En esos casos:
+
+1. Empieza en el primer caracter no blanco de la linea indicada.
+2. Sigue hasta el final natural de la logica:
+   - el `;` de la instruccion;
+   - el cierre de una expresion partida en varias lineas;
+   - el bloque pequeno que pertenece a esa condicion o llamada;
+   - o la mini-secuencia inmediata si la linea solo se entiende con su
+     comprobacion, uso o liberacion cercana.
+3. No subas automaticamente a toda la funcion si basta con explicar esa unidad.
+4. Si necesitas una linea anterior o posterior para que la explicacion sea
+   honesta, incluyela y dilo: "incluyo esta linea porque le da sentido al
+   puntero" o "incluyo esta comprobacion porque protege el acceso".
+
+Ejemplos de unidad logica:
+
+- Una declaracion de puntero: explica que variable nace, que direccion guarda y
+  si apunta a algo valido.
+- Una desreferenciacion: explica que direccion se intenta abrir y que valor se
+  lee o modifica.
+- Una llamada a funcion: explica que argumentos se entregan, si son copias o
+  direcciones, y que efecto vuelve.
+- Una expresion de arreglo: explica que indice se calcula y que casilla se toca.
+- Un `malloc` o `fopen`: explica el recurso pedido, el valor devuelto y la
+  comprobacion necesaria antes de usarlo.
 
 ## Como Analizar El Codigo
 

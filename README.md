@@ -181,20 +181,53 @@ Ejemplos:
 
 ```text
 @ver linea 1
+@ver linea 87
 @ver main
 @ver la funcion donde esta el cursor
 @ver el ciclo de esta linea
+@ver la linea del puntero
 ```
 
 `@ver` hace una prueba de escritorio RAM: explica que variables existen, que
 valores cambian, que decisiones toma el programa y que se imprime.
+
+### Como usar lineas con `@ver`
+
+En VS Code puedes ver el numero de linea a la izquierda del editor. Tambien lo
+ves abajo en la barra de estado, por ejemplo `Ln 87`.
+
+Cuando pidas ayuda, escribe el numero:
+
+```text
+@ver linea 87
+```
+
+La IA usara esa linea como punto de entrada. Segun donde caiga, el alcance
+cambia:
+
+| Si la linea apunta a... | `@ver` debe mirar... |
+|---|---|
+| linea `1` | todo el archivo del ejercicio |
+| `main` | todo el `main` |
+| nombre o encabezado de una funcion | esa funcion completa |
+| `for`, `while` o `do` | ese ciclo completo |
+| una linea dentro de un ciclo | el ciclo mas interno |
+| una declaracion, asignacion o llamada | esa instruccion y su unidad logica |
+| un puntero, arreglo, `struct`, `malloc` o archivo | desde esa linea hasta que termine la accion que pretende |
+
+> [!TIP]
+> Una "unidad logica" no siempre es una sola linea. Si apuntas a un puntero, por
+> ejemplo, la IA puede incluir la comprobacion inmediata, el uso cercano o la
+> liberacion del recurso si eso es necesario para explicar que pasa en RAM.
 
 Si apuntas a:
 
 - linea `1`: mira el archivo completo del ejercicio;
 - `main`: mira todo `main`;
 - una funcion: mira esa funcion;
-- un `for`, `while` o `do`: mira ese ciclo.
+- un `for`, `while` o `do`: mira ese ciclo;
+- una linea suelta: mira desde el primer texto real de esa linea hasta donde
+  termina la logica que esa linea esta intentando realizar.
 
 ### `@sintetizar`
 
