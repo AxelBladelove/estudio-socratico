@@ -34,10 +34,10 @@ MAXCARTAREP es una macro que contiene la cantidad máxima de cartas a repartir (
 
 Se utilizará las siguientes funciones:
 
-int simbolocarta(int indice), que dado un indice, retorna: 
+int simbolocarta(int indice), que dado un indice, retorna:
 0 si el símbolo correspondiente según el índice del arreglo es un corazón,
-1 si el símbolo correspondiente según el índice del arreglo es un diamante, 
-2 si el símbolo correspondiente según el índice del arreglo es un trébol y 
+1 si el símbolo correspondiente según el índice del arreglo es un diamante,
+2 si el símbolo correspondiente según el índice del arreglo es un trébol y
 3 si el símbolo correspondiente según el índice del arreglo es una espada (o pique).
 
 int valorcarta(int indice), que retorna el valor de la carta de acuerdo al valor del índice. Es decir,
