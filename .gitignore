@@ -23,6 +23,8 @@ gcc_err.txt
 gcc_err2.txt
 gcc_exit.txt
 gcc_test.txt
+_tmp_*.c
+_tmp_*.txt
 
 # Identidad local del clon (no se comparte)
 .estudio_usuario

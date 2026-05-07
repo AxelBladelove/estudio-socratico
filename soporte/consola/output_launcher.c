@@ -229,6 +229,82 @@ static double elapsed_seconds(LARGE_INTEGER start, LARGE_INTEGER end, LARGE_INTE
     return (double)(end.QuadPart - start.QuadPart) / (double)frequency.QuadPart;
 }
 
+static int line_has_content(const WCHAR *line, int length)
+{
+    int index;
+
+    for (index = 0; index < length; index++) {
+        if (line[index] != L' ' && line[index] != L'\0') {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static int find_last_visible_content_row(HANDLE console, const CONSOLE_SCREEN_BUFFER_INFO *info)
+{
+    WCHAR *line;
+    DWORD read;
+    COORD coord;
+    int y;
+    int last_row = -1;
+
+    line = (WCHAR *)malloc(sizeof(WCHAR) * (size_t)info->dwSize.X);
+    if (line == NULL) {
+        return -1;
+    }
+
+    coord.X = 0;
+    for (y = info->srWindow.Top; y <= info->srWindow.Bottom; y++) {
+        coord.Y = (SHORT)y;
+        if (ReadConsoleOutputCharacterW(console, line, info->dwSize.X, coord, &read) &&
+            line_has_content(line, (int)read)) {
+            last_row = y;
+        }
+    }
+
+    free(line);
+    return last_row;
+}
+
+static int place_runner_message_cursor(void)
+{
+    HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO info;
+    COORD coord;
+    int last_content_row;
+    int target_row;
+
+    if (console == NULL || console == INVALID_HANDLE_VALUE) {
+        return 1;
+    }
+
+    if (!GetConsoleScreenBufferInfo(console, &info)) {
+        return 1;
+    }
+
+    last_content_row = find_last_visible_content_row(console, &info);
+    target_row = info.dwCursorPosition.Y + 1;
+    if (last_content_row >= 0 && target_row < last_content_row + 2) {
+        target_row = last_content_row + 2;
+    }
+
+    coord.X = 0;
+    if (target_row >= info.dwSize.Y) {
+        coord.Y = (SHORT)(info.dwSize.Y - 1);
+        if (!SetConsoleCursorPosition(console, coord)) {
+            return 1;
+        }
+        printf("\n");
+        fflush(stdout);
+        return 0;
+    }
+
+    coord.Y = (SHORT)target_row;
+    return SetConsoleCursorPosition(console, coord) ? 0 : 1;
+}
+
 int main(int argc, char **argv)
 {
     char target_exe[ESTUDIO_MAX_PATH];
@@ -289,7 +365,10 @@ int main(int argc, char **argv)
     CloseHandle(process_info.hThread);
     CloseHandle(process_info.hProcess);
 
-    printf("\nProcess returned %lu (0x%lX)   execution time : %.3f s\n",
+    if (place_runner_message_cursor() != 0) {
+        printf("\n");
+    }
+    printf("Process returned %lu (0x%lX)   execution time : %.3f s\n",
            exit_code, exit_code, elapsed_seconds(start_time, end_time, frequency));
     printf("Press any key to continue.");
 
