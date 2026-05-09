@@ -1,0 +1,121 @@
+name: Reporte de error
+description: Informa un error para ayudarnos a solucionarlo.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por tomarte el tiempo de reportar este error. Completa la información de la forma más clara posible.
+
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Descripción del error
+      description: Describe de forma clara y concisa cuál es el error.
+      placeholder: Ejemplo: Al hacer clic en el botón de guardar, la página se queda cargando indefinidamente.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Pasos para reproducirlo
+      description: Indica los pasos necesarios para reproducir el comportamiento.
+      value: |
+        1. Ir a '...'
+        2. Hacer clic en '...'
+        3. Desplazarse hasta '...'
+        4. Ver el error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Comportamiento esperado
+      description: Describe de forma clara y concisa qué esperabas que ocurriera.
+      placeholder: Ejemplo: Esperaba que el formulario se guardara correctamente y mostrara un mensaje de éxito.
+    validations:
+      required: true
+
+  - type: upload
+    id: screenshots
+    attributes:
+      label: Capturas de pantalla
+      description: Si aplica, sube capturas de pantalla para ayudar a explicar el problema.
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: "### Información de escritorio"
+
+  - type: input
+    id: desktop-os
+    attributes:
+      label: Sistema operativo
+      placeholder: Ejemplo: Windows 11, macOS, Linux
+    validations:
+      required: false
+
+  - type: input
+    id: desktop-browser
+    attributes:
+      label: Navegador
+      placeholder: Ejemplo: Chrome, Firefox, Safari, Edge
+    validations:
+      required: false
+
+  - type: input
+    id: desktop-version
+    attributes:
+      label: Versión
+      placeholder: Ejemplo: 22, 120.0.0, etc.
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: "### Información del smartphone"
+
+  - type: input
+    id: smartphone-device
+    attributes:
+      label: Dispositivo
+      placeholder: Ejemplo: iPhone 14, Samsung Galaxy S23
+    validations:
+      required: false
+
+  - type: input
+    id: smartphone-os
+    attributes:
+      label: Sistema operativo
+      placeholder: Ejemplo: iOS 17, Android 14
+    validations:
+      required: false
+
+  - type: input
+    id: smartphone-browser
+    attributes:
+      label: Navegador
+      placeholder: Ejemplo: Chrome, Safari, navegador predeterminado
+    validations:
+      required: false
+
+  - type: input
+    id: smartphone-version
+    attributes:
+      label: Versión
+      placeholder: Ejemplo: 22
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Contexto adicional
+      description: Agrega cualquier otro contexto sobre el problema aquí.
+      placeholder: Ejemplo: Esto empezó a pasar después de la última actualización.
+    validations:
+      required: false
