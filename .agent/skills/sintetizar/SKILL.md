@@ -80,6 +80,16 @@ Busca los commits con prefijo `intento_`. El formato del mensaje es:
 `intento_<usuario>_YYYY-MM-DDTHH-mm-ss_exitN` donde N=0 es compilación exitosa y
 N≠0 es error.
 
+También existen intentos de ejercicios importados desde Exercism con este formato:
+`intento_<usuario>_YYYY-MM-DDTHH-mm-ss_exercism_exitN`.
+
+En esos commits, N=0 significa que `exercism test` pasó. N≠0 puede significar
+fallo de herramienta/framework, fallo de compilación/linking del código del
+estudiante, o fallo de tests. No los mezcles. Los fallos de herramienta
+(`make` no encontrado, PATH incorrecto, `exercism` no disponible, descarga
+fallida, error del runner o del CLI) son ruido del entorno y no se documentan en
+`errores.md` como errores del estudiante.
+
 Si no hay commits desde medianoche pero el log del bloque más reciente
 (`logs/<nombre_ejercicio>/bloqueN.log`) tiene contenido de hoy,
 úsalo como fuente principal (PASO 3) e ignora el git log.
@@ -127,6 +137,29 @@ Cada bloque contiene uno o más intentos, cada uno delimitado por `====`. Dentro
     ... errores de gcc, warnings, o "(Compilacion limpia. Cero errores y advertencias.)" ...
     [EXIT CODE: N]     ← 0 = compiló exitosamente, ≠0 = error de compilación
 
+Para logs de Exercism, la estructura puede variar así:
+
+    INTENTO EXERCISM: <timestamp>
+    EJERCICIO: <titulo>
+    RUTA: <carpeta>
+    [ARCHIVOS C]
+    ... archivos de solución visibles para el estudiante ...
+    [EXERCISM TEST]
+    Running tests via `make`
+    ... salida de make/gcc/linker o de Unity/tests ...
+    [EXIT CODE: N]
+
+Si el ejercicio usa el layout compacto, los archivos técnicos de Exercism viven
+en `.estudio-exercism/support/`. Ahí puedes leer:
+
+- `.estudio-exercism/support/README.md` para el enunciado traducido;
+- `.estudio-exercism/support/.exercism/config.json` para saber cuáles son los
+  archivos de solución y test;
+- `.estudio-exercism/support/test_*.c` para entender las aserciones esperadas.
+
+No trates `HELP.md`, `makefile`, `test-framework/`, `.exercism/` ni
+`.estudio-exercism/` como código escrito por el estudiante.
+
 Lee **todos** los intentos del bloque seleccionado en el PASO 4.
 
 ## PASO 4: Evaluación Semántica
@@ -144,6 +177,10 @@ Ejecuta este algoritmo interno de análisis:
    - ¿Qué error de gcc apareció?
    - ¿Qué parte del código lo causó?
    - ¿Cuántas veces apareció el mismo error antes de resolverse?
+   - En Exercism, distingue errores de compilación/linking del estudiante
+     (`undefined reference`, `implicit declaration`, tipos incompatibles,
+     headers faltantes de solución) de errores del entorno (`make not found`,
+     PATH, CLI, permisos). Los de entorno se ignoran para `errores.md`.
 
 2. **Identifica los momentos de compilación exitosa PERO con lógica incorrecta**:
    - El programa compiló (exit 0), pero ¿la salida del programa cumple
@@ -151,6 +188,9 @@ Ejecuta este algoritmo interno de análisis:
      primos" y el programa imprime todos los números, es un error lógico.
    - IMPORTANTE: Si el ejercicio no tenía salida esperada visible en el log,
      analiza la lógica del código en ese commit comparándola con el enunciado.
+   - En Exercism, si el código compila pero `test_*.c` reporta aserciones
+     fallidas, usa los tests como evidencia de comportamiento esperado, sin
+     copiar la solución ni convertir la síntesis en una guía paso a paso.
 
 3. **Analiza la evolución**: compara el código del primer commit con el último.
    - ¿Qué conceptos corrigió el estudiante solo? (no documentar, son victorias)
@@ -190,6 +230,9 @@ Para **cada error lógico significativo** encontrado en el análisis:
   resueltos en el primer o segundo intento. Son ruido.
 - Errores de compilación que el estudiante resolvió en menos de 3 minutos
   y nunca repitió.
+- Errores de infraestructura: falta `make`, PATH sin recargar, `exercism`
+  no instalado/configurado, fallos de descarga, fallos del runner, problemas
+  de la extensión o incompatibilidades del framework.
 
 ### Errores que SÍ documentar:
 - Errores que aparecieron 3+ veces en la sesión

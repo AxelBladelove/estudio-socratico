@@ -1,0 +1,46 @@
+{
+  "provider": "learn-c",
+  "providerName": "learn-c.org",
+  "exercises": [
+    {
+      "slug": "hello-world",
+      "title": "Hello World",
+      "difficulty": "easy",
+      "blurb": "Primer programa en C: imprimir un mensaje y reconocer la estructura basica de main.",
+      "topics": ["entrada-salida", "main", "printf"],
+      "iconUrl": ""
+    },
+    {
+      "slug": "variables-and-types",
+      "title": "Variables and Types",
+      "difficulty": "easy",
+      "blurb": "Practica declaracion de variables, tipos basicos y operaciones simples.",
+      "topics": ["variables", "tipos", "operadores"],
+      "iconUrl": ""
+    },
+    {
+      "slug": "arrays",
+      "title": "Arrays",
+      "difficulty": "easy",
+      "blurb": "Recorre arreglos, modifica posiciones y razona sobre indices.",
+      "topics": ["arreglos", "indices", "for"],
+      "iconUrl": ""
+    },
+    {
+      "slug": "strings",
+      "title": "Strings",
+      "difficulty": "medium",
+      "blurb": "Trabaja con cadenas terminadas en cero y funciones de string.",
+      "topics": ["strings", "arreglos", "caracteres"],
+      "iconUrl": ""
+    },
+    {
+      "slug": "pointers",
+      "title": "Pointers",
+      "difficulty": "medium",
+      "blurb": "Visualiza direcciones de memoria, desreferenciacion y paso por referencia.",
+      "topics": ["punteros", "memoria", "funciones"],
+      "iconUrl": ""
+    }
+  ]
+}

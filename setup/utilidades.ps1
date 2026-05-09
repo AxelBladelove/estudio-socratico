@@ -60,6 +60,20 @@ function Write-SetupInfo {
     Write-SetupLine "[INFO] $Message" DarkCyan
 }
 
+function Open-SetupUrlIfWanted {
+    param(
+        [string]$Url,
+        [string]$Reason
+    )
+
+    Write-SetupInfo $Reason
+    Write-SetupInfo $Url
+    $answer = Read-Host "Abrir ese enlace en el navegador? [S/n]"
+    if ($answer -notmatch '(?i)^n(o)?$') {
+        Start-Process $Url | Out-Null
+    }
+}
+
 function Write-SetupError {
     param([string]$Message)
     Write-SetupLine "[ERROR] $Message" Red
@@ -102,6 +116,17 @@ function Add-SessionPath {
     }
 }
 
+function Test-SessionPathContains {
+    param([string]$PathToFind)
+
+    if (-not $PathToFind) {
+        return $false
+    }
+
+    $entries = @($env:Path -split ";")
+    return ($entries -contains $PathToFind)
+}
+
 function Add-UserPath {
     param(
         [string]$PathToAdd,
@@ -116,6 +141,11 @@ function Add-UserPath {
     $entries = if ($current) { @($current -split ";") } else { @() }
     if ($entries -contains $PathToAdd) {
         Write-SetupSuccess "PATH de usuario ya contiene $PathToAdd"
+        if (-not (Test-SessionPathContains -PathToFind $PathToAdd)) {
+            if (-not $SoloVerificar) {
+                Read-Host "Presiona Enter para recargar el PATH de esta terminal"
+            }
+        }
         Add-SessionPath -PathToAdd $PathToAdd
         return
     }
@@ -127,6 +157,7 @@ function Add-UserPath {
 
     $newPath = if ($current) { "$current;$PathToAdd" } else { $PathToAdd }
     [Environment]::SetEnvironmentVariable("Path", $newPath, "User")
+    Read-Host "Presiona Enter para recargar el PATH de esta terminal"
     Add-SessionPath -PathToAdd $PathToAdd
     Write-SetupSuccess "Agregado al PATH de usuario: $PathToAdd"
 }

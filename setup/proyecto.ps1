@@ -225,6 +225,27 @@ function Read-SetupValue {
     } while ($true)
 }
 
+function Show-SetupInteractiveIntro {
+    param([string]$RepoRoot)
+
+    Write-SetupTitle "Estudio Socratico - Asistente interactivo"
+    Write-SetupLine "Este asistente preparara el repo para estudiar C con VS Code, GCC, Exercism y las skills socraticas." Cyan
+    Write-SetupLine "No tienes que elegir componentes: se instala y valida todo lo necesario por defecto." Cyan
+    Write-SetupLine ""
+    Write-SetupLine "La TUI solo se detendra si necesita datos tuyos:" DarkGray
+    Write-SetupLine "  1. Identidad local del estudiante y Git." DarkGray
+    Write-SetupLine "  2. Token global de Exercism si falta." DarkGray
+    Write-SetupLine "  3. GEMINI_API_KEY si quieres traducciones automaticas." DarkGray
+    Write-SetupLine "  4. Confirmaciones puntuales como abrir enlaces o recargar PATH." DarkGray
+    Write-SetupLine ""
+    Write-SetupLine ("Repo: {0}" -f $RepoRoot) DarkGray
+    Write-SetupLine ""
+}
+
+function Wait-SetupInteractiveStart {
+    Read-Host "Presiona Enter para empezar la instalacion completa"
+}
+
 function Resolve-ProjectOnboarding {
     param(
         [string]$RepoRoot,
@@ -271,7 +292,10 @@ function Resolve-ProjectOnboarding {
         (Test-UsableGitIdentityValue -Value $GitCorreo)
     )
 
-    if ((-not $SoloVerificar) -and (-not $SinOnboarding) -and (-not $hasCompleteInput)) {
+    if ((-not $SoloVerificar) -and (-not $SinOnboarding)) {
+        Show-SetupInteractiveIntro -RepoRoot $RepoRoot
+        Wait-SetupInteractiveStart
+
         Write-SetupStep "Configurando tu usuario de estudio"
         Write-SetupInfo "Estos datos solo se guardan en este clon local."
 
@@ -287,7 +311,10 @@ function Resolve-ProjectOnboarding {
         if (-not (Test-UsableGitIdentityValue -Value $GitCorreo)) {
             $GitCorreo = ("{0}@users.noreply.github.com" -f $GitHubUsuario)
         }
+        Open-SetupUrlIfWanted -Url "https://github.com/settings/emails" -Reason "Si quieres verificar o copiar tu correo de GitHub, abre esta pagina. Si no, usa el noreply sugerido."
         $GitCorreo = Read-SetupValue -Prompt "Correo para commits (usa uno verificado o noreply de GitHub)" -DefaultValue $GitCorreo -Required
+    } elseif ((-not $SoloVerificar) -and (-not $hasCompleteInput)) {
+        Write-SetupInfo "SinOnboarding activo; se usaran valores por defecto para la identidad local."
     }
 
     if (-not (Test-UsableGitIdentityValue -Value $UsuarioSlug)) {
@@ -509,7 +536,7 @@ function Test-WorkspaceJson {
 function Write-SetupReport {
     param([hashtable]$Tools)
 
-    foreach ($name in @("Git", "PowerShell", "Node.js", "Bun", "Python", "GitHub CLI", "MSYS2", "VS Code")) {
+    foreach ($name in @("Git", "PowerShell", "Node.js", "Bun", "Python", "GitHub CLI", "Exercism CLI", "MSYS2", "VS Code")) {
         if ($Tools.ContainsKey($name) -and $Tools[$name]) {
             Write-SetupLine ("  {0}: OK" -f $name) Green
         } else {

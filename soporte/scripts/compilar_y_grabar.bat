@@ -73,6 +73,7 @@ set "OUTPUT_DIR=%RUNTIME_DIR%\builds"
 set "LATEST_EXE_FILE=%RUNTIME_DIR%\latest_exe.txt"
 set "RUN_LOCK_FILE=%RUNTIME_DIR%\run.lock"
 set "CONSOLE_SUPPORT_DIR=%REPO_ROOT%\soporte\consola"
+set "EXERCISM_MANAGER=%REPO_ROOT%\soporte\exercism\manager.ps1"
 set "BUILD_CONTEXT_SCRIPT=%SCRIPT_DIR%resolve_build_context.ps1"
 set "FINALIZE_SCRIPT=%SCRIPT_DIR%finalizar_intento.bat"
 set "OUTPUT_LAUNCHER_SRC=%CONSOLE_SUPPORT_DIR%\output_launcher.c"
@@ -90,6 +91,19 @@ set "CONIO_OBJ=%RUNTIME_DIR%\conio_support.o"
 
 if not exist "%RUNTIME_DIR%\" mkdir "%RUNTIME_DIR%\"
 if not exist "%OUTPUT_DIR%\" mkdir "%OUTPUT_DIR%\"
+
+set "IS_EXERCISM=0"
+if exist "%EXERCISM_MANAGER%" (
+    for /f "usebackq delims=" %%V in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%EXERCISM_MANAGER%" -Action detect -RepoRoot "%REPO_ROOT%" -File "%ARCHIVO_C%"`) do set "%%V"
+)
+
+if "%IS_EXERCISM%"=="1" (
+    echo [EXERCISM] Detectado ejercicio de Exercism.
+    echo [EXERCISM] Ejecutando tests oficiales locales con exercism test...
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%EXERCISM_MANAGER%" -Action test -RepoRoot "%REPO_ROOT%" -File "%ARCHIVO_C%"
+    set "EXIT_CODE=%errorlevel%"
+    endlocal & exit /b %EXIT_CODE%
+)
 
 set "RUN_LOCK_STATE=FREE"
 if exist "%RUN_LOCK_FILE%" (

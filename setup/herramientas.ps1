@@ -40,6 +40,12 @@ function Get-ToolSpecs {
             Candidates = @("$env:ProgramFiles\GitHub CLI\gh.exe")
         },
         @{
+            Name = "Exercism CLI"
+            WingetId = "Exercism.CLI"
+            Command = "exercism"
+            Candidates = @("$env:LOCALAPPDATA\Microsoft\WindowsApps\exercism.exe")
+        },
+        @{
             Name = "MSYS2"
             WingetId = "MSYS2.MSYS2"
             Command = $null
@@ -55,6 +61,21 @@ function Get-ToolSpecs {
             )
         }
     )
+}
+
+function ConvertFrom-SetupSecureString {
+    param([System.Security.SecureString]$SecureValue)
+
+    if (-not $SecureValue -or $SecureValue.Length -eq 0) {
+        return $null
+    }
+
+    $ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecureValue)
+    try {
+        return [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)
+    } finally {
+        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr)
+    }
 }
 
 function Request-SetupElevationIfNeeded {
@@ -192,4 +213,110 @@ function Ensure-Tools {
     }
 
     return $resolved
+}
+
+function Test-ExercismCliConfiguration {
+    param(
+        [AllowNull()][string]$ExercismPath,
+        [switch]$SoloVerificar,
+        [switch]$SinOnboarding
+    )
+
+    if (-not $ExercismPath) {
+        Write-SetupWarning "Exercism CLI no esta confirmado; podras instalarlo luego con winget install Exercism.CLI."
+        return
+    }
+
+    $configPath = Join-Path $env:APPDATA "exercism\user.json"
+    if (Test-Path -LiteralPath $configPath) {
+        try {
+            $config = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
+            if (-not [string]::IsNullOrWhiteSpace($config.token)) {
+                Write-SetupSuccess "Exercism CLI tiene un token configurado para esta PC."
+                return
+            }
+        } catch {
+        }
+    }
+
+    try {
+        $output = & $ExercismPath configure --show 2>&1
+        $tokenLine = @($output) | Where-Object { $_ -match '^\s*Token:' } | Select-Object -First 1
+        if ((-not [string]::IsNullOrWhiteSpace($tokenLine)) -and
+            ($tokenLine -notmatch '(?i)<not configured>|not configured') -and
+            ($tokenLine -match '^\s*Token:\s*(?:\(-t,\s*--token\)\s*)?\S+')) {
+            Write-SetupSuccess "Exercism CLI tiene un token configurado para esta PC."
+            return
+        }
+
+        Write-SetupWarning "Exercism CLI no tiene token configurado."
+        if ((-not $SoloVerificar) -and (-not $SinOnboarding)) {
+            Open-SetupUrlIfWanted -Url "https://exercism.org/settings/api_cli" -Reason "Para obtener tu token de Exercism, inicia sesion y copia el token del CLI."
+            Write-SetupInfo "Pega tu token global de Exercism. Puedes presionar Enter y configurarlo luego."
+            $secureToken = Read-Host "Token de Exercism" -AsSecureString
+            $token = ConvertFrom-SetupSecureString -SecureValue $secureToken
+            if (-not [string]::IsNullOrWhiteSpace($token)) {
+                & $ExercismPath configure --token $token | Out-Null
+                Write-SetupSuccess "Token de Exercism configurado para esta PC."
+                return
+            }
+        }
+        Write-SetupInfo "Configuralo luego con: exercism configure --token TU_TOKEN"
+    } catch {
+        Write-SetupWarning "No pude validar la configuracion de Exercism CLI."
+        Write-SetupInfo "Configuralo manualmente con: exercism configure --token TU_TOKEN"
+    }
+}
+
+function Test-GeminiConfiguration {
+    param(
+        [string]$RepoRoot,
+        [switch]$SoloVerificar,
+        [switch]$SinOnboarding
+    )
+
+    $projectGeminiKey = $null
+    if (-not [string]::IsNullOrWhiteSpace($RepoRoot)) {
+        foreach ($configPath in @(
+            (Join-Path $RepoRoot "soporte\exercism\config.local.json"),
+            (Join-Path $RepoRoot "soporte\exercism\config.json"),
+            (Join-Path $RepoRoot ".estudio_exercism.local.json")
+        )) {
+            if (-not (Test-Path -LiteralPath $configPath)) {
+                continue
+            }
+            try {
+                $config = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
+                $gemini = if ($config.gemini) { $config.gemini } else { $config }
+                if (-not [string]::IsNullOrWhiteSpace($gemini.apiKey)) { $projectGeminiKey = $gemini.apiKey }
+                elseif (-not [string]::IsNullOrWhiteSpace($gemini.geminiApiKey)) { $projectGeminiKey = $gemini.geminiApiKey }
+                elseif (-not [string]::IsNullOrWhiteSpace($gemini.GEMINI_API_KEY)) { $projectGeminiKey = $gemini.GEMINI_API_KEY }
+
+                if (-not [string]::IsNullOrWhiteSpace($projectGeminiKey)) {
+                    break
+                }
+            } catch {
+            }
+        }
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($projectGeminiKey)) {
+        Write-SetupSuccess "Gemini queda configurado desde la configuracion compartida del repo."
+        return
+    }
+
+    $geminiKey = $env:GEMINI_API_KEY
+    if ([string]::IsNullOrWhiteSpace($geminiKey)) {
+        $geminiKey = [Environment]::GetEnvironmentVariable("GEMINI_API_KEY", "User")
+    }
+    if ([string]::IsNullOrWhiteSpace($geminiKey)) {
+        $geminiKey = [Environment]::GetEnvironmentVariable("GEMINI_API_KEY", "Machine")
+    }
+
+    if ([string]::IsNullOrWhiteSpace($geminiKey)) {
+        Write-SetupWarning "Gemini no tiene clave compartida del repo ni GEMINI_API_KEY local; los README importados quedaran con traduccion pendiente."
+        Write-SetupInfo "Para una clave compartida del proyecto, configura soporte\exercism\config.json."
+    } else {
+        Write-SetupSuccess "GEMINI_API_KEY local esta configurado para traducciones automaticas."
+    }
 }

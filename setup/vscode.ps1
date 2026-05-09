@@ -99,6 +99,93 @@ function Install-VSCodeExtensions {
     }
 }
 
+function Install-EstudioExercismExtension {
+    param(
+        [string]$RepoRoot,
+        [AllowNull()][string]$CodePath,
+        [switch]$SinExtensiones,
+        [switch]$SoloVerificar
+    )
+
+    if ($SinExtensiones) {
+        Write-SetupWarning "SinExtensiones activo; no se instalara la extension local de Exercism."
+        return
+    }
+
+    if (-not $CodePath) {
+        Write-SetupWarning "VS Code no esta confirmado; no se instalara la extension local de Exercism."
+        return
+    }
+
+    $extensionDir = Join-Path $RepoRoot "soporte\vscode\estudio-exercism"
+    $packagePath = Join-Path $extensionDir "package.json"
+    if (-not (Test-Path $packagePath)) {
+        Write-SetupWarning "No existe la extension local en soporte\vscode\estudio-exercism."
+        return
+    }
+
+    $npmPath = Resolve-SetupTool -CommandName "npm" -Candidates @("$env:ProgramFiles\nodejs\npm.cmd")
+    $npxPath = Resolve-SetupTool -CommandName "npx" -Candidates @("$env:ProgramFiles\nodejs\npx.cmd")
+    if ((-not $npmPath) -or (-not $npxPath)) {
+        Write-SetupWarning "npm/npx no estan confirmados; no se pudo empacar la extension local."
+        return
+    }
+
+    $vsixDir = Join-Path $RepoRoot "soporte\runtime\vscode"
+    $vsixPath = Join-Path $vsixDir "estudio-exercism.vsix"
+
+    if ($SoloVerificar) {
+        Write-SetupInfo "[SoloVerificar] Empacaria e instalaria la extension local de Exercism."
+        return
+    }
+
+    if (-not (Test-Path $vsixDir)) {
+        New-Item -ItemType Directory -Path $vsixDir -Force | Out-Null
+    }
+
+    Push-Location $extensionDir
+    try {
+        $installExit = Invoke-SetupCommand `
+            -FilePath $npmPath `
+            -Arguments @("install", "--no-audit", "--no-fund") `
+            -Description "Instalando dependencias de la extension local Exercism..." `
+            -SoloVerificar:$false `
+            -AllowFailure
+
+        if ($installExit -ne 0) {
+            Write-SetupWarning "npm install fallo para la extension local; el setup continuara."
+            return
+        }
+
+        $packageExit = Invoke-SetupCommand `
+            -FilePath $npxPath `
+            -Arguments @("vsce", "package", "--no-dependencies", "--allow-missing-repository", "--out", $vsixPath) `
+            -Description "Empacando extension local Exercism..." `
+            -SoloVerificar:$false `
+            -AllowFailure
+
+        if (($packageExit -ne 0) -or (-not (Test-Path $vsixPath))) {
+            Write-SetupWarning "No se pudo crear el VSIX de la extension local."
+            return
+        }
+    } finally {
+        Pop-Location
+    }
+
+    $installExtensionExit = Invoke-SetupCommand `
+        -FilePath $CodePath `
+        -Arguments @("--install-extension", $vsixPath, "--force") `
+        -Description "Instalando extension local Estudio Socratico - Exercism..." `
+        -SoloVerificar:$false `
+        -AllowFailure
+
+    if ($installExtensionExit -eq 0) {
+        Write-SetupSuccess "Extension local Estudio Socratico - Exercism instalada."
+    } else {
+        Write-SetupWarning "VS Code no pudo instalar la extension local de Exercism."
+    }
+}
+
 function Set-VSCodeF9BuildKey {
     param(
         [switch]$SoloVerificar
@@ -170,4 +257,5 @@ function Configure-VSCode {
     Set-TerminalDefaultPowerShell -PowerShellPath $PowerShellPath -SoloVerificar:$SoloVerificar
     Set-VSCodeF9BuildKey -SoloVerificar:$SoloVerificar
     Install-VSCodeExtensions -RepoRoot $RepoRoot -CodePath $CodePath -SinExtensiones:$SinExtensiones -SoloVerificar:$SoloVerificar
+    Install-EstudioExercismExtension -RepoRoot $RepoRoot -CodePath $CodePath -SinExtensiones:$SinExtensiones -SoloVerificar:$SoloVerificar
 }

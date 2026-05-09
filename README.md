@@ -1,4 +1,4 @@
-# Estudio Socratico 1.0
+# Estudio Socratico 1.1
 
 Estudio Socratico es un entorno local para estudiar **Fundamentos de
 Programacion en C** con ayuda de inteligencia artificial, sin convertir la IA en
@@ -148,9 +148,88 @@ El sistema tambien mantiene:
 usuarios/<tu_usuario>/errores.md
 ```
 
-Ese archivo empieza vacio en la version 1.0. Con el tiempo, `@sintetizar` lo
+Ese archivo empieza vacio en la version 1.1. Con el tiempo, `@sintetizar` lo
 puede convertir en una memoria de patrones: errores frecuentes, conceptos que se
 repiten y pistas para estudiar mejor.
+
+## Ejercicios Externos Con Exercism
+
+La version 1.1 incluye un panel de ejercicios dentro de VS Code. Sirve para
+importar ejercicios de **Exercism C** y deja preparada la misma interfaz para
+learn-c.org y el PDF del profesor Alejandro Liz.
+
+Abre el panel desde la paleta de comandos:
+
+```text
+Estudio Socratico: Abrir Panel de Ejercicios
+```
+
+Tambien puedes abrirlo desde un archivo `.c` usando el boton del editor si VS
+Code ya instalo la extension local.
+
+### Antes de usar Exercism
+
+Cada estudiante usa el token global de Exercism configurado en su propia PC. El
+repo no guarda tokens.
+
+Configuralo una vez:
+
+```bat
+exercism configure --token TU_TOKEN
+```
+
+> [!NOTE]
+> El setup valida si `exercism` esta instalado y te avisa si falta el token.
+> Las traducciones automaticas usan primero la configuracion compartida del repo
+> (`soporte/exercism/config.json`) y solo caen a `GEMINI_API_KEY` local si hace
+> falta.
+
+### Importar un ejercicio
+
+En el panel:
+
+1. filtra por `Exercism C`;
+2. elige un ejercicio, por ejemplo `Grains`;
+3. haz clic sobre la tarjeta del ejercicio.
+
+El proyecto creara:
+
+```text
+Ejercicios/Grains/
+```
+
+Dentro quedaran los archivos del ejercicio: `.c`, `.h`, tests, metadata y un
+`README.md` en espanol. El `.c` tambien empezara con un bloque `/* ... */` con
+las instrucciones traducidas.
+
+> [!IMPORTANT]
+> Si no hay clave compartida del repo ni `GEMINI_API_KEY` local, el import deja
+> una nota de traduccion pendiente para que puedas reimportar luego.
+
+### Probar y enviar
+
+Cuando abras un `.c` importado desde Exercism, `F9` cambia de modo
+automaticamente:
+
+| Archivo activo | Que hace F9 |
+|---|---|
+| `Ejercicios/Blackjack.c` u otro `.c` normal | compila y ejecuta estilo Code::Blocks |
+| `Ejercicios/Grains/grains.c` u otro Exercism | ejecuta `exercism test` |
+
+Desde el panel tambien puedes usar:
+
+- `Probar`: ejecuta los tests locales de Exercism;
+- `Enviar`: ejecuta `exercism submit` usando el token global de tu PC;
+- `Actualizar`: refresca catalogo y estados locales.
+
+Los intentos de tests tambien se guardan en:
+
+```text
+usuarios/<tu_usuario>/logs/<ejercicio>/
+```
+
+learn-c.org y PDF Alejandro Liz aparecen en la misma interfaz. En esta version
+crean plantillas de estudio y metadata; no tienen submit remoto.
 
 ## Skills De IA
 
@@ -262,7 +341,7 @@ bloque3.log
 ```
 
 > [!NOTE]
-> En GitHub, la version 1.0 sale limpia: sin logs historicos y con los
+> En GitHub, la version 1.1 sale limpia: sin logs historicos y con los
 > `errores.md` vacios. Los logs nuevos se crean cuando cada estudiante empieza a
 > trabajar.
 

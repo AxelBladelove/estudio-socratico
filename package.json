@@ -6,6 +6,8 @@
   "scripts": {
     "setup": "setup\\instalar.cmd /sin-pausa",
     "setup:dry": "setup\\instalar.cmd /sin-pausa -SoloVerificar",
-    "check": "setup\\instalar.cmd /sin-pausa -SoloVerificar -SinWinget -SinExtensiones"
+    "check": "setup\\instalar.cmd /sin-pausa -SoloVerificar -SinWinget -SinExtensiones",
+    "exercism:catalog": "powershell -NoProfile -ExecutionPolicy Bypass -File soporte\\exercism\\manager.ps1 -Action catalog",
+    "exercism:status": "powershell -NoProfile -ExecutionPolicy Bypass -File soporte\\exercism\\manager.ps1 -Action status"
   }
 }

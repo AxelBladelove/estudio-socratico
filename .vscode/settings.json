@@ -20,7 +20,10 @@
     "**/*.o": true,
     "**/*.obj": true,
     ".output": true,
-    "soporte/runtime": true
+    "soporte/runtime": true,
+    "**/.estudio-exercism": true,
+    "**/.estudio-exercism.json": true,
+    "**/.exercism": true
   },
   "claude-code.enableAuthLogin": true,
   "claudeCode.preferredLocation": "panel",

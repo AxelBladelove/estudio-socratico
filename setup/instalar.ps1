@@ -80,6 +80,8 @@ try {
 
     Write-SetupStep "Verificando herramientas base"
     $tools = Ensure-Tools -ToolSpecs $toolSpecs -SoloVerificar:$SoloVerificar -SinWinget:$SinWinget
+    Test-ExercismCliConfiguration -ExercismPath $tools["Exercism CLI"] -SoloVerificar:$SoloVerificar -SinOnboarding:$SinOnboarding
+    Test-GeminiConfiguration -RepoRoot $RepoRoot -SoloVerificar:$SoloVerificar -SinOnboarding:$SinOnboarding
 
     Write-SetupStep "Configurando Git local"
     Configure-ProjectGit `

@@ -7,11 +7,16 @@ function Ensure-GccToolchain {
 
     $bashPath = "C:\msys64\usr\bin\bash.exe"
     $gccPath = "C:\msys64\mingw64\bin\gcc.exe"
+    $makePath = "C:\msys64\usr\bin\make.exe"
+    $mingwMakePath = "C:\msys64\mingw64\bin\mingw32-make.exe"
 
-    if ((Test-Path $gccPath)) {
+    if ((Test-Path $gccPath) -and (Test-Path $makePath) -and (Test-Path $mingwMakePath)) {
         Invoke-SetupCommand -FilePath $gccPath -Arguments @("--version") -Description "Validando gcc..." -SoloVerificar:$false
+        Invoke-SetupCommand -FilePath $makePath -Arguments @("--version") -Description "Validando make..." -SoloVerificar:$false
+        Invoke-SetupCommand -FilePath $mingwMakePath -Arguments @("--version") -Description "Validando mingw32-make..." -SoloVerificar:$false
         Add-UserPath -PathToAdd (Split-Path -Parent $gccPath) -SoloVerificar:$SoloVerificar
         Write-SetupSuccess "GCC disponible: $gccPath"
+        Write-SetupSuccess "Make disponible para tests Exercism: $makePath"
         return
     }
 
@@ -25,7 +30,7 @@ function Ensure-GccToolchain {
     }
 
     if ($SoloVerificar) {
-        Write-SetupInfo "[SoloVerificar] Instalaria GCC dentro de MSYS2 con pacman."
+        Write-SetupInfo "[SoloVerificar] Instalaria GCC, make y mingw32-make dentro de MSYS2 con pacman."
         return
     }
 
@@ -40,7 +45,7 @@ function Ensure-GccToolchain {
 
     $maxAttempts = 4
     for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
-        if (Test-Path $gccPath) {
+        if ((Test-Path $gccPath) -and (Test-Path $makePath) -and (Test-Path $mingwMakePath)) {
             break
         }
 
@@ -56,8 +61,10 @@ echo "=== Instalando GCC $(date '+%Y-%m-%d %H:%M:%S') ==="
 pacman -Sy --noconfirm msys2-keyring
 pacman -Syuu --noconfirm
 pacman -Syuu --noconfirm
-pacman -S --needed --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils mingw-w64-x86_64-crt-git
+pacman -S --needed --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils mingw-w64-x86_64-crt-git mingw-w64-x86_64-make make
 /mingw64/bin/gcc.exe --version
+/usr/bin/make.exe --version
+/mingw64/bin/mingw32-make.exe --version
 echo "=== GCC listo $(date '+%Y-%m-%d %H:%M:%S') ==="
 '@
 
@@ -75,19 +82,28 @@ echo "=== GCC listo $(date '+%Y-%m-%d %H:%M:%S') ==="
             Remove-Item Env:ESTUDIO_GCC_LOG -ErrorAction SilentlyContinue
         }
 
-        if ((Test-Path $gccPath) -and ($exitCode -eq 0)) {
+        if ((Test-Path $gccPath) -and (Test-Path $makePath) -and (Test-Path $mingwMakePath) -and ($exitCode -eq 0)) {
             break
         }
 
-        Write-SetupWarning "MSYS2/GCC aun no esta listo despues del intento $attempt. Se reintentara si quedan intentos."
+        Write-SetupWarning "MSYS2/GCC/make aun no estan listos despues del intento $attempt. Se reintentara si quedan intentos."
         Start-Sleep -Seconds 2
     }
 
     if (-not (Test-Path $gccPath)) {
         throw "No se encontro gcc.exe despues de instalar GCC."
     }
+    if (-not (Test-Path $makePath)) {
+        throw "No se encontro make.exe despues de instalar herramientas para Exercism."
+    }
+    if (-not (Test-Path $mingwMakePath)) {
+        throw "No se encontro mingw32-make.exe despues de instalar herramientas para Exercism."
+    }
 
     Invoke-SetupCommand -FilePath $gccPath -Arguments @("--version") -Description "Validando gcc..." -SoloVerificar:$false
+    Invoke-SetupCommand -FilePath $makePath -Arguments @("--version") -Description "Validando make..." -SoloVerificar:$false
+    Invoke-SetupCommand -FilePath $mingwMakePath -Arguments @("--version") -Description "Validando mingw32-make..." -SoloVerificar:$false
     Add-UserPath -PathToAdd (Split-Path -Parent $gccPath) -SoloVerificar:$SoloVerificar
     Write-SetupSuccess "GCC disponible: $gccPath"
+    Write-SetupSuccess "Make disponible para tests Exercism: $makePath"
 }

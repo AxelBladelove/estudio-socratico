@@ -34,6 +34,15 @@ soporte/runtime/
 .output/
 logs/setup/
 
+# Extension local de VS Code generada por setup
+soporte/vscode/**/node_modules/
+soporte/vscode/**/*.vsix
+soporte/runtime/vscode/
+
+# Configuracion local de APIs auxiliares (nunca guardar tokens)
+.estudio_exercism.local.json
+soporte/exercism/config.local.json
+
 # Artefactos locales de pruebas de agentes
 .agent/*.exe
 .agent/*.bmp

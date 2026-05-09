@@ -1,0 +1,75 @@
+{
+  "name": "estudio-exercism",
+  "displayName": "Estudio Socratico - Exercism",
+  "description": "Panel de ejercicios para Exercism C, learn-c.org y PDF Alejandro Liz dentro de Estudio Socratico.",
+  "version": "1.0.5",
+  "publisher": "estudio-socratico",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Education",
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:estudioExercism.view",
+    "onCommand:estudioExercism.openPanel",
+    "onCommand:estudioExercism.testCurrent",
+    "onCommand:estudioExercism.submitCurrent"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "estudioSocratico",
+          "title": "Estudio",
+          "icon": "assets/estudio.svg"
+        }
+      ]
+    },
+    "views": {
+      "estudioSocratico": [
+        {
+          "type": "webview",
+          "id": "estudioExercism.view",
+          "name": "Ejercicios"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "estudioExercism.openPanel",
+        "title": "Estudio Socratico: Abrir Panel de Ejercicios"
+      },
+      {
+        "command": "estudioExercism.testCurrent",
+        "title": "Estudio Socratico: Probar Ejercicio Actual"
+      },
+      {
+        "command": "estudioExercism.submitCurrent",
+        "title": "Estudio Socratico: Enviar Ejercicio Actual"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "estudioExercism.openPanel",
+          "when": "resourceLangId == c",
+          "group": "navigation@98"
+        },
+        {
+          "command": "estudioExercism.testCurrent",
+          "when": "resourceLangId == c",
+          "group": "navigation@99"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "package": "vsce package --no-dependencies --allow-missing-repository"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^2.15.0"
+  }
+}

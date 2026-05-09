@@ -34,6 +34,8 @@ El flujo principal es:
 | `setup/instalar.ps1` | Orquestador del setup |
 | `setup/proyecto.ps1` | Validacion del repo, onboarding y Git local |
 | `setup/vscode.ps1` | F9, extensiones y terminal |
+| `soporte/exercism/manager.ps1` | Backend para catalogo, import, test y submit de ejercicios externos |
+| `soporte/vscode/estudio-exercism/` | Extension local de VS Code |
 
 ## Identidad Del Usuario
 
@@ -73,14 +75,17 @@ El setup:
 - valida la raiz del proyecto;
 - pide datos de onboarding si faltan;
 - instala o valida herramientas base;
+- instala o valida Exercism CLI;
 - configura Git local;
 - escribe `.estudio_usuario`;
 - crea `usuarios/<slug>/errores.md` vacio si falta;
 - crea o cambia a la rama personal cuando es posible;
 - valida GCC/MSYS2;
+- instala `make` y `mingw32-make` en MSYS2 para tests de Exercism C;
 - compila `soporte/runtime/_output.exe`;
 - compila `soporte/runtime/conio_support.o`;
 - configura `F9` en VS Code.
+- empaca e instala la extension local de ejercicios.
 
 Parametros utiles:
 
@@ -113,10 +118,120 @@ Compilar y Grabar (Sistema Socratico)
 Comportamiento:
 
 - compila el archivo `.c` activo;
+- antes de compilar, detecta si el archivo pertenece a un ejercicio de
+  Exercism importado;
+- si detecta Exercism, ejecuta `soporte/exercism/manager.ps1 -Action test`;
 - abre el ejecutable en una ventana externa;
 - bloquea ejecuciones duplicadas mediante `soporte/runtime/run.lock`;
 - difiere el commit automatico hasta que el estudiante cierre la ventana;
 - guarda salida del programa en el log cuando el launcher recibe `--log`.
+
+## Integracion Exercism
+
+El backend vive en:
+
+```text
+soporte/exercism/manager.ps1
+```
+
+Acciones principales:
+
+| Accion | Uso |
+|---|---|
+| `status` | valida CLI, workspace y variables auxiliares |
+| `catalog` | devuelve JSON para la extension |
+| `import` | descarga/copia un ejercicio y crea metadata local |
+| `detect` | usado por F9 para saber si debe correr tests |
+| `test` | ejecuta `exercism test`, guarda log y commit |
+| `submit` | ejecuta `exercism submit` desde la carpeta importada |
+
+La extension de VS Code llama al mismo backend, asi el comportamiento es igual
+desde botones, terminal o `F9`.
+
+### Catalogo
+
+Exercism usa el endpoint publico:
+
+```text
+https://api.exercism.org/v2/tracks/c/exercises
+```
+
+Ese endpoint devuelve los ejercicios del track C en el orden que usa la pagina.
+Si no hay internet, el backend usa una lista minima de fallback.
+
+Los proveedores no remotos viven en:
+
+```text
+soporte/exercism/catalogs/learn-c.json
+soporte/exercism/catalogs/alejandro.json
+```
+
+Ambos se muestran en la misma UI. En la version 1.0 importan plantillas y
+metadata; no ejecutan tests remotos.
+
+### Estructura De Un Ejercicio Importado
+
+Ejemplo:
+
+```text
+Ejercicios/Grains/
+  .estudio-exercism/
+    support/
+      .exercism/
+      README.md
+      makefile
+      test_grains.c
+      test-framework/
+  .estudio-exercism.json
+  grains.c
+  grains.h
+```
+
+El Explorer de VS Code oculta `.estudio-exercism/` y `.estudio-exercism.json`
+para que el estudiante vea principalmente los archivos de solucion (`.c` y `.h`).
+El backend sincroniza esos archivos hacia `support/` antes de correr `test` o
+`submit`.
+
+`.estudio-exercism.json` guarda proveedor, slug, titulo, estado local, carpeta
+interna y archivos de solucion. No guarda tokens.
+
+### Tokens
+
+Exercism usa la configuracion global del CLI en la PC del estudiante:
+
+```bat
+exercism configure --token TU_TOKEN
+```
+
+El proyecto no guarda ese token en Git ni en `usuarios/`. El setup solo valida
+si existe y muestra una instruccion si falta.
+
+Para traducciones automaticas se lee primero la clave compartida del repo en
+`soporte/exercism/config.json`, luego `soporte/exercism/config.local.json`,
+despues `.estudio_exercism.local.json` y por ultimo `GEMINI_API_KEY` desde el
+entorno. Si no existe ninguna, el import deja un README con traduccion pendiente.
+
+### Extension Local
+
+Fuente:
+
+```text
+soporte/vscode/estudio-exercism/
+```
+
+Durante setup, `setup/vscode.ps1` ejecuta:
+
+1. `npm install` dentro de la extension;
+2. `npx vsce package --no-dependencies --allow-missing-repository`;
+3. `code --install-extension soporte/runtime/vscode/estudio-exercism.vsix --force`.
+
+La extension aporta comandos:
+
+```text
+Estudio Socratico: Abrir Panel de Ejercicios
+Estudio Socratico: Probar Ejercicio Actual
+Estudio Socratico: Enviar Ejercicio Actual
+```
 
 ## Build Para Live Share
 
