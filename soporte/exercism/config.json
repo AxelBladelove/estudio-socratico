@@ -1,5 +1,9 @@
 {
-  "gemini": {
-    "model": "gemini-2.5-flash-lite"
-  }
+    "gemini":  {
+                   "model":  "gemini-2.5-flash-lite",
+                   "apiKeyProtected":  {
+                                           "scheme":  "windows-dpapi-current-user-base64",
+                                           "value":  "AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAVHGdX+AL3E+wIR5POEZt/AAAAAACAAAAAAAQZgAAAAEAACAAAAB/BZVQwmXK8XVxl6Zxw9gmHfqTicK+Rr3EZqoy1UocDgAAAAAOgAAAAAIAACAAAAD6iC++YNGU5Cg+7x5I8ywbOFdqr7stD7N4lzcT0SKf8EAAAACV8eDgGlKjGk5b+rT5AbqXLwjHe7LQsEpbxkzwXQbEUHrWC69VCoCBPFzEt/qCHg4uNRpOag+P6mOX9dLhIXOuQAAAAIoMf89lkd/HKwwv4aw9/5X+Dowri5Mk1r9H9FwF4hEIqkdf06lK04gSPPhrN6RmL4D+ju8u9gq04AK1SOzaCi0="
+                                       }
+               }
 }

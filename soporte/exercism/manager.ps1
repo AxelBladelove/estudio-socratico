@@ -230,6 +230,86 @@ function Get-ExercismApiHeaders {
     }
 }
 
+function Get-ProtectedDataSupport {
+    $protectedDataType = "System.Security.Cryptography.ProtectedData" -as [type]
+    $scopeType = "System.Security.Cryptography.DataProtectionScope" -as [type]
+
+    if ($null -eq $protectedDataType -or $null -eq $scopeType) {
+        foreach ($assemblyName in @("System.Security.Cryptography.ProtectedData", "System.Security")) {
+            try {
+                Add-Type -AssemblyName $assemblyName -ErrorAction Stop
+            } catch {
+            }
+        }
+
+        $protectedDataType = "System.Security.Cryptography.ProtectedData" -as [type]
+        $scopeType = "System.Security.Cryptography.DataProtectionScope" -as [type]
+    }
+
+    if ($null -eq $protectedDataType -or $null -eq $scopeType) {
+        return $null
+    }
+
+    return [pscustomobject]@{
+        ProtectedData = $protectedDataType
+        CurrentUserScope = $scopeType::CurrentUser
+    }
+}
+
+function ConvertFrom-ProtectedGeminiValue {
+    param([AllowNull()][object]$Value)
+
+    if ($null -eq $Value) {
+        return $null
+    }
+
+    $scheme = "windows-dpapi-current-user-base64"
+    $cipherText = $null
+
+    if ($Value -is [string]) {
+        $cipherText = $Value
+    } else {
+        if (-not [string]::IsNullOrWhiteSpace($Value.scheme)) {
+            $scheme = $Value.scheme.Trim()
+        }
+
+        if (-not [string]::IsNullOrWhiteSpace($Value.value)) {
+            $cipherText = $Value.value
+        } elseif (-not [string]::IsNullOrWhiteSpace($Value.ciphertext)) {
+            $cipherText = $Value.ciphertext
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($cipherText)) {
+        return $null
+    }
+
+    if ($scheme -ne "windows-dpapi-current-user-base64") {
+        return $null
+    }
+
+    try {
+        $dpapi = Get-ProtectedDataSupport
+        if ($null -eq $dpapi) {
+            return $null
+        }
+
+        $protectedBytes = [Convert]::FromBase64String($cipherText)
+        $clearBytes = $dpapi.ProtectedData::Unprotect(
+            $protectedBytes,
+            $null,
+            $dpapi.CurrentUserScope
+        )
+        $plainText = [System.Text.Encoding]::UTF8.GetString($clearBytes).Trim()
+        if (-not [string]::IsNullOrWhiteSpace($plainText)) {
+            return $plainText
+        }
+    } catch {
+    }
+
+    return $null
+}
+
 function Get-GeminiApiKey {
     $config = Get-ProjectGeminiConfig
     if ($config -and -not [string]::IsNullOrWhiteSpace($config.apiKey)) {
@@ -287,7 +367,10 @@ function Get-ProjectGeminiConfig {
             $gemini = if ($config.gemini) { $config.gemini } else { $config }
             $apiKey = $null
             $model = $null
-            if (-not [string]::IsNullOrWhiteSpace($gemini.apiKey)) { $apiKey = $gemini.apiKey }
+            if ($null -ne $gemini.apiKeyProtected) { $apiKey = ConvertFrom-ProtectedGeminiValue -Value $gemini.apiKeyProtected }
+            elseif ($null -ne $gemini.protectedApiKey) { $apiKey = ConvertFrom-ProtectedGeminiValue -Value $gemini.protectedApiKey }
+            elseif ($null -ne $gemini.protectedGeminiApiKey) { $apiKey = ConvertFrom-ProtectedGeminiValue -Value $gemini.protectedGeminiApiKey }
+            elseif (-not [string]::IsNullOrWhiteSpace($gemini.apiKey)) { $apiKey = $gemini.apiKey }
             elseif (-not [string]::IsNullOrWhiteSpace($gemini.geminiApiKey)) { $apiKey = $gemini.geminiApiKey }
             elseif (-not [string]::IsNullOrWhiteSpace($gemini.GEMINI_API_KEY)) { $apiKey = $gemini.GEMINI_API_KEY }
 
