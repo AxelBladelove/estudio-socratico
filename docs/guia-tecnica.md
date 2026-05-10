@@ -7,9 +7,14 @@ motor.
 ## Cambios Clave En 1.2
 
 - `npm run setup` ejecuta la TUI completa y `npm run setup:update` valida una
-  instalacion existente sin repetir identidad si ya esta configurada.
+  instalacion existente reutilizando alias/rama si ya estan configurados.
+- `Instalar Estudio Socratico.cmd` fuerza reconfiguracion interactiva del alias
+  local; `Actualizar Estudio Socratico.cmd` mantiene el alias actual y solo
+  revalida GitHub CLI, herramientas y archivos del workspace.
 - La identidad del estudiante se resuelve como alias local vinculado a
-  `gh auth`; el alias se usa para rama, `.estudio_usuario` y commits.
+  `gh auth`; Git local toma `github.user` y `user.email` desde la cuenta
+  autenticada, mientras el alias se usa para `user.name`, rama y
+  `.estudio_usuario`.
 - El panel de ejercicios usa `soporte/exercism/manager.ps1` para catalogo,
   importacion, tests Exercism, submit y validacion local.
 - Los ejercicios no-Exercism pueden tener tests generados por IA en
@@ -89,7 +94,9 @@ setup\instalar.cmd
 El setup:
 
 - valida la raiz del proyecto;
-- pide datos de onboarding si faltan;
+- pide el alias local solo cuando hace falta o cuando se lanza una reconfiguracion interactiva;
+- resuelve el usuario y el correo de GitHub desde `gh auth` sin pedirlos a mano;
+- usa el alias como `user.name` local para que ese mismo nombre aparezca en los commits;
 - instala o valida herramientas base;
 - instala o valida Exercism CLI;
 - configura Git local;

@@ -87,6 +87,7 @@ try {
     Configure-ProjectGit `
         -RepoRoot $RepoRoot `
         -GitPath $tools["Git"] `
+        -UsuarioSlug $UsuarioSlug `
         -GitHubUsuario $GitHubUsuario `
         -GitNombre $GitNombre `
         -GitCorreo $GitCorreo `

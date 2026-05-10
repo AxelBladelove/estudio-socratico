@@ -11,13 +11,22 @@ setup\instalar.cmd
 Ese comando esta pensado para ejecutarse desde una terminal abierta en la raiz
 del repo. Por defecto abre un asistente interactivo en PowerShell: instala y
 valida todo lo necesario sin pedirte elegir componentes. La TUI solo se detiene
-cuando necesita intervencion humana: identidad local, correo de GitHub, token de
-Exercism, abrir enlaces utiles o recargar el PATH de la terminal.
+cuando necesita intervencion humana: alias local del estudiante, token de
+Exercism, abrir enlaces utiles o recargar el PATH de la terminal. El usuario y
+el correo de GitHub se resuelven automaticamente desde `gh auth`. Ese alias se
+usa tambien como `user.name` local para que los commits salgan con ese nombre.
+
+Si usas los accesos directos de la raiz del repo:
+
+- `Instalar Estudio Socratico.cmd` vuelve a abrir la reconfiguracion del alias local para este clon y usa la cuenta GitHub autenticada en `gh` para configurar Git local.
+- `Actualizar Estudio Socratico.cmd` valida una instalacion existente, reutiliza el alias local actual y no cambia la rama del estudiante.
 
 ## Que Hace
 
 - valida que el repo este completo;
-- pregunta el usuario de estudio si hace falta;
+- pide el alias local del estudiante si hace falta;
+- resuelve usuario y correo de GitHub desde `gh auth` sin pedirlos a mano;
+- usa el alias como nombre local de Git para los commits de ese clon;
 - configura Git local;
 - crea `.estudio_usuario`;
 - prepara `usuarios/<slug>/errores.md`;
