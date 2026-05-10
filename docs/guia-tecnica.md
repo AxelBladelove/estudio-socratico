@@ -4,6 +4,22 @@ Esta guia es para quien quiera mantener, extender o depurar Estudio Socratico.
 El README principal esta escrito para estudiantes; este archivo explica el
 motor.
 
+## Cambios Clave En 1.2
+
+- `npm run setup` ejecuta la TUI completa y `npm run setup:update` valida una
+  instalacion existente sin repetir identidad si ya esta configurada.
+- La identidad del estudiante se resuelve como alias local vinculado a
+  `gh auth`; el alias se usa para rama, `.estudio_usuario` y commits.
+- El panel de ejercicios usa `soporte/exercism/manager.ps1` para catalogo,
+  importacion, tests Exercism, submit y validacion local.
+- Los ejercicios no-Exercism pueden tener tests generados por IA en
+  `.estudio-tests/`; la extension solo marca completado cuando `validate`
+  devuelve exit code 0.
+- W3Schools/w3resource y PDF Alejandro se exponen como catalogos estaticos con
+  metadata ligera y `driveFileId`. Los enunciados completos viven en Google
+  Drive; el texto local solo puede existir en `.estudio-drive/`, que no se sube
+  a Git.
+
 ## Resumen De Arquitectura
 
 El flujo principal es:
@@ -162,12 +178,42 @@ Si no hay internet, el backend usa una lista minima de fallback.
 Los proveedores no remotos viven en:
 
 ```text
-soporte/exercism/catalogs/learn-c.json
+soporte/exercism/catalogs/w3schools.json
 soporte/exercism/catalogs/alejandro.json
 ```
 
-Ambos se muestran en la misma UI. En la version 1.0 importan plantillas y
-metadata; no ejecutan tests remotos.
+Ambos se muestran en la misma UI. El catalogo versionado no debe guardar el
+enunciado completo del ejercicio: solo metadata para pintar tarjetas y el
+`driveFileId` publico usado al importar.
+
+### Google Drive De Mantenimiento
+
+Drive se usa solo para publicar paquetes de ejercicios. Los estudiantes no
+necesitan OAuth ni token de Drive: la extension descarga por `driveFileId`
+publico.
+
+Comandos de mantenedor:
+
+```bat
+npm run drive:auth
+npm run drive:check
+npm run drive:generate
+npm run drive:sync
+```
+
+Archivos locales ignorados por Git:
+
+```text
+.estudio-drive/oauth-client.json
+.estudio-drive/token.json
+.estudio-drive/source/
+.estudio-drive/generated/
+```
+
+`drive:sync` sube/actualiza Markdown en Drive, marca cada archivo como publico
+de solo lectura y escribe el `driveFileId` en el catalogo. Por defecto elimina
+`instructionMarkdown` del catalogo versionado despues de subirlo. Usa
+`--keep-local-text` solo durante depuracion.
 
 ### Estructura De Un Ejercicio Importado
 

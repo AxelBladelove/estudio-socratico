@@ -98,11 +98,95 @@ if exist "%EXERCISM_MANAGER%" (
 )
 
 if "%IS_EXERCISM%"=="1" (
-    echo [EXERCISM] Detectado ejercicio de Exercism.
-    echo [EXERCISM] Ejecutando tests oficiales locales con exercism test...
-    powershell -NoProfile -ExecutionPolicy Bypass -File "%EXERCISM_MANAGER%" -Action test -RepoRoot "%REPO_ROOT%" -File "%ARCHIVO_C%"
-    set "EXIT_CODE=%errorlevel%"
-    endlocal & exit /b %EXIT_CODE%
+    set "RUN_LOCK_STATE=FREE"
+    if exist "%RUN_LOCK_FILE%" (
+        for /f "usebackq delims=" %%L in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$lock=$env:RUN_LOCK_FILE; $state='FREE'; if(Test-Path -LiteralPath $lock){$raw=(Get-Content -LiteralPath $lock -Raw).Trim(); $runPid=0; if([int]::TryParse($raw,[ref]$runPid)){if(Get-Process -Id $runPid -ErrorAction SilentlyContinue){$state='ACTIVE'}else{Remove-Item -LiteralPath $lock -Force -ErrorAction SilentlyContinue; $state='STALE'}}elseif((Get-Item -LiteralPath $lock).LastWriteTime -gt (Get-Date).AddSeconds(-30)){$state='ACTIVE'}else{Remove-Item -LiteralPath $lock -Force -ErrorAction SilentlyContinue; $state='STALE'}}; $state"`) do set "RUN_LOCK_STATE=%%L"
+    )
+    if /i "!RUN_LOCK_STATE!"=="ACTIVE" (
+        echo [RUN] Ya hay una ejecucion abierta de este entorno.
+        echo [RUN] Cierra la ventana externa antes de compilar o probar de nuevo.
+        endlocal & exit /b 1
+    )
+
+    set "RUNNER_PS1=%RUNTIME_DIR%\exercism_run_%NOMBRE_BASE%.ps1"
+    > "%RUN_LOCK_FILE%" echo STARTING
+    > "!RUNNER_PS1!" echo $ErrorActionPreference = 'Continue'
+    >> "!RUNNER_PS1!" echo $Host.UI.RawUI.WindowTitle = 'Exercism Tests - Estudio Socratico'
+    >> "!RUNNER_PS1!" echo try {
+    >> "!RUNNER_PS1!" echo     Set-Location -LiteralPath '%REPO_ROOT%'
+    >> "!RUNNER_PS1!" echo     powershell -NoProfile -ExecutionPolicy Bypass -File '%EXERCISM_MANAGER%' -Action test -RepoRoot '%REPO_ROOT%' -File '%ARCHIVO_C%'
+    >> "!RUNNER_PS1!" echo     $code = $LASTEXITCODE
+    >> "!RUNNER_PS1!" echo     Write-Host ''
+    >> "!RUNNER_PS1!" echo     Write-Host ^('Process returned {0} ^(0x{0:X}^)' -f $code^)
+    >> "!RUNNER_PS1!" echo } catch {
+    >> "!RUNNER_PS1!" echo     $code = 1
+    >> "!RUNNER_PS1!" echo     Write-Host ^('[ERROR] ' + $_.Exception.Message^)
+    >> "!RUNNER_PS1!" echo } finally {
+    >> "!RUNNER_PS1!" echo     Remove-Item -LiteralPath '%RUN_LOCK_FILE%' -Force -ErrorAction SilentlyContinue
+    >> "!RUNNER_PS1!" echo }
+    >> "!RUNNER_PS1!" echo Write-Host ''
+    >> "!RUNNER_PS1!" echo Read-Host 'Press Enter to continue'
+    >> "!RUNNER_PS1!" echo Remove-Item -LiteralPath $PSCommandPath -Force -ErrorAction SilentlyContinue
+    >> "!RUNNER_PS1!" echo exit $code
+
+    set "RUNNER_PID="
+    for /f "usebackq delims=" %%P in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$p=Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',$env:RUNNER_PS1) -WindowStyle Normal -PassThru; $p.Id"`) do set "RUNNER_PID=%%P"
+    if defined RUNNER_PID (
+        > "%RUN_LOCK_FILE%" echo !RUNNER_PID!
+        echo [EXERCISM] Detectado ejercicio de Exercism.
+        echo [EXERCISM] Abriendo tests oficiales en ventana externa estilo Code::Blocks...
+        endlocal & exit /b 0
+    )
+
+    del "%RUN_LOCK_FILE%" >nul 2>&1
+    echo [ERROR] No se pudo abrir la ventana externa de tests Exercism.
+    endlocal & exit /b 1
+)
+
+if "%IS_ESTUDIO_VALIDATE%"=="1" (
+    set "RUN_LOCK_STATE=FREE"
+    if exist "%RUN_LOCK_FILE%" (
+        for /f "usebackq delims=" %%L in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$lock=$env:RUN_LOCK_FILE; $state='FREE'; if(Test-Path -LiteralPath $lock){$raw=(Get-Content -LiteralPath $lock -Raw).Trim(); $runPid=0; if([int]::TryParse($raw,[ref]$runPid)){if(Get-Process -Id $runPid -ErrorAction SilentlyContinue){$state='ACTIVE'}else{Remove-Item -LiteralPath $lock -Force -ErrorAction SilentlyContinue; $state='STALE'}}elseif((Get-Item -LiteralPath $lock).LastWriteTime -gt (Get-Date).AddSeconds(-30)){$state='ACTIVE'}else{Remove-Item -LiteralPath $lock -Force -ErrorAction SilentlyContinue; $state='STALE'}}; $state"`) do set "RUN_LOCK_STATE=%%L"
+    )
+    if /i "!RUN_LOCK_STATE!"=="ACTIVE" (
+        echo [RUN] Ya hay una ejecucion abierta de este entorno.
+        echo [RUN] Cierra la ventana externa antes de compilar o validar de nuevo.
+        endlocal & exit /b 1
+    )
+
+    set "RUNNER_PS1=%RUNTIME_DIR%\validar_run_%NOMBRE_BASE%.ps1"
+    > "%RUN_LOCK_FILE%" echo STARTING
+    > "!RUNNER_PS1!" echo $ErrorActionPreference = 'Continue'
+    >> "!RUNNER_PS1!" echo $Host.UI.RawUI.WindowTitle = 'Validacion - Estudio Socratico'
+    >> "!RUNNER_PS1!" echo try {
+    >> "!RUNNER_PS1!" echo     Set-Location -LiteralPath '%REPO_ROOT%'
+    >> "!RUNNER_PS1!" echo     powershell -NoProfile -ExecutionPolicy Bypass -File '%EXERCISM_MANAGER%' -Action validate -RepoRoot '%REPO_ROOT%' -File '%ARCHIVO_C%'
+    >> "!RUNNER_PS1!" echo     $code = $LASTEXITCODE
+    >> "!RUNNER_PS1!" echo     Write-Host ''
+    >> "!RUNNER_PS1!" echo     Write-Host ^('Process returned {0} ^(0x{0:X}^)' -f $code^)
+    >> "!RUNNER_PS1!" echo } catch {
+    >> "!RUNNER_PS1!" echo     $code = 1
+    >> "!RUNNER_PS1!" echo     Write-Host ^('[ERROR] ' + $_.Exception.Message^)
+    >> "!RUNNER_PS1!" echo } finally {
+    >> "!RUNNER_PS1!" echo     Remove-Item -LiteralPath '%RUN_LOCK_FILE%' -Force -ErrorAction SilentlyContinue
+    >> "!RUNNER_PS1!" echo }
+    >> "!RUNNER_PS1!" echo Write-Host ''
+    >> "!RUNNER_PS1!" echo Read-Host 'Press Enter to continue'
+    >> "!RUNNER_PS1!" echo Remove-Item -LiteralPath $PSCommandPath -Force -ErrorAction SilentlyContinue
+    >> "!RUNNER_PS1!" echo exit $code
+
+    set "RUNNER_PID="
+    for /f "usebackq delims=" %%P in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$p=Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',$env:RUNNER_PS1) -WindowStyle Normal -PassThru; $p.Id"`) do set "RUNNER_PID=%%P"
+    if defined RUNNER_PID (
+        > "%RUN_LOCK_FILE%" echo !RUNNER_PID!
+        echo [VALIDAR] Detectado ejercicio con tests locales.
+        echo [VALIDAR] Abriendo validacion en ventana externa estilo Code::Blocks...
+        endlocal & exit /b 0
+    )
+
+    del "%RUN_LOCK_FILE%" >nul 2>&1
+    echo [ERROR] No se pudo abrir la ventana externa de validacion.
+    endlocal & exit /b 1
 )
 
 set "RUN_LOCK_STATE=FREE"

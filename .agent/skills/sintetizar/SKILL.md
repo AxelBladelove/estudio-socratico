@@ -160,6 +160,21 @@ en `.estudio-exercism/support/`. Ahí puedes leer:
 No trates `HELP.md`, `makefile`, `test-framework/`, `.exercism/` ni
 `.estudio-exercism/` como código escrito por el estudiante.
 
+Para logs de validacion local generados por `@test` / `@validar`, la estructura
+puede variar así:
+
+    VALIDACION LOCAL: <timestamp>
+    EJERCICIO: <titulo>
+    RUTA: <carpeta>
+    ... salida de .estudio-tests/validar.ps1 ...
+    [EXIT CODE: N]
+
+Si N=0, los tests generados pasaron y el ejercicio puede aparecer como
+`completed` en la extension. Si N!=0, distingue errores del estudiante de errores
+del harness generado. Los problemas del harness (`gcc` ausente, rutas mal
+resueltas, casos ambiguos o formato no especificado) son ruido de herramienta y
+no deben documentarse como errores conceptuales del estudiante.
+
 Lee **todos** los intentos del bloque seleccionado en el PASO 4.
 
 ## PASO 4: Evaluación Semántica

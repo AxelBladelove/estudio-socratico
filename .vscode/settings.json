@@ -23,6 +23,8 @@
     "soporte/runtime": true,
     "**/.estudio-exercism": true,
     "**/.estudio-exercism.json": true,
+    "**/.estudio-tests": true,
+    "**/.estudio-drive": true,
     "**/.exercism": true
   },
   "claude-code.enableAuthLogin": true,

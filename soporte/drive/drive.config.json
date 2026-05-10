@@ -1,0 +1,17 @@
+{
+  "rootFolderId": "1Y640fOlIERYQ45gqtYvxAYZrUgk4gpky",
+  "providers": {
+    "w3schools": {
+      "catalog": "w3schools",
+      "folderId": "1eD-sUogV-9_yxRQ9NCSlCqKRwz2-vQuO",
+      "folderUrl": "https://drive.google.com/drive/folders/1eD-sUogV-9_yxRQ9NCSlCqKRwz2-vQuO",
+      "publicDownloads": true
+    },
+    "alejandro": {
+      "catalog": "alejandro",
+      "folderId": "12Y9kmayvwaKQFhiPnNolIWYCFREPnk50",
+      "folderUrl": "https://drive.google.com/drive/folders/12Y9kmayvwaKQFhiPnNolIWYCFREPnk50",
+      "publicDownloads": true
+    }
+  }
+}

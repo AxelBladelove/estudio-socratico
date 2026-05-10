@@ -1,21 +1,17 @@
 {
   "name": "estudio-exercism",
   "displayName": "Estudio Socratico - Exercism",
-  "description": "Panel de ejercicios para Exercism C, learn-c.org y PDF Alejandro Liz dentro de Estudio Socratico.",
-  "version": "1.0.5",
+  "description": "Panel de ejercicios para Exercism C, W3Schools/w3resource y PDF Alejandro Liz dentro de Estudio Socratico.",
+  "version": "1.2.0",
   "publisher": "estudio-socratico",
+  "license": "MIT",
+  "icon": "assets/estudio.png",
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
     "Education",
     "Other"
-  ],
-  "activationEvents": [
-    "onView:estudioExercism.view",
-    "onCommand:estudioExercism.openPanel",
-    "onCommand:estudioExercism.testCurrent",
-    "onCommand:estudioExercism.submitCurrent"
   ],
   "main": "./extension.js",
   "contributes": {
@@ -33,7 +29,8 @@
         {
           "type": "webview",
           "id": "estudioExercism.view",
-          "name": "Ejercicios"
+          "name": "Ejercicios",
+          "icon": "assets/estudio.svg"
         }
       ]
     },
@@ -49,6 +46,10 @@
       {
         "command": "estudioExercism.submitCurrent",
         "title": "Estudio Socratico: Enviar Ejercicio Actual"
+      },
+      {
+        "command": "estudioExercism.validateCurrent",
+        "title": "Estudio Socratico: Validar Ejercicio Actual"
       }
     ],
     "menus": {

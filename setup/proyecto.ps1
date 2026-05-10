@@ -199,6 +199,100 @@ function Get-ProjectCurrentUserSlug {
     return $null
 }
 
+function Test-GhAuthenticated {
+    param([AllowNull()][string]$GhPath)
+
+    if (-not $GhPath) {
+        return $false
+    }
+
+    try {
+        & $GhPath auth status 1>$null 2>$null
+        return ($LASTEXITCODE -eq 0)
+    } catch {
+        return $false
+    }
+}
+
+function Get-GhAuthenticatedProfile {
+    param([AllowNull()][string]$GhPath)
+
+    if (-not $GhPath) {
+        return $null
+    }
+
+    if (-not (Test-GhAuthenticated -GhPath $GhPath)) {
+        return $null
+    }
+
+    try {
+        $json = & $GhPath api user 2>$null
+        if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($json)) {
+            return $null
+        }
+        $profile = $json | ConvertFrom-Json
+        if ([string]::IsNullOrWhiteSpace($profile.login)) {
+            return $null
+        }
+
+        $email = $profile.email
+        if ([string]::IsNullOrWhiteSpace($email)) {
+            if ($profile.id) {
+                $email = ("{0}+{1}@users.noreply.github.com" -f $profile.id, $profile.login)
+            } else {
+                $email = ("{0}@users.noreply.github.com" -f $profile.login)
+            }
+        }
+
+        return [pscustomobject]@{
+            login = $profile.login
+            email = $email
+        }
+    } catch {
+        return $null
+    }
+}
+
+function Ensure-GhAuthenticatedProfile {
+    param(
+        [AllowNull()][string]$GhPath,
+        [switch]$SoloVerificar,
+        [switch]$SinOnboarding
+    )
+
+    if (-not $GhPath) {
+        Write-SetupWarning "GitHub CLI no esta confirmado; se usara la configuracion Git local si existe."
+        return $null
+    }
+
+    $profile = Get-GhAuthenticatedProfile -GhPath $GhPath
+    if ($profile) {
+        Write-SetupSuccess ("GitHub autenticado como {0}." -f $profile.login)
+        return $profile
+    }
+
+    if ($SoloVerificar) {
+        Write-SetupInfo "[SoloVerificar] Validaria GitHub CLI con gh auth status."
+        return $null
+    }
+
+    if ($SinOnboarding) {
+        Write-SetupWarning "GitHub CLI no tiene sesion activa y SinOnboarding esta activo."
+        return $null
+    }
+
+    Write-SetupStep "Conectando GitHub"
+    Write-SetupInfo "Se abrira el flujo web de GitHub CLI. Esto vincula tu alias local con tu cuenta real."
+    & $GhPath auth login -w -s repo
+    $profile = Get-GhAuthenticatedProfile -GhPath $GhPath
+    if (-not $profile) {
+        throw "No pude confirmar la sesion de GitHub CLI despues de gh auth login."
+    }
+
+    Write-SetupSuccess ("GitHub autenticado como {0}." -f $profile.login)
+    return $profile
+}
+
 function Read-SetupValue {
     param(
         [string]$Prompt,
@@ -250,18 +344,30 @@ function Resolve-ProjectOnboarding {
     param(
         [string]$RepoRoot,
         [AllowNull()][string]$GitPath,
+        [AllowNull()][string]$GhPath,
         [AllowNull()][string]$UsuarioSlug,
         [AllowNull()][string]$GitHubUsuario,
         [AllowNull()][string]$GitNombre,
         [AllowNull()][string]$GitCorreo,
         [switch]$SoloVerificar,
-        [switch]$SinOnboarding
+        [switch]$SinOnboarding,
+        [switch]$Actualizar,
+        [switch]$Reconfigurar
     )
 
     $configuredGitHubUser = Get-ProjectGitConfigValue -RepoRoot $RepoRoot -GitPath $GitPath -Name "github.user"
     $configuredGitName = Get-ProjectGitConfigValue -RepoRoot $RepoRoot -GitPath $GitPath -Name "user.name"
     $configuredGitEmail = Get-ProjectGitConfigValue -RepoRoot $RepoRoot -GitPath $GitPath -Name "user.email"
     $configuredSlug = Get-ProjectCurrentUserSlug -RepoRoot $RepoRoot
+
+    $ghProfile = Ensure-GhAuthenticatedProfile -GhPath $GhPath -SoloVerificar:$SoloVerificar -SinOnboarding:$SinOnboarding
+
+    if ($ghProfile -and (Test-UsableGitIdentityValue -Value $ghProfile.login)) {
+        $GitHubUsuario = $ghProfile.login
+    }
+    if ($ghProfile -and (Test-UsableGitIdentityValue -Value $ghProfile.email)) {
+        $GitCorreo = $ghProfile.email
+    }
 
     if (-not (Test-UsableGitIdentityValue -Value $UsuarioSlug)) {
         $UsuarioSlug = $configuredSlug
@@ -292,27 +398,28 @@ function Resolve-ProjectOnboarding {
         (Test-UsableGitIdentityValue -Value $GitCorreo)
     )
 
-    if ((-not $SoloVerificar) -and (-not $SinOnboarding)) {
+    if ($hasCompleteInput -and (-not $Reconfigurar)) {
+        Write-SetupSuccess ("Identidad local reutilizada: {0} vinculado a GitHub {1}." -f (ConvertTo-ProjectUserSlug -Value $UsuarioSlug), $GitHubUsuario)
+    } elseif ((-not $SoloVerificar) -and (-not $SinOnboarding)) {
         Show-SetupInteractiveIntro -RepoRoot $RepoRoot
         Wait-SetupInteractiveStart
 
         Write-SetupStep "Configurando tu usuario de estudio"
-        Write-SetupInfo "Estos datos solo se guardan en este clon local."
+        Write-SetupInfo "El alias se guardara en este clon local y quedara vinculado a tu sesion real de GitHub."
 
         $UsuarioSlug = Read-SetupValue -Prompt "Nombre corto para tu carpeta y rama (ej. axel)" -DefaultValue $defaultSlug -Required
         $UsuarioSlug = ConvertTo-ProjectUserSlug -Value $UsuarioSlug
 
-        $GitHubUsuario = Read-SetupValue -Prompt "Usuario de GitHub para commits y ramas" -DefaultValue $GitHubUsuario -Required
-        if (-not (Test-UsableGitIdentityValue -Value $GitNombre)) {
-            $GitNombre = $GitHubUsuario
+        if (-not (Test-UsableGitIdentityValue -Value $GitHubUsuario)) {
+            $GitHubUsuario = $UsuarioSlug
         }
-        $GitNombre = Read-SetupValue -Prompt "Nombre que aparecera en los commits" -DefaultValue $GitNombre -Required
+        if (-not (Test-UsableGitIdentityValue -Value $GitNombre)) {
+            $GitNombre = $UsuarioSlug
+        }
 
         if (-not (Test-UsableGitIdentityValue -Value $GitCorreo)) {
             $GitCorreo = ("{0}@users.noreply.github.com" -f $GitHubUsuario)
         }
-        Open-SetupUrlIfWanted -Url "https://github.com/settings/emails" -Reason "Si quieres verificar o copiar tu correo de GitHub, abre esta pagina. Si no, usa el noreply sugerido."
-        $GitCorreo = Read-SetupValue -Prompt "Correo para commits (usa uno verificado o noreply de GitHub)" -DefaultValue $GitCorreo -Required
     } elseif ((-not $SoloVerificar) -and (-not $hasCompleteInput)) {
         Write-SetupInfo "SinOnboarding activo; se usaran valores por defecto para la identidad local."
     }
@@ -325,9 +432,7 @@ function Resolve-ProjectOnboarding {
     if (-not (Test-UsableGitIdentityValue -Value $GitHubUsuario)) {
         $GitHubUsuario = $UsuarioSlug
     }
-    if (-not (Test-UsableGitIdentityValue -Value $GitNombre)) {
-        $GitNombre = $GitHubUsuario
-    }
+    $GitNombre = $UsuarioSlug
     if (-not (Test-UsableGitIdentityValue -Value $GitCorreo)) {
         $GitCorreo = ("{0}@users.noreply.github.com" -f $GitHubUsuario)
     }
@@ -419,6 +524,8 @@ function Configure-ProjectGit {
     Invoke-SetupCommand -FilePath $GitPath -Arguments @("config", "github.user", $GitHubUsuario) -Description "Configurando github.user local..." -SoloVerificar:$SoloVerificar
     Invoke-SetupCommand -FilePath $GitPath -Arguments @("config", "user.name", $GitNombre) -Description "Configurando user.name local..." -SoloVerificar:$SoloVerificar
     Invoke-SetupCommand -FilePath $GitPath -Arguments @("config", "user.email", $GitCorreo) -Description "Configurando user.email local..." -SoloVerificar:$SoloVerificar
+    Invoke-SetupCommand -FilePath $GitPath -Arguments @("config", "estudio.github.login", $GitHubUsuario) -Description "Vinculando alias local con GitHub..." -SoloVerificar:$SoloVerificar
+    Invoke-SetupCommand -FilePath $GitPath -Arguments @("config", "estudio.usuario.alias", $GitNombre) -Description "Guardando alias local de estudio..." -SoloVerificar:$SoloVerificar
 }
 
 function Test-ProjectGitRefExists {
@@ -437,13 +544,29 @@ function Test-ProjectGitRefExists {
     }
 }
 
+function Test-ProjectGitDirty {
+    param(
+        [string]$RepoRoot,
+        [string]$GitPath
+    )
+
+    Push-Location $RepoRoot
+    try {
+        $status = (& $GitPath status --porcelain 2>$null)
+        return (-not [string]::IsNullOrWhiteSpace(($status -join "")))
+    } finally {
+        Pop-Location
+    }
+}
+
 function Initialize-ProjectUser {
     param(
         [string]$RepoRoot,
         [AllowNull()][string]$GitPath,
         [string]$UsuarioSlug,
         [switch]$SoloVerificar,
-        [switch]$SinRamaUsuario
+        [switch]$SinRamaUsuario,
+        [switch]$Actualizar
     )
 
     $usuarioDir = Join-Path $RepoRoot ("usuarios\" + $UsuarioSlug)
@@ -466,6 +589,11 @@ function Initialize-ProjectUser {
             New-Item -ItemType File -Path $erroresPath -Force | Out-Null
         }
         Write-SetupSuccess "Usuario local activo: $UsuarioSlug."
+    }
+
+    if ($Actualizar) {
+        Write-SetupInfo "Modo actualizar activo; se mantiene la rama actual y no se intenta cambiar a '$UsuarioSlug'."
+        return
     }
 
     if ($SinRamaUsuario) {
@@ -497,6 +625,12 @@ function Initialize-ProjectUser {
 
     if ($currentBranch -eq $UsuarioSlug) {
         Write-SetupSuccess "Ya estas en la rama personal '$UsuarioSlug'."
+        return
+    }
+
+    if (Test-ProjectGitDirty -RepoRoot $RepoRoot -GitPath $GitPath) {
+        Write-SetupWarning "Hay cambios locales sin guardar; no se cambiara de '$currentBranch' a '$UsuarioSlug' automaticamente."
+        Write-SetupInfo "Esto es esperado si estas actualizando o editando el framework desde main."
         return
     }
 

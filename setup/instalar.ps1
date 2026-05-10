@@ -3,6 +3,8 @@ param(
     [switch]$SinWinget,
     [switch]$SinExtensiones,
     [switch]$Elevado,
+    [switch]$Actualizar,
+    [switch]$Reconfigurar,
     [switch]$SinOnboarding,
     [switch]$SinRamaUsuario,
     [AllowNull()][string]$UsuarioSlug,
@@ -40,25 +42,6 @@ try {
 
     Assert-ProjectRoot -RepoRoot $RepoRoot
 
-    $preGitPath = Resolve-SetupTool `
-        -CommandName "git" `
-        -Candidates @("$env:ProgramFiles\Git\cmd\git.exe", "${env:ProgramFiles(x86)}\Git\cmd\git.exe")
-
-    $setupIdentity = Resolve-ProjectOnboarding `
-        -RepoRoot $RepoRoot `
-        -GitPath $preGitPath `
-        -UsuarioSlug $UsuarioSlug `
-        -GitHubUsuario $GitHubUsuario `
-        -GitNombre $GitNombre `
-        -GitCorreo $GitCorreo `
-        -SoloVerificar:$SoloVerificar `
-        -SinOnboarding:$SinOnboarding
-
-    $UsuarioSlug = $setupIdentity["UsuarioSlug"]
-    $GitHubUsuario = $setupIdentity["GitHubUsuario"]
-    $GitNombre = $setupIdentity["GitNombre"]
-    $GitCorreo = $setupIdentity["GitCorreo"]
-
     $toolSpecs = Get-ToolSpecs
     Request-SetupElevationIfNeeded `
         -ToolSpecs $toolSpecs `
@@ -67,10 +50,8 @@ try {
         -SoloVerificar:$SoloVerificar `
         -SinWinget:$SinWinget `
         -Elevado:$Elevado `
-        -UsuarioSlug $UsuarioSlug `
-        -GitHubUsuario $GitHubUsuario `
-        -GitNombre $GitNombre `
-        -GitCorreo $GitCorreo `
+        -Actualizar:$Actualizar `
+        -Reconfigurar:$Reconfigurar `
         -SinOnboarding:$SinOnboarding `
         -SinRamaUsuario:$SinRamaUsuario `
         -SinExtensiones:$SinExtensiones
@@ -80,6 +61,25 @@ try {
 
     Write-SetupStep "Verificando herramientas base"
     $tools = Ensure-Tools -ToolSpecs $toolSpecs -SoloVerificar:$SoloVerificar -SinWinget:$SinWinget
+
+    $setupIdentity = Resolve-ProjectOnboarding `
+        -RepoRoot $RepoRoot `
+        -GitPath $tools["Git"] `
+        -GhPath $tools["GitHub CLI"] `
+        -UsuarioSlug $UsuarioSlug `
+        -GitHubUsuario $GitHubUsuario `
+        -GitNombre $GitNombre `
+        -GitCorreo $GitCorreo `
+        -SoloVerificar:$SoloVerificar `
+        -SinOnboarding:$SinOnboarding `
+        -Actualizar:$Actualizar `
+        -Reconfigurar:$Reconfigurar
+
+    $UsuarioSlug = $setupIdentity["UsuarioSlug"]
+    $GitHubUsuario = $setupIdentity["GitHubUsuario"]
+    $GitNombre = $setupIdentity["GitNombre"]
+    $GitCorreo = $setupIdentity["GitCorreo"]
+
     Test-ExercismCliConfiguration -ExercismPath $tools["Exercism CLI"] -SoloVerificar:$SoloVerificar -SinOnboarding:$SinOnboarding
     Test-GeminiConfiguration -RepoRoot $RepoRoot -SoloVerificar:$SoloVerificar -SinOnboarding:$SinOnboarding
 
@@ -98,7 +98,8 @@ try {
         -GitPath $tools["Git"] `
         -UsuarioSlug $UsuarioSlug `
         -SoloVerificar:$SoloVerificar `
-        -SinRamaUsuario:$SinRamaUsuario
+        -SinRamaUsuario:$SinRamaUsuario `
+        -Actualizar:$Actualizar
 
     Write-SetupStep "Instalando y validando GCC"
     Ensure-GccToolchain -RepoRoot $RepoRoot -SoloVerificar:$SoloVerificar -SinWinget:$SinWinget
@@ -121,10 +122,16 @@ try {
     Write-SetupReport -Tools $tools
     Write-SetupSuccess "Setup completado. Abre un .c en Ejercicios y presiona F9."
     Stop-SetupLog
+    if ($Elevado) {
+        Read-Host "Proceso elevado completado. Presiona Enter para cerrar esta ventana"
+    }
     exit 0
 } catch {
     Write-SetupError $_.Exception.Message
     Write-SetupInfo "Log: $script:SetupLogPath"
     Stop-SetupLog
+    if ($Elevado) {
+        Read-Host "Proceso elevado detenido. Presiona Enter para cerrar esta ventana"
+    }
     exit 1
 }

@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("status", "catalog", "import", "mark", "test", "submit", "detect")]
+    [ValidateSet("status", "catalog", "import", "mark", "test", "submit", "validate", "test-window", "validate-window", "reveal-tests", "detect")]
     [string]$Action = "catalog",
 
     [string]$RepoRoot,
@@ -439,13 +439,15 @@ function Get-Catalog {
         }
     }
 
-    foreach ($catalogName in @("learn-c", "alejandro")) {
-        $providerName = if ($catalogName -eq "learn-c") { "learn-c.org" } else { "PDF Alejandro Liz" }
+    foreach ($catalogName in @("w3schools", "alejandro")) {
+        $providerName = if ($catalogName -eq "w3schools") { "W3Schools / w3resource" } else { "PDF Alejandro Liz" }
         $order = 0
         foreach ($exercise in (Get-StaticCatalog -Root $Root -CatalogName $catalogName)) {
             $order++
             $key = "${catalogName}:$($exercise.slug)"
             $localEntry = $local[$key]
+            $testsRoot = if ($localEntry) { Join-Path $localEntry.Folder ".estudio-tests" } else { $null }
+            $hasLocalTests = $testsRoot -and (Test-Path -LiteralPath (Join-Path $testsRoot "manifest.json"))
             $items += [pscustomobject]@{
                 provider = $catalogName
                 providerName = $providerName
@@ -459,8 +461,12 @@ function Get-Catalog {
                 imported = [bool]$localEntry
                 folder = if ($localEntry) { $localEntry.Folder } else { $null }
                 topics = @($exercise.topics)
+                sourceUrl = $exercise.sourceUrl
+                driveFileId = $exercise.driveFileId
                 order = $order
-                supportsTests = $false
+                unlocked = $true
+                supportsTests = [bool]$hasLocalTests
+                supportsValidate = [bool]$hasLocalTests
                 supportsSubmit = $false
             }
         }
@@ -485,6 +491,8 @@ function Invoke-GeminiTranslation {
         [string]$Title
     )
 
+    $Markdown = Select-InstructionMarkdown -Markdown $Markdown
+
     $apiKey = Get-GeminiApiKey
     if ([string]::IsNullOrWhiteSpace($apiKey)) {
         return @"
@@ -507,7 +515,8 @@ Conserva Markdown, tablas, listas, nombres de funciones, nombres de archivos y b
 No resuelvas el ejercicio ni agregues pistas.
 "@
     $prompt = @"
-Traduce al espanol latinoamericano el siguiente README de un ejercicio de programacion.
+Traduce al espanol latinoamericano el siguiente enunciado de un ejercicio de programacion.
+Devuelve solo el Markdown traducido, sin introducciones ni explicaciones.
 Titulo del ejercicio: $Title
 
 $Markdown
@@ -539,6 +548,32 @@ $Markdown
         throw "Gemini no devolvio texto traducido."
     }
     return (Clear-TranslationText -Text $text -Title $Title)
+}
+
+function Select-InstructionMarkdown {
+    param([string]$Markdown)
+
+    if ([string]::IsNullOrWhiteSpace($Markdown)) {
+        return $Markdown
+    }
+
+    $clean = $Markdown -replace "`r`n", "`n"
+    $patterns = @(
+        '(?im)^##\s+Fuente\b',
+        '(?im)^##\s+Source\b',
+        '(?im)^##\s+Credits?\b',
+        '(?im)^##\s+External\s+source\b'
+    )
+
+    $cutAt = $clean.Length
+    foreach ($pattern in $patterns) {
+        $match = [regex]::Match($clean, $pattern)
+        if ($match.Success -and $match.Index -lt $cutAt) {
+            $cutAt = $match.Index
+        }
+    }
+
+    return $clean.Substring(0, $cutAt).Trim()
 }
 
 function Clear-TranslationText {
@@ -955,40 +990,40 @@ function Import-TemplateExercise {
         Remove-Item -LiteralPath $target -Recurse -Force
     }
     New-Item -ItemType Directory -Path $target -Force | Out-Null
+    $supportRelative = ".estudio-exercism\support"
+    $supportRoot = Join-Path $target $supportRelative
+    New-Item -ItemType Directory -Path $supportRoot -Force | Out-Null
 
-    $readme = @"
-# $($exercise.title)
+    $readme = Get-TemplateExerciseMarkdown -Root $Root -Exercise $exercise -ProviderName $ProviderName
+    try {
+        $translated = Invoke-GeminiTranslation -Markdown $readme -Title $exercise.title
+    } catch {
+        $translated = Select-InstructionMarkdown -Markdown $readme
+    }
 
-$($exercise.blurb)
-
-## Objetivo
-
-Resuelve el ejercicio en C usando el flujo de Estudio Socratico. Este proveedor aun no incluye tests automaticos, pero comparte la misma interfaz y metadata para poder filtrarse por temas.
-
-## Temas
-
-$(@($exercise.topics) -join ", ")
-"@
-
-    $fileName = (ConvertTo-Slug $exercise.title) + ".c"
+    $fileName = if ($exercise.fileName) { ConvertTo-SafeFileName $exercise.fileName } else { (ConvertTo-Slug $exercise.title) + ".c" }
     $sourcePath = Join-Path $target $fileName
-    Set-Content -LiteralPath (Join-Path $target "README.md") -Value $readme -Encoding utf8
-    Set-Content -LiteralPath $sourcePath -Value ((ConvertTo-CCommentBlock -Markdown $readme -Title $exercise.title) + "#include <stdio.h>`n`nint main(void)`n{`n    return 0;`n}`n") -Encoding utf8
+    $starter = if ($exercise.starterCode) { [string]$exercise.starterCode } else { "#include <stdio.h>`n`nint main(void)`n{`n    return 0;`n}`n" }
+    Set-Content -LiteralPath (Join-Path $supportRoot "README.md") -Value $translated -Encoding utf8
+    Set-Content -LiteralPath $sourcePath -Value ((ConvertTo-CCommentBlock -Markdown $translated -Title $exercise.title) + $starter) -Encoding utf8
 
     $meta = [pscustomobject]@{
         provider = $ProviderName
         slug = $ExerciseSlug
         title = $exercise.title
         folderName = $folderName
-        status = "imported"
+        status = "in_progress"
         difficulty = $exercise.difficulty
         blurb = $exercise.blurb
         topics = @($exercise.topics)
+        sourceUrl = $exercise.sourceUrl
+        driveFileId = $exercise.driveFileId
         solutionFiles = @($fileName)
+        supportRoot = $supportRelative
         importedAt = (Get-Date).ToString("o")
     }
     $meta | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath (Join-Path $target ".estudio-exercism.json") -Encoding utf8
-    Save-Progress -Root $Root -Provider $ProviderName -Slug $ExerciseSlug -Title $exercise.title -Status "imported" -Folder $target
+    Save-Progress -Root $Root -Provider $ProviderName -Slug $ExerciseSlug -Title $exercise.title -Status "in_progress" -Folder $target
 
     return [pscustomobject]@{
         ok = $true
@@ -998,6 +1033,35 @@ $(@($exercise.topics) -join ", ")
         folder = $target
         openFile = $sourcePath
     }
+}
+
+function Get-TemplateExerciseMarkdown {
+    param(
+        [string]$Root,
+        [object]$Exercise,
+        [string]$ProviderName
+    )
+
+    if ($Exercise.driveFileId) {
+        $cacheRoot = Join-Path $Root "soporte\runtime\drive-cache"
+        if (-not (Test-Path -LiteralPath $cacheRoot)) {
+            New-Item -ItemType Directory -Path $cacheRoot -Force | Out-Null
+        }
+        $cachePath = Join-Path $cacheRoot ((ConvertTo-Slug $Exercise.title) + ".md")
+        if (-not (Test-Path -LiteralPath $cachePath)) {
+            $uri = "https://drive.google.com/uc?export=download&id=$($Exercise.driveFileId)"
+            Invoke-WebRequest -Uri $uri -OutFile $cachePath -TimeoutSec 60 | Out-Null
+        }
+        if (Test-Path -LiteralPath $cachePath) {
+            return (Select-InstructionMarkdown -Markdown (Get-Content -LiteralPath $cachePath -Raw))
+        }
+    }
+
+    if ($Exercise.instructionMarkdown) {
+        return (Select-InstructionMarkdown -Markdown ([string]$Exercise.instructionMarkdown))
+    }
+
+    throw "El ejercicio '$($Exercise.title)' no tiene paquete en Drive. Ejecuta npm run drive:sync como mantenedor antes de publicarlo."
 }
 
 function Resolve-ExerciseRoot {
@@ -1036,6 +1100,177 @@ function Resolve-ExerciseRoot {
     }
 
     return $null
+}
+
+function Get-ExerciseLogContext {
+    param(
+        [string]$Root,
+        [object]$Meta,
+        [string]$ExerciseRoot
+    )
+
+    $userSlug = Get-UserSlug -Root $Root
+    $title = if ($Meta.title) { $Meta.title } else { Split-Path $ExerciseRoot -Leaf }
+    $logsDir = Join-Path $Root ("usuarios\" + $userSlug + "\logs\" + (ConvertTo-Slug $title))
+    $erroresFile = Join-Path $Root ("usuarios\" + $userSlug + "\errores.md")
+    if (-not (Test-Path $logsDir)) { New-Item -ItemType Directory -Path $logsDir -Force | Out-Null }
+    if (-not (Test-Path $erroresFile)) { New-Item -ItemType File -Path $erroresFile -Force | Out-Null }
+    $timestamp = Get-Date -Format "yyyy-MM-ddTHH-mm-ss"
+    return [pscustomobject]@{
+        userSlug = $userSlug
+        title = $title
+        timestamp = $timestamp
+        log = (Join-Path $logsDir ("bloque_" + $timestamp + ".log"))
+        erroresFile = $erroresFile
+    }
+}
+
+function Set-LocalExerciseStatus {
+    param(
+        [string]$Root,
+        [string]$ExerciseRoot,
+        [object]$Meta,
+        [string]$Status,
+        [int]$ExitCode
+    )
+
+    $metaPath = Join-Path $ExerciseRoot ".estudio-exercism.json"
+    if (Test-Path -LiteralPath $metaPath) {
+        Set-ObjectProperty -Target $Meta -Name "status" -Value $Status
+        Set-ObjectProperty -Target $Meta -Name "lastValidateAt" -Value (Get-Date).ToString("o")
+        Set-ObjectProperty -Target $Meta -Name "lastValidateExitCode" -Value $ExitCode
+        if ($Status -eq "completed") {
+            Set-ObjectProperty -Target $Meta -Name "completedAt" -Value (Get-Date).ToString("o")
+        }
+        $Meta | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $metaPath -Encoding utf8
+        Save-Progress -Root $Root -Provider $Meta.provider -Slug $Meta.slug -Title $Meta.title -Status $Status -Folder $ExerciseRoot
+    }
+}
+
+function Invoke-ExerciseValidate {
+    param(
+        [string]$Root,
+        [string]$Path
+    )
+
+    $exerciseRoot = Resolve-ExerciseRoot -Root $Root -Path $Path
+    if (-not $exerciseRoot) {
+        throw "No se pudo detectar un ejercicio importado desde la ruta indicada."
+    }
+
+    $metaPath = Join-Path $exerciseRoot ".estudio-exercism.json"
+    if (-not (Test-Path -LiteralPath $metaPath)) {
+        throw "Falta .estudio-exercism.json."
+    }
+    $meta = Get-Content -LiteralPath $metaPath -Raw | ConvertFrom-Json
+    if ($meta.provider -eq "exercism") {
+        return (Invoke-ExercismTest -Root $Root -Path $Path)
+    }
+
+    $testsRoot = Join-Path $exerciseRoot ".estudio-tests"
+    $manifestPath = Join-Path $testsRoot "manifest.json"
+    if (-not (Test-Path -LiteralPath $manifestPath)) {
+        throw "Este ejercicio aun no tiene tests generados. Usa @test o @validar para crearlos primero."
+    }
+
+    $logContext = Get-ExerciseLogContext -Root $Root -Meta $meta -ExerciseRoot $exerciseRoot
+    "============================================================" | Add-Content -LiteralPath $logContext.log
+    "VALIDACION LOCAL: $($logContext.timestamp)" | Add-Content -LiteralPath $logContext.log
+    "EJERCICIO: $($meta.title)" | Add-Content -LiteralPath $logContext.log
+    "RUTA: $exerciseRoot" | Add-Content -LiteralPath $logContext.log
+    "============================================================" | Add-Content -LiteralPath $logContext.log
+
+    $psRunner = Join-Path $testsRoot "validar.ps1"
+    $cmdRunner = Join-Path $testsRoot "validar.cmd"
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        if (Test-Path -LiteralPath $psRunner) {
+            $output = powershell -NoProfile -ExecutionPolicy Bypass -File $psRunner -RepoRoot $Root -ExerciseRoot $exerciseRoot 2>&1
+            $exitCode = $LASTEXITCODE
+        } elseif (Test-Path -LiteralPath $cmdRunner) {
+            $output = cmd /c "`"$cmdRunner`" `"$Root`" `"$exerciseRoot`"" 2>&1
+            $exitCode = $LASTEXITCODE
+        } else {
+            throw "No encontre .estudio-tests\validar.ps1 ni .estudio-tests\validar.cmd."
+        }
+    } finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+
+    $output | ForEach-Object {
+        Write-Host $_
+        $_ | Add-Content -LiteralPath $logContext.log
+    }
+    "[EXIT CODE: $exitCode]" | Add-Content -LiteralPath $logContext.log
+
+    $newStatus = if ($exitCode -eq 0) { "completed" } else { "tests_failed" }
+    Set-LocalExerciseStatus -Root $Root -ExerciseRoot $exerciseRoot -Meta $meta -Status $newStatus -ExitCode $exitCode
+    return $exitCode
+}
+
+function Invoke-ExerciseWindow {
+    param(
+        [string]$Root,
+        [string]$Path,
+        [ValidateSet("test", "validate")]
+        [string]$InnerAction
+    )
+
+    $runtime = Join-Path $Root "soporte\runtime"
+    if (-not (Test-Path -LiteralPath $runtime)) {
+        New-Item -ItemType Directory -Path $runtime -Force | Out-Null
+    }
+
+    $stamp = Get-Date -Format "yyyyMMdd_HHmmss_fff"
+    $runner = Join-Path $runtime ("exercise_window_" + $stamp + ".ps1")
+    $manager = $PSCommandPath
+    $content = @"
+`$Host.UI.RawUI.WindowTitle = 'Estudio Socratico - pruebas'
+try {
+    Set-Location -LiteralPath '$Root'
+    powershell -NoProfile -ExecutionPolicy Bypass -File '$manager' -RepoRoot '$Root' -Action $InnerAction -ExercisePath '$Path'
+    `$code = `$LASTEXITCODE
+    Write-Host ''
+    Write-Host ('Process returned {0} (0x{0:X})' -f `$code)
+} catch {
+    `$code = 1
+    Write-Host ('[ERROR] ' + `$_.Exception.Message)
+}
+Write-Host ''
+Read-Host 'Press Enter to continue'
+Remove-Item -LiteralPath `$PSCommandPath -Force -ErrorAction SilentlyContinue
+exit `$code
+"@
+    Set-Content -LiteralPath $runner -Value $content -Encoding ascii
+    Start-Process -FilePath "powershell.exe" -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $runner) -WindowStyle Normal | Out-Null
+    return [pscustomobject]@{
+        ok = $true
+        action = $InnerAction
+        runner = $runner
+    }
+}
+
+function Reveal-ExerciseTests {
+    param(
+        [string]$Root,
+        [string]$Path
+    )
+
+    $exerciseRoot = Resolve-ExerciseRoot -Root $Root -Path $Path
+    if (-not $exerciseRoot) {
+        throw "No se pudo detectar un ejercicio importado desde la ruta indicada."
+    }
+
+    $testsRoot = Join-Path $exerciseRoot ".estudio-tests"
+    if (-not (Test-Path -LiteralPath $testsRoot)) {
+        throw "Este ejercicio aun no tiene tests generados."
+    }
+
+    return [pscustomobject]@{
+        ok = $true
+        folder = $testsRoot
+    }
 }
 
 function Invoke-LoggedGitCommit {
@@ -1189,7 +1424,17 @@ function Invoke-ExercismSubmit {
     $solutionFiles = if ($meta.solutionFiles) { @($meta.solutionFiles) } else { Get-SolutionFiles -ExerciseRoot $supportRoot }
     Sync-SolutionFilesToSupport -ExerciseRoot $exerciseRoot -SupportRoot $supportRoot -SolutionFiles $solutionFiles
 
-    Push-Location $supportRoot
+    $workspaceRoot = if ($meta.sourceWorkspace) { [string]$meta.sourceWorkspace } else { $null }
+    if ([string]::IsNullOrWhiteSpace($workspaceRoot)) {
+        $workspace = Get-ExercismWorkspace -Cli $cli
+        $workspaceRoot = Join-Path $workspace ("c\" + $meta.slug)
+    }
+    if (-not (Test-Path -LiteralPath $workspaceRoot)) {
+        throw "No encontre el workspace real de Exercism para '$($meta.slug)'. Reimporta el ejercicio o ejecuta exercism download --track c --exercise $($meta.slug)."
+    }
+    Sync-SolutionFilesToSupport -ExerciseRoot $exerciseRoot -SupportRoot $workspaceRoot -SolutionFiles $solutionFiles
+
+    Push-Location $workspaceRoot
     try {
         $previousErrorActionPreference = $ErrorActionPreference
         $ErrorActionPreference = "Continue"
@@ -1260,6 +1505,26 @@ try {
             $exitCode = Invoke-ExercismTest -Root $RepoRoot -Path $path
             exit $exitCode
         }
+        "validate" {
+            $path = if ($ExercisePath) { $ExercisePath } else { $File }
+            $exitCode = Invoke-ExerciseValidate -Root $RepoRoot -Path $path
+            exit $exitCode
+        }
+        "test-window" {
+            $path = if ($ExercisePath) { $ExercisePath } else { $File }
+            Write-Json (Invoke-ExerciseWindow -Root $RepoRoot -Path $path -InnerAction "test")
+            exit 0
+        }
+        "validate-window" {
+            $path = if ($ExercisePath) { $ExercisePath } else { $File }
+            Write-Json (Invoke-ExerciseWindow -Root $RepoRoot -Path $path -InnerAction "validate")
+            exit 0
+        }
+        "reveal-tests" {
+            $path = if ($ExercisePath) { $ExercisePath } else { $File }
+            Write-Json (Reveal-ExerciseTests -Root $RepoRoot -Path $path)
+            exit 0
+        }
         "submit" {
             $path = if ($ExercisePath) { $ExercisePath } else { $File }
             $exitCode = Invoke-ExercismSubmit -Root $RepoRoot -Path $path
@@ -1286,6 +1551,10 @@ try {
                 Write-Output ("EXERCISM_ROOT=" + $exerciseRoot)
             } else {
                 Write-Output "IS_EXERCISM=0"
+                if (Test-Path -LiteralPath (Join-Path $exerciseRoot ".estudio-tests\manifest.json")) {
+                    Write-Output "IS_ESTUDIO_VALIDATE=1"
+                    Write-Output ("ESTUDIO_VALIDATE_ROOT=" + $exerciseRoot)
+                }
             }
         }
     }
@@ -1294,7 +1563,7 @@ try {
     if ([string]::IsNullOrWhiteSpace($message)) {
         $message = ($_ | Out-String).Trim()
     }
-    if ($Json -or $Action -in @("catalog", "status", "import", "mark")) {
+    if ($Json -or $Action -in @("catalog", "status", "import", "mark", "test-window", "validate-window", "reveal-tests")) {
         Write-Json ([pscustomobject]@{
             ok = $false
             error = $message

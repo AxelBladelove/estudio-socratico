@@ -77,6 +77,23 @@ Cuando el usuario escriba `@sintetizar`, `sintetizar` o "resume la sesion":
    existe, inicializalo desde `errores.template.md` antes de escribir.
 4. Reporta los patrones documentados.
 
+## Protocolo `@test` / `@validar`
+
+Cuando el usuario escriba `@test`, `@validar`, "crea tests", "valida mi
+solucion" o algo equivalente para un ejercicio que no sea Exercism:
+
+1. Lee `.agent/skills/test/SKILL.md`.
+2. Lee el `.c` activo, el `README.md` visible o
+   `.estudio-exercism/support/README.md`, y `.estudio-exercism.json`.
+3. Si el proveedor es Exercism, no generes tests: usa los tests oficiales.
+4. Para PDF Alejandro, W3Schools o w3resource, genera tests en
+   `.estudio-tests/` siguiendo el layout de la skill.
+5. No cambies el codigo del estudiante ni escribas la solucion.
+6. Explica solo el alcance de los tests y como ejecutarlos.
+
+Un ejercicio no-Exercism solo debe marcarse como completado cuando la validacion
+local de `.estudio-tests` termine con codigo 0.
+
 ## Reglas De Edicion
 
 - No reemplaces el metodo socratico por soluciones completas.

@@ -42,6 +42,9 @@ soporte/runtime/vscode/
 # Configuracion local de APIs auxiliares (nunca guardar tokens)
 .estudio_exercism.local.json
 soporte/exercism/config.local.json
+.estudio-drive/
+**/.estudio-tests/
+**/.estudio-drive/
 
 # Artefactos locales de pruebas de agentes
 .agent/*.exe

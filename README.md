@@ -1,4 +1,4 @@
-# Estudio Socratico 1.1
+# Estudio Socratico 1.2
 
 Estudio Socratico es un entorno local para estudiar **Fundamentos de
 Programacion en C** con ayuda de inteligencia artificial, sin convertir la IA en
@@ -48,20 +48,19 @@ Estudio Socratico intenta ordenar todo eso en un flujo de estudio:
 4. Ejecuta:
 
 ```bat
-setup\instalar.cmd
+Instalar Estudio Socratico.cmd
 ```
 
 El setup intentara preparar lo necesario: Git, PowerShell, GCC/MSYS2,
 herramientas locales del proyecto, VS Code y el atajo `F9`.
 
-Durante el proceso te pedira tus datos de estudio:
+Durante el proceso te pedira solo lo que no pueda resolver por si mismo:
 
-- nombre corto para tu carpeta y rama, por ejemplo `axel` o `juan`;
-- usuario de GitHub;
-- nombre que aparecera en tus commits;
-- correo para tus commits.
+- iniciar sesion con GitHub CLI si falta;
+- un nombre corto para tu carpeta y rama, por ejemplo `axel` o `juan`;
+- token global de Exercism si falta.
 
-Con eso crea:
+El alias corto queda vinculado a tu cuenta real de GitHub. Con eso crea:
 
 ```text
 .estudio_usuario
@@ -76,7 +75,13 @@ Tambien deja preparada tu rama personal cuando Git lo permite.
 Puedes ejecutar el mismo comando:
 
 ```bat
-setup\instalar.cmd
+Actualizar Estudio Socratico.cmd
+```
+
+Tambien funciona:
+
+```bash
+npm run setup:update
 ```
 
 Si ya tienes las herramientas, el setup solo valida, actualiza lo necesario y
@@ -154,9 +159,9 @@ repiten y pistas para estudiar mejor.
 
 ## Ejercicios Externos Con Exercism
 
-La version 1.1 incluye un panel de ejercicios dentro de VS Code. Sirve para
-importar ejercicios de **Exercism C** y deja preparada la misma interfaz para
-learn-c.org y el PDF del profesor Alejandro Liz.
+La version 1.2 incluye un panel de ejercicios dentro de VS Code. Sirve para
+importar ejercicios de **Exercism C**, **W3Schools / w3resource** y el PDF del
+profesor Alejandro Liz.
 
 Abre el panel desde la paleta de comandos:
 
@@ -198,9 +203,9 @@ El proyecto creara:
 Ejercicios/Grains/
 ```
 
-Dentro quedaran los archivos del ejercicio: `.c`, `.h`, tests, metadata y un
-`README.md` en espanol. El `.c` tambien empezara con un bloque `/* ... */` con
-las instrucciones traducidas.
+Dentro veras solo los archivos utiles para estudiar, normalmente `.c` y `.h`.
+Los tests, metadata y archivos tecnicos quedan ocultos en carpetas `.estudio-*`.
+El `.c` empieza con un bloque `/* ... */` con las instrucciones traducidas.
 
 > [!IMPORTANT]
 > Si no hay clave compartida del repo ni `GEMINI_API_KEY` local, el import deja
@@ -228,8 +233,15 @@ Los intentos de tests tambien se guardan en:
 usuarios/<tu_usuario>/logs/<ejercicio>/
 ```
 
-learn-c.org y PDF Alejandro Liz aparecen en la misma interfaz. En esta version
-crean plantillas de estudio y metadata; no tienen submit remoto.
+W3Schools / w3resource y PDF Alejandro Liz aparecen en la misma interfaz. No
+tienen submit remoto. Si generas tests con `@test` / `@validar`, `F9` puede usar
+esos tests para validar y marcar el ejercicio como completado.
+
+> [!NOTE]
+> Los enunciados completos de W3/PDF no viven en el repo del estudiante. El
+> catalogo solo trae metadata ligera y un `driveFileId`; al importar, la
+> extension descarga el enunciado publico desde Google Drive. La autenticacion de
+> Drive solo se usa para mantener/subir ejercicios, no para estudiar.
 
 ## Skills De IA
 
@@ -318,6 +330,19 @@ Usala al final de una sesion de estudio.
 
 La IA revisa commits y logs de la sesion, detecta patrones y actualiza
 `usuarios/<tu_usuario>/errores.md`.
+
+### `@test` / `@validar`
+
+Usala en ejercicios de PDF Alejandro, W3Schools o w3resource cuando quieras
+crear tests locales para comprobar tu solucion.
+
+```text
+@test
+@validar
+```
+
+La IA lee el enunciado y tu archivo, crea tests ocultos en `.estudio-tests/` y
+no cambia tu solucion. Luego puedes validar desde el panel o con `F9`.
 
 ## Como Funcionan Los Logs
 

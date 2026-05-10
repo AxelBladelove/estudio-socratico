@@ -89,6 +89,8 @@ function Request-SetupElevationIfNeeded {
         [switch]$SinExtensiones,
         [switch]$SinOnboarding,
         [switch]$SinRamaUsuario,
+        [switch]$Actualizar,
+        [switch]$Reconfigurar,
         [AllowNull()][string]$UsuarioSlug,
         [AllowNull()][string]$GitHubUsuario,
         [AllowNull()][string]$GitNombre,
@@ -123,13 +125,19 @@ function Request-SetupElevationIfNeeded {
         "-NoProfile",
         "-ExecutionPolicy", "Bypass",
         "-File", $SetupScript,
-        "-Elevado",
-        "-UsuarioSlug", $UsuarioSlug,
-        "-GitHubUsuario", $GitHubUsuario,
-        "-GitNombre", $GitNombre,
-        "-GitCorreo", $GitCorreo
+        "-Elevado"
     )
 
+    if ($UsuarioSlug) { $args += @("-UsuarioSlug", $UsuarioSlug) }
+    if ($GitHubUsuario) { $args += @("-GitHubUsuario", $GitHubUsuario) }
+    if ($GitNombre) { $args += @("-GitNombre", $GitNombre) }
+    if ($GitCorreo) { $args += @("-GitCorreo", $GitCorreo) }
+    if ($Actualizar) {
+        $args += "-Actualizar"
+    }
+    if ($Reconfigurar) {
+        $args += "-Reconfigurar"
+    }
     if ($SinExtensiones) {
         $args += "-SinExtensiones"
     }
@@ -227,45 +235,145 @@ function Test-ExercismCliConfiguration {
         return
     }
 
+    $hasToken = $false
     $configPath = Join-Path $env:APPDATA "exercism\user.json"
     if (Test-Path -LiteralPath $configPath) {
         try {
             $config = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
             if (-not [string]::IsNullOrWhiteSpace($config.token)) {
-                Write-SetupSuccess "Exercism CLI tiene un token configurado para esta PC."
-                return
+                $hasToken = $true
             }
         } catch {
+            Write-SetupWarning "No pude leer el archivo local de configuracion de Exercism; intentare validar con el CLI."
         }
     }
 
-    try {
-        $output = & $ExercismPath configure --show 2>&1
-        $tokenLine = @($output) | Where-Object { $_ -match '^\s*Token:' } | Select-Object -First 1
-        if ((-not [string]::IsNullOrWhiteSpace($tokenLine)) -and
-            ($tokenLine -notmatch '(?i)<not configured>|not configured') -and
-            ($tokenLine -match '^\s*Token:\s*(?:\(-t,\s*--token\)\s*)?\S+')) {
-            Write-SetupSuccess "Exercism CLI tiene un token configurado para esta PC."
-            return
+    if (-not $hasToken) {
+        $previousErrorActionPreference = $ErrorActionPreference
+        try {
+            $ErrorActionPreference = "Continue"
+            $output = & $ExercismPath configure --show 2>&1
+            $exitCode = $LASTEXITCODE
+        } finally {
+            $ErrorActionPreference = $previousErrorActionPreference
         }
 
-        Write-SetupWarning "Exercism CLI no tiene token configurado."
-        if ((-not $SoloVerificar) -and (-not $SinOnboarding)) {
-            Open-SetupUrlIfWanted -Url "https://exercism.org/settings/api_cli" -Reason "Para obtener tu token de Exercism, inicia sesion y copia el token del CLI."
-            Write-SetupInfo "Pega tu token global de Exercism. Puedes presionar Enter y configurarlo luego."
-            $secureToken = Read-Host "Token de Exercism" -AsSecureString
-            $token = ConvertFrom-SetupSecureString -SecureValue $secureToken
-            if (-not [string]::IsNullOrWhiteSpace($token)) {
+        if ($exitCode -eq 0) {
+            $tokenLine = @($output) | Where-Object { $_ -match '^\s*Token:' } | Select-Object -First 1
+            if ((-not [string]::IsNullOrWhiteSpace($tokenLine)) -and
+                ($tokenLine -notmatch '(?i)<not configured>|not configured') -and
+                ($tokenLine -match '^\s*Token:\s*(?:\(-t,\s*--token\)\s*)?\S+')) {
+                $hasToken = $true
+            }
+        } else {
+            Write-SetupWarning "No pude consultar la configuracion de Exercism CLI con 'configure --show'."
+        }
+    }
+
+    if ($hasToken) {
+        Write-SetupSuccess "Exercism CLI tiene un token configurado para esta PC."
+        Ensure-ExercismCTrackReady -ExercismPath $ExercismPath -SoloVerificar:$SoloVerificar -SinOnboarding:$SinOnboarding | Out-Null
+        return
+    }
+
+    Write-SetupWarning "Exercism CLI no tiene token configurado."
+    if ((-not $SoloVerificar) -and (-not $SinOnboarding)) {
+        Open-SetupUrlIfWanted -Url "https://exercism.org/settings/api_cli" -Reason "Para obtener tu token de Exercism, inicia sesion y copia el token del CLI."
+        Write-SetupInfo "Pega tu token global de Exercism. Puedes presionar Enter y configurarlo luego."
+        $secureToken = Read-Host "Token de Exercism" -AsSecureString
+        $token = ConvertFrom-SetupSecureString -SecureValue $secureToken
+        if (-not [string]::IsNullOrWhiteSpace($token)) {
+            $previousErrorActionPreference = $ErrorActionPreference
+            try {
+                $ErrorActionPreference = "Continue"
                 & $ExercismPath configure --token $token | Out-Null
+                $configureExit = $LASTEXITCODE
+            } finally {
+                $ErrorActionPreference = $previousErrorActionPreference
+            }
+
+            if ($configureExit -eq 0) {
                 Write-SetupSuccess "Token de Exercism configurado para esta PC."
+                Ensure-ExercismCTrackReady -ExercismPath $ExercismPath -SoloVerificar:$SoloVerificar -SinOnboarding:$SinOnboarding | Out-Null
                 return
             }
+
+            Write-SetupWarning "No pude guardar el token de Exercism desde la TUI."
         }
-        Write-SetupInfo "Configuralo luego con: exercism configure --token TU_TOKEN"
-    } catch {
-        Write-SetupWarning "No pude validar la configuracion de Exercism CLI."
-        Write-SetupInfo "Configuralo manualmente con: exercism configure --token TU_TOKEN"
     }
+
+    Write-SetupInfo "Configuralo luego con: exercism configure --token TU_TOKEN"
+}
+
+function Ensure-ExercismCTrackReady {
+    param(
+        [string]$ExercismPath,
+        [switch]$SoloVerificar,
+        [switch]$SinOnboarding
+    )
+
+    if (-not $ExercismPath) {
+        return $false
+    }
+
+    if ($SoloVerificar) {
+        Write-SetupInfo "[SoloVerificar] Ejecutaria exercism prepare y validaria el track C."
+        return $true
+    }
+
+    $prepareExit = Invoke-SetupCommand `
+        -FilePath $ExercismPath `
+        -Arguments @("prepare") `
+        -Description "Preparando configuracion local de Exercism..." `
+        -SoloVerificar:$false `
+        -AllowFailure
+
+    if ($prepareExit -ne 0) {
+        Write-SetupWarning "exercism prepare no termino correctamente; intentare validar el track C de todos modos."
+    }
+
+    $maxAttempts = if ($SinOnboarding) { 1 } else { 6 }
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        $previousErrorActionPreference = $ErrorActionPreference
+        try {
+            $ErrorActionPreference = "Continue"
+            $output = & $ExercismPath download --track c --exercise hello-world 2>&1
+            $exitCode = $LASTEXITCODE
+        } finally {
+            $ErrorActionPreference = $previousErrorActionPreference
+        }
+
+        if ($exitCode -eq 0) {
+            Write-SetupSuccess "Track C de Exercism listo para descargar ejercicios."
+            return $true
+        }
+
+        $message = (($output | ForEach-Object { "$_" }) -join " ").Trim()
+        if ([string]::IsNullOrWhiteSpace($message)) {
+            $message = "exercism download devolvio codigo $exitCode sin salida legible"
+        }
+
+        if ($message -match '(?i)already exists|ya existe') {
+            Write-SetupSuccess "Track C de Exercism listo; hello-world ya existe en el workspace local."
+            return $true
+        }
+
+        if ($message -notmatch '(?i)not joined|no has unido|join this track') {
+            Write-SetupWarning "No pude validar el track C de Exercism: $message"
+            return $false
+        }
+
+        Write-SetupWarning "Tu cuenta de Exercism aun no se ha unido al track C."
+        if ($SinOnboarding) {
+            return $false
+        }
+
+        Open-SetupUrlIfWanted -Url "https://exercism.org/tracks/c" -Reason "Unete al track C en Exercism y vuelve a la TUI para continuar."
+        Read-Host "Cuando ya estes unido al track C, presiona Enter para reintentar"
+    }
+
+    Write-SetupWarning "No pude validar el track C de Exercism despues de varios intentos."
+    return $false
 }
 
 function Test-GeminiConfiguration {

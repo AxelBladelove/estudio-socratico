@@ -157,17 +157,29 @@ function Install-EstudioExercismExtension {
             return
         }
 
-        $packageExit = Invoke-SetupCommand `
-            -FilePath $npxPath `
-            -Arguments @("vsce", "package", "--no-dependencies", "--allow-missing-repository", "--out", $vsixPath) `
-            -Description "Empacando extension local Exercism..." `
-            -SoloVerificar:$false `
-            -AllowFailure
+        Write-SetupInfo "Empacando extension local Exercism..."
+        $packageLogPath = Join-Path $vsixDir "estudio-exercism-package.log"
+        $packageArguments = @("vsce", "package", "--no-dependencies", "--allow-missing-repository", "--out", $vsixPath)
+        $previousErrorActionPreference = $ErrorActionPreference
+        try {
+            $ErrorActionPreference = "Continue"
+            $packageOutput = & $npxPath @packageArguments 2>&1
+            $packageExit = $LASTEXITCODE
+        } finally {
+            $ErrorActionPreference = $previousErrorActionPreference
+        }
+
+        @($packageOutput | ForEach-Object { "$_" }) | Set-Content -Path $packageLogPath -Encoding utf8
 
         if (($packageExit -ne 0) -or (-not (Test-Path $vsixPath))) {
             Write-SetupWarning "No se pudo crear el VSIX de la extension local."
+            foreach ($line in @($packageOutput)) {
+                Write-SetupLine "$line"
+            }
             return
         }
+        Write-SetupSuccess "VSIX local generado: $vsixPath"
+        Write-SetupInfo "Log de empaque: $packageLogPath"
     } finally {
         Pop-Location
     }

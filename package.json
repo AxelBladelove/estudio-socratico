@@ -1,12 +1,17 @@
 {
   "name": "estudio-socratico",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "private": true,
   "description": "Sistema de estudio socratico para Fundamentos de Programacion en C.",
   "scripts": {
-    "setup": "setup\\instalar.cmd /sin-pausa",
-    "setup:dry": "setup\\instalar.cmd /sin-pausa -SoloVerificar",
+    "setup": "setup\\instalar.cmd",
+    "setup:update": "setup\\instalar.cmd -Actualizar",
+    "setup:dry": "setup\\instalar.cmd -SoloVerificar",
     "check": "setup\\instalar.cmd /sin-pausa -SoloVerificar -SinWinget -SinExtensiones",
+    "drive:auth": "node soporte\\drive\\sync-drive.mjs auth",
+    "drive:check": "node soporte\\drive\\sync-drive.mjs check",
+    "drive:sync": "node soporte\\drive\\sync-drive.mjs sync",
+    "drive:generate": "node soporte\\drive\\sync-drive.mjs generate",
     "exercism:catalog": "powershell -NoProfile -ExecutionPolicy Bypass -File soporte\\exercism\\manager.ps1 -Action catalog",
     "exercism:status": "powershell -NoProfile -ExecutionPolicy Bypass -File soporte\\exercism\\manager.ps1 -Action status"
   }
