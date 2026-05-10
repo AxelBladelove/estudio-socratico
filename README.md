@@ -1,460 +1,556 @@
-# Estudio Socratico 1.2
+<div align="center">
 
-Estudio Socratico es un entorno local para estudiar **Fundamentos de
-Programacion en C** con ayuda de inteligencia artificial, sin convertir la IA en
-un atajo para que haga los ejercicios por ti.
+# 🏛️ Estudio Socrático
 
-La idea es simple: escribes C, compilas como en Code::Blocks, el sistema guarda
-tu historial de intentos y la IA usa ese contexto para ayudarte a pensar mejor.
+**Un entorno de estudio para aprender Fundamentos de Programación en C,<br>con una IA que te guía sin resolver los ejercicios por ti.**
+
+![Versión](https://img.shields.io/badge/versión-1.1.6-blue?style=flat-square)
+![Plataforma](https://img.shields.io/badge/plataforma-Windows-0078D6?style=flat-square&logo=windows)
+![Lenguaje](https://img.shields.io/badge/lenguaje-C-A8B9CC?style=flat-square&logo=c)
+![Editor](https://img.shields.io/badge/editor-VS_Code-007ACC?style=flat-square&logo=visualstudiocode)
+
+</div>
+
+---
+
+## ¿Qué es esto?
+
+Estudio Socrático convierte **VS Code** en un entorno parecido a Code::Blocks,
+pero con una diferencia importante: tiene una **IA integrada que actúa como
+tutor**.
+
+La IA **no te da las respuestas**. Te hace preguntas, te explica conceptos y te
+ayuda a descubrir qué está mal en tu código. El razonamiento siempre es tuyo.
 
 > [!NOTE]
-> Este proyecto esta pensado para aprender. La IA puede explicar, guiar,
-> revisar y ayudarte a visualizar tu codigo, pero el objetivo es que el
-> razonamiento siga siendo tuyo.
+> Está pensado para el curso de **Fundamentos de Programación** de la PUCMM con
+> el profesor Alejandro Liz, pero funciona para cualquier persona que esté
+> aprendiendo C.
 
-## Que Problema Resuelve
+---
 
-Cuando estas aprendiendo C, muchas veces el problema no es solo "me dio error".
-El problema real puede ser:
+## ¿Qué problema resuelve?
 
-- no ver como cambian las variables en memoria;
-- no entender por que un ciclo repite de mas o de menos;
-- confundir una posicion de arreglo con el valor guardado ahi;
-- no saber interpretar un error de `gcc`;
-- perder el hilo de varios intentos durante una sesion larga;
-- pedir ayuda a una IA y recibir una respuesta demasiado vaga o demasiado
-  resuelta.
+Cuando aprendes C, los errores no siempre son fáciles de entender:
 
-Estudio Socratico intenta ordenar todo eso en un flujo de estudio:
+| El problema... | Lo que hace Estudio Socrático |
+|---|---|
+| `gcc` muestra un error y no sabes qué significa | La IA te explica el concepto detrás del error |
+| Tu programa compila pero da resultados raros | Puedes pedir una "prueba de escritorio" paso a paso |
+| No entiendes por qué un ciclo repite de más | La IA te muestra cómo cambian las variables |
+| Pierdes el hilo de tus intentos | Cada compilación queda guardada automáticamente |
+| Le preguntas a una IA y te da la solución directa | Aquí la IA te guía, no te resuelve |
 
-1. escribes tu ejercicio en `Ejercicios/`;
-2. compilas con `F9`;
-3. el programa se abre en una consola estilo Code::Blocks;
-4. se guarda un log del intento;
-5. puedes pedir `@revisar`, `@ver` o `@sintetizar` segun lo que necesites.
+---
+
+## Lo que necesitas
+
+- 💻 Una computadora con **Windows**
+- 🐙 Una cuenta en **[GitHub](https://github.com/signup)** (es gratis)
+- 🌐 Conexión a internet (solo durante la instalación)
 
 > [!TIP]
-> Si vienes de Code::Blocks, la sensacion buscada es familiar: compilar,
-> ejecutar en una ventana externa, ver `Process returned...` y cerrar con una
-> tecla.
+> No necesitas tener nada más instalado. El instalador se encarga de todo:
+> Git, GCC, VS Code y las herramientas del proyecto.
 
-## Instalacion Rapida
+---
 
-### Caso 1: Primera vez en una computadora
+## Instalación
 
-1. Descarga o clona este repositorio.
-2. Abre la carpeta del proyecto en VS Code o Antigravity.
-3. Abre una terminal integrada dentro de esa carpeta.
-4. Ejecuta:
+### Primera vez
+
+```
+1. Descarga o clona este repositorio
+2. Abre la carpeta del proyecto
+3. Haz doble clic en:
+```
 
 ```bat
 Instalar Estudio Socratico.cmd
 ```
 
-El setup intentara preparar lo necesario: Git, PowerShell, GCC/MSYS2,
-herramientas locales del proyecto, VS Code y el atajo `F9`.
+El instalador te pide solo dos cosas:
 
-Durante el proceso te pedira solo lo que no pueda resolver por si mismo:
+- **Tu nombre corto** — un alias como `axel` o `juan`, que identifica tus
+  archivos dentro del proyecto.
+- **Iniciar sesión en GitHub** — para vincular tus commits.
 
-- iniciar sesion con GitHub CLI si falta;
-- un nombre corto para tu carpeta y rama, por ejemplo `axel` o `juan`;
-- token global de Exercism si falta.
+Al terminar quedan listos:
+- ✅ El atajo <kbd>F9</kbd> para compilar
+- ✅ Tu carpeta personal (`usuarios/tu_nombre/`)
+- ✅ El historial de intentos vacío y listo para empezar
+- ✅ El panel de ejercicios dentro de VS Code
 
-El alias corto queda vinculado a tu cuenta real de GitHub. Con eso crea:
+<details>
+<summary><strong>🔄 Ya lo tengo instalado, solo quiero actualizar</strong></summary>
 
-```text
-.estudio_usuario
-usuarios/<tu_usuario>/errores.md
-usuarios/<tu_usuario>/logs/
-```
-
-Tambien deja preparada tu rama personal cuando Git lo permite.
-
-### Caso 2: Ya tienes todo instalado
-
-Puedes ejecutar el mismo comando:
+Haz doble clic en:
 
 ```bat
 Actualizar Estudio Socratico.cmd
 ```
 
-Tambien funciona:
+O desde la terminal:
 
 ```bash
 npm run setup:update
 ```
 
-Si ya tienes las herramientas, el setup solo valida, actualiza lo necesario y
-confirma que el proyecto este listo.
+Esto valida tu instalación, actualiza lo que haga falta y no cambia tus archivos
+personales.
 
-### Caso 3: Solo quieres comprobar sin cambiar nada
+</details>
 
-```bat
-setup\instalar.cmd -SoloVerificar -SinWinget -SinExtensiones
-```
-
-Tambien funciona:
+<details>
+<summary><strong>🔍 Solo quiero verificar sin cambiar nada</strong></summary>
 
 ```bash
 npm run check
 ```
 
-### Caso 4: No quieres que instale cosas automaticamente
+Esto revisa que todo esté en orden sin instalar ni modificar nada.
+
+</details>
+
+<details>
+<summary><strong>🛠️ Prefiero instalar Git/GCC/VS Code por mi cuenta</strong></summary>
 
 ```bat
 setup\instalar.cmd -SinWinget
 ```
 
-Usa esta opcion si prefieres instalar Git, VS Code o MSYS2 por tu cuenta.
+Esto omite las instalaciones automáticas y solo configura el proyecto.
 
-## Uso Diario
+</details>
 
-### 1. Abre un ejercicio
+---
 
-Los ejercicios viven en:
+## Uso diario
 
-```text
-Ejercicios/
+### 1️⃣ Abre tu archivo `.c`
+
+Todos tus ejercicios van en la carpeta `Ejercicios/`. El proyecto trae un
+ejemplo:
+
 ```
-
-En la version limpia del proyecto solo viene un ejemplo:
-
-```text
 Ejercicios/Blackjack.c
 ```
 
-### 2. Compila con F9
+Puedes crear más archivos ahí cuando quieras.
 
-Abre un archivo `.c` y presiona:
+### 2️⃣ Presiona <kbd>F9</kbd> para compilar y ejecutar
 
-```text
-F9
-```
+<kbd>F9</kbd> hace lo mismo que el botón de ejecutar en Code::Blocks:
 
-El sistema compila el archivo activo y, si todo sale bien, abre una consola
-externa estilo Code::Blocks.
+1. Compila tu código con GCC.
+2. Si hay errores, los muestra en la terminal.
+3. Si compila bien, abre una **ventana de consola** con tu programa corriendo.
+4. Al terminar, la consola muestra `Process returned...` como en Code::Blocks.
 
 > [!IMPORTANT]
-> Mientras esa consola este abierta, el proyecto considera que hay una ejecucion
-> en curso. Cierra la ventana o presiona una tecla en ella antes de volver a
-> compilar.
+> Mientras la consola de tu programa esté abierta, no puedes compilar de nuevo.
+> Cierra esa ventana (o presiona cualquier tecla en ella) antes de volver a
+> presionar <kbd>F9</kbd>.
 
-### 3. Revisa los resultados
+### 3️⃣ Cada intento queda guardado
 
-Cada intento queda registrado por usuario:
+No tienes que hacer nada. Cada vez que compilas, el sistema guarda
+automáticamente:
 
-```text
-usuarios/<tu_usuario>/logs/<ejercicio>/bloqueN.log
+- 🕐 La hora del intento
+- 📄 El código que tenías en ese momento
+- ❌ Los errores que mostró `gcc` (si hubo)
+- ✅ El resultado de la ejecución
+- 🔢 El código de salida del programa
+
+Los registros se agrupan en bloques de ~45 minutos:
+
 ```
-
-El sistema tambien mantiene:
-
-```text
-usuarios/<tu_usuario>/errores.md
-```
-
-Ese archivo empieza vacio en la version 1.1. Con el tiempo, `@sintetizar` lo
-puede convertir en una memoria de patrones: errores frecuentes, conceptos que se
-repiten y pistas para estudiar mejor.
-
-## Ejercicios Externos Con Exercism
-
-La version 1.2 incluye un panel de ejercicios dentro de VS Code. Sirve para
-importar ejercicios de **Exercism C**, **W3Schools / w3resource** y el PDF del
-profesor Alejandro Liz.
-
-Abre el panel desde la paleta de comandos:
-
-```text
-Estudio Socratico: Abrir Panel de Ejercicios
-```
-
-Tambien puedes abrirlo desde un archivo `.c` usando el boton del editor si VS
-Code ya instalo la extension local.
-
-### Antes de usar Exercism
-
-Cada estudiante usa el token global de Exercism configurado en su propia PC. El
-repo no guarda tokens.
-
-Configuralo una vez:
-
-```bat
-exercism configure --token TU_TOKEN
+usuarios/tu_nombre/logs/nombre_del_ejercicio/
+├── bloque1.log
+├── bloque2.log
+└── bloque3.log
 ```
 
 > [!NOTE]
-> El setup valida si `exercism` esta instalado y te avisa si falta el token.
-> Las traducciones automaticas usan primero la configuracion compartida del repo
-> (`soporte/exercism/config.json`) y solo caen a `GEMINI_API_KEY` local si hace
-> falta.
+> Además, cada compilación crea un **commit automático** en Git con tu nombre.
+> No tienes que hacer nada — esto pasa en segundo plano.
 
-### Importar un ejercicio
+---
 
-En el panel:
+## Pide ayuda a la IA
 
-1. filtra por `Exercism C`;
-2. elige un ejercicio, por ejemplo `Grains`;
-3. haz clic sobre la tarjeta del ejercicio.
+La IA está integrada en el chat del editor. Puedes escribirle en español.
+Hay cuatro comandos:
 
-El proyecto creara:
+### `@revisar` — *Estoy atascado, dame una pista*
 
-```text
-Ejercicios/Grains/
 ```
-
-Dentro veras solo los archivos utiles para estudiar, normalmente `.c` y `.h`.
-Los tests, metadata y archivos tecnicos quedan ocultos en carpetas `.estudio-*`.
-El `.c` empieza con un bloque `/* ... */` con las instrucciones traducidas.
-
-> [!IMPORTANT]
-> Si no hay clave compartida del repo ni `GEMINI_API_KEY` local, el import deja
-> una nota de traduccion pendiente para que puedas reimportar luego.
-
-### Probar y enviar
-
-Cuando abras un `.c` importado desde Exercism, `F9` cambia de modo
-automaticamente:
-
-| Archivo activo | Que hace F9 |
-|---|---|
-| `Ejercicios/Blackjack.c` u otro `.c` normal | compila y ejecuta estilo Code::Blocks |
-| `Ejercicios/Grains/grains.c` u otro Exercism | ejecuta `exercism test` |
-
-Desde el panel tambien puedes usar:
-
-- `Probar`: ejecuta los tests locales de Exercism;
-- `Enviar`: ejecuta `exercism submit` usando el token global de tu PC;
-- `Actualizar`: refresca catalogo y estados locales.
-
-Los intentos de tests tambien se guardan en:
-
-```text
-usuarios/<tu_usuario>/logs/<ejercicio>/
-```
-
-W3Schools / w3resource y PDF Alejandro Liz aparecen en la misma interfaz. No
-tienen submit remoto. Si generas tests con `@test` / `@validar`, `F9` puede usar
-esos tests para validar y marcar el ejercicio como completado.
-
-> [!NOTE]
-> Los enunciados completos de W3/PDF no viven en el repo del estudiante. El
-> catalogo solo trae metadata ligera y un `driveFileId`; al importar, la
-> extension descarga el enunciado publico desde Google Drive. La autenticacion de
-> Drive solo se usa para mantener/subir ejercicios, no para estudiar.
-
-## Skills De IA
-
-Las skills son protocolos para que la IA se comporte como tutor y use el
-contexto correcto del proyecto.
-
-### `@revisar`
-
-Usala cuando estas atascado y quieres una pista.
-
-```text
 @revisar
 ```
 
-La IA debe leer tu usuario, tu archivo `.c`, tu `errores.md` y el ultimo log si
-hace falta. Luego responde con una pista socratica, pero no vaga: debe explicar
-el concepto de C que esta detras del problema.
+La IA lee tu código, tus errores anteriores y el último intento. Te explica el
+concepto de C que está detrás del problema y te hace una pregunta para que lo
+pienses tú.
 
 > [!WARNING]
-> `@revisar` no deberia darte la solucion completa ni escribir el codigo final.
-> Debe ayudarte a pensar el siguiente paso.
+> `@revisar` **no te da la solución**. Te ayuda a pensar el siguiente paso.
+> Si quieres salir del modo tutor, díselo explícitamente.
 
-### `@ver`
+---
 
-Usala cuando no logras visualizar que esta haciendo tu codigo.
+### `@ver` — *No entiendo qué hace este código*
 
-Ejemplos:
+Úsalo cuando tu programa compila pero no entiendes qué pasa dentro.
 
-```text
+```
 @ver linea 1
-@ver linea 87
 @ver main
-@ver la funcion donde esta el cursor
+@ver linea 45
 @ver el ciclo de esta linea
-@ver la linea del puntero
+@ver la funcion donde esta el cursor
 ```
 
-`@ver` hace una prueba de escritorio RAM: explica que variables existen, que
-valores cambian, que decisiones toma el programa y que se imprime.
+La IA hace una **prueba de escritorio**: te muestra paso a paso cómo cambian
+las variables, qué decisiones toma el programa y qué se imprime en pantalla.
 
-### Como usar lineas con `@ver`
+<details>
+<summary><strong>¿Cómo sé el número de línea?</strong></summary>
 
-En VS Code puedes ver el numero de linea a la izquierda del editor. Tambien lo
-ves abajo en la barra de estado, por ejemplo `Ln 87`.
+Mira la barra de estado de VS Code, abajo a la izquierda. Dice algo como
+`Ln 45`. También puedes ver los números al lado izquierdo del código.
 
-Cuando pidas ayuda, escribe el numero:
+</details>
 
-```text
-@ver linea 87
-```
-
-La IA usara esa linea como punto de entrada. Segun donde caiga, el alcance
-cambia:
-
-| Si la linea apunta a... | `@ver` debe mirar... |
+| Si escribes... | La IA analiza... |
 |---|---|
-| linea `1` | todo el archivo del ejercicio |
-| `main` | todo el `main` |
-| nombre o encabezado de una funcion | esa funcion completa |
-| `for`, `while` o `do` | ese ciclo completo |
-| una linea dentro de un ciclo | el ciclo mas interno |
-| una declaracion, asignacion o llamada | esa instruccion y su unidad logica |
-| un puntero, arreglo, `struct`, `malloc` o archivo | desde esa linea hasta que termine la accion que pretende |
+| `@ver linea 1` | Todo el archivo completo |
+| `@ver main` | Todo el bloque `main` |
+| `@ver linea 45` | La función o ciclo donde está esa línea |
+| `@ver el for de esta linea` | Ese ciclo completo |
+| `@ver la linea del puntero` | Desde esa línea hasta donde termina la acción |
 
 > [!TIP]
-> Una "unidad logica" no siempre es una sola linea. Si apuntas a un puntero, por
-> ejemplo, la IA puede incluir la comprobacion inmediata, el uso cercano o la
-> liberacion del recurso si eso es necesario para explicar que pasa en RAM.
+> Si apuntas a un puntero, arreglo, `struct` o `malloc`, la IA puede incluir
+> líneas cercanas (como la comprobación o el `free`) para explicar qué pasa en
+> la memoria.
 
-Si apuntas a:
+---
 
-- linea `1`: mira el archivo completo del ejercicio;
-- `main`: mira todo `main`;
-- una funcion: mira esa funcion;
-- un `for`, `while` o `do`: mira ese ciclo;
-- una linea suelta: mira desde el primer texto real de esa linea hasta donde
-  termina la logica que esa linea esta intentando realizar.
+### `@sintetizar` — *Terminé la sesión de hoy*
 
-### `@sintetizar`
-
-Usala al final de una sesion de estudio.
-
-```text
+```
 @sintetizar
 ```
 
-La IA revisa commits y logs de la sesion, detecta patrones y actualiza
-`usuarios/<tu_usuario>/errores.md`.
+Úsalo **al final de cada sesión de estudio**. La IA revisa todos los commits y
+logs de la sesión, detecta patrones de error y actualiza tu archivo personal:
 
-### `@test` / `@validar`
+```
+usuarios/tu_nombre/errores.md
+```
 
-Usala en ejercicios de PDF Alejandro, W3Schools o w3resource cuando quieras
-crear tests locales para comprobar tu solucion.
+Ese archivo se convierte en tu memoria de estudio: errores frecuentes,
+conceptos que se repiten y pistas para estudiar antes de un examen.
 
-```text
+> [!NOTE]
+> `errores.md` nunca se borra automáticamente. Cada sesión agrega información
+> nueva o incrementa la frecuencia de patrones que ya existían.
+
+---
+
+### `@test` / `@validar` — *Quiero comprobar mi solución*
+
+```
 @test
 @validar
 ```
 
-La IA lee el enunciado y tu archivo, crea tests ocultos en `.estudio-tests/` y
-no cambia tu solucion. Luego puedes validar desde el panel o con `F9`.
+Úsalo en ejercicios del **PDF del profesor** o de **W3Schools** cuando quieras
+saber si tu respuesta es correcta. La IA:
 
-## Como Funcionan Los Logs
+1. Lee el enunciado y tu archivo `.c`
+2. Crea pruebas automáticas en `.estudio-tests/`
+3. Las ejecuta sin tocar tu código
+4. Si todo pasa, el ejercicio queda marcado como completado
 
-Los logs no son castigo ni vigilancia. Son una libreta de laboratorio.
+> [!IMPORTANT]
+> Para ejercicios de **Exercism**, no necesitas `@test`. Exercism ya trae sus
+> propios tests oficiales y se ejecutan con <kbd>F9</kbd>.
 
-Cada vez que compilas, el sistema guarda:
+---
 
-- fecha y hora del intento;
-- archivo compilado;
-- copia del codigo en ese momento;
-- salida de `gcc`;
-- resultado de ejecucion;
-- codigo de salida.
+## Panel de ejercicios
 
-Los bloques se agrupan aproximadamente cada 45 minutos:
+El proyecto incluye un **panel dentro de VS Code** para explorar e importar
+ejercicios de tres fuentes:
 
-```text
-bloque1.log
-bloque2.log
-bloque3.log
+| Fuente | Descripción |
+|---|---|
+| **Exercism C** | Plataforma gratuita con ejercicios de programación en C |
+| **W3Schools / w3resource** | Ejercicios web de práctica |
+| **PDF Alejandro Liz** | Ejercicios del profesor del curso |
+
+### Abrir el panel
+
+```
+Ctrl + Shift + P → "Estudio Socratico: Abrir Panel de Ejercicios"
+```
+
+También puedes abrirlo desde el botón del editor cuando tienes un archivo `.c`
+abierto.
+
+### Importar un ejercicio
+
+1. Filtra por la fuente que prefieras (ej. `Exercism C`)
+2. Elige un ejercicio, por ejemplo `Grains`
+3. Haz clic en la tarjeta
+
+El ejercicio se descarga y las instrucciones se traducen al español
+automáticamente:
+
+```
+Ejercicios/Grains/
+├── grains.c          ← Tu solución (aquí escribes)
+├── grains.h          ← Cabecera del ejercicio
+└── .estudio-exercism/ ← Tests y metadata (oculto)
 ```
 
 > [!NOTE]
-> En GitHub, la version 1.1 sale limpia: sin logs historicos y con los
-> `errores.md` vacios. Los logs nuevos se crean cuando cada estudiante empieza a
-> trabajar.
+> Los archivos técnicos (tests, makefiles, metadata) quedan ocultos en carpetas
+> que empiezan con `.estudio-`. Solo ves los archivos donde escribes tu
+> solución.
 
-## Ramas Recomendadas
+### <kbd>F9</kbd> cambia de modo automáticamente
 
-El proyecto esta pensado para compartir el mismo framework sin mezclar los
-intentos de cada persona.
-
-| Rama | Uso |
+| Archivo activo | Qué hace <kbd>F9</kbd> |
 |---|---|
-| `main` | Version estable del framework |
-| `axel`, `eric`, `juan`, etc. | Trabajo personal de cada estudiante |
-| `pair` | Trabajo compartido o Live Share |
+| `Ejercicios/Blackjack.c` u otro `.c` normal | Compila y ejecuta en consola |
+| `Ejercicios/Grains/grains.c` (Exercism) | Corre los tests oficiales |
 
-Cuando una persona empieza, el setup puede crear o activar su rama personal con
-el mismo nombre que su slug.
+Desde el panel también puedes:
 
-## Compatibilidad Con `conio.h`
+- **Probar** — ejecuta los tests locales
+- **Enviar** — envía tu solución a Exercism (`exercism submit`)
+- **Actualizar** — refresca el catálogo y los estados
 
-El repo incluye soporte local para usar:
+<details>
+<summary><strong>⚙️ Configurar Exercism (solo una vez)</strong></summary>
+
+Exercism usa un token personal que se configura una sola vez en tu computadora:
+
+```bat
+exercism configure --token TU_TOKEN_AQUI
+```
+
+El instalador te avisa si falta. El token **no se guarda** en el repositorio.
+
+> [!TIP]
+> Puedes encontrar tu token en https://exercism.org/settings/api_cli
+
+</details>
+
+---
+
+## Tu carpeta personal
+
+Cuando te instalas por primera vez, el proyecto crea una carpeta solo para ti:
+
+```
+usuarios/tu_nombre/
+├── logs/              ← Historial de todos tus intentos
+│   ├── Blackjack/
+│   │   ├── bloque1.log
+│   │   └── bloque2.log
+│   └── Grains/
+│       └── bloque1.log
+└── errores.md         ← Tu memoria de estudio (la llena @sintetizar)
+```
+
+Nadie más ve tu `errores.md`. Es tu resumen personal de patrones de error.
+
+---
+
+## Compatibilidad con `conio.h`
+
+Si el ejercicio usa funciones como `gotoxy`, `clrscr`, `getch` o colores de
+consola, **no necesitas instalar nada extra**. El proyecto incluye soporte
+local para:
 
 ```c
 #include <conio.h>
 ```
 
-La intencion es que ejercicios con `gotoxy`, `clrscr`, `getch`, colores y salida
-de consola se sientan lo mas parecido posible a Code::Blocks en Windows.
+Funciones disponibles:
 
-No tienes que copiar una libreria externa para compilar desde este entorno. El
-script ya conecta `include/` y el runtime local cuando presionas `F9`.
-
-## Donde Esta Cada Cosa
-
-| Carpeta o archivo | Para que sirve |
+| Función | Para qué sirve |
 |---|---|
-| `Ejercicios/` | Tus archivos `.c` |
-| `usuarios/` | Logs y errores por estudiante |
-| `.agent/skills/` | Protocolos de IA como `@revisar` y `@ver` |
-| `soporte/scripts/` | Scripts de compilacion y commits automaticos |
-| `soporte/consola/` | Runtime de consola estilo Code::Blocks |
-| `setup/` | Instalador y configuracion inicial |
-| `docs/guia-tecnica.md` | Documentacion tecnica detallada |
+| `gotoxy(x, y)` | Mover el cursor a una posición |
+| `clrscr()` | Limpiar la pantalla |
+| `getch()` | Leer una tecla sin mostrarla |
+| `getche()` | Leer una tecla mostrándola |
+| `kbhit()` | Saber si se presionó una tecla |
+| `textcolor(color)` | Cambiar el color del texto |
+| `textbackground(color)` | Cambiar el color de fondo |
+| `wherex()` / `wherey()` | Saber la posición del cursor |
 
-## Documentacion Tecnica
+> [!TIP]
+> Los caracteres especiales de la tabla CP437 (como ♥, ♦, ♣, ♠ y bordes de
+> recuadro) también se muestran correctamente sin configuración extra.
 
-Este README evita entrar demasiado en detalles internos. Si quieres entender o
-modificar el motor del proyecto, lee:
+---
 
-```text
-docs/guia-tecnica.md
+## ¿Dónde está cada cosa?
+
+```
+estudio-socratico/
+├── Ejercicios/                ← Tus archivos .c van aquí
+│   └── Blackjack.c            ← Ejemplo incluido
+├── usuarios/                  ← Carpeta personal de cada estudiante
+│   └── tu_nombre/
+│       ├── logs/              ← Historial de intentos
+│       └── errores.md         ← Patrones de error (lo llena @sintetizar)
+├── soporte/
+│   ├── scripts/               ← Motor de compilación y commits
+│   ├── consola/               ← Runtime de consola estilo Code::Blocks
+│   ├── exercism/              ← Backend del panel de ejercicios
+│   └── vscode/                ← Extensión local de VS Code
+├── setup/                     ← Instalador
+├── include/                   ← conio.h y soporte de consola
+├── docs/
+│   └── guia-tecnica.md        ← Documentación técnica (para curiosos)
+├── .agent/skills/             ← Protocolos de IA (@revisar, @ver, etc.)
+├── Instalar Estudio Socratico.cmd
+└── Actualizar Estudio Socratico.cmd
 ```
 
-Ahi se explica el flujo de scripts, logs, ramas, `conio.h`, runtime, setup y
-reglas para mantener el framework.
+---
 
-## Problemas Comunes
+## Ramas de Git
 
-### F9 no compila
+> No necesitas saber nada de Git para usar esto. El instalador configura todo y
+> los commits se hacen solos cada vez que compilas.
 
-Ejecuta otra vez:
+Si varios estudiantes usan el mismo repositorio en GitHub, el proyecto usa
+**ramas** para separar el trabajo de cada uno:
+
+| Rama | Para qué |
+|---|---|
+| `main` | Versión base del framework |
+| `axel`, `juan`, etc. | Trabajo personal de cada estudiante |
+| `pair` | Trabajo compartido (ej. sesiones Live Share) |
+
+El instalador crea tu rama personal automáticamente con el mismo nombre que tu
+alias.
+
+---
+
+## Algo no funciona
+
+<details>
+<summary><strong>❌ <kbd>F9</kbd> no hace nada</strong></summary>
+
+Ejecuta el instalador de nuevo:
 
 ```bat
-setup\instalar.cmd
+Instalar Estudio Socratico.cmd
 ```
 
-Luego cierra y vuelve a abrir VS Code si el atajo no aparece de inmediato.
+Luego cierra VS Code completamente y vuelve a abrirlo.
 
-### Dice que ya hay una ejecucion abierta
+</details>
 
-Cierra la consola externa del programa o presiona una tecla dentro de ella. Si
-cerraste la ventana y el mensaje sigue apareciendo, vuelve a intentar; el lock
-viejo se limpia automaticamente cuando detecta que el proceso ya no existe.
+<details>
+<summary><strong>⚠️ Dice "ya hay una ejecución abierta"</strong></summary>
 
-### GitHub muestra commits con otro nombre
+Tienes una ventana de consola abierta de una ejecución anterior. Ciérrala o
+presiona cualquier tecla dentro de ella.
 
-Ejecuta el setup y revisa los datos que escribiste. Para GitHub, el correo debe
-ser uno verificado o tu correo `noreply` de GitHub.
+Si ya la cerraste y el error persiste, vuelve a intentar compilar — el sistema
+detecta automáticamente que el proceso anterior ya no existe.
 
-### La IA responde demasiado general
+</details>
 
-Pidele que lea el protocolo:
+<details>
+<summary><strong>🔀 GitHub muestra commits con otro nombre</strong></summary>
 
-```text
+Ejecuta el instalador y revisa los datos de tu cuenta. Para que GitHub asocie
+correctamente tus commits, el correo debe ser uno verificado en tu cuenta o tu
+correo `noreply` de GitHub.
+
+</details>
+
+<details>
+<summary><strong>🤖 La IA responde de forma muy general</strong></summary>
+
+Escríbele esto en el chat:
+
+```
 Lee AGENTS.md y usa @revisar.
 ```
 
-Para visualizar ejecucion, no uses `@revisar`; usa:
+Para visualizar ejecución, no uses `@revisar`. Usa:
 
-```text
+```
 @ver linea <numero>
 ```
+
+</details>
+
+---
+
+## Preguntas frecuentes
+
+<details>
+<summary><strong>¿Tengo que saber usar Git?</strong></summary>
+
+No. Git corre en segundo plano. Tú solo presionas <kbd>F9</kbd>. Los commits se
+hacen automáticamente con tu nombre.
+
+</details>
+
+<details>
+<summary><strong>¿Puedo usar <code>conio.h</code> y <code>gotoxy</code>?</strong></summary>
+
+Sí. El proyecto incluye soporte completo para `conio.h` en Windows. Funciones
+como `getch`, `clrscr`, `gotoxy` y colores compilan con <kbd>F9</kbd> sin
+configuración extra.
+
+</details>
+
+<details>
+<summary><strong>¿Funciona en Mac o Linux?</strong></summary>
+
+Por ahora está pensado solo para **Windows**. Los scripts de compilación, la
+consola estilo Code::Blocks y el soporte de `conio.h` son específicos de
+Windows.
+
+</details>
+
+<details>
+<summary><strong>¿Funciona con Live Share?</strong></summary>
+
+Sí. El proyecto incluye una tarea alternativa para sesiones de Live Share que
+ejecuta el programa en la terminal compartida en lugar de abrir una ventana
+externa.
+
+</details>
+
+<details>
+<summary><strong>¿Dónde está la documentación técnica?</strong></summary>
+
+En [`docs/guia-tecnica.md`](docs/guia-tecnica.md). Ahí se explica la
+arquitectura interna: scripts, logs, ramas, runtime, setup y cómo mantener el
+framework.
+
+</details>
+
+---
+
+<div align="center">
+
+**Estudio Socrático** · v1.1.6 · Mayo 2026
+
+*Hecho para aprender, no para copiar.*
+
+</div>
