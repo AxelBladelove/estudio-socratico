@@ -1153,12 +1153,29 @@ function Resolve-ExerciseRoot {
         return $null
     }
 
+    function Test-ImportedExerciseMarkers {
+        param([string]$Dir)
+
+        $markers = @(
+            (Join-Path $Dir ".estudio-exercism.json"),
+            (Join-Path $Dir ".exercism\metadata.json"),
+            (Join-Path $Dir ".estudio-exercism\support"),
+            (Join-Path $Dir ".estudio-exercism\support\.exercism\metadata.json"),
+            (Join-Path $Dir ".estudio-exercism\support\.exercism\config.json")
+        )
+
+        foreach ($marker in $markers) {
+            if (Test-Path -LiteralPath $marker) {
+                return $true
+            }
+        }
+
+        return $false
+    }
+
     $dir = if ($item.PSIsContainer) { $item.FullName } else { $item.DirectoryName }
     while ($dir -and $dir.StartsWith($Root, [StringComparison]::OrdinalIgnoreCase)) {
-        if (Test-Path (Join-Path $dir ".estudio-exercism.json")) {
-            return $dir
-        }
-        if (Test-Path (Join-Path $dir ".exercism\metadata.json")) {
+        if (Test-ImportedExerciseMarkers -Dir $dir) {
             return $dir
         }
         $parent = Split-Path -Parent $dir
@@ -1426,7 +1443,7 @@ function Invoke-ExercismTest {
         Get-Content -LiteralPath $_.FullName | Add-Content -LiteralPath $log
     }
     "[EXERCISM TEST]" | Add-Content -LiteralPath $log
-    "Running tests via `make`" | Add-Content -LiteralPath $log
+    "Running tests via make" | Add-Content -LiteralPath $log
 
     Push-Location $testWorkspace
     try {
@@ -1437,7 +1454,7 @@ function Invoke-ExercismTest {
         $mingwPath = "C:\msys64\mingw64\bin"
         $env:PATH = "$testWorkspace;$msysPath;$mingwPath;$env:PATH"
         try {
-            Write-Host "Running tests via `make`"
+            Write-Host "Running tests via make"
             $output = & $makeCommand test 2>&1
             $exitCode = $LASTEXITCODE
         } finally {
