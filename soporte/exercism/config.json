@@ -1,6 +1,5 @@
 {
   "gemini": {
-    "model": "gemini-2.5-flash-lite",
-    "apiKey": ""
+    "model": "gemini-2.5-flash-lite"
   }
 }
