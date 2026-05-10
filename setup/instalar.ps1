@@ -79,6 +79,8 @@ try {
     $GitHubUsuario = $setupIdentity["GitHubUsuario"]
     $GitNombre = $setupIdentity["GitNombre"]
     $GitCorreo = $setupIdentity["GitCorreo"]
+    $PreviousUsuarioSlug = $setupIdentity["PreviousUsuarioSlug"]
+    $PreviousGitHubUsuario = $setupIdentity["PreviousGitHubUsuario"]
 
     Test-ExercismCliConfiguration -ExercismPath $tools["Exercism CLI"] -SoloVerificar:$SoloVerificar -SinOnboarding:$SinOnboarding
     Test-GeminiConfiguration -RepoRoot $RepoRoot -SoloVerificar:$SoloVerificar -SinOnboarding:$SinOnboarding
@@ -98,6 +100,9 @@ try {
         -RepoRoot $RepoRoot `
         -GitPath $tools["Git"] `
         -UsuarioSlug $UsuarioSlug `
+        -PreviousUsuarioSlug $PreviousUsuarioSlug `
+        -GitHubUsuario $GitHubUsuario `
+        -PreviousGitHubUsuario $PreviousGitHubUsuario `
         -SoloVerificar:$SoloVerificar `
         -SinRamaUsuario:$SinRamaUsuario `
         -Actualizar:$Actualizar `

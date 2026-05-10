@@ -100,8 +100,10 @@ function printHelp() {
 Uso:
   npm run drive:auth
   npm run drive:check
-  npm run drive:generate -- [--provider w3schools]
-  npm run drive:sync -- [--provider w3schools] [--dry-run] [--keep-local-text]
+  npm run drive:generate -- [--provider w3schools|alejandro] [--allow-fallback]
+  npm run drive:sync -- [--provider w3schools|alejandro] [--dry-run] [--keep-local-text] [--allow-fallback]
+  npm run drive:generate:alejandro
+  npm run drive:sync:alejandro
 
 Credenciales locales:
   .estudio-drive/oauth-client.json
@@ -110,6 +112,11 @@ Credenciales locales:
 Notas:
   - Estos comandos son solo para mantenedores.
   - Los estudiantes descargan por driveFileId publico; no usan OAuth.
+  - Las credenciales del conector Google Drive de Codex/ChatGPT no son las
+    credenciales locales de estos scripts.
+  - alejandro necesita enunciados Markdown en .estudio-drive/source/alejandro,
+    instructionMarkdown en catalogo, o --allow-fallback para publicar paquetes
+    provisionales desde la metadata del catalogo.
   - drive:sync elimina instructionMarkdown del catalogo despues de subir,
     salvo que uses --keep-local-text.`);
 }
@@ -453,14 +460,15 @@ async function syncAll(options) {
 
       const fileName = driveMarkdownFileName(index, exercise);
       const markdown = withSourceFooter(source.markdown, provider, exercise);
-      const sourceCopy = path.join(sourceRoot, provider, fileName);
-      await fs.mkdir(path.dirname(sourceCopy), { recursive: true });
-      await fs.writeFile(sourceCopy, markdown, "utf8");
 
       if (options.dryRun) {
         console.log(`[DRY] Subiria ${fileName}`);
         continue;
       }
+
+      const sourceCopy = path.join(sourceRoot, provider, fileName);
+      await fs.mkdir(path.dirname(sourceCopy), { recursive: true });
+      await fs.writeFile(sourceCopy, markdown, "utf8");
 
       let fileId = exercise.driveFileId || "";
       if (!fileId) {
@@ -491,6 +499,13 @@ async function syncAll(options) {
   }
 
   console.log(`[OK] Sync terminado. Subidos/actualizados: ${uploaded}. Omitidos: ${skipped}.`);
+  if (skipped > 0) {
+    console.log("[INFO] Los omitidos no tenian enunciado local.");
+    console.log("[INFO] Coloca Markdown en .estudio-drive/source/<provider>/<slug>.md o usa --allow-fallback.");
+    if (options.provider === "alejandro" && !options.allowFallback) {
+      console.log("[INFO] Para publicar paquetes provisionales de Alejandro: npm run drive:sync:alejandro");
+    }
+  }
   if (!options.keepLocalText && !options.dryRun) {
     console.log("[OK] Los instructionMarkdown subidos fueron removidos del catalogo versionado.");
   }

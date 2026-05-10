@@ -79,6 +79,101 @@ function Write-SetupError {
     Write-SetupLine "[ERROR] $Message" Red
 }
 
+function Read-SetupMenu {
+    param(
+        [string]$Title,
+        [array]$Options,
+        [int]$DefaultIndex = 0
+    )
+
+    if (-not $Options -or $Options.Count -eq 0) {
+        throw "Read-SetupMenu necesita al menos una opcion."
+    }
+
+    if ($DefaultIndex -lt 0 -or $DefaultIndex -ge $Options.Count) {
+        $DefaultIndex = 0
+    }
+
+    Write-SetupLine ""
+    Write-SetupLine $Title Cyan
+    if ($script:SetupLogPath) {
+        foreach ($option in $Options) {
+            Add-Content -Path $script:SetupLogPath -Value ("  - {0}" -f $option.Label)
+        }
+    }
+
+    try {
+        $raw = $Host.UI.RawUI
+        $width = [Math]::Max(50, $raw.WindowSize.Width - 1)
+        $selected = $DefaultIndex
+        $top = $raw.CursorPosition.Y
+
+        function Write-MenuLine {
+            param(
+                [int]$Index,
+                [bool]$Selected
+            )
+
+            $option = $Options[$Index]
+            $prefix = if ($Selected) { "> " } else { "  " }
+            $line = "{0}{1}" -f $prefix, $option.Label
+            if (-not [string]::IsNullOrWhiteSpace($option.Description)) {
+                $line = "{0} - {1}" -f $line, $option.Description
+            }
+            if ($line.Length -gt $width) {
+                $line = $line.Substring(0, $width)
+            }
+            $line = $line.PadRight($width)
+            $color = if ($Selected) { [ConsoleColor]::Cyan } else { [ConsoleColor]::Gray }
+            Write-Host $line -ForegroundColor $color
+        }
+
+        while ($true) {
+            $raw.CursorPosition = New-Object System.Management.Automation.Host.Coordinates 0, $top
+            for ($i = 0; $i -lt $Options.Count; $i++) {
+                Write-MenuLine -Index $i -Selected:($i -eq $selected)
+            }
+
+            $key = $raw.ReadKey("NoEcho,IncludeKeyDown")
+            switch ($key.VirtualKeyCode) {
+                38 {
+                    $selected--
+                    if ($selected -lt 0) { $selected = $Options.Count - 1 }
+                }
+                40 {
+                    $selected++
+                    if ($selected -ge $Options.Count) { $selected = 0 }
+                }
+                13 {
+                    Write-SetupInfo ("Seleccionado: {0}" -f $Options[$selected].Label)
+                    return $Options[$selected].Value
+                }
+            }
+        }
+    } catch {
+        for ($i = 0; $i -lt $Options.Count; $i++) {
+            $option = $Options[$i]
+            Write-SetupLine ("  {0}. {1}" -f ($i + 1), $option.Label) Gray
+            if (-not [string]::IsNullOrWhiteSpace($option.Description)) {
+                Write-SetupLine ("     {0}" -f $option.Description) DarkGray
+            }
+        }
+
+        do {
+            $answer = Read-Host ("Elige una opcion [1-{0}]" -f $Options.Count)
+            if ([string]::IsNullOrWhiteSpace($answer)) {
+                $answer = ($DefaultIndex + 1)
+            }
+            $number = 0
+            if ([int]::TryParse("$answer", [ref]$number) -and $number -ge 1 -and $number -le $Options.Count) {
+                Write-SetupInfo ("Seleccionado: {0}" -f $Options[$number - 1].Label)
+                return $Options[$number - 1].Value
+            }
+            Write-SetupWarning "Opcion invalida."
+        } while ($true)
+    }
+}
+
 function New-SetupDirectory {
     param(
         [string]$Path,
@@ -196,6 +291,59 @@ function Invoke-SetupCommand {
 
     if (($exitCode -ne 0) -and (-not $AllowFailure)) {
         throw "Fallo el comando: $FilePath $($Arguments -join ' ')"
+    }
+
+    if ($AllowFailure) {
+        return $exitCode
+    }
+}
+
+function Invoke-SetupInteractiveCommand {
+    param(
+        [string]$FilePath,
+        [string[]]$Arguments,
+        [string]$Description,
+        [switch]$SoloVerificar,
+        [switch]$AllowFailure,
+        [int]$TimeoutSeconds = 300
+    )
+
+    if ($SoloVerificar) {
+        Write-SetupInfo "[SoloVerificar] $Description"
+        Write-SetupInfo "  $FilePath $($Arguments -join ' ')"
+        return
+    }
+
+    Write-SetupInfo $Description
+    Write-SetupInfo "Si el navegador no vuelve a la terminal, cancela la pagina y reintenta desde el setup."
+    if ($script:SetupLogPath) {
+        Add-Content -Path $script:SetupLogPath -Value ("[CMD] {0} {1}" -f $FilePath, ($Arguments -join " "))
+    }
+
+    $process = Start-Process `
+        -FilePath $FilePath `
+        -ArgumentList (Convert-ToArgumentString -Arguments $Arguments) `
+        -NoNewWindow `
+        -PassThru
+
+    $completed = $process.WaitForExit($TimeoutSeconds * 1000)
+    if (-not $completed) {
+        try {
+            $process.Kill($true)
+        } catch {
+            try { $process.Kill() } catch {}
+        }
+        $message = "El comando interactivo no termino despues de $TimeoutSeconds segundos: $FilePath $($Arguments -join ' ')"
+        if ($AllowFailure) {
+            Write-SetupWarning $message
+            return 124
+        }
+        throw $message
+    }
+
+    $exitCode = $process.ExitCode
+    if (($exitCode -ne 0) -and (-not $AllowFailure)) {
+        throw "Fallo el comando interactivo: $FilePath $($Arguments -join ' ')"
     }
 
     if ($AllowFailure) {

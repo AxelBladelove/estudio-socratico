@@ -1,0 +1,23 @@
+﻿{
+    "provider":  "exercism",
+    "track":  "c",
+    "slug":  "grains",
+    "title":  "Grains",
+    "folderName":  "Grains",
+    "difficulty":  "easy",
+    "blurb":  "Calculate the number of grains of wheat on a chessboard given that the number on each square doubles.",
+    "iconUrl":  "https://assets.exercism.org/exercises/grains.svg",
+    "solutionFiles":  [
+                          "grains.c",
+                          "grains.h"
+                      ],
+    "supportRoot":  ".estudio-exercism\\support",
+    "importedAt":  "2026-05-10T01:31:51.0931850-04:00",
+    "sourceWorkspace":  "C:\\Users\\AxelBlade\\Exercism\\c\\grains",
+    "lastTestAt":  "2026-05-10T04:09:29.2641811-04:00",
+    "lastTestExitCode":  0,
+    "lastSubmitAt":  "2026-05-10T04:09:52.7654026-04:00",
+    "lastSubmitExitCode":  0,
+    "status":  "completed",
+    "completedAt":  "2026-05-10T04:53:45.3198689-04:00"
+}

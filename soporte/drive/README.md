@@ -23,12 +23,21 @@ npm run drive:auth
 npm run drive:check
 npm run drive:generate
 npm run drive:sync
+npm run drive:generate:alejandro
+npm run drive:sync:alejandro
 ```
 
 Para sincronizar solo W3Schools:
 
 ```bat
 npm run drive:sync -- --provider w3schools
+```
+
+Para sincronizar Alejandro con paquetes provisionales creados desde la metadata
+del catalogo:
+
+```bat
+npm run drive:sync:alejandro
 ```
 
 `drive:sync` sube o actualiza archivos Markdown, los deja publicos como solo
@@ -50,3 +59,13 @@ Ejemplo:
 ```text
 .estudio-drive/source/alejandro/seccion-1-1-imprimir-nombre-n-veces.md
 ```
+
+Si todavia no tienes enunciados exactos en Markdown, usa `--allow-fallback`.
+Eso crea un paquete minimo desde titulo, descripcion y temas del catalogo. Es
+util para validar Drive, pero los paquetes finales deberian usar el enunciado
+real del PDF.
+
+> [!NOTE]
+> La sesion de Google Drive conectada a Codex/ChatGPT no es la misma que usa
+> este script. Para publicar desde el repo necesitas el OAuth local de
+> `.estudio-drive/oauth-client.json` y `npm run drive:auth`.

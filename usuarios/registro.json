@@ -1,0 +1,17 @@
+﻿{
+    "version":  1,
+    "users":  [
+                  {
+                      "githubLogin":  "AxelBladelove",
+                      "branch":  "axel",
+                      "alias":  "axel",
+                      "updatedAt":  "2026-05-10T17:24:40.1951079-04:00"
+                  },
+                  {
+                      "githubLogin":  "Erickcruzho",
+                      "branch":  "erick",
+                      "alias":  "erick",
+                      "updatedAt":  "2026-05-10T00:00:00-04:00"
+                  }
+              ]
+}

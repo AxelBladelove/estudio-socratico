@@ -18,20 +18,31 @@ usa tambien como `user.name` local para que los commits salgan con ese nombre.
 
 Si usas los accesos directos de la raiz del repo:
 
-- `Instalar Estudio Socratico.cmd` revalida GitHub CLI por navegador, deja cambiar o conservar el alias local y mantiene la rama actual del clon.
-- `Actualizar Estudio Socratico.cmd` revalida GitHub CLI por navegador, reutiliza el alias local actual y no cambia la rama del estudiante.
+- `Instalar Estudio Socratico.cmd` prepara un clon nuevo: valida GitHub CLI,
+  consulta `usuarios/registro.json`, reutiliza la rama ya vinculada a esa
+  cuenta de GitHub si existe, pide alias si falta y crea o activa la rama
+  personal.
+- `Actualizar Estudio Socratico.cmd` valida la cuenta actual de GitHub CLI,
+  permite conservarla o cambiarla por navegador, y luego permite conservar o
+  renombrar el alias local. Si el alias cambia para la misma cuenta de GitHub,
+  tambien se intenta renombrar la carpeta `usuarios/<alias>` y la rama local
+  vinculada, en vez de crear una rama nueva. Si existe `origin/<alias_antiguo>`,
+  la TUI pregunta antes de subir la nueva rama y borrar la antigua en GitHub.
 
 ## Que Hace
 
 - valida que el repo este completo;
 - pide el alias local del estudiante si hace falta;
-- revalida GitHub CLI por navegador en los flujos de instalar y actualizar;
+- valida GitHub CLI y abre el flujo web cuando falta sesion o decides cambiar
+  de cuenta;
+- lee `usuarios/registro.json` para saber si tu cuenta de GitHub ya tiene rama
+  vinculada;
 - resuelve usuario y correo de GitHub desde `gh auth` sin pedirlos a mano;
 - usa el alias como nombre local de Git para los commits de ese clon;
 - configura Git local;
 - crea `.estudio_usuario`;
 - prepara `usuarios/<slug>/errores.md`;
-- crea o activa la rama personal;
+- crea, activa o renombra la rama personal segun el flujo;
 - instala o valida herramientas base;
 - instala o valida Exercism CLI;
 - instala o valida GCC/MSYS2;

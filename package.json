@@ -1,6 +1,6 @@
 {
   "name": "estudio-socratico",
-  "version": "1.2.0",
+  "version": "1.1.6",
   "private": true,
   "description": "Sistema de estudio socratico para Fundamentos de Programacion en C.",
   "scripts": {
@@ -12,6 +12,10 @@
     "drive:check": "node soporte\\drive\\sync-drive.mjs check",
     "drive:sync": "node soporte\\drive\\sync-drive.mjs sync",
     "drive:generate": "node soporte\\drive\\sync-drive.mjs generate",
+    "drive:generate:w3": "node soporte\\drive\\sync-drive.mjs generate --provider w3schools",
+    "drive:generate:alejandro": "node soporte\\drive\\sync-drive.mjs generate --provider alejandro --allow-fallback",
+    "drive:sync:w3": "node soporte\\drive\\sync-drive.mjs sync --provider w3schools",
+    "drive:sync:alejandro": "node soporte\\drive\\sync-drive.mjs sync --provider alejandro --allow-fallback",
     "exercism:catalog": "powershell -NoProfile -ExecutionPolicy Bypass -File soporte\\exercism\\manager.ps1 -Action catalog",
     "exercism:status": "powershell -NoProfile -ExecutionPolicy Bypass -File soporte\\exercism\\manager.ps1 -Action status"
   }

@@ -199,6 +199,104 @@ function Get-ProjectCurrentUserSlug {
     return $null
 }
 
+function Get-ProjectUserRegistryPath {
+    param([string]$RepoRoot)
+    return (Join-Path $RepoRoot "usuarios\registro.json")
+}
+
+function Read-ProjectUserRegistry {
+    param([string]$RepoRoot)
+
+    $path = Get-ProjectUserRegistryPath -RepoRoot $RepoRoot
+    if (-not (Test-Path -LiteralPath $path)) {
+        return [pscustomobject]@{
+            version = 1
+            users = @()
+        }
+    }
+
+    try {
+        $registry = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
+        if ($null -eq $registry.users) {
+            $registry | Add-Member -NotePropertyName users -NotePropertyValue @() -Force
+        }
+        return $registry
+    } catch {
+        Write-SetupWarning "No pude leer usuarios\registro.json; se ignorara este registro."
+        return [pscustomobject]@{
+            version = 1
+            users = @()
+        }
+    }
+}
+
+function Find-ProjectRegisteredUser {
+    param(
+        [string]$RepoRoot,
+        [AllowNull()][string]$GitHubUsuario
+    )
+
+    if (-not (Test-UsableGitIdentityValue -Value $GitHubUsuario)) {
+        return $null
+    }
+
+    $registry = Read-ProjectUserRegistry -RepoRoot $RepoRoot
+    foreach ($user in @($registry.users)) {
+        if ("$($user.githubLogin)".Trim().ToLowerInvariant() -eq $GitHubUsuario.Trim().ToLowerInvariant()) {
+            return $user
+        }
+    }
+
+    return $null
+}
+
+function Set-ProjectUserRegistryEntry {
+    param(
+        [string]$RepoRoot,
+        [string]$GitHubUsuario,
+        [string]$UsuarioSlug,
+        [switch]$SoloVerificar
+    )
+
+    if (-not (Test-UsableGitIdentityValue -Value $GitHubUsuario)) {
+        return
+    }
+    if (-not (Test-UsableGitIdentityValue -Value $UsuarioSlug)) {
+        return
+    }
+
+    $UsuarioSlug = ConvertTo-ProjectUserSlug -Value $UsuarioSlug
+    $path = Get-ProjectUserRegistryPath -RepoRoot $RepoRoot
+    if ($SoloVerificar) {
+        Write-SetupInfo ("[SoloVerificar] Actualizaria usuarios\registro.json: {0} -> {1}." -f $GitHubUsuario, $UsuarioSlug)
+        return
+    }
+
+    $registry = Read-ProjectUserRegistry -RepoRoot $RepoRoot
+    $users = @(@($registry.users) | Where-Object {
+        "$($_.githubLogin)".Trim().ToLowerInvariant() -ne $GitHubUsuario.Trim().ToLowerInvariant()
+    })
+    $newEntry = [pscustomobject]@{
+        githubLogin = $GitHubUsuario.Trim()
+        branch = $UsuarioSlug
+        alias = $UsuarioSlug
+        updatedAt = (Get-Date).ToString("o")
+    }
+    $users = @($users) + @($newEntry)
+
+    $updated = [pscustomobject]@{
+        version = 1
+        users = @($users | Sort-Object githubLogin)
+    }
+
+    $dir = Split-Path -Parent $path
+    if (-not (Test-Path -LiteralPath $dir)) {
+        New-Item -ItemType Directory -Path $dir -Force | Out-Null
+    }
+    $updated | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $path -Encoding utf8
+    Write-SetupSuccess ("Registro GitHub/rama actualizado: {0} -> {1}." -f $GitHubUsuario, $UsuarioSlug)
+}
+
 function Test-GhAuthenticated {
     param([AllowNull()][string]$GhPath)
 
@@ -277,7 +375,7 @@ function Ensure-GhAuthenticatedProfile {
     if ($SoloVerificar) {
         if ($ForceWebValidation) {
             if ($profile) {
-                Write-SetupInfo ("[SoloVerificar] Revalidaria GitHub CLI en el navegador para la cuenta {0}." -f $profile.login)
+                Write-SetupInfo ("[SoloVerificar] Revalidaria GitHub CLI en el navegador para {0} o permitiria cambiar de cuenta." -f $profile.login)
             } else {
                 Write-SetupInfo "[SoloVerificar] Abriria el flujo web de GitHub CLI para iniciar sesion."
             }
@@ -294,29 +392,60 @@ function Ensure-GhAuthenticatedProfile {
         Write-SetupStep "Conectando GitHub"
 
         if ($profile) {
-            $refreshExitCode = Invoke-SetupCommand `
-                -FilePath $GhPath `
-                -Arguments @("auth", "refresh", "--hostname", "github.com") `
-                -Description ("Revalidando GitHub CLI en el navegador para {0}..." -f $profile.login) `
-                -SoloVerificar:$false `
-                -AllowFailure
+            Write-SetupSuccess ("GitHub CLI responde como {0}." -f $profile.login)
+            if ($SinOnboarding) {
+                return $profile
+            }
 
-            if ($refreshExitCode -eq 0) {
+            $authChoice = Read-SetupMenu `
+                -Title "Cuenta GitHub detectada: $($profile.login)" `
+                -Options @(
+                    [pscustomobject]@{
+                        Label = "Revalidar esta cuenta"
+                        Description = "Abre GitHub en el navegador y conserva $($profile.login)."
+                        Value = "refresh"
+                    },
+                    [pscustomobject]@{
+                        Label = "Cambiar de cuenta"
+                        Description = "Cierra la sesion local de gh y autentica otra cuenta."
+                        Value = "change"
+                    }
+                )
+
+            if ($authChoice -ne "change") {
+                Invoke-SetupInteractiveCommand `
+                    -FilePath $GhPath `
+                    -Arguments @("auth", "refresh", "--hostname", "github.com", "--scopes", "repo,read:user,user:email") `
+                    -Description ("Revalidando GitHub CLI en el navegador para {0}..." -f $profile.login) `
+                    -SoloVerificar:$false `
+                    -AllowFailure `
+                    -TimeoutSeconds 300 | Out-Null
+
                 $profile = Get-GhAuthenticatedProfile -GhPath $GhPath
                 if ($profile) {
                     Write-SetupSuccess ("GitHub autenticado como {0}." -f $profile.login)
                     return $profile
                 }
-            }
 
-            Write-SetupWarning "No pude revalidar la sesion actual con gh auth refresh; intentare un login web completo."
+                Write-SetupWarning "No pude confirmar la revalidacion con gh auth refresh; intentare un login web completo."
+            } else {
+                Invoke-SetupInteractiveCommand `
+                    -FilePath $GhPath `
+                    -Arguments @("auth", "logout", "--hostname", "github.com", "--user", $profile.login) `
+                    -Description "Cerrando la sesion GitHub CLI actual..." `
+                    -SoloVerificar:$false `
+                    -AllowFailure `
+                    -TimeoutSeconds 60 | Out-Null
+            }
         }
 
-        Invoke-SetupCommand `
+        Invoke-SetupInteractiveCommand `
             -FilePath $GhPath `
-            -Arguments @("auth", "login", "--web", "--hostname", "github.com", "--scopes", "repo") `
+            -Arguments @("auth", "login", "--web", "--hostname", "github.com", "--scopes", "repo,read:user,user:email") `
             -Description "Abriendo autenticacion web de GitHub CLI..." `
-            -SoloVerificar:$false
+            -SoloVerificar:$false `
+            -AllowFailure `
+            -TimeoutSeconds 300 | Out-Null
 
         $profile = Get-GhAuthenticatedProfile -GhPath $GhPath
         if (-not $profile) {
@@ -338,11 +467,12 @@ function Ensure-GhAuthenticatedProfile {
     }
 
     Write-SetupStep "Conectando GitHub"
-    Invoke-SetupCommand `
+    Invoke-SetupInteractiveCommand `
         -FilePath $GhPath `
-        -Arguments @("auth", "login", "--web", "--hostname", "github.com", "--scopes", "repo") `
+        -Arguments @("auth", "login", "--web", "--hostname", "github.com", "--scopes", "repo,read:user,user:email") `
         -Description "Abriendo autenticacion web de GitHub CLI..." `
-        -SoloVerificar:$false
+        -SoloVerificar:$false `
+        -TimeoutSeconds 300
 
     $profile = Get-GhAuthenticatedProfile -GhPath $GhPath
     if (-not $profile) {
@@ -437,8 +567,25 @@ function Resolve-ProjectOnboarding {
         $GitCorreo = $ghProfile.email
     }
 
+    $registeredUser = $null
+    $registeredSlug = $null
+    if (Test-UsableGitIdentityValue -Value $GitHubUsuario) {
+        $registeredUser = Find-ProjectRegisteredUser -RepoRoot $RepoRoot -GitHubUsuario $GitHubUsuario
+        if ($registeredUser) {
+            if (Test-UsableGitIdentityValue -Value $registeredUser.branch) {
+                $registeredSlug = ConvertTo-ProjectUserSlug -Value $registeredUser.branch
+            } elseif (Test-UsableGitIdentityValue -Value $registeredUser.alias) {
+                $registeredSlug = ConvertTo-ProjectUserSlug -Value $registeredUser.alias
+            }
+        }
+    }
+
     if (-not (Test-UsableGitIdentityValue -Value $UsuarioSlug)) {
-        $UsuarioSlug = $configuredSlug
+        if (Test-UsableGitIdentityValue -Value $configuredSlug) {
+            $UsuarioSlug = $configuredSlug
+        } elseif (Test-UsableGitIdentityValue -Value $registeredSlug) {
+            $UsuarioSlug = $registeredSlug
+        }
     }
     if (-not (Test-UsableGitIdentityValue -Value $GitHubUsuario)) {
         $GitHubUsuario = $configuredGitHubUser
@@ -461,25 +608,52 @@ function Resolve-ProjectOnboarding {
 
     $hasAlias = (Test-UsableGitIdentityValue -Value $UsuarioSlug)
     $hasGitHubIdentity = (Test-UsableGitIdentityValue -Value $GitHubUsuario)
-    $shouldPromptAlias = ((-not $SoloVerificar) -and (-not $SinOnboarding) -and (-not $Actualizar) -and (($Reconfigurar) -or (-not $hasAlias)))
+    $shouldPromptAlias = ((-not $SoloVerificar) -and (-not $SinOnboarding) -and (($Actualizar) -or ($Reconfigurar) -or (-not $hasAlias)))
 
-    if ($hasAlias -and $hasGitHubIdentity -and (-not $Reconfigurar)) {
+    if ($hasAlias -and $hasGitHubIdentity -and (-not $Actualizar) -and (-not $Reconfigurar)) {
         Write-SetupSuccess ("Identidad local reutilizada: {0} vinculado a GitHub {1}." -f (ConvertTo-ProjectUserSlug -Value $UsuarioSlug), $GitHubUsuario)
     } elseif ($shouldPromptAlias) {
-        Show-SetupInteractiveIntro -RepoRoot $RepoRoot
+        if (Test-UsableGitIdentityValue -Value $registeredSlug) {
+            Show-SetupInteractiveIntro -RepoRoot $RepoRoot
+            Write-SetupStep "Cuenta GitHub reconocida"
+            Write-SetupSuccess ("{0} ya esta vinculada a la rama '{1}'." -f $GitHubUsuario, $registeredSlug)
+            $aliasChoice = Read-SetupMenu `
+                -Title "Que quieres hacer con esta identidad?" `
+                -Options @(
+                    [pscustomobject]@{
+                        Label = "Usar rama '$registeredSlug'"
+                        Description = "Reutiliza la identidad registrada en este repo."
+                        Value = "use"
+                    },
+                    [pscustomobject]@{
+                        Label = "Renombrar alias/rama"
+                        Description = "Cambia el nombre visible de commits, logs y rama vinculada."
+                        Value = "rename"
+                    }
+                )
 
-        Write-SetupStep "Configurando tu usuario de estudio"
-        Write-SetupInfo ("GitHub CLI resolvera tu usuario y correo automaticamente desde la cuenta {0}." -f $GitHubUsuario)
-        if ($Reconfigurar -and $hasAlias) {
-            Write-SetupInfo ("Alias actual detectado: {0}. Presiona Enter para conservarlo o escribe uno nuevo para cambiarlo." -f $defaultSlug)
+            if ($aliasChoice -eq "rename") {
+                $UsuarioSlug = Read-SetupValue -Prompt "Nuevo alias/rama para $GitHubUsuario" -DefaultValue $registeredSlug -Required
+                $UsuarioSlug = ConvertTo-ProjectUserSlug -Value $UsuarioSlug
+            } else {
+                $UsuarioSlug = $registeredSlug
+            }
         } else {
-            Write-SetupInfo "Solo necesitas elegir el alias local que se usara en tus commits y en .estudio_usuario."
-        }
+            Show-SetupInteractiveIntro -RepoRoot $RepoRoot
 
-        $UsuarioSlug = Read-SetupValue -Prompt "Alias local del estudiante (ej. axel)" -DefaultValue $defaultSlug -Required
-        $UsuarioSlug = ConvertTo-ProjectUserSlug -Value $UsuarioSlug
+            Write-SetupStep "Configurando tu usuario de estudio"
+            Write-SetupInfo ("GitHub CLI resolvera tu usuario y correo automaticamente desde la cuenta {0}." -f $GitHubUsuario)
+            if (($Actualizar -or $Reconfigurar) -and $hasAlias) {
+                Write-SetupInfo ("Alias actual detectado: {0}. Presiona Enter para conservarlo o escribe uno nuevo para renombrar tu identidad local." -f $defaultSlug)
+            } else {
+                Write-SetupInfo "Solo necesitas elegir el alias local que se usara en tus commits, logs y rama personal."
+            }
+
+            $UsuarioSlug = Read-SetupValue -Prompt "Alias local del estudiante (ej. axel)" -DefaultValue $defaultSlug -Required
+            $UsuarioSlug = ConvertTo-ProjectUserSlug -Value $UsuarioSlug
+        }
     } elseif ((-not $SoloVerificar) -and (-not $SinOnboarding) -and $Actualizar) {
-        Write-SetupInfo ("Actualizar reutilizara el alias local '{0}' y no cambiara la rama del estudiante." -f $defaultSlug)
+        Write-SetupInfo ("Actualizar reutilizara el alias local '{0}'." -f $defaultSlug)
     } elseif ((-not $SoloVerificar) -and (-not $hasGitHubIdentity)) {
         Write-SetupInfo "SinOnboarding activo; se usaran valores por defecto para la identidad local."
     }
@@ -497,11 +671,18 @@ function Resolve-ProjectOnboarding {
         $GitCorreo = ("{0}@users.noreply.github.com" -f $GitHubUsuario)
     }
 
+    $previousSlugForReturn = $configuredSlug
+    if (-not (Test-UsableGitIdentityValue -Value $previousSlugForReturn)) {
+        $previousSlugForReturn = $registeredSlug
+    }
+
     return @{
         UsuarioSlug = $UsuarioSlug
         GitHubUsuario = $GitHubUsuario.Trim()
         GitNombre = $GitNombre.Trim()
         GitCorreo = $GitCorreo.Trim()
+        PreviousUsuarioSlug = if (Test-UsableGitIdentityValue -Value $previousSlugForReturn) { (ConvertTo-ProjectUserSlug -Value $previousSlugForReturn) } else { $null }
+        PreviousGitHubUsuario = if (Test-UsableGitIdentityValue -Value $configuredGitHubUser) { $configuredGitHubUser.Trim() } else { $null }
     }
 }
 
@@ -599,6 +780,8 @@ function Configure-ProjectGit {
         Invoke-SetupCommand -FilePath $GitPath -Arguments @("config", "--local", "user.email", $GitCorreo) -Description "Configurando user.email local..." -SoloVerificar:$SoloVerificar
         Invoke-SetupCommand -FilePath $GitPath -Arguments @("config", "--local", "estudio.github.login", $GitHubUsuario) -Description "Vinculando alias local con GitHub..." -SoloVerificar:$SoloVerificar
         Invoke-SetupCommand -FilePath $GitPath -Arguments @("config", "--local", "estudio.usuario.alias", $UsuarioSlug) -Description "Guardando alias local de estudio..." -SoloVerificar:$SoloVerificar
+        Invoke-SetupCommand -FilePath $GitPath -Arguments @("config", "--local", "estudio.github.branch", $UsuarioSlug) -Description "Guardando rama vinculada a esta cuenta GitHub..." -SoloVerificar:$SoloVerificar
+        Set-ProjectUserRegistryEntry -RepoRoot $RepoRoot -GitHubUsuario $GitHubUsuario -UsuarioSlug $UsuarioSlug -SoloVerificar:$SoloVerificar
     } finally {
         Pop-Location
     }
@@ -635,11 +818,133 @@ function Test-ProjectGitDirty {
     }
 }
 
+function Move-ProjectUserDirectory {
+    param(
+        [string]$RepoRoot,
+        [string]$PreviousUsuarioSlug,
+        [string]$UsuarioSlug,
+        [switch]$SoloVerificar
+    )
+
+    if (-not (Test-UsableGitIdentityValue -Value $PreviousUsuarioSlug)) {
+        return
+    }
+    if ($PreviousUsuarioSlug -eq $UsuarioSlug) {
+        return
+    }
+
+    $oldDir = Join-Path $RepoRoot ("usuarios\" + $PreviousUsuarioSlug)
+    $newDir = Join-Path $RepoRoot ("usuarios\" + $UsuarioSlug)
+    if (-not (Test-Path -LiteralPath $oldDir)) {
+        return
+    }
+    if (Test-Path -LiteralPath $newDir) {
+        Write-SetupWarning "Ya existe usuarios\$UsuarioSlug; no se movera usuarios\$PreviousUsuarioSlug automaticamente."
+        return
+    }
+
+    if ($SoloVerificar) {
+        Write-SetupInfo "[SoloVerificar] Renombraria usuarios\$PreviousUsuarioSlug a usuarios\$UsuarioSlug."
+        return
+    }
+
+    Move-Item -LiteralPath $oldDir -Destination $newDir
+    Write-SetupSuccess "Carpeta de usuario renombrada: usuarios\$PreviousUsuarioSlug -> usuarios\$UsuarioSlug."
+}
+
+function Rename-ProjectUserBranch {
+    param(
+        [string]$RepoRoot,
+        [AllowNull()][string]$GitPath,
+        [string]$PreviousUsuarioSlug,
+        [string]$UsuarioSlug,
+        [switch]$SoloVerificar
+    )
+
+    if (-not $GitPath) {
+        return
+    }
+    if (-not (Test-UsableGitIdentityValue -Value $PreviousUsuarioSlug)) {
+        return
+    }
+    if ($PreviousUsuarioSlug -eq $UsuarioSlug) {
+        return
+    }
+    if (-not (Test-Path (Join-Path $RepoRoot ".git"))) {
+        return
+    }
+
+    if ($SoloVerificar) {
+        Write-SetupInfo "[SoloVerificar] Renombraria la rama local '$PreviousUsuarioSlug' a '$UsuarioSlug' si existe."
+        return
+    }
+
+    Push-Location $RepoRoot
+    try {
+        $currentBranch = (& $GitPath branch --show-current 2>$null | Select-Object -First 1)
+        $hasOldLocal = Test-ProjectGitRefExists -RepoRoot $RepoRoot -GitPath $GitPath -RefName ("refs/heads/" + $PreviousUsuarioSlug)
+        $hasNewLocal = Test-ProjectGitRefExists -RepoRoot $RepoRoot -GitPath $GitPath -RefName ("refs/heads/" + $UsuarioSlug)
+
+        if ($hasNewLocal) {
+            Write-SetupWarning "La rama local '$UsuarioSlug' ya existe; no se renombrara '$PreviousUsuarioSlug'."
+            return
+        }
+        if (-not $hasOldLocal) {
+            Write-SetupWarning "No existe una rama local '$PreviousUsuarioSlug' que pueda renombrarse a '$UsuarioSlug'."
+            return
+        }
+
+        if ($currentBranch -eq $PreviousUsuarioSlug) {
+            Invoke-SetupCommand -FilePath $GitPath -Arguments @("branch", "-m", $UsuarioSlug) -Description "Renombrando rama actual $PreviousUsuarioSlug -> $UsuarioSlug..." -SoloVerificar:$false
+        } else {
+            Invoke-SetupCommand -FilePath $GitPath -Arguments @("branch", "-m", $PreviousUsuarioSlug, $UsuarioSlug) -Description "Renombrando rama local $PreviousUsuarioSlug -> $UsuarioSlug..." -SoloVerificar:$false
+        }
+        Write-SetupSuccess "Rama local vinculada actualizada: $PreviousUsuarioSlug -> $UsuarioSlug."
+
+        $hasOldRemote = Test-ProjectGitRefExists -RepoRoot $RepoRoot -GitPath $GitPath -RefName ("refs/remotes/origin/" + $PreviousUsuarioSlug)
+        if ($hasOldRemote) {
+            $remoteChoice = Read-SetupMenu `
+                -Title "Rama remota detectada: origin/$PreviousUsuarioSlug" `
+                -Options @(
+                    [pscustomobject]@{
+                        Label = "Renombrar tambien en GitHub"
+                        Description = "Sube origin/$UsuarioSlug y borra origin/$PreviousUsuarioSlug."
+                        Value = "rename"
+                    },
+                    [pscustomobject]@{
+                        Label = "Dejar remoto como esta"
+                        Description = "Solo renombra este clon local por ahora."
+                        Value = "keep"
+                    }
+                ) `
+                -DefaultIndex 1
+            if ($remoteChoice -eq "rename") {
+                Invoke-SetupCommand -FilePath $GitPath -Arguments @("push", "-u", "origin", $UsuarioSlug) -Description "Subiendo rama remota origin/$UsuarioSlug..." -SoloVerificar:$false
+                $deleteExit = Invoke-SetupCommand -FilePath $GitPath -Arguments @("push", "origin", "--delete", $PreviousUsuarioSlug) -Description "Eliminando rama remota origin/$PreviousUsuarioSlug..." -SoloVerificar:$false -AllowFailure
+                if ($deleteExit -eq 0) {
+                    Write-SetupSuccess "Rama remota renombrada: origin/$PreviousUsuarioSlug -> origin/$UsuarioSlug."
+                } else {
+                    Write-SetupWarning "La nueva rama se subio, pero no pude borrar origin/$PreviousUsuarioSlug automaticamente."
+                    Write-SetupInfo "Cuando confirmes permisos, ejecuta: git push origin --delete $PreviousUsuarioSlug"
+                }
+            } else {
+                Write-SetupWarning "origin/$PreviousUsuarioSlug sigue existiendo."
+                Write-SetupInfo "Cuando quieras renombrarla en GitHub: git push -u origin $UsuarioSlug ; git push origin --delete $PreviousUsuarioSlug"
+            }
+        }
+    } finally {
+        Pop-Location
+    }
+}
+
 function Initialize-ProjectUser {
     param(
         [string]$RepoRoot,
         [AllowNull()][string]$GitPath,
         [string]$UsuarioSlug,
+        [AllowNull()][string]$PreviousUsuarioSlug,
+        [AllowNull()][string]$GitHubUsuario,
+        [AllowNull()][string]$PreviousGitHubUsuario,
         [switch]$SoloVerificar,
         [switch]$SinRamaUsuario,
         [switch]$Actualizar,
@@ -650,6 +955,14 @@ function Initialize-ProjectUser {
     $logsDir = Join-Path $usuarioDir "logs"
     $erroresPath = Join-Path $usuarioDir "errores.md"
     $usuarioConfig = Join-Path $RepoRoot ".estudio_usuario"
+    $sameGithubAccount = $true
+    if ((Test-UsableGitIdentityValue -Value $PreviousGitHubUsuario) -and (Test-UsableGitIdentityValue -Value $GitHubUsuario)) {
+        $sameGithubAccount = ($PreviousGitHubUsuario.Trim().ToLowerInvariant() -eq $GitHubUsuario.Trim().ToLowerInvariant())
+    }
+
+    if ($sameGithubAccount) {
+        Move-ProjectUserDirectory -RepoRoot $RepoRoot -PreviousUsuarioSlug $PreviousUsuarioSlug -UsuarioSlug $UsuarioSlug -SoloVerificar:$SoloVerificar
+    }
 
     if ($SoloVerificar) {
         Write-SetupInfo "[SoloVerificar] Escribiria .estudio_usuario con '$UsuarioSlug'."
@@ -669,12 +982,18 @@ function Initialize-ProjectUser {
     }
 
     if ($Actualizar) {
-        Write-SetupInfo "Modo actualizar activo; se mantiene la rama actual y no se intenta cambiar a '$UsuarioSlug'."
+        if ($sameGithubAccount) {
+            Rename-ProjectUserBranch -RepoRoot $RepoRoot -GitPath $GitPath -PreviousUsuarioSlug $PreviousUsuarioSlug -UsuarioSlug $UsuarioSlug -SoloVerificar:$SoloVerificar
+        }
+        Write-SetupInfo "Modo actualizar activo; no se cambiara de rama salvo renombrar la rama vinculada si cambio el alias."
         return
     }
 
     if ($Reconfigurar) {
-        Write-SetupInfo "Modo reconfigurar activo; se mantiene la rama actual y no se intenta cambiar automaticamente la rama personal."
+        if ($sameGithubAccount) {
+            Rename-ProjectUserBranch -RepoRoot $RepoRoot -GitPath $GitPath -PreviousUsuarioSlug $PreviousUsuarioSlug -UsuarioSlug $UsuarioSlug -SoloVerificar:$SoloVerificar
+        }
+        Write-SetupInfo "Modo reconfigurar activo; no se cambiara de rama salvo renombrar la rama vinculada si cambio el alias."
         return
     }
 

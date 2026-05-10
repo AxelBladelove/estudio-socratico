@@ -205,7 +205,8 @@ async function handleWebviewMessage(root, message, sourceWebview) {
     }
 
     if (message.command === "submit" && message.folder) {
-      runInTerminal(root, "submit", message.folder);
+      await submitExercise(root, message.folder);
+      await refreshAll(root);
     }
   } catch (error) {
     vscode.window.showErrorMessage(cleanMessage(error.message));
@@ -246,6 +247,38 @@ async function importExercise(root, provider, slug) {
   );
 }
 
+async function submitExercise(root, folder) {
+  await vscode.window.withProgress(
+    { location: vscode.ProgressLocation.Notification, title: "Enviando ejercicio a Exercism", cancellable: false },
+    async () => {
+      const result = await runManagerJson(root, ["-Action", "submit", "-ExercisePath", folder]);
+      if (!result || result.ok === false) {
+        const output = Array.isArray(result?.output) ? result.output.join(" ") : "";
+        throw new Error(result?.error || output || "No se pudo enviar el ejercicio.");
+      }
+      if (result.completed) {
+        const choice = await vscode.window.showInformationMessage(
+          `Ejercicio completado en Exercism: ${result.title}`,
+          result.viewUrl ? "Abrir Exercism" : undefined,
+        );
+        if (choice === "Abrir Exercism" && result.viewUrl) {
+          vscode.env.openExternal(vscode.Uri.parse(result.viewUrl));
+        }
+        return;
+      }
+
+      const remoteStatus = result.remoteTestsStatus || result.status || "pendiente";
+      const choice = await vscode.window.showWarningMessage(
+        `Exercism recibio el envio, pero no lo marco como completado (${remoteStatus}). Revisa los tests remotos.`,
+        result.viewUrl ? "Abrir Exercism" : undefined,
+      );
+      if (choice === "Abrir Exercism" && result.viewUrl) {
+        vscode.env.openExternal(vscode.Uri.parse(result.viewUrl));
+      }
+    },
+  );
+}
+
 function runForCurrentFile(action) {
   const editor = vscode.window.activeTextEditor;
   if (!editor) {
@@ -257,6 +290,12 @@ function runForCurrentFile(action) {
     runManagerJson(root, ["-Action", action, "-ExercisePath", editor.document.uri.fsPath]).catch((error) => {
       vscode.window.showErrorMessage(cleanMessage(error.message));
     });
+    return;
+  }
+  if (action === "submit") {
+    submitExercise(root, editor.document.uri.fsPath)
+      .then(() => refreshAll(root))
+      .catch((error) => vscode.window.showErrorMessage(cleanMessage(error.message)));
     return;
   }
   runInTerminal(root, action, editor.document.uri.fsPath);
@@ -477,8 +516,8 @@ function statusText(status) {
 }
 
 function statusGroupName(status) {
-  if (["completed", "submitted"].includes(status)) return "completed";
-  if (["imported", "tests_passed", "tests_failed", "submit_failed", "in_progress"].includes(status)) return "in_progress";
+  if (["completed"].includes(status)) return "completed";
+  if (["imported", "tests_passed", "tests_failed", "submitted", "submit_failed", "in_progress"].includes(status)) return "in_progress";
   return "available";
 }
 

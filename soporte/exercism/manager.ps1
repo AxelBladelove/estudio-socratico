@@ -478,6 +478,112 @@ function Get-ExercismSolutions {
     return $solutions
 }
 
+function Get-ExercismSolutionForSlug {
+    param([string]$Slug)
+
+    $solutions = Get-ExercismSolutions
+    if ($solutions.ContainsKey($Slug)) {
+        return $solutions[$Slug]
+    }
+
+    return $null
+}
+
+function Get-ExercismSolutionTestsStatus {
+    param([AllowNull()][object]$Solution)
+
+    if ($null -eq $Solution) {
+        return $null
+    }
+
+    foreach ($name in @(
+        "published_iteration_head_tests_status",
+        "latest_iteration_head_tests_status",
+        "head_tests_status",
+        "tests_status"
+    )) {
+        if ($Solution.PSObject.Properties.Name -contains $name) {
+            $value = $Solution.$name
+            if (-not [string]::IsNullOrWhiteSpace($value)) {
+                return "$value"
+            }
+        }
+    }
+
+    return $null
+}
+
+function Get-ExercismSolutionUrl {
+    param(
+        [AllowNull()][object]$Solution,
+        [string]$Slug,
+        [AllowNull()][string[]]$Output
+    )
+
+    foreach ($line in @($Output)) {
+        $match = [regex]::Match("$line", "https?://\S+")
+        if ($match.Success) {
+            return $match.Value.TrimEnd(".", ",", ";", ")")
+        }
+    }
+
+    if ($Solution) {
+        if (-not [string]::IsNullOrWhiteSpace($Solution.private_url)) {
+            return "$($Solution.private_url)"
+        }
+        if (-not [string]::IsNullOrWhiteSpace($Solution.public_url)) {
+            return "$($Solution.public_url)"
+        }
+    }
+
+    return "https://exercism.org/tracks/c/exercises/$Slug"
+}
+
+function Wait-ExercismSolutionAfterSubmit {
+    param(
+        [string]$Slug,
+        [AllowNull()][object]$PreviousSolution,
+        [int]$Attempts = 8,
+        [int]$DelaySeconds = 2
+    )
+
+    $previousLastIteratedAt = if ($PreviousSolution) { "$($PreviousSolution.last_iterated_at)" } else { "" }
+    $previousUpdatedAt = if ($PreviousSolution) { "$($PreviousSolution.updated_at)" } else { "" }
+    $previousIterations = if ($PreviousSolution -and $null -ne $PreviousSolution.num_iterations) { [int]$PreviousSolution.num_iterations } else { -1 }
+    $latest = $null
+    $sawChanged = (-not $PreviousSolution)
+    for ($i = 0; $i -lt $Attempts; $i++) {
+        $latest = Get-ExercismSolutionForSlug -Slug $Slug
+        if ($latest) {
+            $testsStatus = Get-ExercismSolutionTestsStatus -Solution $latest
+            $changed = $true
+            if ($PreviousSolution) {
+                $changed = (($latest.num_iterations -as [int]) -gt $previousIterations) -or
+                    ("$($latest.last_iterated_at)" -ne $previousLastIteratedAt) -or
+                    ("$($latest.updated_at)" -ne $previousUpdatedAt)
+            }
+            if ($changed) {
+                $sawChanged = $true
+            }
+
+            if ($changed -and (
+                (-not [string]::IsNullOrWhiteSpace($latest.completed_at)) -or
+                ($testsStatus -match '(?i)passed|failed|errored|error')
+            )) {
+                return $latest
+            }
+        }
+
+        Start-Sleep -Seconds $DelaySeconds
+    }
+
+    if (-not $sawChanged) {
+        return $null
+    }
+
+    return $latest
+}
+
 function Get-Catalog {
     param([string]$Root)
 
@@ -496,7 +602,7 @@ function Get-Catalog {
         if ($remoteSolution) {
             if (-not [string]::IsNullOrWhiteSpace($remoteSolution.completed_at)) {
                 $status = "completed"
-            } elseif (-not [string]::IsNullOrWhiteSpace($remoteSolution.status)) {
+            } elseif ($status -notin @("completed", "submitted")) {
                 $status = "in_progress"
             }
         }
@@ -1611,12 +1717,13 @@ function Invoke-ExercismSubmit {
     }
     Sync-SolutionFilesToSupport -ExerciseRoot $exerciseRoot -SupportRoot $workspaceRoot -SolutionFiles $solutionFiles
 
+    $output = @()
     Push-Location $workspaceRoot
     try {
         $previousErrorActionPreference = $ErrorActionPreference
         $ErrorActionPreference = "Continue"
         try {
-            & $cli submit
+            $output = & $cli submit 2>&1
             $exitCode = $LASTEXITCODE
         } finally {
             $ErrorActionPreference = $previousErrorActionPreference
@@ -1625,14 +1732,50 @@ function Invoke-ExercismSubmit {
         Pop-Location
     }
 
-    $newStatus = if ($exitCode -eq 0) { "submitted" } else { "submit_failed" }
+    $previousRemoteSolution = Get-ExercismSolutionForSlug -Slug $meta.slug
+    $remoteSolution = $null
+    $remoteTestsStatus = $null
+    if ($exitCode -eq 0) {
+        $remoteSolution = Wait-ExercismSolutionAfterSubmit -Slug $meta.slug -PreviousSolution $previousRemoteSolution
+        $remoteTestsStatus = Get-ExercismSolutionTestsStatus -Solution $remoteSolution
+    }
+
+    $newStatus = "submit_failed"
+    if ($exitCode -eq 0) {
+        if ($remoteTestsStatus -match '(?i)failed|errored|error') {
+            $newStatus = "submit_failed"
+        } elseif ($remoteSolution -and -not [string]::IsNullOrWhiteSpace($remoteSolution.completed_at)) {
+            $newStatus = "completed"
+        } else {
+            $newStatus = "submitted"
+        }
+    }
+    $viewUrl = Get-ExercismSolutionUrl -Solution $remoteSolution -Slug $meta.slug -Output $output
+
     Set-ObjectProperty -Target $meta -Name "status" -Value $newStatus
     Set-ObjectProperty -Target $meta -Name "lastSubmitAt" -Value (Get-Date).ToString("o")
     Set-ObjectProperty -Target $meta -Name "lastSubmitExitCode" -Value $exitCode
+    Set-ObjectProperty -Target $meta -Name "lastSubmitRemoteTestsStatus" -Value $remoteTestsStatus
+    Set-ObjectProperty -Target $meta -Name "lastSubmitUrl" -Value $viewUrl
+    if ($newStatus -eq "completed") {
+        Set-ObjectProperty -Target $meta -Name "completedAt" -Value (Get-Date).ToString("o")
+    }
     $meta | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $metaPath -Encoding utf8
     Save-Progress -Root $Root -Provider "exercism" -Slug $meta.slug -Title $meta.title -Status $newStatus -Folder $exerciseRoot
 
-    return $exitCode
+    return [pscustomobject]@{
+        ok = ($exitCode -eq 0)
+        completed = ($newStatus -eq "completed")
+        provider = "exercism"
+        slug = $meta.slug
+        title = $meta.title
+        status = $newStatus
+        exitCode = $exitCode
+        remoteTestsStatus = $remoteTestsStatus
+        viewUrl = $viewUrl
+        folder = $exerciseRoot
+        output = @($output | ForEach-Object { "$_" })
+    }
 }
 
 $RepoRoot = Resolve-RepoRoot -Root $RepoRoot
@@ -1704,8 +1847,15 @@ try {
         }
         "submit" {
             $path = if ($ExercisePath) { $ExercisePath } else { $File }
-            $exitCode = Invoke-ExercismSubmit -Root $RepoRoot -Path $path
-            exit $exitCode
+            $result = Invoke-ExercismSubmit -Root $RepoRoot -Path $path
+            if ($Json -or $OutFile) {
+                Write-Json $result
+                exit 0
+            }
+            foreach ($line in @($result.output)) {
+                Write-Output $line
+            }
+            exit $result.exitCode
         }
         "detect" {
             $path = if ($ExercisePath) { $ExercisePath } else { $File }
@@ -1740,7 +1890,7 @@ try {
     if ([string]::IsNullOrWhiteSpace($message)) {
         $message = ($_ | Out-String).Trim()
     }
-    if ($Json -or $Action -in @("catalog", "status", "import", "mark", "test-window", "validate-window", "reveal-tests")) {
+    if ($Json -or $Action -in @("catalog", "status", "import", "mark", "submit", "test-window", "validate-window", "reveal-tests")) {
         Write-Json ([pscustomobject]@{
             ok = $false
             error = $message
