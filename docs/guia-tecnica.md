@@ -9,8 +9,9 @@ motor.
 - `npm run setup` ejecuta la TUI completa y `npm run setup:update` valida una
   instalacion existente reutilizando alias/rama si ya estan configurados.
 - `Instalar Estudio Socratico.cmd` fuerza reconfiguracion interactiva del alias
-  local; `Actualizar Estudio Socratico.cmd` mantiene el alias actual y solo
-  revalida GitHub CLI, herramientas y archivos del workspace.
+  local y revalida GitHub CLI por navegador; `Actualizar Estudio Socratico.cmd`
+  mantiene el alias actual, revalida GitHub CLI por navegador y no cambia la
+  rama activa del workspace.
 - La identidad del estudiante se resuelve como alias local vinculado a
   `gh auth`; Git local toma `github.user` y `user.email` desde la cuenta
   autenticada, mientras el alias se usa para `user.name`, rama y
@@ -95,6 +96,7 @@ El setup:
 
 - valida la raiz del proyecto;
 - pide el alias local solo cuando hace falta o cuando se lanza una reconfiguracion interactiva;
+- revalida GitHub CLI por navegador en los accesos directos de instalar y actualizar;
 - resuelve el usuario y el correo de GitHub desde `gh auth` sin pedirlos a mano;
 - usa el alias como `user.name` local para que ese mismo nombre aparezca en los commits;
 - instala o valida herramientas base;
@@ -144,6 +146,7 @@ Comportamiento:
 - antes de compilar, detecta si el archivo pertenece a un ejercicio de
   Exercism importado;
 - si detecta Exercism, ejecuta `soporte/exercism/manager.ps1 -Action test`;
+- para Exercism, el runner local copia el soporte a un workspace temporal y comenta los `TEST_IGNORE()` oficiales para que el resultado local refleje toda la suite, no solo el modo incremental;
 - abre el ejecutable en una ventana externa;
 - bloquea ejecuciones duplicadas mediante `soporte/runtime/run.lock`;
 - difiere el commit automatico hasta que el estudiante cierre la ventana;

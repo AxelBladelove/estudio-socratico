@@ -18,13 +18,14 @@ usa tambien como `user.name` local para que los commits salgan con ese nombre.
 
 Si usas los accesos directos de la raiz del repo:
 
-- `Instalar Estudio Socratico.cmd` vuelve a abrir la reconfiguracion del alias local para este clon y usa la cuenta GitHub autenticada en `gh` para configurar Git local.
-- `Actualizar Estudio Socratico.cmd` valida una instalacion existente, reutiliza el alias local actual y no cambia la rama del estudiante.
+- `Instalar Estudio Socratico.cmd` revalida GitHub CLI por navegador, deja cambiar o conservar el alias local y mantiene la rama actual del clon.
+- `Actualizar Estudio Socratico.cmd` revalida GitHub CLI por navegador, reutiliza el alias local actual y no cambia la rama del estudiante.
 
 ## Que Hace
 
 - valida que el repo este completo;
 - pide el alias local del estudiante si hace falta;
+- revalida GitHub CLI por navegador en los flujos de instalar y actualizar;
 - resuelve usuario y correo de GitHub desde `gh auth` sin pedirlos a mano;
 - usa el alias como nombre local de Git para los commits de ese clon;
 - configura Git local;

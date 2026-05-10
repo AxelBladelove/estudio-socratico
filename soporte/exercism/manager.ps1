@@ -738,6 +738,73 @@ function Ensure-ExercismMakeShim {
     Set-Content -LiteralPath $shim -Value $content -Encoding ascii
 }
 
+function Disable-ExercismTestIgnoreLines {
+    param([string]$SupportRoot)
+
+    Get-ChildItem -LiteralPath $SupportRoot -Filter "test_*.c" -File -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
+        $current = Get-Content -LiteralPath $_.FullName -Raw
+        $updated = [regex]::Replace($current, '(?m)^(\s*)TEST_IGNORE\(\);', '$1// TEST_IGNORE();')
+        if (-not [string]::Equals($current, $updated, [StringComparison]::Ordinal)) {
+            Set-Content -LiteralPath $_.FullName -Value $updated -Encoding utf8
+        }
+    }
+}
+
+function New-ExercismTestWorkspace {
+    param(
+        [string]$Root,
+        [string]$ExerciseRoot,
+        [string]$SupportRoot,
+        [string[]]$SolutionFiles,
+        [string]$Slug
+    )
+
+    $runtimeRoot = Join-Path $Root "soporte\runtime\exercism-tests"
+    if (-not (Test-Path -LiteralPath $runtimeRoot)) {
+        New-Item -ItemType Directory -Path $runtimeRoot -Force | Out-Null
+    }
+
+    $stamp = Get-Date -Format "yyyyMMdd_HHmmss_fff"
+    $folderName = "{0}_{1}" -f (ConvertTo-Slug $Slug), $stamp
+    $workspaceRoot = Join-Path $runtimeRoot $folderName
+    New-Item -ItemType Directory -Path $workspaceRoot -Force | Out-Null
+
+    Get-ChildItem -LiteralPath $SupportRoot -Force -ErrorAction SilentlyContinue | ForEach-Object {
+        Copy-Item -LiteralPath $_.FullName -Destination $workspaceRoot -Recurse -Force
+    }
+
+    Sync-SolutionFilesToSupport -ExerciseRoot $ExerciseRoot -SupportRoot $workspaceRoot -SolutionFiles $SolutionFiles
+    Ensure-ExercismMakeShim -SupportRoot $workspaceRoot
+    Disable-ExercismTestIgnoreLines -SupportRoot $workspaceRoot
+
+    return $workspaceRoot
+}
+
+function Get-ExercismMakeCommand {
+    param([string]$SupportRoot)
+
+    $localShim = Join-Path $SupportRoot "make.cmd"
+    if (Test-Path -LiteralPath $localShim) {
+        return $localShim
+    }
+
+    $command = Get-Command make -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($command) {
+        return $command.Source
+    }
+
+    foreach ($candidate in @(
+        "C:\msys64\usr\bin\make.exe",
+        "C:\msys64\mingw64\bin\mingw32-make.exe"
+    )) {
+        if (Test-Path -LiteralPath $candidate) {
+            return $candidate
+        }
+    }
+
+    throw "No se encontro make para ejecutar los tests oficiales de Exercism."
+}
+
 function Add-TranslatedHeaderToSolution {
     param(
         [string]$ExerciseRoot,
@@ -1332,8 +1399,13 @@ function Invoke-ExercismTest {
     $userSlug = Get-UserSlug -Root $Root
     $supportRoot = Get-ExercismSupportRoot -ExerciseRoot $exerciseRoot -Meta $meta
     $solutionFiles = if ($meta.solutionFiles) { @($meta.solutionFiles) } else { Get-SolutionFiles -ExerciseRoot $supportRoot }
-    Sync-SolutionFilesToSupport -ExerciseRoot $exerciseRoot -SupportRoot $supportRoot -SolutionFiles $solutionFiles
-    Ensure-ExercismMakeShim -SupportRoot $supportRoot
+    $testWorkspace = New-ExercismTestWorkspace `
+        -Root $Root `
+        -ExerciseRoot $exerciseRoot `
+        -SupportRoot $supportRoot `
+        -SolutionFiles $solutionFiles `
+        -Slug $meta.slug
+    $makeCommand = Get-ExercismMakeCommand -SupportRoot $testWorkspace
 
     $logsDir = Join-Path $Root ("usuarios\" + $userSlug + "\logs\" + (ConvertTo-Slug $meta.title))
     $erroresFile = Join-Path $Root ("usuarios\" + $userSlug + "\errores.md")
@@ -1354,17 +1426,19 @@ function Invoke-ExercismTest {
         Get-Content -LiteralPath $_.FullName | Add-Content -LiteralPath $log
     }
     "[EXERCISM TEST]" | Add-Content -LiteralPath $log
+    "Running tests via `make`" | Add-Content -LiteralPath $log
 
-    Push-Location $supportRoot
+    Push-Location $testWorkspace
     try {
         $previousErrorActionPreference = $ErrorActionPreference
         $previousPath = $env:PATH
         $ErrorActionPreference = "Continue"
         $msysPath = "C:\msys64\usr\bin"
         $mingwPath = "C:\msys64\mingw64\bin"
-        $env:PATH = "$supportRoot;$msysPath;$mingwPath;$env:PATH"
+        $env:PATH = "$testWorkspace;$msysPath;$mingwPath;$env:PATH"
         try {
-            $output = & $cli test 2>&1
+            Write-Host "Running tests via `make`"
+            $output = & $makeCommand test 2>&1
             $exitCode = $LASTEXITCODE
         } finally {
             $ErrorActionPreference = $previousErrorActionPreference
@@ -1372,6 +1446,9 @@ function Invoke-ExercismTest {
         }
     } finally {
         Pop-Location
+        if ($testWorkspace -and (Test-Path -LiteralPath $testWorkspace)) {
+            Remove-Item -LiteralPath $testWorkspace -Recurse -Force -ErrorAction SilentlyContinue
+        }
     }
 
     $output | ForEach-Object {

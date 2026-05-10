@@ -263,7 +263,8 @@ function Ensure-GhAuthenticatedProfile {
     param(
         [AllowNull()][string]$GhPath,
         [switch]$SoloVerificar,
-        [switch]$SinOnboarding
+        [switch]$SinOnboarding,
+        [switch]$ForceWebValidation
     )
 
     if (-not $GhPath) {
@@ -272,14 +273,63 @@ function Ensure-GhAuthenticatedProfile {
     }
 
     $profile = Get-GhAuthenticatedProfile -GhPath $GhPath
-    if ($profile) {
+
+    if ($SoloVerificar) {
+        if ($ForceWebValidation) {
+            if ($profile) {
+                Write-SetupInfo ("[SoloVerificar] Revalidaria GitHub CLI en el navegador para la cuenta {0}." -f $profile.login)
+            } else {
+                Write-SetupInfo "[SoloVerificar] Abriria el flujo web de GitHub CLI para iniciar sesion."
+            }
+        } elseif ($profile) {
+            Write-SetupSuccess ("GitHub autenticado como {0}." -f $profile.login)
+        } else {
+            Write-SetupInfo "[SoloVerificar] Validaria GitHub CLI con gh auth status."
+        }
+
+        return $profile
+    }
+
+    if ($ForceWebValidation) {
+        Write-SetupStep "Conectando GitHub"
+
+        if ($profile) {
+            $refreshExitCode = Invoke-SetupCommand `
+                -FilePath $GhPath `
+                -Arguments @("auth", "refresh", "--hostname", "github.com") `
+                -Description ("Revalidando GitHub CLI en el navegador para {0}..." -f $profile.login) `
+                -SoloVerificar:$false `
+                -AllowFailure
+
+            if ($refreshExitCode -eq 0) {
+                $profile = Get-GhAuthenticatedProfile -GhPath $GhPath
+                if ($profile) {
+                    Write-SetupSuccess ("GitHub autenticado como {0}." -f $profile.login)
+                    return $profile
+                }
+            }
+
+            Write-SetupWarning "No pude revalidar la sesion actual con gh auth refresh; intentare un login web completo."
+        }
+
+        Invoke-SetupCommand `
+            -FilePath $GhPath `
+            -Arguments @("auth", "login", "--web", "--hostname", "github.com", "--scopes", "repo") `
+            -Description "Abriendo autenticacion web de GitHub CLI..." `
+            -SoloVerificar:$false
+
+        $profile = Get-GhAuthenticatedProfile -GhPath $GhPath
+        if (-not $profile) {
+            throw "No pude confirmar la sesion de GitHub CLI despues de la autenticacion web."
+        }
+
         Write-SetupSuccess ("GitHub autenticado como {0}." -f $profile.login)
         return $profile
     }
 
-    if ($SoloVerificar) {
-        Write-SetupInfo "[SoloVerificar] Validaria GitHub CLI con gh auth status."
-        return $null
+    if ($profile) {
+        Write-SetupSuccess ("GitHub autenticado como {0}." -f $profile.login)
+        return $profile
     }
 
     if ($SinOnboarding) {
@@ -288,8 +338,12 @@ function Ensure-GhAuthenticatedProfile {
     }
 
     Write-SetupStep "Conectando GitHub"
-    Write-SetupInfo "Se abrira el flujo web de GitHub CLI. Esto vincula tu alias local con tu cuenta real."
-    & $GhPath auth login -w -s repo
+    Invoke-SetupCommand `
+        -FilePath $GhPath `
+        -Arguments @("auth", "login", "--web", "--hostname", "github.com", "--scopes", "repo") `
+        -Description "Abriendo autenticacion web de GitHub CLI..." `
+        -SoloVerificar:$false
+
     $profile = Get-GhAuthenticatedProfile -GhPath $GhPath
     if (-not $profile) {
         throw "No pude confirmar la sesion de GitHub CLI despues de gh auth login."
@@ -373,7 +427,8 @@ function Resolve-ProjectOnboarding {
     $ghProfile = Ensure-GhAuthenticatedProfile `
         -GhPath $GhPath `
         -SoloVerificar:$SoloVerificar `
-        -SinOnboarding:$SinOnboarding
+        -SinOnboarding:$SinOnboarding `
+        -ForceWebValidation:($Actualizar -or $Reconfigurar)
 
     if ($ghProfile -and (Test-UsableGitIdentityValue -Value $ghProfile.login)) {
         $GitHubUsuario = $ghProfile.login
@@ -415,9 +470,13 @@ function Resolve-ProjectOnboarding {
 
         Write-SetupStep "Configurando tu usuario de estudio"
         Write-SetupInfo ("GitHub CLI resolvera tu usuario y correo automaticamente desde la cuenta {0}." -f $GitHubUsuario)
-        Write-SetupInfo "Solo necesitas elegir el alias local que se usara en tu rama y en .estudio_usuario."
+        if ($Reconfigurar -and $hasAlias) {
+            Write-SetupInfo ("Alias actual detectado: {0}. Presiona Enter para conservarlo o escribe uno nuevo para cambiarlo." -f $defaultSlug)
+        } else {
+            Write-SetupInfo "Solo necesitas elegir el alias local que se usara en tus commits y en .estudio_usuario."
+        }
 
-        $UsuarioSlug = Read-SetupValue -Prompt "Nombre corto para tu carpeta y rama (ej. axel)" -DefaultValue $defaultSlug -Required
+        $UsuarioSlug = Read-SetupValue -Prompt "Alias local del estudiante (ej. axel)" -DefaultValue $defaultSlug -Required
         $UsuarioSlug = ConvertTo-ProjectUserSlug -Value $UsuarioSlug
     } elseif ((-not $SoloVerificar) -and (-not $SinOnboarding) -and $Actualizar) {
         Write-SetupInfo ("Actualizar reutilizara el alias local '{0}' y no cambiara la rama del estudiante." -f $defaultSlug)
@@ -583,7 +642,8 @@ function Initialize-ProjectUser {
         [string]$UsuarioSlug,
         [switch]$SoloVerificar,
         [switch]$SinRamaUsuario,
-        [switch]$Actualizar
+        [switch]$Actualizar,
+        [switch]$Reconfigurar
     )
 
     $usuarioDir = Join-Path $RepoRoot ("usuarios\" + $UsuarioSlug)
@@ -610,6 +670,11 @@ function Initialize-ProjectUser {
 
     if ($Actualizar) {
         Write-SetupInfo "Modo actualizar activo; se mantiene la rama actual y no se intenta cambiar a '$UsuarioSlug'."
+        return
+    }
+
+    if ($Reconfigurar) {
+        Write-SetupInfo "Modo reconfigurar activo; se mantiene la rama actual y no se intenta cambiar automaticamente la rama personal."
         return
     }
 

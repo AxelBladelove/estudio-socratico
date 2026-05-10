@@ -100,7 +100,8 @@ try {
         -UsuarioSlug $UsuarioSlug `
         -SoloVerificar:$SoloVerificar `
         -SinRamaUsuario:$SinRamaUsuario `
-        -Actualizar:$Actualizar
+        -Actualizar:$Actualizar `
+        -Reconfigurar:$Reconfigurar
 
     Write-SetupStep "Instalando y validando GCC"
     Ensure-GccToolchain -RepoRoot $RepoRoot -SoloVerificar:$SoloVerificar -SinWinget:$SinWinget
