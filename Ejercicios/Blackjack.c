@@ -252,7 +252,7 @@ int main()
       {
          gotoxy(1, 30);
 
-         printf("Jugadas: %d  Ganadas: %d  Perdidas: %d\n", manos_jugadas, manos_ganadas, manos_perdidas);
+         printf("Jugadas: %d  Ganadas: %d  Perdidas: %d\n\n", manos_jugadas, manos_ganadas, manos_perdidas);
 
          if (resultado_mano == RESULTADO_GANADO)
          {
