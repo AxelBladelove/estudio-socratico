@@ -7,6 +7,14 @@
                                  "folder":  "C:\\Users\\AxelBlade\\.gemini\\antigravity\\scratch\\estudio-socratico\\Ejercicios\\Hello World",
                                  "updatedAt":  "2026-05-09T19:07:13.5843007-04:00"
                              },
+    "alejandro:alejandro-imprimir-nombre-n-veces":  {
+                                                        "provider":  "alejandro",
+                                                        "slug":  "alejandro-imprimir-nombre-n-veces",
+                                                        "title":  "Imprimir nombre N veces",
+                                                        "status":  "in_progress",
+                                                        "folder":  "C:\\Users\\axelb\\estudio-socratico\\Ejercicios\\Imprimir nombre N veces",
+                                                        "updatedAt":  "2026-05-12T12:55:08.7050489-04:00"
+                                                    },
     "exercism:grains":  {
                             "provider":  "exercism",
                             "slug":  "grains",
@@ -15,14 +23,6 @@
                             "folder":  "C:\\Users\\AxelBlade\\.gemini\\antigravity\\scratch\\estudio-socratico\\Ejercicios\\Grains",
                             "updatedAt":  "2026-05-10T04:53:45.3468687-04:00"
                         },
-    "alejandro:alejandro-imprimir-nombre-n-veces":  {
-                                                        "provider":  "alejandro",
-                                                        "slug":  "alejandro-imprimir-nombre-n-veces",
-                                                        "title":  "Imprimir nombre N veces",
-                                                        "status":  "in_progress",
-                                                        "folder":  "C:\\Users\\axelb\\estudio-socratico\\Ejercicios\\Imprimir nombre N veces",
-                                                        "updatedAt":  "2026-05-12T03:15:57.1987032-04:00"
-                                                    },
     "alejandro:parte-ii-5-blackjack-implementacion":  {
                                                           "provider":  "alejandro",
                                                           "slug":  "parte-ii-5-blackjack-implementacion",

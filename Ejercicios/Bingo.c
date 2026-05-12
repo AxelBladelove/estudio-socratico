@@ -35,16 +35,36 @@ cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
 #define DERECHA   77
 #define IZQUIERDA 75
 #define ESP       32
+#define CT      	LIGHTBLUE
+#define CF 			WHITE
+#define ANCHO_CASILLA 4
+#define ALTO_CASILLA  1
+
 #define BOLASTOTAL 75
 #define B 1
 #define I 2
 #define N 3
 #define G 4
 #define O 5
+#define POS_B_x
+#define POS_B_y
+#define POS_I_x
+#define POS_I_y
+#define POS_N_x
+#define POS_N_y
+#define POS_G_x
+#define POS_G_y
+#define POS_O_x
+#define POS_O_y
 
 
 
-void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy);
+void setcolor(int ct, int cf);
+void colordefault(void);
+void llenar_carton (int carton[dim][dim], int num_carton[BOLASTOTAL]);
+void 
+
+void showcarton (int carton[dim][dim], int posx, int posy);
 int bolas (int bolillero[BOLASTOTAL]);
 int sacarbolas🥚🥚(int Grupo, int bolillero[BOLASTOTAL]);
 int randrange (int limif, int limsp);
@@ -55,18 +75,18 @@ int main(){
 
 	int jugando = 1;
 	int carton[dim][dim];
-	int bolillero[BOLASTOTAL] = {0};
-	int num_carton[BOLASTOTAL] = {0};
+	int bolillero[BOLASTOTAL + 1] = {0};
+	int num_carton[BOLASTOTAL + 1] = {0};
 	srand(time(NULL));
 	
 
 	//while (jugando == 1)
 //	{
-		bolas(bolillero);
-		showcarton(carton, bolillero, 15, 15);
+		llenar_carton(carton, num_carton);
+		showcarton(carton, 45, 8);
 
 		jugando = 0;
-		printf("prueba");
+		printf("\n\nprueba");
 //	}
 
 
@@ -74,41 +94,35 @@ int main(){
 	return 0;
 }
 
-void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+void showcarton (int carton[dim][dim], int posx, int posy)
 {
 	int fil;
 	int col;
+	int dx;
+	int dy;
+
 
 	for (fil = 0; fil < dim; fil++)
 	{
 	
 		for (col = 0; col < dim; col++)
 		{
+			setcolor(CT, CF);
 
-			if (col == 0)
+         for (dy = 0; dy < ALTO_CASILLA; dy++)
 			{
-				carton[col][fil] = numerar_carton(B, bolillero);	
+				gotoxy(posx + col * ANCHO_CASILLA, posy + fil * ALTO_CASILLA + dy);
+				for (dx = 0; dx < ANCHO_CASILLA; dx++)
+				{
+					printf(" ");
+				}
 			}
-			if (col == 1)
-			{
-				carton[col][fil] = numerar_carton(I, bolillero);	
-			}
-			if (col == 2)
-			{
-				carton[col][fil] = numerar_carton(N, bolillero);	
-			}
-			if (col == 3)
-			{
-				carton[col][fil] = numerar_carton(G, bolillero);	
-			}
-			if (col == 4)
-			{
-				carton[col][fil] = numerar_carton(O, bolillero);	
-			}
-			printf("%d\t", carton[col][fil]);
-
+			int textoy = posy + fil * ALTO_CASILLA + (ALTO_CASILLA - 1) / 2;
+			int textox = posx + col * ANCHO_CASILLA + 1;
+			gotoxy(textox, textoy);
+			printf("%2d", carton[col][fil]);
 		}
-		printf("\n");
+		//printf("\n");
 	}	
 }
 
@@ -159,7 +173,7 @@ int numerar_carton (int Grupo, int num_carton[BOLASTOTAL])
 	int indice_temp;
 	do
 	{
-		indice_temp =  randrange(1, BOLASTOTAL - 1);
+		indice_temp =  randrange(1, BOLASTOTAL);
 		indice = indice_temp;
 		indice_temp = (((indice_temp - 1) / 15) + 1);
 		if (indice_temp == Grupo && num_carton[indice] == 0)
@@ -169,4 +183,38 @@ int numerar_carton (int Grupo, int num_carton[BOLASTOTAL])
 		}
 		
 	} while (num_carton[indice] == 1 || indice_temp != Grupo);
+}
+
+
+void setcolor(int ct, int cf)
+{
+   textbackground(cf);
+   textcolor(ct);
+}
+
+
+void colordefault(void)
+{
+   setcolor(LIGHTGRAY,BLACK);
+}
+
+
+
+
+void llenar_carton (int carton[dim][dim], int num_carton[BOLASTOTAL])
+{
+	int col;
+	int fil;
+
+	for (col = 0; col < dim; col++)
+	{
+		for (fil = 0; fil < dim; fil++)
+		{	
+			if (col == 0) carton[col][fil] = numerar_carton(B, num_carton);
+			if (col == 1) carton[col][fil] = numerar_carton(I, num_carton);
+			if (col == 2) carton[col][fil] = numerar_carton(N, num_carton);
+			if (col == 3) carton[col][fil] = numerar_carton(G, num_carton);
+			if (col == 4) carton[col][fil] = numerar_carton(O, num_carton);
+		}		
+	}
 }
