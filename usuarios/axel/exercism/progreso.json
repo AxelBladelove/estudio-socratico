@@ -1,4 +1,4 @@
-﻿{
+{
     "exercism:hello-world":  {
                                  "provider":  "exercism",
                                  "slug":  "hello-world",
@@ -15,6 +15,22 @@
                                                         "folder":  "C:\\Users\\axelb\\estudio-socratico\\Ejercicios\\Imprimir nombre N veces",
                                                         "updatedAt":  "2026-05-12T12:55:08.7050489-04:00"
                                                     },
+    "alejandro:alejandro-ciclos-condiciones-y-funciones-01-ciclos-condiciones-y-funciones-1-numero-e-imprima-por-pantalla-su-nombre-tantas-veces-como":  {
+                                                                                                                                                             "provider":  "alejandro",
+                                                                                                                                                             "slug":  "alejandro-ciclos-condiciones-y-funciones-01-ciclos-condiciones-y-funciones-1-numero-e-imprima-por-pantalla-su-nombre-tantas-veces-como",
+                                                                                                                                                             "title":  "Ciclos, condiciones y funciones - #1 Número e imprima por pantalla su nombre tantas veces como lo indique el número digi",
+                                                                                                                                                             "status":  "in_progress",
+                                                                                                                                                             "folder":  "C:\\Users\\AxelBlade\\.gemini\\antigravity\\scratch\\estudio-socratico\\Ejercicios\\Ciclos, condiciones y funciones - #1 Número e imprima por pantalla su nombre tantas veces como lo indique el número digi",
+                                                                                                                                                             "updatedAt":  "2026-05-10T20:49:27.9584848-04:00"
+                                                                                                                                                         },
+    "alejandro:parte-ii-5-blackjack-implementacion":  {
+                                                          "provider":  "alejandro",
+                                                          "slug":  "parte-ii-5-blackjack-implementacion",
+                                                          "title":  "Parte II - #5 Blackjack (implementación)",
+                                                          "status":  "in_progress",
+                                                          "folder":  "C:\\Users\\AxelBlade\\.gemini\\antigravity\\scratch\\estudio-socratico\\Ejercicios\\Parte II - #5 Blackjack (implementación)",
+                                                          "updatedAt":  "2026-05-09T22:19:00.0650553-04:00"
+                                                      },
     "exercism:grains":  {
                             "provider":  "exercism",
                             "slug":  "grains",
@@ -23,12 +39,12 @@
                             "folder":  "C:\\Users\\AxelBlade\\.gemini\\antigravity\\scratch\\estudio-socratico\\Ejercicios\\Grains",
                             "updatedAt":  "2026-05-10T04:53:45.3468687-04:00"
                         },
-    "alejandro:parte-ii-5-blackjack-implementacion":  {
-                                                          "provider":  "alejandro",
-                                                          "slug":  "parte-ii-5-blackjack-implementacion",
-                                                          "title":  "Parte II - #5 Blackjack (implementación)",
-                                                          "status":  "in_progress",
-                                                          "folder":  "C:\\Users\\AxelBlade\\.gemini\\antigravity\\scratch\\estudio-socratico\\Ejercicios\\Parte II - #5 Blackjack (implementación)",
-                                                          "updatedAt":  "2026-05-09T22:19:00.0650553-04:00"
-                                                      }
+    "alejandro:alejandro-tipos-de-variables-y-expresiones-01-tipos-y-expresiones-1":  {
+                                                                                          "provider":  "alejandro",
+                                                                                          "slug":  "alejandro-tipos-de-variables-y-expresiones-01-tipos-y-expresiones-1",
+                                                                                          "title":  "Tipos y expresiones - #1",
+                                                                                          "status":  "in_progress",
+                                                                                          "folder":  "C:\\Users\\AxelBlade\\.gemini\\antigravity\\scratch\\estudio-socratico\\Ejercicios\\Tipos y expresiones - #1",
+                                                                                          "updatedAt":  "2026-05-10T20:48:55.9218592-04:00"
+                                                                                      }
 }
