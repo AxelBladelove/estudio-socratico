@@ -395,8 +395,16 @@ int _getch(void)
         if (record.EventType == KEY_EVENT &&
             record.Event.KeyEvent.bKeyDown &&
             !conio_is_modifier_key(record.Event.KeyEvent.wVirtualKeyCode)) {
-            CHAR ascii = record.Event.KeyEvent.uChar.AsciiChar;
-            return ascii ? (unsigned char)ascii : 0;
+            if (record.Event.KeyEvent.uChar.AsciiChar != 0) {
+                return (unsigned char)record.Event.KeyEvent.uChar.AsciiChar;
+            }
+            switch (record.Event.KeyEvent.wVirtualKeyCode) {
+                case VK_UP:    return 72;
+                case VK_LEFT:  return 75;
+                case VK_RIGHT: return 77;
+                case VK_DOWN:  return 80;
+                default:       return (unsigned char)record.Event.KeyEvent.wVirtualKeyCode;
+            }
         }
     }
 }

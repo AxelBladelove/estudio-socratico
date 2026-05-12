@@ -61,3 +61,12 @@ usuarios/*/logs/**/bloque_actual.txt
 # SI rastrear estos cuando existan (son telemetria de estudio):
 # usuarios/<usuario>/logs/<ejercicio>/bloqueN.log
 # usuarios/<usuario>/errores.md
+
+# Extension and VSIX
+*.vsix
+src/generated/
+media/generated/
+.generated/gists/
+*.private-manifest.json
+*gist-state*.json
+catalog.private.json
