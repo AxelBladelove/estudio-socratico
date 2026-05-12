@@ -66,6 +66,7 @@ usuarios/*/logs/**/bloque_actual.txt
 *.vsix
 src/generated/
 media/generated/
+soporte/vscode/estudio-exercism/generated/
 .generated/gists/
 *.private-manifest.json
 *gist-state*.json

@@ -798,17 +798,32 @@ function Clear-TranslationText {
 function ConvertTo-CCommentBlock {
     param(
         [string]$Markdown,
-        [string]$Title
+        [string]$Title,
+        [string]$Source
     )
 
     $safe = $Markdown -replace '\*/', '* /'
+    # Strip markdown headings to get clean instruction text
+    $lines = @($safe -split "`r?`n")
+    $cleanLines = @()
+    foreach ($line in $lines) {
+        if ($line -match '^\s*#+\s') { continue }
+        $cleanLines += $line
+    }
+    $body = ($cleanLines -join "`n").Trim()
+
+    $sourceText = if (-not [string]::IsNullOrWhiteSpace($Source)) { $Source } else { "Estudio Socratico" }
+
     return @"
 /*
-Estudio Socratico - instrucciones traducidas
-Ejercicio: $Title
+$Title
 
-$safe
+Instrucciones:
+$body
+
+Fuente: $sourceText
 */
+
 
 "@
 }
@@ -1251,17 +1266,37 @@ function Import-TemplateExercise {
     New-Item -ItemType Directory -Path $supportRoot -Force | Out-Null
 
     $readme = Get-TemplateExerciseMarkdown -Root $Root -Exercise $exercise -ProviderName $ProviderName
-    try {
-        $translated = Invoke-GeminiTranslation -Markdown $readme -Title $exercise.title
-    } catch {
+
+    # Alejandro exercises from Gists are already in Spanish; skip Gemini translation
+    if ($ProviderName -eq "alejandro" -and -not [string]::IsNullOrWhiteSpace($exercise.gistInstructionsUrl)) {
         $translated = Select-InstructionMarkdown -Markdown $readme
+    } else {
+        try {
+            $translated = Invoke-GeminiTranslation -Markdown $readme -Title $exercise.title
+        } catch {
+            $translated = Select-InstructionMarkdown -Markdown $readme
+        }
     }
 
-    $fileName = if ($exercise.fileName) { ConvertTo-SafeFileName $exercise.fileName } else { (ConvertTo-Slug $exercise.title) + ".c" }
+    $fileName = if ($exercise.fileName) { ConvertTo-SafeFileName $exercise.fileName } else { "main.c" }
     $sourcePath = Join-Path $target $fileName
-    $starter = if ($exercise.starterCode) { [string]$exercise.starterCode } else { "#include <stdio.h>`n`nint main(void)`n{`n    return 0;`n}`n" }
-    Set-Content -LiteralPath (Join-Path $supportRoot "README.md") -Value $translated -Encoding utf8
-    Set-Content -LiteralPath $sourcePath -Value ((ConvertTo-CCommentBlock -Markdown $translated -Title $exercise.title) + $starter) -Encoding utf8
+
+    # Alejandro exercises: only the comment block, no C skeleton
+    $sourceLabel = $exercise.sourceUrl
+    if ($ProviderName -eq "alejandro") {
+        $sourceLabel = "Problemas de Programacion - Rolando J. Batista & Alejandro J. Liz"
+    }
+    $commentBlock = ConvertTo-CCommentBlock -Markdown $translated -Title $exercise.title -Source $sourceLabel
+
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    if ($ProviderName -eq "alejandro") {
+        # No starter code; student writes everything from scratch
+        [System.IO.File]::WriteAllText($sourcePath, $commentBlock, $utf8NoBom)
+    } else {
+        $starter = if ($exercise.starterCode) { [string]$exercise.starterCode } else { "#include <stdio.h>`n`nint main(void)`n{`n    return 0;`n}`n" }
+        [System.IO.File]::WriteAllText($sourcePath, ($commentBlock + $starter), $utf8NoBom)
+    }
+    [System.IO.File]::WriteAllText((Join-Path $supportRoot "README.md"), $translated, $utf8NoBom)
 
     $meta = [pscustomobject]@{
         provider = $ProviderName
@@ -1298,6 +1333,28 @@ function Get-TemplateExerciseMarkdown {
         [string]$ProviderName
     )
 
+    # Priority 1: Download from Gist raw URL (Alejandro curated exercises)
+    if (-not [string]::IsNullOrWhiteSpace($Exercise.gistInstructionsUrl)) {
+        $cacheRoot = Join-Path $Root "soporte\runtime\gist-cache"
+        if (-not (Test-Path -LiteralPath $cacheRoot)) {
+            New-Item -ItemType Directory -Path $cacheRoot -Force | Out-Null
+        }
+        $cachePath = Join-Path $cacheRoot ((ConvertTo-Slug $Exercise.title) + ".md")
+        if (-not (Test-Path -LiteralPath $cachePath)) {
+            try {
+                Invoke-WebRequest -Uri $Exercise.gistInstructionsUrl -OutFile $cachePath -TimeoutSec 30 | Out-Null
+            } catch {
+                # If download fails but we have inline markdown, fall through
+            }
+        }
+        if (Test-Path -LiteralPath $cachePath) {
+            $utf8 = New-Object System.Text.UTF8Encoding($false)
+            $raw = [System.IO.File]::ReadAllText($cachePath, $utf8)
+            return (Select-InstructionMarkdown -Markdown $raw)
+        }
+    }
+
+    # Priority 2: Google Drive download (legacy w3schools/alejandro exercises)
     if ($Exercise.driveFileId) {
         $cacheRoot = Join-Path $Root "soporte\runtime\drive-cache"
         if (-not (Test-Path -LiteralPath $cacheRoot)) {
@@ -1313,11 +1370,12 @@ function Get-TemplateExerciseMarkdown {
         }
     }
 
+    # Priority 3: Inline instructionMarkdown from catalog JSON
     if ($Exercise.instructionMarkdown) {
         return (Select-InstructionMarkdown -Markdown ([string]$Exercise.instructionMarkdown))
     }
 
-    throw "El ejercicio '$($Exercise.title)' no tiene paquete en Drive. Ejecuta npm run drive:sync como mantenedor antes de publicarlo."
+    throw "El ejercicio '$($Exercise.title)' no tiene instrucciones disponibles. Ejecuta npm run alejandro:gists:manifest para regenerar el catalogo."
 }
 
 function Resolve-ExerciseRoot {
