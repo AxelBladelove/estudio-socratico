@@ -36,13 +36,19 @@ cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
 #define IZQUIERDA 75
 #define ESP       32
 #define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
 
 
 
-
-void showcarton (int carton[dim][dim],int posx, int posy);
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy);
 int bolas (int bolillero[BOLASTOTAL]);
-int sacarbolas🥚🥚(int indice, bolillero[BOLASTOTAL])
+int sacarbolas🥚🥚(int Grupo, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+int numerar_carton (int Grupo, int num_carton[BOLASTOTAL]);
 
 
 int main(){
@@ -50,54 +56,66 @@ int main(){
 	int jugando = 1;
 	int carton[dim][dim];
 	int bolillero[BOLASTOTAL] = {0};
+	int num_carton[BOLASTOTAL] = {0};
 	srand(time(NULL));
-	int B1, B2, I1, I2, N1, N2, G1, G2, O1, O2;
-	B1 = 1;
-	B2 = 15;
-	I1 = 16;
-	I2 = 30;
-	N1 = 31;
-	N2 = 45;
-	G1 = 46;
-	G2 = 60;
-	O1 = 61;
-	O2 = 75;
 	
 
-while (jugando == 1)
-{
-	bolas(bolillero);
-	showcarton(carton, 15, 15);
+	//while (jugando == 1)
+//	{
+		bolas(bolillero);
+		showcarton(carton, bolillero, 15, 15);
+
+		jugando = 0;
+		printf("prueba");
+//	}
+
+
+
+	return 0;
 }
 
-
-
-	return;
-}
-
-void showcarton (int carton[dim][dim],int posx, int posy)
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
 {
 	int fil;
 	int col;
 
-	for (col = 0; col < dim; col++){
-		for (fil = 0; fil < dim; fil++){
-			bol
-			
-			if (condition)
-			{
-					
-			}
-			
+	for (fil = 0; fil < dim; fil++)
+	{
+	
+		for (col = 0; col < dim; col++)
+		{
 
+			if (col == 0)
+			{
+				carton[col][fil] = numerar_carton(B, bolillero);	
+			}
+			if (col == 1)
+			{
+				carton[col][fil] = numerar_carton(I, bolillero);	
+			}
+			if (col == 2)
+			{
+				carton[col][fil] = numerar_carton(N, bolillero);	
+			}
+			if (col == 3)
+			{
+				carton[col][fil] = numerar_carton(G, bolillero);	
+			}
+			if (col == 4)
+			{
+				carton[col][fil] = numerar_carton(O, bolillero);	
+			}
+			printf("%d\t", carton[col][fil]);
 
 		}
-	}
+		printf("\n");
+	}	
 }
 
 
 
 
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
 
 int bolas (int bolillero[BOLASTOTAL])
 {
@@ -119,9 +137,36 @@ int randrange(int limif,int limsp)
 	return (rand() % (limsp - limif + 1) + limif);
 }
 
-int sacarbolas🥚🥚 (int indice, int bolillero[BOLASTOTAL])
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
 {
-	bolas(bolillero)
+	int indice;
+	int indice_temp;
 
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = (((indice_temp - 1) / 15) + 1);
+	} while (indice_temp != GRUPO);	
 
+	return indice;
+}
+
+int numerar_carton (int Grupo, int num_carton[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+	do
+	{
+		indice_temp =  randrange(1, BOLASTOTAL - 1);
+		indice = indice_temp;
+		indice_temp = (((indice_temp - 1) / 15) + 1);
+		if (indice_temp == Grupo && num_carton[indice] == 0)
+		{
+			num_carton[indice] = 1;
+			return indice;
+		}
+		
+	} while (num_carton[indice] == 1 || indice_temp != Grupo);
 }

@@ -1,0 +1,3477 @@
+ 
+============================================================ 
+INTENTO: 2026-05-12T02-49-37 
+ARCHIVO: C:\Users\axelb\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de BINGO con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de Bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 		5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+
+
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int GRUPO, int bolillero[BOLASTOTAL]);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL] = {0};
+	srand(time(NULL));
+	
+
+while (jugando == 1)
+{
+	bolas(bolillero);
+	showcarton(carton, bolillero, 15, 15);
+
+	jugando = 0;
+	printf("prueba");
+}
+
+
+
+	return;
+}
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+{
+	int fil;
+	int col;
+
+	for (col = 0; col < dim; col++){
+		for (fil = 0; fil < dim; fil++){
+		
+			if (col == 0)
+			{
+				sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 1)
+			{
+				sacarbolas🥚🥚(I, bolillero);
+			}
+			if (col == 2)
+			{
+				sacarbolas🥚🥚(N, bolillero);
+			}
+			if (col == 3)
+			{
+				sacarbolas🥚🥚(G, bolillero);
+			}
+			else
+			{
+				sacarbolas🥚🥚(O, bolillero);
+			}
+		}
+	}
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice = bolas(bolillero);
+		indice_temp = indice;
+		indice = ((indice + 15 - 1) / 15);
+	} while (indice != GRUPO);	
+
+	return indice_temp;
+} 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:71:9: error: 'return' with no value, in function returning non-void [-Wreturn-mismatch]
+   71 |         return;
+      |         ^~~~~~
+Bingo.c:52:5: note: declared here
+   52 | int main(){
+      |     ^~~~
+Bingo.c: In function 'showcarton':
+Bingo.c:74:22: warning: unused parameter 'carton' [-Wunused-parameter]
+   74 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                  ~~~~^~~~~~~~~~~~~~~~
+Bingo.c:74:71: warning: unused parameter 'posx' [-Wunused-parameter]
+   74 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                   ~~~~^~~~
+Bingo.c:74:81: warning: unused parameter 'posy' [-Wunused-parameter]
+   74 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                             ~~~~^~~~
+Bingo.c: In function 'bolas':
+Bingo.c:116:27: error: implicit declaration of function 'randrange' [-Wimplicit-function-declaration]
+  116 |                 indice =  randrange(1, BOLASTOTAL - 1);
+      |                           ^~~~~~~~~
+[EXIT CODE: 1] 
+ 
+============================================================ 
+INTENTO: 2026-05-12T02-52-25 
+ARCHIVO: C:\Users\axelb\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de BINGO con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de Bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 		5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+
+
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int GRUPO, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL] = {0};
+	srand(time(NULL));
+	
+
+	while (jugando == 1)
+	{
+		bolas(bolillero);
+		showcarton(carton, bolillero, 15, 15);
+
+		jugando = 0;
+		printf("prueba");
+	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+{
+	int fil;
+	int col;
+
+	for (col = 0; col < dim; col++){
+		for (fil = 0; fil < dim; fil++){
+		
+			if (col == 0)
+			{
+				sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 1)
+			{
+				sacarbolas🥚🥚(I, bolillero);
+			}
+			if (col == 2)
+			{
+				sacarbolas🥚🥚(N, bolillero);
+			}
+			if (col == 3)
+			{
+				sacarbolas🥚🥚(G, bolillero);
+			}
+			else
+			{
+				sacarbolas🥚🥚(O, bolillero);
+			}
+		}
+	}
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice = bolas(bolillero);
+		indice_temp = indice;
+		indice = ((indice + 15 - 1) / 15);
+	} while (indice != GRUPO);	
+
+	return indice_temp;
+} 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'showcarton':
+Bingo.c:75:22: warning: unused parameter 'carton' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                  ~~~~^~~~~~~~~~~~~~~~
+Bingo.c:75:71: warning: unused parameter 'posx' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                   ~~~~^~~~
+Bingo.c:75:81: warning: unused parameter 'posy' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                             ~~~~^~~~
+[EXIT CODE: 0] 
+ 
+============================================================ 
+INTENTO: 2026-05-12T02-53-27 
+ARCHIVO: C:\Users\axelb\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de BINGO con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de Bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 		5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+
+
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int GRUPO, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL] = {0};
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		bolas(bolillero);
+		showcarton(carton, bolillero, 15, 15);
+
+		jugando = 0;
+		printf("prueba");
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+{
+	int fil;
+	int col;
+
+	for (col = 0; col < dim; col++){
+		for (fil = 0; fil < dim; fil++){
+		
+			if (col == 0)
+			{
+				sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 1)
+			{
+				sacarbolas🥚🥚(I, bolillero);
+			}
+			if (col == 2)
+			{
+				sacarbolas🥚🥚(N, bolillero);
+			}
+			if (col == 3)
+			{
+				sacarbolas🥚🥚(G, bolillero);
+			}
+			else
+			{
+				sacarbolas🥚🥚(O, bolillero);
+			}
+		}
+	}
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice = bolas(bolillero);
+		indice_temp = indice;
+		indice = ((indice + 15 - 1) / 15);
+	} while (indice != GRUPO);	
+
+	return indice_temp;
+} 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:55:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   55 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'showcarton':
+Bingo.c:75:22: warning: unused parameter 'carton' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                  ~~~~^~~~~~~~~~~~~~~~
+Bingo.c:75:71: warning: unused parameter 'posx' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                   ~~~~^~~~
+Bingo.c:75:81: warning: unused parameter 'posy' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                             ~~~~^~~~
+[EXIT CODE: 0] 
+ 
+============================================================ 
+INTENTO: 2026-05-12T02-55-42 
+ARCHIVO: C:\Users\axelb\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de BINGO con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de Bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 		5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+
+
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int GRUPO, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL] = {0};
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		bolas(bolillero);
+		showcarton(carton, bolillero, 15, 15);
+
+		jugando = 0;
+		printf("prueba");
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+{
+	int fil;
+	int col;
+
+	for (col = 0; col < dim; col++){
+		for (fil = 0; fil < dim; fil++){
+		
+			if (col == 0)
+			{
+				sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 1)
+			{
+				sacarbolas🥚🥚(I, bolillero);
+			}
+			if (col == 2)
+			{
+				sacarbolas🥚🥚(N, bolillero);
+			}
+			if (col == 3)
+			{
+				sacarbolas🥚🥚(G, bolillero);
+			}
+			else
+			{
+				sacarbolas🥚🥚(O, bolillero);
+			}
+		}
+	}
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = ((indice + 15 - 1) / 15);
+	} while (indice_temp != GRUPO);	
+
+	return indice;
+} 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:55:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   55 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'showcarton':
+Bingo.c:75:22: warning: unused parameter 'carton' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                  ~~~~^~~~~~~~~~~~~~~~
+Bingo.c:75:71: warning: unused parameter 'posx' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                   ~~~~^~~~
+Bingo.c:75:81: warning: unused parameter 'posy' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                             ~~~~^~~~
+[EXIT CODE: 0] 
+ 
+============================================================ 
+INTENTO: 2026-05-12T03-00-16 
+ARCHIVO: C:\Users\axelb\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de BINGO con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de Bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 		5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+
+
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int GRUPO, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL] = {0};
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		bolas(bolillero);
+		showcarton(carton, bolillero, 15, 15);
+
+		jugando = 0;
+		printf("prueba");
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+{
+	int fil;
+	int col;
+
+	for (col = 0; col < dim; col++)
+	{
+
+		if (col == 0)
+		{
+			sacarbolas🥚🥚(B, bolillero);	
+		}
+		if (col == 1)
+		{
+			sacarbolas🥚🥚(I, bolillero);
+		}
+		if (col == 2)
+		{
+			sacarbolas🥚🥚(N, bolillero);
+		}
+		if (col == 3)
+		{
+			sacarbolas🥚🥚(G, bolillero);
+		}
+		else
+		{
+			sacarbolas🥚🥚(O, bolillero);
+		}
+	}	
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = ((indice + 15 - 1) / 15);
+	} while (indice_temp != GRUPO);	
+
+	return indice;
+} 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:55:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   55 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'showcarton':
+Bingo.c:77:13: warning: unused variable 'fil' [-Wunused-variable]
+   77 |         int fil;
+      |             ^~~
+Bingo.c:75:22: warning: unused parameter 'carton' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                  ~~~~^~~~~~~~~~~~~~~~
+Bingo.c:75:71: warning: unused parameter 'posx' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                   ~~~~^~~~
+Bingo.c:75:81: warning: unused parameter 'posy' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                             ~~~~^~~~
+[EXIT CODE: 0] 
+
+[EJECUCION DEL USUARIO]
+prueba
+
+Process returned 0 (0x0)   execution time : 2.584 s
+Press any key to continue.
+
+------------------------------------------------------------
+ 
+============================================================ 
+INTENTO: 2026-05-12T03-04-36 
+ARCHIVO: C:\Users\axelb\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de BINGO con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de Bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 		5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+
+
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int GRUPO, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL] = {0};
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		bolas(bolillero);
+		showcarton(carton, bolillero, 15, 15);
+
+		jugando = 0;
+		printf("prueba");
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+{
+	int fil;
+	int col;
+
+	for (col = 0; col < dim; col++)
+	{
+
+		if (col == 0)
+		{
+			sacarbolas🥚🥚(B, bolillero);	
+		}
+		if (col == 1)
+		{
+			sacarbolas🥚🥚(I, bolillero);
+		}
+		if (col == 2)
+		{
+			sacarbolas🥚🥚(N, bolillero);
+		}
+		if (col == 3)
+		{
+			sacarbolas🥚🥚(G, bolillero);
+		}
+		else
+		{
+			sacarbolas🥚🥚(O, bolillero);
+		}
+
+		printf("%d", carton[col][fil]);
+	}	
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = ((indice + 15 - 1) / 15);
+	} while (indice_temp != GRUPO);	
+
+	return indice;
+} 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:55:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   55 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'showcarton':
+Bingo.c:75:71: warning: unused parameter 'posx' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                   ~~~~^~~~
+Bingo.c:75:81: warning: unused parameter 'posy' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                             ~~~~^~~~
+In file included from Bingo.c:27:
+C:\Users\axelb\estudio-socratico\include/conio.h:100:16: warning: 'fil' may be used uninitialized [-Wmaybe-uninitialized]
+  100 | #define printf estudio_printf
+Bingo.c:104:17: note: in expansion of macro 'printf'
+  104 |                 printf("%d", carton[col][fil]);
+      |                 ^~~~~~
+Bingo.c:77:13: note: 'fil' was declared here
+   77 |         int fil;
+      |             ^~~
+[EXIT CODE: 0] 
+
+[EJECUCION DEL USUARIO]
+243276386384-194778935prueba
+
+Process returned 0 (0x0)   execution time : 2.121 s
+Press any key to continue.
+
+------------------------------------------------------------
+ 
+============================================================ 
+INTENTO: 2026-05-12T03-05-50 
+ARCHIVO: C:\Users\axelb\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de BINGO con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de Bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 		5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+
+
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int GRUPO, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL] = {0};
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		bolas(bolillero);
+		showcarton(carton, bolillero, 15, 15);
+
+		jugando = 0;
+		printf("prueba");
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+{
+	int fil;
+	int col;
+
+	for (col = 0; col < dim; col++)
+	{
+
+		if (col == 0)
+		{
+			sacarbolas🥚🥚(B, bolillero);	
+		}
+		if (col == 1)
+		{
+			sacarbolas🥚🥚(I, bolillero);
+		}
+		if (col == 2)
+		{
+			sacarbolas🥚🥚(N, bolillero);
+		}
+		if (col == 3)
+		{
+			sacarbolas🥚🥚(G, bolillero);
+		}
+		else
+		{
+			sacarbolas🥚🥚(O, bolillero);
+		}
+
+		printf("%d\t", carton[col][fil]);
+	}	
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = ((indice + 15 - 1) / 15);
+	} while (indice_temp != GRUPO);	
+
+	return indice;
+} 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:55:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   55 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'showcarton':
+Bingo.c:75:71: warning: unused parameter 'posx' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                   ~~~~^~~~
+Bingo.c:75:81: warning: unused parameter 'posy' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                             ~~~~^~~~
+In file included from Bingo.c:27:
+C:\Users\axelb\estudio-socratico\include/conio.h:100:16: warning: 'fil' may be used uninitialized [-Wmaybe-uninitialized]
+  100 | #define printf estudio_printf
+Bingo.c:104:17: note: in expansion of macro 'printf'
+  104 |                 printf("%d\t", carton[col][fil]);
+      |                 ^~~~~~
+Bingo.c:77:13: note: 'fil' was declared here
+   77 |         int fil;
+      |             ^~~
+[EXIT CODE: 0] 
+
+[EJECUCION DEL USUARIO]
+24      32763   86      593     -194778935      prueba
+
+Process returned 0 (0x0)   execution time : 0.912 s
+Press any key to continue.
+
+------------------------------------------------------------
+ 
+============================================================ 
+INTENTO: 2026-05-12T03-11-37 
+ARCHIVO: C:\Users\axelb\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de BINGO con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de Bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 		5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+
+
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int GRUPO, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL] = {0};
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		bolas(bolillero);
+		showcarton(carton, bolillero, 15, 15);
+
+		jugando = 0;
+		printf("prueba");
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+{
+	int fil;
+	int col;
+
+	for (fil = 0; i < dim; fil++)
+	{
+	
+		for (col = 0; col < dim; col++)
+		{
+
+			if (col == 0)
+			{
+				sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 1)
+			{
+				sacarbolas🥚🥚(I, bolillero);
+			}
+			if (col == 2)
+			{
+				sacarbolas🥚🥚(N, bolillero);
+			}
+			if (col == 3)
+			{
+				sacarbolas🥚🥚(G, bolillero);
+			}
+			else
+			{
+			sacarbolas🥚🥚(O, bolillero);
+			}
+
+		}printf("%d\t", carton[col][fil]);
+	}	
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = ((indice + 15 - 1) / 15);
+	} while (indice_temp != GRUPO);	
+
+	return indice;
+} 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:55:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   55 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'showcarton':
+Bingo.c:80:23: error: 'i' undeclared (first use in this function)
+   80 |         for (fil = 0; i < dim; fil++)
+      |                       ^
+Bingo.c:80:23: note: each undeclared identifier is reported only once for each function it appears in
+Bingo.c:75:71: warning: unused parameter 'posx' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                   ~~~~^~~~
+Bingo.c:75:81: warning: unused parameter 'posy' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                             ~~~~^~~~
+[EXIT CODE: 1] 
+ 
+============================================================ 
+INTENTO: 2026-05-12T03-11-54 
+ARCHIVO: C:\Users\axelb\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de BINGO con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de Bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 		5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+
+
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int GRUPO, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL] = {0};
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		bolas(bolillero);
+		showcarton(carton, bolillero, 15, 15);
+
+		jugando = 0;
+		printf("prueba");
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+{
+	int fil;
+	int col;
+
+	for (fil = 0; fil < dim; fil++)
+	{
+	
+		for (col = 0; col < dim; col++)
+		{
+
+			if (col == 0)
+			{
+				sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 1)
+			{
+				sacarbolas🥚🥚(I, bolillero);
+			}
+			if (col == 2)
+			{
+				sacarbolas🥚🥚(N, bolillero);
+			}
+			if (col == 3)
+			{
+				sacarbolas🥚🥚(G, bolillero);
+			}
+			else
+			{
+			sacarbolas🥚🥚(O, bolillero);
+			}
+
+		}printf("%d\t", carton[col][fil]);
+	}	
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = ((indice + 15 - 1) / 15);
+	} while (indice_temp != GRUPO);	
+
+	return indice;
+} 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:55:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   55 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'showcarton':
+Bingo.c:75:71: warning: unused parameter 'posx' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                   ~~~~^~~~
+Bingo.c:75:81: warning: unused parameter 'posy' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                             ~~~~^~~~
+[EXIT CODE: 0] 
+ 
+============================================================ 
+INTENTO: 2026-05-12T03-14-10 
+ARCHIVO: C:\Users\axelb\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de BINGO con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de Bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 		5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+
+
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int GRUPO, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL] = {0};
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		bolas(bolillero);
+		showcarton(carton, bolillero, 15, 15);
+
+		jugando = 0;
+		printf("prueba");
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+{
+	int fil;
+	int col;
+
+	for (fil = 0; fil < dim; fil++)
+	{
+	
+		for (col = 0; col < dim; col++)
+		{
+
+			if (col == 0)
+			{
+				sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 1)
+			{
+				sacarbolas🥚🥚(I, bolillero);
+			}
+			if (col == 2)
+			{
+				sacarbolas🥚🥚(N, bolillero);
+			}
+			if (col == 3)
+			{
+				sacarbolas🥚🥚(G, bolillero);
+			}
+			else
+			{
+			sacarbolas🥚🥚(O, bolillero);
+			}
+
+		}printf("%d\t", carton[col][fil]);
+	}	
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = ((indice / 15) + 1);
+	} while (indice_temp != GRUPO);	
+
+	return indice;
+} 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:55:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   55 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'showcarton':
+Bingo.c:75:71: warning: unused parameter 'posx' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                   ~~~~^~~~
+Bingo.c:75:81: warning: unused parameter 'posy' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                             ~~~~^~~~
+[EXIT CODE: 0] 
+ 
+============================================================ 
+INTENTO: 2026-05-12T03-19-40 
+ARCHIVO: C:\Users\axelb\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de BINGO con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de Bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 		5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+
+
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int GRUPO, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL] = {0};
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		bolas(bolillero);
+		showcarton(carton, bolillero, 15, 15);
+
+		jugando = 0;
+		printf("prueba");
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+{
+	int fil;
+	int col;
+
+	for (fil = 0; fil < dim; fil++)
+	{
+	
+		for (col = 0; col < dim; col++)
+		{
+
+			if (col == 0)
+			{
+				carton[col][fil] = carton[col][sacarbolas🥚🥚(B, bolillero)];	
+			}
+			if (col == 1)
+			{
+				carton[col][fil] = carton[col][sacarbolas🥚🥚(B, bolillero)];	
+			}
+			if (col == 2)
+			{
+				carton[col][fil] = carton[col][sacarbolas🥚🥚(B, bolillero)];	
+			}
+			if (col == 3)
+			{
+				carton[col][fil] = carton[col][sacarbolas🥚🥚(B, bolillero)];	
+			}
+			if
+			{
+				carton[col][fil] = carton[col][sacarbolas🥚🥚(B, bolillero)];	
+			}
+
+		}printf("%d\t", carton[col][fil]);
+	}	
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = ((indice / 15) + 1);
+	} while (indice_temp != GRUPO);	
+
+	return indice;
+} 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:55:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   55 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'showcarton':
+Bingo.c:103:25: error: expected '(' before '{' token
+  103 |                         {
+      |                         ^
+      |                         (
+Bingo.c:75:71: warning: unused parameter 'posx' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                   ~~~~^~~~
+Bingo.c:75:81: warning: unused parameter 'posy' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                             ~~~~^~~~
+[EXIT CODE: 1] 
+ 
+============================================================ 
+INTENTO: 2026-05-12T03-21-29 
+ARCHIVO: C:\Users\axelb\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de BINGO con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de Bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 		5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+
+
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int GRUPO, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL] = {0};
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		bolas(bolillero);
+		showcarton(carton, bolillero, 15, 15);
+
+		jugando = 0;
+		printf("prueba");
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+{
+	int fil;
+	int col;
+
+	for (fil = 0; fil < dim; fil++)
+	{
+	
+		for (col = 0; col < dim; col++)
+		{
+
+			if (col == 0)
+			{
+				carton[col][fil] = carton[col][sacarbolas🥚🥚(B, bolillero)];	
+			}
+			if (col == 1)
+			{
+				carton[col][fil] = carton[col][sacarbolas🥚🥚(B, bolillero)];	
+			}
+			if (col == 2)
+			{
+				carton[col][fil] = carton[col][sacarbolas🥚🥚(B, bolillero)];	
+			}
+			if (col == 3)
+			{
+				carton[col][fil] = carton[col][sacarbolas🥚🥚(B, bolillero)];	
+			}
+			if (col == 4)
+			{
+				carton[col][fil] = carton[col][sacarbolas🥚🥚(B, bolillero)];	
+			}
+
+		}printf("%d\t", carton[col][fil]);
+	}	
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = ((indice / 15) + 1);
+	} while (indice_temp != GRUPO);	
+
+	return indice;
+} 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:55:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   55 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'showcarton':
+Bingo.c:75:71: warning: unused parameter 'posx' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                   ~~~~^~~~
+Bingo.c:75:81: warning: unused parameter 'posy' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                             ~~~~^~~~
+[EXIT CODE: 0] 
+ 
+============================================================ 
+INTENTO: 2026-05-12T03-22-09 
+ARCHIVO: C:\Users\axelb\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de BINGO con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de Bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 		5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+
+
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int GRUPO, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL] = {0};
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		bolas(bolillero);
+		showcarton(carton, bolillero, 15, 15);
+
+		jugando = 0;
+		printf("prueba");
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+{
+	int fil;
+	int col;
+
+	for (fil = 0; fil < dim; fil++)
+	{
+	
+		for (col = 0; col < dim; col++)
+		{
+
+			if (col == 0)
+			{
+				carton[col][fil] = carton[col][sacarbolas🥚🥚(B, bolillero)];	
+			}
+			if (col == 1)
+			{
+				carton[col][fil] = carton[col][sacarbolas🥚🥚(B, bolillero)];	
+			}
+			if (col == 2)
+			{
+				carton[col][fil] = carton[col][sacarbolas🥚🥚(B, bolillero)];	
+			}
+			if (col == 3)
+			{
+				carton[col][fil] = carton[col][sacarbolas🥚🥚(B, bolillero)];	
+			}
+			if (col == 4)
+			{
+				carton[col][fil] = carton[col][sacarbolas🥚🥚(B, bolillero)];	
+			}
+			printf("%d\t", carton[col][fil]);
+
+		}
+	}	
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = ((indice / 15) + 1);
+	} while (indice_temp != GRUPO);	
+
+	return indice;
+} 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:55:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   55 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'showcarton':
+Bingo.c:75:71: warning: unused parameter 'posx' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                   ~~~~^~~~
+Bingo.c:75:81: warning: unused parameter 'posy' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                             ~~~~^~~~
+[EXIT CODE: 0] 
+ 
+============================================================ 
+INTENTO: 2026-05-12T03-25-28 
+ARCHIVO: C:\Users\axelb\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de BINGO con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de Bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 		5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+
+
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int GRUPO, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL] = {0};
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		bolas(bolillero);
+		showcarton(carton, bolillero, 15, 15);
+
+		jugando = 0;
+		printf("prueba");
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+{
+	int fil;
+	int col;
+
+	for (fil = 0; fil < dim; fil++)
+	{
+	
+		for (col = 0; col < dim; col++)
+		{
+
+			if (col == 0)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 1)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 2)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 3)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 4)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			printf("%d\t", carton[col][fil]);
+
+		}
+	}	
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = ((indice / 15) + 1);
+	} while (indice_temp != GRUPO);	
+
+	return indice;
+} 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:55:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   55 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'showcarton':
+Bingo.c:75:71: warning: unused parameter 'posx' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                   ~~~~^~~~
+Bingo.c:75:81: warning: unused parameter 'posy' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                             ~~~~^~~~
+[EXIT CODE: 0] 
+ 
+============================================================ 
+INTENTO: 2026-05-12T03-26-12 
+ARCHIVO: C:\Users\axelb\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de BINGO con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de Bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 		5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+
+
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int GRUPO, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL] = {0};
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		bolas(bolillero);
+		showcarton(carton, bolillero, 15, 15);
+
+		jugando = 0;
+		printf("prueba");
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+{
+	int fil;
+	int col;
+
+	for (fil = 0; fil < dim; fil++)
+	{
+	
+		for (col = 0; col < dim; col++)
+		{
+
+			if (col == 0)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 1)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 2)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 3)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 4)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			printf("%d\t", carton[col][fil]);
+
+		}
+		printf("\n");
+	}	
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = ((indice / 15) + 1);
+	} while (indice_temp != GRUPO);	
+
+	return indice;
+} 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:55:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   55 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'showcarton':
+Bingo.c:75:71: warning: unused parameter 'posx' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                   ~~~~^~~~
+Bingo.c:75:81: warning: unused parameter 'posy' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                             ~~~~^~~~
+[EXIT CODE: 0] 
+ 
+============================================================ 
+INTENTO: 2026-05-12T03-27-20 
+ARCHIVO: C:\Users\axelb\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de BINGO con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de Bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 		5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+
+
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int GRUPO, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL] = {0};
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		bolas(bolillero);
+		showcarton(carton, bolillero, 15, 15);
+
+		jugando = 0;
+		printf("prueba");
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+{
+	int fil;
+	int col;
+
+	for (fil = 0; fil < dim; fil++)
+	{
+	
+		for (col = 0; col < dim; col++)
+		{
+
+			if (col == 0)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 1)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 2)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 3)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 4)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			printf("%d\t", carton[col][fil]);
+
+		}
+		printf("\n");
+	}	
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = ((indice / 15) + 1);
+	} while (indice_temp != GRUPO);	
+
+	return indice;
+} 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:55:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   55 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'showcarton':
+Bingo.c:75:71: warning: unused parameter 'posx' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                   ~~~~^~~~
+Bingo.c:75:81: warning: unused parameter 'posy' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                             ~~~~^~~~
+[EXIT CODE: 0] 
+ 
+============================================================ 
+INTENTO: 2026-05-12T03-27-46 
+ARCHIVO: C:\Users\axelb\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de BINGO con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de Bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 		5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+
+
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int GRUPO, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL] = {0};
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		bolas(bolillero);
+		showcarton(carton, bolillero, 15, 15);
+
+		jugando = 0;
+		printf("prueba");
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+{
+	int fil;
+	int col;
+
+	for (fil = 0; fil < dim; fil++)
+	{
+	
+		for (col = 0; col < dim; col++)
+		{
+
+			if (col == 0)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 1)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 2)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 3)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 4)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			printf("%d\t", carton[col][fil]);
+
+		}
+		printf("\n");
+	}	
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = ((indice / 15) + 1);
+	} while (indice_temp != GRUPO);	
+
+	return indice;
+} 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:55:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   55 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'showcarton':
+Bingo.c:75:71: warning: unused parameter 'posx' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                   ~~~~^~~~
+Bingo.c:75:81: warning: unused parameter 'posy' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                             ~~~~^~~~
+[EXIT CODE: 0] 
+ 
+============================================================ 
+INTENTO: 2026-05-12T03-28-58 
+ARCHIVO: C:\Users\axelb\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de BINGO con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de Bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 		5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+
+
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int GRUPO, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL] = {0};
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		bolas(bolillero);
+		showcarton(carton, bolillero, 15, 15);
+
+		jugando = 0;
+		printf("prueba");
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+{
+	int fil;
+	int col;
+
+	for (col = 0; col < dim; col++)
+	{
+	
+		for (fil = 0; fil < dim; fil++)
+		{
+
+			if (col == 0)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 1)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 2)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 3)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 4)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			printf("%d\t", carton[col][fil]);
+
+		}
+		printf("\n");
+	}	
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = ((indice / 15) + 1);
+	} while (indice_temp != GRUPO);	
+
+	return indice;
+} 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:55:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   55 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'showcarton':
+Bingo.c:75:71: warning: unused parameter 'posx' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                   ~~~~^~~~
+Bingo.c:75:81: warning: unused parameter 'posy' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                             ~~~~^~~~
+[EXIT CODE: 0] 
+ 
+============================================================ 
+INTENTO: 2026-05-12T03-31-03 
+ARCHIVO: C:\Users\axelb\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de BINGO con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de Bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 		5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+
+
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int GRUPO, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL] = {0};
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		bolas(bolillero);
+		showcarton(carton, bolillero, 15, 15);
+
+		jugando = 0;
+		printf("prueba");
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+{
+	int fil;
+	int col;
+
+	for (col = 0; col < dim; col++)
+	{
+	
+		for (fil = 0; fil < dim; fil++)
+		{
+
+			if (col == 0)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 1)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(I, bolillero);	
+			}
+			if (col == 2)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(N, bolillero);	
+			}
+			if (col == 3)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(G, bolillero);	
+			}
+			if (col == 4)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(O, bolillero);	
+			}
+			printf("%d\t", carton[col][fil]);
+
+		}
+		printf("\n");
+	}	
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = ((indice / 15) + 1);
+	} while (indice_temp != GRUPO);	
+
+	return indice;
+} 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:55:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   55 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'showcarton':
+Bingo.c:75:71: warning: unused parameter 'posx' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                   ~~~~^~~~
+Bingo.c:75:81: warning: unused parameter 'posy' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                             ~~~~^~~~
+[EXIT CODE: 0] 
+ 
+============================================================ 
+INTENTO: 2026-05-12T03-31-46 
+ARCHIVO: C:\Users\axelb\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de BINGO con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de Bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 		5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+
+
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int GRUPO, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL] = {0};
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		bolas(bolillero);
+		showcarton(carton, bolillero, 15, 15);
+
+		jugando = 0;
+		printf("prueba");
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+{
+	int fil;
+	int col;
+
+	for (fil = 0; fil < dim; fil++)
+	{
+	
+		for (col = 0; col < dim; col++)
+		{
+
+			if (col == 0)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(B, bolillero);	
+			}
+			if (col == 1)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(I, bolillero);	
+			}
+			if (col == 2)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(N, bolillero);	
+			}
+			if (col == 3)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(G, bolillero);	
+			}
+			if (col == 4)
+			{
+				carton[col][fil] = sacarbolas🥚🥚(O, bolillero);	
+			}
+			printf("%d\t", carton[col][fil]);
+
+		}
+		printf("\n");
+	}	
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = ((indice / 15) + 1);
+	} while (indice_temp != GRUPO);	
+
+	return indice;
+} 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:55:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   55 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'showcarton':
+Bingo.c:75:71: warning: unused parameter 'posx' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                   ~~~~^~~~
+Bingo.c:75:81: warning: unused parameter 'posy' [-Wunused-parameter]
+   75 | void showcarton (int carton[dim][dim], int bolillero[BOLASTOTAL], int posx, int posy)
+      |                                                                             ~~~~^~~~
+[EXIT CODE: 0] 
