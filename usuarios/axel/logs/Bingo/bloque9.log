@@ -1,3 +1,10 @@
+ 
+============================================================ 
+INTENTO: 2026-05-13T03-18-29 
+ARCHIVO: C:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
 /* Realizar un programa interactivo en C que simule un juego de bingo con un carton. Este debe presentarse
 graficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
 generara el carton de forma aleatoria. Asegurese que una combinacion no se repita para cada columna
@@ -652,3 +659,32 @@ void clearxy(int posx,int posy,int ancho,int largo)
 	}
 	colordefault();
 }
+ 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+(Compilacion limpia. Cero errores y advertencias.) 
+[EXIT CODE: 0] 
+
+[EJECUCION DEL USUARIO]
+
+  Flechas: mover
+  ENTER: marcar
+  ESC: no esta
+
+
+                          B   I   N   G   O
+                          9  26  33  48  61
+                         15  29  44  60  62                      B- 1
+                          5  22 Free 56  63
+                          4  23  41  59  69
+                          8  28  42  57  70
+
+
+  Ganadas: 0
+  Perdidas: 0
+  X: salir
+
+Process returned 0 (0x0)   execution time : 28.386 s
+Press any key to continue.
+
+------------------------------------------------------------

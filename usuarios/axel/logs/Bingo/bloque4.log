@@ -4419,3 +4419,1656 @@ Process returned 0 (0x0)   execution time : 0.634 s
 Press any key to continue.
 
 ------------------------------------------------------------
+ 
+============================================================ 
+INTENTO: 2026-05-12T22-30-06 
+ARCHIVO: C:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de binposY con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 	  5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define CT      	LIGHTBLUE
+#define CF 			WHITE
+#define colortext RED
+#define CMT 		CYAN
+#define CMF 		DARKGRAY
+#define ANCHO_CASILLA 4
+#define ALTO_CASILLA  1
+
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+#define bingoposY 7
+#define POS_B 47 
+#define POS_I 51 
+#define POS_N 55 
+#define POS_G 59
+#define POS_O 63
+
+
+
+int buscarymarcar (int carton[dim][dim], int marcadas[dim][dim], int bola);
+void setcolor(int ct, int cf);
+void colordefault(void);
+void llenar_carton (int carton[dim][dim], int num_carton[BOLASTOTAL]);
+void LetrasBingo (void);
+void showcarton (int carton[dim][dim], int marcadas[dim][dim], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int Grupo, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+int numerar_carton (int Grupo, int num_carton[BOLASTOTAL]);
+void iniciar_carton (int marcadas[dim][dim]);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL + 1] = {0};
+	int num_carton[BOLASTOTAL + 1] = {0};
+	int marcadas[dim][dim] = {0};
+	int bola;
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		llenar_carton(carton, num_carton);
+		iniciar_carton(marcadas);
+		showcarton(carton, marcadas, 45, 8);
+		bola = sacarbolas🥚🥚((randrange(1, 5)), bolillero);
+		buscarymarcar(carton, marcadas, bola);
+
+		jugando = 0;
+
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int marcadas[dim][dim], int posx, int posy)
+{
+	int fil;
+	int col;
+	int dx;
+	int dy;
+
+	LetrasBingo();
+
+
+	for (fil = 0; fil < dim; fil++)
+	{
+	
+		for (col = 0; col < dim; col++)
+		{
+			if (marcadas[col][fil] == 1)
+			{
+				setcolor(CMT, CMF);
+			}
+			else
+			{
+				setcolor(CT, CF);
+			}
+			for (dy = 0; dy < ALTO_CASILLA; dy++)
+			{
+				gotoxy(posx + col * ANCHO_CASILLA, posy + fil * ALTO_CASILLA + dy);
+				for (dx = 0; dx < ANCHO_CASILLA; dx++)
+				{
+					printf(" ");
+				}
+			}
+			gotoxy(posx + col * ANCHO_CASILLA + 1, posy + fil * ALTO_CASILLA);
+			printf("%2d", carton[col][fil]);
+		}
+	}	
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = (((indice_temp - 1) / 15) + 1);
+	} while (indice_temp != GRUPO);	
+
+	return indice;
+}
+
+int numerar_carton (int Grupo, int num_carton[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+	do
+	{
+		indice_temp =  randrange(1, BOLASTOTAL);
+		indice = indice_temp;
+		indice_temp = (((indice_temp - 1) / 15) + 1);
+		if (indice_temp == Grupo && num_carton[indice] == 0)
+		{
+			num_carton[indice] = 1;
+			return indice;
+		}
+		
+	} while (num_carton[indice] == 1 || indice_temp != Grupo);
+}
+
+
+void setcolor(int ct, int cf)
+{
+   textbackground(cf);
+   textcolor(ct);
+}
+
+
+void colordefault(void)
+{
+   setcolor(LIGHTGRAY,BLACK);
+}
+
+
+
+
+void llenar_carton (int carton[dim][dim], int num_carton[BOLASTOTAL])
+{
+	int col;
+	int fil;
+
+	for (col = 0; col < dim; col++)
+	{
+		for (fil = 0; fil < dim; fil++)
+		{	
+			if (col == 0) carton[col][fil] = numerar_carton(B, num_carton);
+			if (col == 1) carton[col][fil] = numerar_carton(I, num_carton);
+			if (col == 2) carton[col][fil] = numerar_carton(N, num_carton);
+			if (col == 3) carton[col][fil] = numerar_carton(G, num_carton);
+			if (col == 4) carton[col][fil] = numerar_carton(O, num_carton);
+		}		
+	}
+}
+
+void LetrasBingo (void)
+{
+	int dx;
+
+	setcolor(CF, colortext);
+
+	gotoxy(POS_B - 2, bingoposY);
+	for (dx = 0; dx < (ANCHO_CASILLA * 5); dx++) printf(" ");
+
+	gotoxy(POS_B, bingoposY);
+	printf("B");	
+	gotoxy(POS_I, bingoposY);
+	printf("I");
+	gotoxy(POS_N, bingoposY);
+	printf("N");
+	gotoxy(POS_G, bingoposY);
+	printf("G");
+	gotoxy(POS_O, bingoposY);
+	printf("O");
+
+}
+
+
+int buscarymarcar (int carton[dim][dim], int marcadas[dim][dim], int bola)
+{
+	int fil;
+	int col;
+	int si = 0;
+	for (col = 0; col < dim; col++)
+	{
+		for (fil = 0; fil < dim; fil++)
+		{
+			if (carton[col][fil] == bola)
+			{
+				marcadas[col][fil] = 1;
+				
+			}		
+		}	
+	}
+	return si;
+}
+
+
+void iniciar_carton(int marcadas[dim][dim])
+{
+	for (int col = 0; col < dim; col++)
+	{
+		for (int fil = 0; fil < dim; fil++)
+		{
+			marcadas[col][fil] = 0;
+
+			if (col == 2 && fil == 2)
+			{
+				marcadas[col][fil] = 1;
+			}
+			
+		}
+		
+	}
+	
+}
+ 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:76:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   76 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'numerar_carton':
+Bingo.c:196:1: warning: control reaches end of non-void function [-Wreturn-type]
+  196 | }
+      | ^
+[EXIT CODE: 0] 
+
+[EJECUCION DEL USUARIO]
+
+
+
+
+
+
+                                              B   I   N   G   O
+                                              2  22  36  52  69
+                                             13  21  44  49  71
+                                              1  26  43  50  64
+                                             11  16  35  53  68
+                                             14  30  37  54  74
+
+Process returned 0 (0x0)   execution time : 0.039 s
+Press any key to continue.
+
+------------------------------------------------------------
+ 
+============================================================ 
+INTENTO: 2026-05-12T23-05-05 
+ARCHIVO: C:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de binposY con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 	  5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define CT      	LIGHTBLUE
+#define CF 			WHITE
+#define colortext RED
+#define CMT 		CYAN
+#define CMF 		DARKGRAY
+#define ANCHO_CASILLA 4
+#define ALTO_CASILLA  1
+
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+#define bingoposY 7
+#define POS_B 47 
+#define POS_I 51 
+#define POS_N 55 
+#define POS_G 59
+#define POS_O 63
+
+
+
+int buscarymarcar (int carton[dim][dim], int marcadas[dim][dim], int bola);
+void setcolor(int ct, int cf);
+void colordefault(void);
+void llenar_carton (int carton[dim][dim], int num_carton[BOLASTOTAL]);
+void LetrasBingo (void);
+void showcarton (int carton[dim][dim], int marcadas[dim][dim], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int Grupo, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+int numerar_carton (int Grupo, int num_carton[BOLASTOTAL]);
+void iniciar_carton (int marcadas[dim][dim]);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL + 1] = {0};
+	int num_carton[BOLASTOTAL + 1] = {0};
+	int marcadas[dim][dim] = {0};
+	int bola;
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		llenar_carton(carton, num_carton);
+		iniciar_carton(marcadas);
+		showcarton(carton, marcadas, 45, 8);
+		bola = sacarbolas🥚🥚((randrange(1, 5)), bolillero);
+		buscarymarcar(carton, marcadas, bola);
+
+		jugando = 0;
+
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int marcadas[dim][dim], int posx, int posy)
+{
+	int fil;
+	int col;
+	int dx;
+	int dy;
+
+	LetrasBingo();
+
+
+	for (fil = 0; fil < dim; fil++)
+	{
+	
+		for (col = 0; col < dim; col++)
+		{
+			if (marcadas[col][fil] == 1)
+			{
+				setcolor(CMT, CMF);
+			}
+			else
+			{
+				setcolor(CT, CF);
+			}
+			for (dy = 0; dy < ALTO_CASILLA; dy++)
+			{
+				gotoxy(posx + col * ANCHO_CASILLA, posy + fil * ALTO_CASILLA + dy);
+				for (dx = 0; dx < ANCHO_CASILLA; dx++)
+				{
+					printf(" ");
+				}
+			}
+			gotoxy(posx + col * ANCHO_CASILLA + 1, posy + fil * ALTO_CASILLA);
+			printf("%2d", carton[col][fil]);
+		}
+	}	
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = (((indice_temp - 1) / 15) + 1);
+	} while (indice_temp != GRUPO);	
+
+	return indice;
+}
+
+int numerar_carton (int Grupo, int num_carton[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+	do
+	{
+		indice_temp =  randrange(1, BOLASTOTAL);
+		indice = indice_temp;
+		indice_temp = (((indice_temp - 1) / 15) + 1);
+		if (indice_temp == Grupo && num_carton[indice] == 0)
+		{
+			num_carton[indice] = 1;
+			return indice;
+		}
+		
+	} while (num_carton[indice] == 1 || indice_temp != Grupo);
+}
+
+
+void setcolor(int ct, int cf)
+{
+   textbackground(cf);
+   textcolor(ct);
+}
+
+
+void colordefault(void)
+{
+   setcolor(LIGHTGRAY,BLACK);
+}
+
+
+
+
+void llenar_carton (int carton[dim][dim], int num_carton[BOLASTOTAL])
+{
+	int col;
+	int fil;
+
+	for (col = 0; col < dim; col++)
+	{
+		for (fil = 0; fil < dim; fil++)
+		{	
+			if (col == 0) carton[col][fil] = numerar_carton(B, num_carton);
+			if (col == 1) carton[col][fil] = numerar_carton(I, num_carton);
+			if (col == 2) carton[col][fil] = numerar_carton(N, num_carton);
+			if (col == 3) carton[col][fil] = numerar_carton(G, num_carton);
+			if (col == 4) carton[col][fil] = numerar_carton(O, num_carton);
+		}		
+	}
+}
+
+void LetrasBingo (void)
+{
+	int dx;
+
+	setcolor(CF, colortext);
+
+	gotoxy(POS_B - 2, bingoposY);
+	for (dx = 0; dx < (ANCHO_CASILLA * 5); dx++) printf(" ");
+
+	gotoxy(POS_B, bingoposY);
+	printf("B");	
+	gotoxy(POS_I, bingoposY);
+	printf("I");
+	gotoxy(POS_N, bingoposY);
+	printf("N");
+	gotoxy(POS_G, bingoposY);
+	printf("G");
+	gotoxy(POS_O, bingoposY);
+	printf("O");
+
+}
+
+
+int buscarymarcar (int carton[dim][dim], int marcadas[dim][dim], int bola)
+{
+	int fil;
+	int col;
+	int si = 0;
+	for (col = 0; col < dim; col++)
+	{
+		for (fil = 0; fil < dim; fil++)
+		{
+			if (carton[col][fil] == bola)
+			{
+				marcadas[col][fil] = 1;
+				
+			}		
+		}	
+	}
+	return si;
+}
+
+
+void iniciar_carton(int marcadas[dim][dim])
+{
+	for (int col = 0; col < dim; col++)
+	{
+		for (int fil = 0; fil < dim; fil++)
+		{
+			marcadas[col][fil] = 0;
+
+			if (col == 2 && fil == 2)
+			{
+				marcadas[col][fil] = 1;
+			}
+			
+		}
+		
+	}
+	
+}
+
+
+ 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:76:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   76 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'numerar_carton':
+Bingo.c:196:1: warning: control reaches end of non-void function [-Wreturn-type]
+  196 | }
+      | ^
+[EXIT CODE: 0] 
+
+[EJECUCION DEL USUARIO]
+
+
+
+
+
+
+                                              B   I   N   G   O
+                                              2  19  40  51  65
+                                              9  28  39  49  73
+                                              6  17  36  59  74
+                                              7  22  31  54  68
+                                              3  23  45  46  72
+
+Process returned 0 (0x0)   execution time : 0.047 s
+Press any key to continue.
+
+------------------------------------------------------------
+ 
+============================================================ 
+INTENTO: 2026-05-12T23-07-12 
+ARCHIVO: C:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de binposY con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 	  5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define CT      	LIGHTBLUE
+#define CF 			WHITE
+#define colortext RED
+#define CMT 		CYAN
+#define CMF 		DARKGRAY
+#define ANCHO_CASILLA 4
+#define ALTO_CASILLA  1
+
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+#define bingoposY 7
+#define POS_B 47 
+#define POS_I 51 
+#define POS_N 55 
+#define POS_G 59
+#define POS_O 63
+
+
+
+int buscarymarcar (int carton[dim][dim], int marcadas[dim][dim], int bola);
+void setcolor(int ct, int cf);
+void colordefault(void);
+void llenar_carton (int carton[dim][dim], int num_carton[BOLASTOTAL]);
+void LetrasBingo (void);
+void showcarton (int carton[dim][dim], int marcadas[dim][dim], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int Grupo, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+int numerar_carton (int Grupo, int num_carton[BOLASTOTAL]);
+void iniciar_carton (int marcadas[dim][dim]);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL + 1] = {0};
+	int num_carton[BOLASTOTAL + 1] = {0};
+	int marcadas[dim][dim] = {0};
+	int bola;
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		llenar_carton(carton, num_carton);
+		iniciar_carton(marcadas);
+		showcarton(carton, marcadas, 45, 8);
+		bola = sacarbolas🥚🥚((randrange(1, 5)), bolillero);
+		buscarymarcar(carton, marcadas, bola);
+
+		jugando = 0;
+
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int marcadas[dim][dim], int posx, int posy)
+{
+	int fil;
+	int col;
+	int dx;
+	int dy;
+
+	LetrasBingo();
+
+
+	for (fil = 0; fil < dim; fil++)
+	{
+	
+		for (col = 0; col < dim; col++)
+		{
+			if (marcadas[col][fil] == 1)
+			{
+				setcolor(CMT, CMF);
+			}
+			else
+			{
+				setcolor(CT, CF);
+			}
+			for (dy = 0; dy < ALTO_CASILLA; dy++)
+			{
+				gotoxy(posx + col * ANCHO_CASILLA, posy + fil * ALTO_CASILLA + dy);
+				for (dx = 0; dx < ANCHO_CASILLA; dx++)
+				{
+					printf(" ");
+				}
+			}
+			gotoxy(posx + col * ANCHO_CASILLA + 1, posy + fil * ALTO_CASILLA);
+			printf("%2d", carton[col][fil]);
+		}
+	}	
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = (((indice_temp - 1) / 15) + 1);
+	} while (indice_temp != GRUPO);	
+
+	return indice;
+}
+
+int numerar_carton (int Grupo, int num_carton[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+	do
+	{
+		indice_temp =  randrange(1, BOLASTOTAL);
+		indice = indice_temp;
+		indice_temp = (((indice_temp - 1) / 15) + 1);
+		if (indice_temp == Grupo && num_carton[indice] == 0)
+		{
+			num_carton[indice] = 1;
+			return indice;
+		}
+		
+	} while (num_carton[indice] == 1 || indice_temp != Grupo);
+}
+
+
+void setcolor(int ct, int cf)
+{
+   textbackground(cf);
+   textcolor(ct);
+}
+
+
+void colordefault(void)
+{
+   setcolor(LIGHTGRAY,BLACK);
+}
+
+
+
+
+void llenar_carton (int carton[dim][dim], int num_carton[BOLASTOTAL])
+{
+	int col;
+	int fil;
+
+	for (col = 0; col < dim; col++)
+	{
+		for (fil = 0; fil < dim; fil++)
+		{	
+			if (col == 0) carton[col][fil] = numerar_carton(B, num_carton);
+			if (col == 1) carton[col][fil] = numerar_carton(I, num_carton);
+			if (col == 2) carton[col][fil] = numerar_carton(N, num_carton);
+			if (col == 3) carton[col][fil] = numerar_carton(G, num_carton);
+			if (col == 4) carton[col][fil] = numerar_carton(O, num_carton);
+		}		
+	}
+}
+
+void LetrasBingo (void)
+{
+	int dx;
+
+	setcolor(CF, colortext);
+
+	gotoxy(POS_B - 2, bingoposY);
+	for (dx = 0; dx < (ANCHO_CASILLA * 5); dx++) printf(" ");
+
+	gotoxy(POS_B, bingoposY);
+	printf("B");	
+	gotoxy(POS_I, bingoposY);
+	printf("I");
+	gotoxy(POS_N, bingoposY);
+	printf("N");
+	gotoxy(POS_G, bingoposY);
+	printf("G");
+	gotoxy(POS_O, bingoposY);
+	printf("O");
+
+}
+
+
+int buscarymarcar (int carton[dim][dim], int marcadas[dim][dim], int bola)
+{
+	int fil;
+	int col;
+	int si = 0;
+	for (col = 0; col < dim; col++)
+	{
+		for (fil = 0; fil < dim; fil++)
+		{
+			if (carton[col][fil] == bola)
+			{
+				marcadas[col][fil] = 1;
+				
+			}		
+		}	
+	}
+	return si;
+}
+
+
+void iniciar_carton(int marcadas[dim][dim])
+{
+	for (int col = 0; col < dim; col++)
+	{
+		for (int fil = 0; fil < dim; fil++)
+		{
+			marcadas[col][fil] = 0;
+
+			if (col == 2 && fil == 2)
+			{
+				marcadas[col][fil] = 1;
+			}
+			
+		}
+		
+	}
+	
+}
+
+
+ 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:76:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   76 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'numerar_carton':
+Bingo.c:196:1: warning: control reaches end of non-void function [-Wreturn-type]
+  196 | }
+      | ^
+[EXIT CODE: 0] 
+
+[EJECUCION DEL USUARIO]
+
+
+
+
+
+
+                                              B   I   N   G   O
+                                              3  16  38  48  64
+                                              6  27  31  49  74
+                                              5  22  41  54  72
+                                             13  24  42  53  73
+                                              2  25  37  57  67
+
+Process returned 0 (0x0)   execution time : 0.055 s
+Press any key to continue.
+
+------------------------------------------------------------
+ 
+============================================================ 
+INTENTO: 2026-05-12T23-08-31 
+ARCHIVO: C:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de binposY con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 	  5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define CT      	LIGHTBLUE
+#define CF 			WHITE
+#define colortext RED
+#define CMT 		CYAN
+#define CMF 		DARKGRAY
+#define ANCHO_CASILLA 4
+#define ALTO_CASILLA  1
+
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+#define bingoposY 7
+#define POS_B 47 
+#define POS_I 51 
+#define POS_N 55 
+#define POS_G 59
+#define POS_O 63
+
+
+
+int buscarymarcar (int carton[dim][dim], int marcadas[dim][dim], int bola);
+void setcolor(int ct, int cf);
+void colordefault(void);
+void llenar_carton (int carton[dim][dim], int num_carton[BOLASTOTAL]);
+void LetrasBingo (void);
+void showcarton (int carton[dim][dim], int marcadas[dim][dim], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int Grupo, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+int numerar_carton (int Grupo, int num_carton[BOLASTOTAL]);
+void iniciar_carton (int marcadas[dim][dim]);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL + 1] = {0};
+	int num_carton[BOLASTOTAL + 1] = {0};
+	int marcadas[dim][dim] = {0};
+	int bola;
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		llenar_carton(carton, num_carton);
+		iniciar_carton(marcadas);
+		showcarton(carton, marcadas, 45, 8);
+		bola = sacarbolas🥚🥚((randrange(1, 5)), bolillero);
+		buscarymarcar(carton, marcadas, bola);
+
+		jugando = 0;
+
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int marcadas[dim][dim], int posx, int posy)
+{
+	int fil;
+	int col;
+	int dx;
+	int dy;
+
+	LetrasBingo();
+
+
+	for (fil = 0; fil < dim; fil++)
+	{
+	
+		for (col = 0; col < dim; col++)
+		{
+			if (marcadas[col][fil] == 1)
+			{
+				setcolor(CMT, CMF);
+			}
+			else
+			{
+				setcolor(CT, CF);
+			}
+			for (dy = 0; dy < ALTO_CASILLA; dy++)
+			{
+				gotoxy(posx + col * ANCHO_CASILLA, posy + fil * ALTO_CASILLA + dy);
+				for (dx = 0; dx < ANCHO_CASILLA; dx++)
+				{
+					printf(" ");
+				}
+			}
+			gotoxy(posx + col * ANCHO_CASILLA + 1, posy + fil * ALTO_CASILLA);
+			printf("%2d", carton[col][fil]);
+		}
+	}	
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = (((indice_temp - 1) / 15) + 1);
+	} while (indice_temp != GRUPO);	
+
+	return indice;
+}
+
+int numerar_carton (int Grupo, int num_carton[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+	do
+	{
+		indice_temp =  randrange(1, BOLASTOTAL);
+		indice = indice_temp;
+		indice_temp = (((indice_temp - 1) / 15) + 1);
+		if (indice_temp == Grupo && num_carton[indice] == 0)
+		{
+			num_carton[indice] = 1;
+			return indice;
+		}
+		
+	} while (num_carton[indice] == 1 || indice_temp != Grupo);
+}
+
+
+void setcolor(int ct, int cf)
+{
+   textbackground(cf);
+   textcolor(ct);
+}
+
+
+void colordefault(void)
+{
+   setcolor(LIGHTGRAY,BLACK);
+}
+
+
+
+
+void llenar_carton (int carton[dim][dim], int num_carton[BOLASTOTAL])
+{
+	int col;
+	int fil;
+
+	for (col = 0; col < dim; col++)
+	{
+		for (fil = 0; fil < dim; fil++)
+		{	
+			if (col == 0) carton[col][fil] = numerar_carton(B, num_carton);
+			if (col == 1) carton[col][fil] = numerar_carton(I, num_carton);
+			if (col == 2) carton[col][fil] = numerar_carton(N, num_carton);
+			if (col == 3) carton[col][fil] = numerar_carton(G, num_carton);
+			if (col == 4) carton[col][fil] = numerar_carton(O, num_carton);
+		}		
+	}
+}
+
+void LetrasBingo (void)
+{
+	int dx;
+
+	setcolor(CF, colortext);
+
+	gotoxy(POS_B - 2, bingoposY);
+	for (dx = 0; dx < (ANCHO_CASILLA * 5); dx++) printf(" ");
+
+	gotoxy(POS_B, bingoposY);
+	printf("B");	
+	gotoxy(POS_I, bingoposY);
+	printf("I");
+	gotoxy(POS_N, bingoposY);
+	printf("N");
+	gotoxy(POS_G, bingoposY);
+	printf("G");
+	gotoxy(POS_O, bingoposY);
+	printf("O");
+
+}
+
+
+int buscarymarcar (int carton[dim][dim], int marcadas[dim][dim], int bola)
+{
+	int fil;
+	int col;
+	int si = 0;
+	for (col = 0; col < dim; col++)
+	{
+		for (fil = 0; fil < dim; fil++)
+		{
+			if (carton[col][fil] == bola)
+			{
+				marcadas[col][fil] = 1;
+			}		
+		}	
+	}
+	return si;
+}
+
+
+void iniciar_carton(int marcadas[dim][dim])
+{
+	for (int col = 0; col < dim; col++)
+	{
+		for (int fil = 0; fil < dim; fil++)
+		{
+			marcadas[col][fil] = 0;
+
+			if (col == 2 && fil == 2)
+			{
+				marcadas[col][fil] = 1;
+			}
+			
+		}
+		
+	}
+	
+}
+
+
+ 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:76:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   76 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'numerar_carton':
+Bingo.c:196:1: warning: control reaches end of non-void function [-Wreturn-type]
+  196 | }
+      | ^
+[EXIT CODE: 0] 
+
+[EJECUCION DEL USUARIO]
+
+
+
+
+
+
+                                              B   I   N   G   O
+                                              6  16  43  51  70
+                                             13  18  44  59  75
+                                              2  29  36  52  68
+                                              4  24  41  47  72
+                                              1  25  40  49  66
+
+Process returned 0 (0x0)   execution time : 0.046 s
+Press any key to continue.
+
+------------------------------------------------------------
+ 
+============================================================ 
+INTENTO: 2026-05-12T23-09-03 
+ARCHIVO: C:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\Ejercicios\Bingo.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+/* Realizar un programa interactivo en C que simule un juego de binposY con un cartón. Este debe presentarse
+gráficamente, identificando con un color diferente los recuadros de las bolas que han salido. El juego
+generará el cartón de forma aleatoria. Asegúrese que una combinación no se repita para cada columna
+del cartón. Tome en cuenta que cada una de las letras de bingo corresponde a un cierto rango de
+números, como se indica a continuación.
+B: 1-15
+I: 16-30
+N: 31-45
+G: 46-60
+O: 61-75
+El cartón tendrá cinco columnas, rotuladas B-I-N-G-O. Cada columna contendrá cinco números, dentro
+de los rangos indicados arriba. La posición central de cada cartón se cubre antes de comenzar el juego
+(jugada gratis). Se gana cuando se tenga una línea de números sacados (en vertical, horizontal o en
+diagonal). Luego de esto se preguntará si se desea jugar a cartón lleno y en caso de ser afirmativo se debe
+continuar sacando bolos. Cada vez que termine una mano se debe preguntar si se desea continuar
+jugando. Se debe presentar las estadísticas de ganados vs perdidos en el momento que el usuario desee.
+Una vez iniciado el juego se presenta una bola que se genera de manera aleatoria, sin repetición. El
+usuario presionará [ENTER] sobre la bola en su cartón y en caso de que no esté presionará [ESC]. Si el
+usuario presiona [ESC] y la bola está en el cartón se le descuenta el 10% de lo apostado. Se debe presentar
+la bola generada, en un área de la pantalla conjuntamente con la información del cartón. El usuario puede
+cambiar de cartón cuantas veces lo desee antes de comenzar el juego. */
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+
+#define dim 	  5
+#define ENTER     13
+#define ESC       27
+#define ARRIBA    72
+#define ABAJO     80
+#define DERECHA   77
+#define IZQUIERDA 75
+#define ESP       32
+#define CT      	LIGHTBLUE
+#define CF 			WHITE
+#define colortext RED
+#define CMT 		CYAN
+#define CMF 		DARKGRAY
+#define ANCHO_CASILLA 4
+#define ALTO_CASILLA  1
+
+#define BOLASTOTAL 75
+#define B 1
+#define I 2
+#define N 3
+#define G 4
+#define O 5
+#define bingoposY 7
+#define POS_B 47 
+#define POS_I 51 
+#define POS_N 55 
+#define POS_G 59
+#define POS_O 63
+
+
+
+int buscarymarcar (int carton[dim][dim], int marcadas[dim][dim], int bola);
+void setcolor(int ct, int cf);
+void colordefault(void);
+void llenar_carton (int carton[dim][dim], int num_carton[BOLASTOTAL]);
+void LetrasBingo (void);
+void showcarton (int carton[dim][dim], int marcadas[dim][dim], int posx, int posy);
+int bolas (int bolillero[BOLASTOTAL]);
+int sacarbolas🥚🥚(int Grupo, int bolillero[BOLASTOTAL]);
+int randrange (int limif, int limsp);
+int numerar_carton (int Grupo, int num_carton[BOLASTOTAL]);
+void iniciar_carton (int marcadas[dim][dim]);
+
+
+int main(){
+
+	int jugando = 1;
+	int carton[dim][dim];
+	int bolillero[BOLASTOTAL + 1] = {0};
+	int num_carton[BOLASTOTAL + 1] = {0};
+	int marcadas[dim][dim] = {0};
+	int bola;
+	srand(time(NULL));
+	
+
+	//while (jugando == 1)
+//	{
+		llenar_carton(carton, num_carton);
+		iniciar_carton(marcadas);
+		showcarton(carton, marcadas, 45, 8);
+		bola = sacarbolas🥚🥚((randrange(1, 5)), bolillero);
+		buscarymarcar(carton, marcadas, bola);
+
+		jugando = 0;
+
+//	}
+
+
+
+	return 0;
+}
+
+void showcarton (int carton[dim][dim], int marcadas[dim][dim], int posx, int posy)
+{
+	int fil;
+	int col;
+	int dx;
+	int dy;
+
+	LetrasBingo();
+
+
+	for (fil = 0; fil < dim; fil++)
+	{
+	
+		for (col = 0; col < dim; col++)
+		{
+			if (marcadas[col][fil] == 1)
+			{
+				setcolor(CMT, CMF);
+			}
+			else
+			{
+				setcolor(CT, CF);
+			}
+			for (dy = 0; dy < ALTO_CASILLA; dy++)
+			{
+				gotoxy(posx + col * ANCHO_CASILLA, posy + fil * ALTO_CASILLA + dy);
+				for (dx = 0; dx < ANCHO_CASILLA; dx++)
+				{
+					printf(" ");
+				}
+			}
+			gotoxy(posx + col * ANCHO_CASILLA + 1, posy + fil * ALTO_CASILLA);
+			printf("%2d", carton[col][fil]);
+		}
+	}	
+}
+
+
+
+
+/*Recibe el arreglo del total de volas y me retorna de manera aleatoria el indice de una posicion que no ha salido antes*/
+
+int bolas (int bolillero[BOLASTOTAL])
+{
+	int indice;
+	do
+	{
+		indice =  randrange(1, BOLASTOTAL - 1);
+	} while (bolillero[indice] == 1);
+	bolillero[indice] = 1;
+	
+	return indice;  
+}
+
+
+
+
+int randrange(int limif,int limsp)
+{
+	return (rand() % (limsp - limif + 1) + limif);
+}
+
+/**/
+int sacarbolas🥚🥚 (int GRUPO, int bolillero[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+
+	do
+	{
+		indice_temp = bolas(bolillero);
+		indice = indice_temp;
+		indice_temp = (((indice_temp - 1) / 15) + 1);
+	} while (indice_temp != GRUPO);	
+
+	return indice;
+}
+
+int numerar_carton (int Grupo, int num_carton[BOLASTOTAL])
+{
+	int indice;
+	int indice_temp;
+	do
+	{
+		indice_temp =  randrange(1, BOLASTOTAL);
+		indice = indice_temp;
+		indice_temp = (((indice_temp - 1) / 15) + 1);
+		if (indice_temp == Grupo && num_carton[indice] == 0)
+		{
+			num_carton[indice] = 1;
+			return indice;
+		}
+		
+	} while (num_carton[indice] == 1 || indice_temp != Grupo);
+}
+
+
+void setcolor(int ct, int cf)
+{
+   textbackground(cf);
+   textcolor(ct);
+}
+
+
+void colordefault(void)
+{
+   setcolor(LIGHTGRAY,BLACK);
+}
+
+
+
+
+void llenar_carton (int carton[dim][dim], int num_carton[BOLASTOTAL])
+{
+	int col;
+	int fil;
+
+	for (col = 0; col < dim; col++)
+	{
+		for (fil = 0; fil < dim; fil++)
+		{	
+			if (col == 0) carton[col][fil] = numerar_carton(B, num_carton);
+			if (col == 1) carton[col][fil] = numerar_carton(I, num_carton);
+			if (col == 2) carton[col][fil] = numerar_carton(N, num_carton);
+			if (col == 3) carton[col][fil] = numerar_carton(G, num_carton);
+			if (col == 4) carton[col][fil] = numerar_carton(O, num_carton);
+		}		
+	}
+}
+
+void LetrasBingo (void)
+{
+	int dx;
+
+	setcolor(CF, colortext);
+
+	gotoxy(POS_B - 2, bingoposY);
+	for (dx = 0; dx < (ANCHO_CASILLA * 5); dx++) printf(" ");
+
+	gotoxy(POS_B, bingoposY);
+	printf("B");	
+	gotoxy(POS_I, bingoposY);
+	printf("I");
+	gotoxy(POS_N, bingoposY);
+	printf("N");
+	gotoxy(POS_G, bingoposY);
+	printf("G");
+	gotoxy(POS_O, bingoposY);
+	printf("O");
+
+}
+
+
+int buscarymarcar (int carton[dim][dim], int marcadas[dim][dim], int bola)
+{
+	int fil;
+	int col;
+	int si = 0;
+	for (col = 0; col < dim; col++)
+	{
+		for (fil = 0; fil < dim; fil++)
+		{
+			if (carton[col][fil] == bola)
+			{
+				marcadas[col][fil] = 1;
+			}		
+		}	
+	}
+	return si;
+}
+
+
+void iniciar_carton(int marcadas[dim][dim])
+{
+	for (int col = 0; col < dim; col++)
+	{
+		for (int fil = 0; fil < dim; fil++)
+		{
+			marcadas[col][fil] = 0;
+
+			if (col == 2 && fil == 2)
+			{
+				marcadas[col][fil] = 1;
+			}	
+		}	
+	}
+}
+
+
+ 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+Bingo.c: In function 'main':
+Bingo.c:76:13: warning: variable 'jugando' set but not used [-Wunused-but-set-variable]
+   76 |         int jugando = 1;
+      |             ^~~~~~~
+Bingo.c: In function 'numerar_carton':
+Bingo.c:196:1: warning: control reaches end of non-void function [-Wreturn-type]
+  196 | }
+      | ^
+[EXIT CODE: 0] 
+
+[EJECUCION DEL USUARIO]
+
+
+
+
+
+
+                                              B   I   N   G   O
+                                              7  24  36  46  62
+                                              5  19  32  59  61
+                                             10  29  33  51  69
+                                              4  27  40  47  71
+                                              9  22  42  55  73
+
+Process returned 0 (0x0)   execution time : 0.045 s
+Press any key to continue.
+
+------------------------------------------------------------
