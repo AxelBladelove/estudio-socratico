@@ -2,7 +2,7 @@
   "name": "estudio-exercism",
   "displayName": "Estudio Socratico - Exercism",
   "description": "Panel de ejercicios para Exercism C, W3Schools/w3resource y PDF Alejandro Liz dentro de Estudio Socratico.",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "publisher": "estudio-socratico",
   "license": "MIT",
   "icon": "assets/estudio.png",

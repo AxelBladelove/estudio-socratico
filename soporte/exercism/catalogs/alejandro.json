@@ -1,17 +1,17 @@
 {
   "provider": "alejandro",
   "providerName": "PDF Alejandro Liz",
-  "generatedAt": "2026-05-12T04:41:28.484Z",
+  "generatedAt": "2026-05-14T05:59:00.370Z",
   "exercises": [
     {
       "slug": "alejandro-imprimir-nombre-n-veces",
       "title": "Imprimir nombre N veces",
       "folderName": "Imprimir nombre N veces",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "beginner",
+      "blurb": "Repite un nombre según el número indicado por el usuario.",
       "topics": [
-        "ciclos",
-        "condiciones"
+        "entrada-salida",
+        "ciclos"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/5c1d4441124452d2db5e53487995a42b/raw/icon.svg",
       "order": 1,
@@ -25,11 +25,13 @@
       "slug": "alejandro-pies-y-pulgadas-a-metros",
       "title": "Pies y pulgadas a metros",
       "folderName": "Pies y pulgadas a metros",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "beginner",
+      "blurb": "Convertir pies y pulgadas ingresados por el usuario a metros.",
       "topics": [
-        "ciclos",
-        "condiciones"
+        "entrada-salida",
+        "variables",
+        "operadores",
+        "conversiones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/4a798ec0ffe1b3ba4db8b71228d0c4d1/raw/icon.svg",
       "order": 2,
@@ -43,11 +45,14 @@
       "slug": "alejandro-suma-hasta-n",
       "title": "Suma hasta N",
       "folderName": "Suma hasta N",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Suma los enteros desde 0 hasta un número dado.",
       "topics": [
+        "entrada-salida",
+        "variables",
+        "operadores",
         "ciclos",
-        "condiciones"
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/edc30d4c41fbbf208338a4b6d1f50687/raw/icon.svg",
       "order": 3,
@@ -61,11 +66,14 @@
       "slug": "alejandro-pulgadas-a-yardas-pies-y-pulgadas",
       "title": "Pulgadas a yardas, pies y pulgadas",
       "folderName": "Pulgadas a yardas, pies y pulgadas",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "beginner",
+      "blurb": "Convierte una longitud en pulgadas a yardas, pies y pulgadas.",
       "topics": [
-        "ciclos",
-        "condiciones"
+        "entrada-salida",
+        "variables",
+        "operadores",
+        "matematica",
+        "conversiones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/68e05fa00d71ee965d5e623e55ae3712/raw/icon.svg",
       "order": 4,
@@ -79,11 +87,13 @@
       "slug": "alejandro-impares-menores-que-20",
       "title": "Impares menores que 20",
       "folderName": "Impares menores que 20",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "beginner",
+      "blurb": "Despliega los números impares positivos menores que 20 en orden ascendente.",
       "topics": [
-        "ciclos",
-        "condiciones"
+        "entrada-salida",
+        "variables",
+        "condiciones",
+        "ciclos"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/348060977da57642119a85f75d1b9f8d/raw/icon.svg",
       "order": 5,
@@ -97,8 +107,8 @@
       "slug": "alejandro-impares-descendentes",
       "title": "Impares descendentes",
       "folderName": "Impares descendentes",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Imprime los números impares positivos menores a 20 en orden descendente",
       "topics": [
         "ciclos",
         "condiciones"
@@ -115,11 +125,13 @@
       "slug": "alejandro-maximo-de-dos-valores",
       "title": "Máximo de dos valores",
       "folderName": "Máximo de dos valores",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "beginner",
+      "blurb": "Función que retorna el mayor entre dos valores",
       "topics": [
-        "ciclos",
-        "condiciones"
+        "funciones",
+        "condiciones",
+        "operadores",
+        "variables"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/31bc4d99a31119b1b33247afb9befb30/raw/icon.svg",
       "order": 7,
@@ -133,11 +145,13 @@
       "slug": "alejandro-tabla-ascii",
       "title": "Tabla ASCII",
       "folderName": "Tabla ASCII",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Genera una tabla de 6 columnas mostrando las equivalencias del codigo ASCII",
       "topics": [
+        "entrada-salida",
         "ciclos",
-        "condiciones"
+        "conversiones",
+        "variables"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/d59ea4187b3e89938861ab91464621f3/raw/icon.svg",
       "order": 8,
@@ -151,11 +165,13 @@
       "slug": "alejandro-media-armonica",
       "title": "Media armónica",
       "folderName": "Media armónica",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "beginner",
+      "blurb": "Calcula la media armónica de dos números double mediante operaciones aritméticas",
       "topics": [
-        "ciclos",
-        "condiciones"
+        "variables",
+        "operadores",
+        "funciones",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/30e5484c4b818ac48dfbadde22c5caea/raw/icon.svg",
       "order": 9,
@@ -169,11 +185,14 @@
       "slug": "alejandro-fahrenheit-a-celsius",
       "title": "Fahrenheit a Celsius",
       "folderName": "Fahrenheit a Celsius",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "beginner",
+      "blurb": "Imprimir tabla de conversión de Fahrenheit a Celsius usando fórmula",
       "topics": [
+        "entrada-salida",
+        "variables",
+        "operadores",
         "ciclos",
-        "condiciones"
+        "conversiones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/e28db9ff32e0d904b129e7d2f37ac0da/raw/icon.svg",
       "order": 10,
@@ -187,11 +206,14 @@
       "slug": "alejandro-divisores-exactos",
       "title": "Divisores exactos",
       "folderName": "Divisores exactos",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Encuentra todos los divisores exactos de un numero entero positivo.",
       "topics": [
-        "ciclos",
-        "condiciones"
+        "entrada-salida",
+        "variables",
+        "operadores",
+        "condiciones",
+        "ciclos"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/bc10b0c305c439cb40855f350a469a59/raw/icon.svg",
       "order": 11,
@@ -205,11 +227,14 @@
       "slug": "alejandro-multiplicacion-por-sumas-sucesivas",
       "title": "Multiplicación por sumas sucesivas",
       "folderName": "Multiplicación por sumas sucesivas",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "beginner",
+      "blurb": "Multiplica dos enteros usando sumas repetidas en un ciclo, sin usar el operador *",
       "topics": [
+        "entrada-salida",
+        "variables",
+        "operadores",
         "ciclos",
-        "condiciones"
+        "funciones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/784ee8261f8562b6a4d227b2c04313fe/raw/icon.svg",
       "order": 12,
@@ -223,11 +248,14 @@
       "slug": "alejandro-multiplicacion-para-negativos",
       "title": "Multiplicación para negativos",
       "folderName": "Multiplicación para negativos",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Adaptar una multiplicación para que funcione con números positivos y negativos",
       "topics": [
-        "ciclos",
-        "condiciones"
+        "entrada-salida",
+        "variables",
+        "operadores",
+        "condiciones",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/e00d675c1b2ee913c9807bf54e41bd60/raw/icon.svg",
       "order": 13,
@@ -241,11 +269,13 @@
       "slug": "alejandro-libreta-de-ahorros",
       "title": "Libreta de ahorros",
       "folderName": "Libreta de ahorros",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Calcula el capital final de un ahorro con intereses mensuales",
       "topics": [
-        "ciclos",
-        "condiciones"
+        "entrada-salida",
+        "variables",
+        "operadores",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/5637600d86c43224fbe3c76b2b858921/raw/icon.svg",
       "order": 14,
@@ -259,11 +289,15 @@
       "slug": "alejandro-conejos-de-fibonacci",
       "title": "Conejos de Fibonacci",
       "folderName": "Conejos de Fibonacci",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Calcular crías de conejos usando la serie de Fibonacci.",
       "topics": [
+        "variables",
+        "operadores",
         "ciclos",
-        "condiciones"
+        "funciones",
+        "series",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/8b2010875e5588365019ca4b870dd315/raw/icon.svg",
       "order": 15,
@@ -277,11 +311,14 @@
       "slug": "alejandro-el-inventor-del-ajedrez",
       "title": "El inventor del ajedrez",
       "folderName": "El inventor del ajedrez",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Calcula los granos de trigo en un tablero de ajedrez doblando cada casilla y estima el peso total",
       "topics": [
+        "variables",
+        "operadores",
         "ciclos",
-        "condiciones"
+        "matematica",
+        "series"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/c9fe60d7a9ede9749429bdc0d3c4068b/raw/icon.svg",
       "order": 16,
@@ -295,11 +332,14 @@
       "slug": "alejandro-resumen-de-diez-valores",
       "title": "Resumen de diez valores",
       "folderName": "Resumen de diez valores",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Lee diez valores y calcula suma, suma de cuadrados, promedio, máximo y mínimo.",
       "topics": [
-        "ciclos",
-        "condiciones"
+        "entrada-salida",
+        "variables",
+        "operadores",
+        "condiciones",
+        "ciclos"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/ae53364e1da878bb5e5fe87060efa74c/raw/icon.svg",
       "order": 17,
@@ -313,11 +353,14 @@
       "slug": "alejandro-division-por-restas-sucesivas",
       "title": "División por restas sucesivas",
       "folderName": "División por restas sucesivas",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Divide números enteros positivos por restas sucesivas",
       "topics": [
+        "entrada-salida",
+        "operadores",
+        "condiciones",
         "ciclos",
-        "condiciones"
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/8729444248c8a0ce002fba1fad8494b9/raw/icon.svg",
       "order": 18,
@@ -331,11 +374,14 @@
       "slug": "alejandro-nomina-semanal",
       "title": "Nómina semanal",
       "folderName": "Nómina semanal",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Calcular salario semanal con horas extras y retenciones progresivas",
       "topics": [
-        "ciclos",
-        "condiciones"
+        "entrada-salida",
+        "variables",
+        "operadores",
+        "condiciones",
+        "funciones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/2d7ad40cd547a5723d86423bbd91e9ba/raw/icon.svg",
       "order": 19,
@@ -349,11 +395,13 @@
       "slug": "alejandro-ecuacion-cuadratica",
       "title": "Ecuación cuadrática",
       "folderName": "Ecuación cuadrática",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Retorna la solución positiva de una ecuación cuadrática dados sus coeficientes a, b y c",
       "topics": [
-        "ciclos",
-        "condiciones"
+        "funciones",
+        "matematica",
+        "operadores",
+        "variables"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/c8dd38d7c47ae27acc650576bfea9403/raw/icon.svg",
       "order": 20,
@@ -367,11 +415,13 @@
       "slug": "alejandro-tipo-de-triangulo",
       "title": "Tipo de triángulo",
       "folderName": "Tipo de triángulo",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Clasifica un triángulo como equilátero, isósceles o escaleno según sus lados.",
       "topics": [
-        "ciclos",
-        "condiciones"
+        "condiciones",
+        "funciones",
+        "operadores",
+        "geometria"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/8a25845562378c37346913df781c571b/raw/icon.svg",
       "order": 21,
@@ -385,11 +435,13 @@
       "slug": "alejandro-aproximacion-de-pi",
       "title": "Aproximación de Pi",
       "folderName": "Aproximación de Pi",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Aproxima π usando la serie de Leibniz con una función y un ciclo.",
       "topics": [
+        "funciones",
         "ciclos",
-        "condiciones"
+        "series",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/ae4a6af37c79ba1fff5afc633b290ddc/raw/icon.svg",
       "order": 22,
@@ -403,11 +455,14 @@
       "slug": "alejandro-proyeccion-de-poblacion",
       "title": "Proyección de población",
       "folderName": "Proyección de población",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Estimar población futura usando tasas de natalidad y mortalidad en un ciclo de 10 años.",
       "topics": [
+        "entrada-salida",
+        "variables",
+        "operadores",
         "ciclos",
-        "condiciones"
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/b5168894838718e01678d44cd6ad48d7/raw/icon.svg",
       "order": 23,
@@ -421,11 +476,15 @@
       "slug": "alejandro-area-y-circunferencia",
       "title": "Área y circunferencia",
       "folderName": "Área y circunferencia",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "beginner",
+      "blurb": "Calcular área y circunferencia de un círculo usando funciones con punto flotante",
       "topics": [
-        "ciclos",
-        "condiciones"
+        "entrada-salida",
+        "variables",
+        "operadores",
+        "funciones",
+        "matematica",
+        "geometria"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/6a62159384417285bea7337d77f0a91e/raw/icon.svg",
       "order": 24,
@@ -439,11 +498,12 @@
       "slug": "alejandro-potencia-por-multiplicaciones",
       "title": "Potencia por multiplicaciones",
       "folderName": "Potencia por multiplicaciones",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Implementar potencia usando multiplicaciones sucesivas en C",
       "topics": [
+        "funciones",
         "ciclos",
-        "condiciones"
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/34360330c9bb150bd12e0338e6bce1a7/raw/icon.svg",
       "order": 25,
@@ -457,11 +517,13 @@
       "slug": "alejandro-volumen-de-esfera",
       "title": "Volumen de esfera",
       "folderName": "Volumen de esfera",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "beginner",
+      "blurb": "Crear funciones potencia y pi para calcular volumen de esfera",
       "topics": [
-        "ciclos",
-        "condiciones"
+        "funciones",
+        "matematica",
+        "operadores",
+        "variables"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/fc8a532c45960554391530c3984ab8a4/raw/icon.svg",
       "order": 26,
@@ -475,11 +537,14 @@
       "slug": "alejandro-dieta-de-cuatro-semanas",
       "title": "Dieta de cuatro semanas",
       "folderName": "Dieta de cuatro semanas",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Calcula libras perdidas en una dieta de 4 semanas con déficit calórico semanal",
       "topics": [
+        "entrada-salida",
+        "variables",
+        "operadores",
         "ciclos",
-        "condiciones"
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/3df5fa2a642acc3cfa2eed01d0eb462a/raw/icon.svg",
       "order": 27,
@@ -493,11 +558,13 @@
       "slug": "alejandro-dieta-para-vacaciones",
       "title": "Dieta para vacaciones",
       "folderName": "Dieta para vacaciones",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "beginner",
+      "blurb": "Calcula las calorías diarias a reducir para perder peso en 4 semanas",
       "topics": [
-        "ciclos",
-        "condiciones"
+        "entrada-salida",
+        "variables",
+        "operadores",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/1d07a5b0f197370ad24cfdf803bbb7bd/raw/icon.svg",
       "order": 28,
@@ -511,11 +578,14 @@
       "slug": "alejandro-ternas-pitagoricas",
       "title": "Ternas pitagóricas",
       "folderName": "Ternas pitagóricas",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Encuentra cinco ternas pitagóricas donde a²+b²=c² con b y c consecutivos.",
       "topics": [
+        "variables",
+        "operadores",
+        "condiciones",
         "ciclos",
-        "condiciones"
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/4c1e1e3d05f73abbaf32f17987037160/raw/icon.svg",
       "order": 29,
@@ -529,11 +599,12 @@
       "slug": "alejandro-graficos-con-asteriscos",
       "title": "Gráficos con asteriscos",
       "folderName": "Gráficos con asteriscos",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Generar patrones de asteriscos con forma de triángulos usando ciclos anidados",
       "topics": [
         "ciclos",
-        "condiciones"
+        "graficos-ascii",
+        "entrada-salida"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/eceb8040f519e862a240a4601c47c792/raw/icon.svg",
       "order": 30,
@@ -547,11 +618,14 @@
       "slug": "alejandro-media-minimo-y-maximo",
       "title": "Media, mínimo y máximo",
       "folderName": "Media, mínimo y máximo",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "beginner",
+      "blurb": "Captura N números por teclado y calcula su media, mínimo y máximo.",
       "topics": [
+        "entrada-salida",
+        "condiciones",
         "ciclos",
-        "condiciones"
+        "operadores",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/bcc455e4033c6d642abc0c131b253dc1/raw/icon.svg",
       "order": 31,
@@ -565,11 +639,13 @@
       "slug": "alejandro-primos-entre-1-y-100",
       "title": "Primos entre 1 y 100",
       "folderName": "Primos entre 1 y 100",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Despliega los números primos entre 1 y 100.",
       "topics": [
         "ciclos",
-        "condiciones"
+        "condiciones",
+        "numeros-primos",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/e31d809ae39c1d4b2872444dc6254715/raw/icon.svg",
       "order": 32,
@@ -583,11 +659,13 @@
       "slug": "alejandro-valor-de-e",
       "title": "Valor de e",
       "folderName": "Valor de e",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Calcular e usando la serie 1 + 1/1! + 1/2! + ... + 1/n!",
       "topics": [
+        "funciones",
         "ciclos",
-        "condiciones"
+        "matematica",
+        "series"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/3c544f1d4ffcea709fd409b3032c8ada/raw/icon.svg",
       "order": 33,
@@ -601,10 +679,12 @@
       "slug": "alejandro-conteo-de-digitos",
       "title": "Conteo de dígitos",
       "folderName": "Conteo de dígitos",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "beginner",
+      "blurb": "Contar cuántas veces aparece un dígito en un número entero.",
       "topics": [
+        "funciones",
         "ciclos",
+        "operadores",
         "condiciones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/ab732c7eaf3b22a7d9e1731222f8797c/raw/icon.svg",
@@ -619,11 +699,14 @@
       "slug": "alejandro-triangulo-de-latas",
       "title": "Triángulo de latas",
       "folderName": "Triángulo de latas",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Calcular niveles y latas sobrantes al formar un triángulo con latas.",
       "topics": [
+        "matematica",
+        "funciones",
         "ciclos",
-        "condiciones"
+        "operadores",
+        "variables"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/f96596d4be892044da3ed0d634cc33d3/raw/icon.svg",
       "order": 35,
@@ -637,11 +720,14 @@
       "slug": "alejandro-factorizacion-prima",
       "title": "Factorización prima",
       "folderName": "Factorización prima",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Descompone números enteros en factores primos hasta ingresar 0.",
       "topics": [
+        "entrada-salida",
         "ciclos",
-        "condiciones"
+        "condiciones",
+        "matematica",
+        "numeros-primos"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/35477e76ada9122de132babd43d29872/raw/icon.svg",
       "order": 36,
@@ -655,11 +741,15 @@
       "slug": "alejandro-numeros-dorsales",
       "title": "Números dorsales",
       "folderName": "Números dorsales",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Determina si un número es igual a la suma de los cuadrados de sus dos mitades.",
       "topics": [
+        "funciones",
+        "operadores",
+        "condiciones",
         "ciclos",
-        "condiciones"
+        "matematica",
+        "teoria-de-numeros"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/2b8d2350f858801b19df3dda91bda319/raw/icon.svg",
       "order": 37,
@@ -673,11 +763,15 @@
       "slug": "alejandro-maximo-comun-divisor",
       "title": "Máximo común divisor",
       "folderName": "Máximo común divisor",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Encuentra el MCD de dos números enteros",
       "topics": [
+        "entrada-salida",
+        "variables",
+        "operadores",
         "ciclos",
-        "condiciones"
+        "matematica",
+        "teoria-de-numeros"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/91138cb57e20b9fac35be84e5aa74137/raw/icon.svg",
       "order": 38,
@@ -691,11 +785,15 @@
       "slug": "alejandro-relativamente-primos",
       "title": "Relativamente primos",
       "folderName": "Relativamente primos",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Determine si dos números enteros son relativamente primos (coprimos).",
       "topics": [
-        "ciclos",
-        "condiciones"
+        "entrada-salida",
+        "variables",
+        "operadores",
+        "condiciones",
+        "funciones",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/311f3b59f17d2f5f4ca68eabace77906/raw/icon.svg",
       "order": 39,
@@ -709,11 +807,12 @@
       "slug": "alejandro-minimo-comun-multiplo",
       "title": "Mínimo común múltiplo",
       "folderName": "Mínimo común múltiplo",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Implementa una función para calcular el mínimo común múltiplo de dos enteros.",
       "topics": [
-        "ciclos",
-        "condiciones"
+        "funciones",
+        "operadores",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/f5499a6e52a5cf0cb0e9fe1c5d46b8eb/raw/icon.svg",
       "order": 40,
@@ -727,11 +826,14 @@
       "slug": "alejandro-decimal-a-bases",
       "title": "Decimal a bases",
       "folderName": "Decimal a bases",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Convertir un número decimal a binario, octal y hexadecimal sin %o ni %x.",
       "topics": [
+        "entrada-salida",
+        "variables",
+        "operadores",
         "ciclos",
-        "condiciones"
+        "conversiones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/72de786fbd559ea3aa3b98f0cc202a6a/raw/icon.svg",
       "order": 41,
@@ -745,11 +847,14 @@
       "slug": "alejandro-suma-binaria",
       "title": "Suma binaria",
       "folderName": "Suma binaria",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Implementa una función que sume dos números binarios sin convertir a otra notación",
       "topics": [
+        "funciones",
         "ciclos",
-        "condiciones"
+        "condiciones",
+        "operadores",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/789678627cf98ef47c8ecac9a3332ba4/raw/icon.svg",
       "order": 42,
@@ -764,10 +869,14 @@
       "title": "Conjetura de Goldbach",
       "folderName": "Conjetura de Goldbach",
       "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "blurb": "Verifica la conjetura de Goldbach para los primeros 100 números impares.",
       "topics": [
         "ciclos",
-        "condiciones"
+        "condiciones",
+        "funciones",
+        "numeros-primos",
+        "teoria-de-numeros",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/b4030414406ba229f577d98b1f0d89a9/raw/icon.svg",
       "order": 43,
@@ -781,11 +890,14 @@
       "slug": "alejandro-numero-perfecto",
       "title": "Número perfecto",
       "folderName": "Número perfecto",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Indica si un número entero es perfecto (igual a la suma de sus divisores propios).",
       "topics": [
+        "funciones",
         "ciclos",
-        "condiciones"
+        "condiciones",
+        "matematica",
+        "teoria-de-numeros"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/a1412e9f410dad4535006fa88c0b0b2a/raw/icon.svg",
       "order": 44,
@@ -799,11 +911,14 @@
       "slug": "alejandro-adivina-el-numero",
       "title": "Adivina el número",
       "folderName": "Adivina el número",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Adivina un número aleatorio entre 0 y 200 con pistas de mayor/menor.",
       "topics": [
+        "entrada-salida",
+        "variables",
+        "condiciones",
         "ciclos",
-        "condiciones"
+        "aleatoriedad"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/489fa07842d98b6c0a85cfb71fa3edaa/raw/icon.svg",
       "order": 45,
@@ -817,11 +932,14 @@
       "slug": "alejandro-la-maquina-adivina",
       "title": "La máquina adivina",
       "folderName": "La máquina adivina",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "El computador adivina un numero usando busqueda binaria y detecta mentiras del usuario",
       "topics": [
+        "entrada-salida",
+        "condiciones",
         "ciclos",
-        "condiciones"
+        "juegos",
+        "ordenamiento-busqueda"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/43f75b4de0d73cc1eff15d6c7d645a20/raw/icon.svg",
       "order": 46,
@@ -835,11 +953,15 @@
       "slug": "alejandro-cambio-minimo",
       "title": "Cambio mínimo",
       "folderName": "Cambio mínimo",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Calcula la menor cantidad de monedas para entregar el cambio a un comprador.",
       "topics": [
+        "entrada-salida",
+        "variables",
+        "operadores",
+        "condiciones",
         "ciclos",
-        "condiciones"
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/1139acbd6a1a8389b143eac208ad7df6/raw/icon.svg",
       "order": 47,
@@ -853,11 +975,12 @@
       "slug": "alejandro-cambio-con-billetes",
       "title": "Cambio con billetes",
       "folderName": "Cambio con billetes",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Calcula el cambio óptimo usando billetes de distintas denominaciones.",
       "topics": [
-        "ciclos",
-        "condiciones"
+        "matematica",
+        "variables",
+        "operadores"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/a63027d229e47f3a8d56bcd9cb3300da/raw/icon.svg",
       "order": 48,
@@ -871,11 +994,14 @@
       "slug": "alejandro-numeros-mellizos",
       "title": "Números mellizos",
       "folderName": "Números mellizos",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Encuentra y muestra 5 pares de números primos mellizos (diferencia de 2).",
       "topics": [
+        "numeros-primos",
+        "teoria-de-numeros",
         "ciclos",
-        "condiciones"
+        "condiciones",
+        "entrada-salida"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/495880fb93aac91de960154815084c44/raw/icon.svg",
       "order": 49,
@@ -889,11 +1015,15 @@
       "slug": "alejandro-problemas-de-calendario",
       "title": "Problemas de calendario",
       "folderName": "Problemas de calendario",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "hard",
+      "blurb": "Funciones de calendario: año bisiesto, día de semana, fin de semana largo y calendario anual.",
       "topics": [
+        "fechas-calendario",
+        "condiciones",
         "ciclos",
-        "condiciones"
+        "funciones",
+        "operadores",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/215f47b2c84427f20ee728967ac1a7be/raw/icon.svg",
       "order": 50,
@@ -907,11 +1037,14 @@
       "slug": "alejandro-cubo-narcisista",
       "title": "Cubo narcisista",
       "folderName": "Cubo narcisista",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Determina si un entero n es igual a la suma de los cubos de sus cifras decimales.",
       "topics": [
+        "funciones",
         "ciclos",
-        "condiciones"
+        "operadores",
+        "matematica",
+        "teoria-de-numeros"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/5cebc0d7abd1691eb63a22786066a3be/raw/icon.svg",
       "order": 51,
@@ -925,11 +1058,12 @@
       "slug": "alejandro-persistencia-de-un-entero",
       "title": "Persistencia de un entero",
       "folderName": "Persistencia de un entero",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de ciclos, condiciones.",
+      "difficulty": "easy",
+      "blurb": "Calcula la persistencia multiplicativa de un entero.",
       "topics": [
+        "funciones",
         "ciclos",
-        "condiciones"
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/ce56184e96c9cf41416f362498b7aa60/raw/icon.svg",
       "order": 52,
@@ -943,12 +1077,11 @@
       "slug": "alejandro-intercambiar-valores",
       "title": "Intercambiar valores",
       "folderName": "Intercambiar valores",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de arreglos, punteros, matrices.",
+      "difficulty": "beginner",
+      "blurb": "Implementar una función que intercambie dos valores enteros.",
       "topics": [
-        "arreglos",
-        "punteros",
-        "matrices"
+        "funciones",
+        "variables"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/9fab92fdb02592c17d3ed51f70141e83/raw/icon.svg",
       "order": 53,
@@ -962,12 +1095,11 @@
       "slug": "alejandro-encender-bit",
       "title": "Encender bit",
       "folderName": "Encender bit",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de arreglos, punteros, matrices.",
+      "difficulty": "easy",
+      "blurb": "Escribe una función que ponga en 1 un bit específico de un número entero.",
       "topics": [
-        "arreglos",
-        "punteros",
-        "matrices"
+        "bits",
+        "funciones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/613fb8785c358ab2fa33b463b20d48bb/raw/icon.svg",
       "order": 54,
@@ -982,11 +1114,12 @@
       "title": "Invertir bits",
       "folderName": "Invertir bits",
       "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de arreglos, punteros, matrices.",
+      "blurb": "Invierte el orden de los bits de un número entero.",
       "topics": [
-        "arreglos",
-        "punteros",
-        "matrices"
+        "bits",
+        "funciones",
+        "ciclos",
+        "operadores"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/0287aa8dedb11acc2855fd6eaa6d2ad2/raw/icon.svg",
       "order": 55,
@@ -1000,12 +1133,14 @@
       "slug": "alejandro-temperaturas-del-dia",
       "title": "Temperaturas del día",
       "folderName": "Temperaturas del día",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de arreglos, punteros, matrices.",
+      "difficulty": "easy",
+      "blurb": "Ingresa temperaturas por hora, calcula promedio, máxima y mínima con su hora.",
       "topics": [
-        "arreglos",
-        "punteros",
-        "matrices"
+        "entrada-salida",
+        "variables",
+        "operadores",
+        "condiciones",
+        "ciclos"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/f5e824a6d82a531b09cdf553e6d80cf3/raw/icon.svg",
       "order": 56,
@@ -1020,11 +1155,14 @@
       "title": "Estadísticas de arreglo",
       "folderName": "Estadísticas de arreglo",
       "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de arreglos, punteros, matrices.",
+      "blurb": "Estadísticas en arreglo: menor, mayor, promedio, desviación estándar, moda, mediana y grupos adyacentes.",
       "topics": [
         "arreglos",
-        "punteros",
-        "matrices"
+        "ciclos",
+        "funciones",
+        "aleatoriedad",
+        "estadistica",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/0c5be8396dc22b520ba3f17949d08834/raw/icon.svg",
       "order": 57,
@@ -1038,12 +1176,13 @@
       "slug": "alejandro-sumar-arreglos",
       "title": "Sumar arreglos",
       "folderName": "Sumar arreglos",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de arreglos, punteros, matrices.",
+      "difficulty": "easy",
+      "blurb": "Programa que suma dos arreglos de cualquier tamano elemento por elemento.",
       "topics": [
         "arreglos",
-        "punteros",
-        "matrices"
+        "ciclos",
+        "funciones",
+        "entrada-salida"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/3533547c8634352111d5470bfe296e03/raw/icon.svg",
       "order": 58,
@@ -1057,12 +1196,13 @@
       "slug": "alejandro-graficar-arreglo",
       "title": "Graficar arreglo",
       "folderName": "Graficar arreglo",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de arreglos, punteros, matrices.",
+      "difficulty": "easy",
+      "blurb": "Grafica un arreglo de números reales usando un carácter ASCII",
       "topics": [
         "arreglos",
-        "punteros",
-        "matrices"
+        "funciones",
+        "ciclos",
+        "graficos-ascii"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/fb52a826b1fe9ca65136dbf69891a2de/raw/icon.svg",
       "order": 59,
@@ -1076,12 +1216,14 @@
       "slug": "alejandro-comisiones-de-vendedores",
       "title": "Comisiones de vendedores",
       "folderName": "Comisiones de vendedores",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de arreglos, punteros, matrices.",
+      "difficulty": "easy",
+      "blurb": "Calcula comisiones de vendedores según ventas diarias, aplicando tasas del 8% y 9.5% con condicionales.",
       "topics": [
+        "entrada-salida",
+        "condiciones",
+        "ciclos",
         "arreglos",
-        "punteros",
-        "matrices"
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/d059d7fda840617cb8d14d0240a8cfd0/raw/icon.svg",
       "order": 60,
@@ -1095,12 +1237,12 @@
       "slug": "alejandro-multiplicar-arreglos",
       "title": "Multiplicar arreglos",
       "folderName": "Multiplicar arreglos",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de arreglos, punteros, matrices.",
+      "difficulty": "easy",
+      "blurb": "Programa que multiplica elementos de arreglos.",
       "topics": [
         "arreglos",
-        "punteros",
-        "matrices"
+        "operadores",
+        "ciclos"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/a613a8ac8e07002dfad8687f61e39f09/raw/icon.svg",
       "order": 61,
@@ -1114,12 +1256,14 @@
       "slug": "alejandro-posicion-de-la-reina",
       "title": "Posición de la reina",
       "folderName": "Posición de la reina",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de arreglos, punteros, matrices.",
+      "difficulty": "easy",
+      "blurb": "Determina y visualiza los movimientos de la reina en un tablero de ajedrez 8x8",
       "topics": [
-        "arreglos",
-        "punteros",
-        "matrices"
+        "entrada-salida",
+        "variables",
+        "condiciones",
+        "ciclos",
+        "geometria"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/bc6b0dfc0cb7d2d285bde0d7d80ea561/raw/icon.svg",
       "order": 62,
@@ -1134,11 +1278,12 @@
       "title": "Multiplicar matrices",
       "folderName": "Multiplicar matrices",
       "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de arreglos, punteros, matrices.",
+      "blurb": "Multiplica dos matrices cuadradas de dimensión n",
       "topics": [
+        "matrices",
         "arreglos",
-        "punteros",
-        "matrices"
+        "ciclos",
+        "funciones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/f8b4c3a69b44c48d199675f7b654fad4/raw/icon.svg",
       "order": 63,
@@ -1153,11 +1298,13 @@
       "title": "Infección en la piel",
       "folderName": "Infección en la piel",
       "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de arreglos, punteros, matrices.",
+      "blurb": "Simular infección cutánea con propagación, inmunidad y recuperación en cuadrícula 11×11",
       "topics": [
-        "arreglos",
-        "punteros",
-        "matrices"
+        "matrices",
+        "aleatoriedad",
+        "simulacion",
+        "condiciones",
+        "ciclos"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/e084dd702fde13f12a6a51e89134559a/raw/icon.svg",
       "order": 64,
@@ -1171,10 +1318,11 @@
       "slug": "alejandro-funciones-estandar",
       "title": "Funciones estándar",
       "folderName": "Funciones estándar",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "difficulty": "easy",
+      "blurb": "Implementa versiones propias de strlen, strchr, strcpy y strcat en C",
       "topics": [
-        "cadenas"
+        "cadenas",
+        "funciones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/b0d483548b72093a5132a8e26416cb0f/raw/icon.svg",
       "order": 65,
@@ -1188,10 +1336,13 @@
       "slug": "alejandro-convertir-a-mayusculas",
       "title": "Convertir a mayúsculas",
       "folderName": "Convertir a mayúsculas",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "difficulty": "easy",
+      "blurb": "Función que convierte a mayúsculas todas las letras de un string",
       "topics": [
-        "cadenas"
+        "funciones",
+        "cadenas",
+        "conversiones",
+        "condiciones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/2730c69e9df15ac6a6f7bce1004c3734/raw/icon.svg",
       "order": 66,
@@ -1205,10 +1356,12 @@
       "slug": "alejandro-convertir-a-minusculas",
       "title": "Convertir a minúsculas",
       "folderName": "Convertir a minúsculas",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "difficulty": "beginner",
+      "blurb": "Implementa una función que convierta caracteres a minúsculas",
       "topics": [
-        "cadenas"
+        "funciones",
+        "cadenas",
+        "entrada-salida"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/d14555f9bad870ba90bc02df6986224a/raw/icon.svg",
       "order": 67,
@@ -1222,10 +1375,13 @@
       "slug": "alejandro-contar-caracter",
       "title": "Contar caracter",
       "folderName": "Contar caracter",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "difficulty": "easy",
+      "blurb": "Cuenta cuántas veces se repite un carácter en una cadena de texto",
       "topics": [
-        "cadenas"
+        "cadenas",
+        "ciclos",
+        "funciones",
+        "variables"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/0d96d19d959e68879e98df3d7bb93a4f/raw/icon.svg",
       "order": 68,
@@ -1239,10 +1395,13 @@
       "slug": "alejandro-sustituir-caracter",
       "title": "Sustituir caracter",
       "folderName": "Sustituir caracter",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "difficulty": "easy",
+      "blurb": "Sustituye todas las ocurrencias de un caracter en una cadena.",
       "topics": [
-        "cadenas"
+        "funciones",
+        "cadenas",
+        "ciclos",
+        "condiciones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/05e85fdddbcf7863574dcd9ca6f4d6b7/raw/icon.svg",
       "order": 69,
@@ -1256,10 +1415,13 @@
       "slug": "alejandro-invertir-mayusculas",
       "title": "Invertir mayúsculas",
       "folderName": "Invertir mayúsculas",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "difficulty": "easy",
+      "blurb": "Función que invierte el caso de cada letra en un string, dejando números y signos intactos.",
       "topics": [
-        "cadenas"
+        "funciones",
+        "cadenas",
+        "ciclos",
+        "condiciones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/ca87dcfe4ce34e5b956a2e282ad18e49/raw/icon.svg",
       "order": 70,
@@ -1273,10 +1435,13 @@
       "slug": "alejandro-solo-numericos",
       "title": "Solo numéricos",
       "folderName": "Solo numéricos",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "difficulty": "easy",
+      "blurb": "Determina si una cadena contiene solo caracteres numéricos",
       "topics": [
-        "cadenas"
+        "cadenas",
+        "ciclos",
+        "condiciones",
+        "funciones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/90f863f63e987523311f1fd53c3c0a52/raw/icon.svg",
       "order": 71,
@@ -1291,9 +1456,13 @@
       "title": "Cambio de base",
       "folderName": "Cambio de base",
       "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "blurb": "Convertir un numero entre dos bases del 2 al 36 usando cadenas de caracteres",
       "topics": [
-        "cadenas"
+        "cadenas",
+        "conversiones",
+        "matematica",
+        "ciclos",
+        "funciones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/b9ba52b40205b5e63f8c2d8f529dead9/raw/icon.svg",
       "order": 72,
@@ -1307,10 +1476,12 @@
       "slug": "alejandro-mas-funciones-estandar",
       "title": "Más funciones estándar",
       "folderName": "Más funciones estándar",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "difficulty": "easy",
+      "blurb": "Implementa tus propias versiones de strcmp, stricmp, strrchr, atoi e itoa",
       "topics": [
-        "cadenas"
+        "funciones",
+        "cadenas",
+        "conversiones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/bd58738504963104172e0a7618bf2324/raw/icon.svg",
       "order": 73,
@@ -1324,10 +1495,13 @@
       "slug": "alejandro-insertar-string",
       "title": "Insertar string",
       "folderName": "Insertar string",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "difficulty": "easy",
+      "blurb": "Insertar un string en otro en posición dada; retorna -1 si la posición excede el largo.",
       "topics": [
-        "cadenas"
+        "cadenas",
+        "punteros",
+        "funciones",
+        "condiciones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/c59b342fd67d7a86c2b8397fceb47d39/raw/icon.svg",
       "order": 74,
@@ -1341,10 +1515,13 @@
       "slug": "alejandro-posicion-de-substring",
       "title": "Posición de substring",
       "folderName": "Posición de substring",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "difficulty": "easy",
+      "blurb": "Encuentra la posición de un substring dentro de un string, o retorna -1 si no existe.",
       "topics": [
-        "cadenas"
+        "cadenas",
+        "ciclos",
+        "condiciones",
+        "arreglos"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/5ec7d1dd14ff9b3d22aab2394a479c03/raw/icon.svg",
       "order": 75,
@@ -1358,10 +1535,12 @@
       "slug": "alejandro-numero-de-palabras",
       "title": "Número de palabras",
       "folderName": "Número de palabras",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "difficulty": "easy",
+      "blurb": "Contar palabras en un string separadas por uno o más espacios",
       "topics": [
-        "cadenas"
+        "cadenas",
+        "funciones",
+        "ciclos"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/9b677521648a29f43a93f610822fb339/raw/icon.svg",
       "order": 76,
@@ -1375,10 +1554,13 @@
       "slug": "alejandro-invertir-string",
       "title": "Invertir string",
       "folderName": "Invertir string",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "difficulty": "easy",
+      "blurb": "Implementa una función que invierta un string.",
       "topics": [
-        "cadenas"
+        "cadenas",
+        "funciones",
+        "ciclos",
+        "arreglos"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/03028d21e233912e13065552909270f6/raw/icon.svg",
       "order": 77,
@@ -1392,10 +1574,12 @@
       "slug": "alejandro-ocurrencia-derecha",
       "title": "Ocurrencia derecha",
       "folderName": "Ocurrencia derecha",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "difficulty": "easy",
+      "blurb": "Implementar función que retorne la posición de la ocurrencia más a la derecha de un substring en una cadena.",
       "topics": [
-        "cadenas"
+        "cadenas",
+        "ciclos",
+        "funciones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/1490bffb4574d1fa1ce144ebf8c8162e/raw/icon.svg",
       "order": 78,
@@ -1409,10 +1593,12 @@
       "slug": "alejandro-string-al-final",
       "title": "String al final",
       "folderName": "String al final",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "difficulty": "easy",
+      "blurb": "Implementa una función que verifique si un string aparece al final de otro.",
       "topics": [
-        "cadenas"
+        "cadenas",
+        "ciclos",
+        "condiciones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/a767f07dcd91a70a909e434881d8c915/raw/icon.svg",
       "order": 79,
@@ -1426,10 +1612,13 @@
       "slug": "alejandro-eliminar-caracteres",
       "title": "Eliminar caracteres",
       "folderName": "Eliminar caracteres",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "difficulty": "easy",
+      "blurb": "Eliminar una cantidad de caracteres desde una posición en una cadena",
       "topics": [
-        "cadenas"
+        "cadenas",
+        "funciones",
+        "arreglos",
+        "punteros"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/2012803a8fbb196cdad4988ae486cfea/raw/icon.svg",
       "order": 80,
@@ -1443,10 +1632,12 @@
       "slug": "alejandro-eliminar-palabra",
       "title": "Eliminar palabra",
       "folderName": "Eliminar palabra",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "difficulty": "easy",
+      "blurb": "Elimina la n-ésima palabra de una cadena de texto.",
       "topics": [
-        "cadenas"
+        "cadenas",
+        "funciones",
+        "ciclos"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/1f0bb55856302a3d3f323d603c5a16f1/raw/icon.svg",
       "order": 81,
@@ -1460,10 +1651,13 @@
       "slug": "alejandro-contar-palabras-en-archivo",
       "title": "Contar palabras en archivo",
       "folderName": "Contar palabras en archivo",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "difficulty": "easy",
+      "blurb": "Cuenta palabras de un archivo usando redireccionamiento de entrada",
       "topics": [
-        "cadenas"
+        "entrada-salida",
+        "redireccionamiento",
+        "cadenas",
+        "archivos"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/59244eed4ea1e9bce894be10fe57e99b/raw/icon.svg",
       "order": 82,
@@ -1477,10 +1671,12 @@
       "slug": "alejandro-contar-palabras-clave",
       "title": "Contar palabras clave",
       "folderName": "Contar palabras clave",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "difficulty": "easy",
+      "blurb": "Cuenta cuántas veces aparecen while, for e if en un programa en C.",
       "topics": [
-        "cadenas"
+        "entrada-salida",
+        "cadenas",
+        "ciclos"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/cf74f2b25b9ceb16708ecc8196ff3d3a/raw/icon.svg",
       "order": 83,
@@ -1495,9 +1691,11 @@
       "title": "Sumar romanos",
       "folderName": "Sumar romanos",
       "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "blurb": "Crear función que sume dos números romanos representados como strings",
       "topics": [
-        "cadenas"
+        "cadenas",
+        "funciones",
+        "conversiones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/bca1e47e5031ab959bb76d665528768c/raw/icon.svg",
       "order": 84,
@@ -1512,9 +1710,12 @@
       "title": "Restar romanos",
       "folderName": "Restar romanos",
       "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "blurb": "Implementa una función para restar números romanos",
       "topics": [
-        "cadenas"
+        "funciones",
+        "cadenas",
+        "matematica",
+        "conversiones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/e54d69d8ddb63ae492ba80d5bd533ac1/raw/icon.svg",
       "order": 85,
@@ -1529,8 +1730,12 @@
       "title": "Número en letras",
       "folderName": "Número en letras",
       "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "blurb": "Convierte números entre 0 y 10000 a letras. Usa la función numletras y repite hasta ingresar 0.",
       "topics": [
+        "entrada-salida",
+        "condiciones",
+        "ciclos",
+        "funciones",
         "cadenas"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/3f850dfa2e858622eaba04b73f0320ea/raw/icon.svg",
@@ -1545,10 +1750,13 @@
       "slug": "alejandro-aritmetica-grande",
       "title": "Aritmética grande",
       "folderName": "Aritmética grande",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "difficulty": "hard",
+      "blurb": "Implementar suma, resta, multiplicación y división de números grandes usando cadenas de caracteres en C.",
       "topics": [
-        "cadenas"
+        "cadenas",
+        "funciones",
+        "arreglos",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/7825e1573b8e0239adf52de3aa34b6b1/raw/icon.svg",
       "order": 87,
@@ -1562,10 +1770,12 @@
       "slug": "alejandro-frecuencia-de-letras",
       "title": "Frecuencia de letras",
       "folderName": "Frecuencia de letras",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "difficulty": "easy",
+      "blurb": "Calcula la frecuencia de cada letra de un archivo usando redireccionamiento",
       "topics": [
-        "cadenas"
+        "entrada-salida",
+        "arreglos",
+        "redireccionamiento"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/5a795968c6b5e30a799b4a554bf94639/raw/icon.svg",
       "order": 88,
@@ -1579,10 +1789,12 @@
       "slug": "alejandro-eliminar-caracteres-comunes",
       "title": "Eliminar caracteres comunes",
       "folderName": "Eliminar caracteres comunes",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de cadenas.",
+      "difficulty": "easy",
+      "blurb": "Elimina de un string todos los caracteres presentes en otro string.",
       "topics": [
-        "cadenas"
+        "cadenas",
+        "funciones",
+        "ciclos"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/1553dd6c0ec93ffa60643f270a97183f/raw/icon.svg",
       "order": 89,
@@ -1596,10 +1808,12 @@
       "slug": "alejandro-factorial-recursivo",
       "title": "Factorial recursivo",
       "folderName": "Factorial recursivo",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de recursividad.",
+      "difficulty": "easy",
+      "blurb": "Implementa una función recursiva para calcular el factorial de n",
       "topics": [
-        "recursividad"
+        "funciones",
+        "recursividad",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/b404feed34f9112fec5051cdb66c374d/raw/icon.svg",
       "order": 90,
@@ -1613,10 +1827,14 @@
       "slug": "alejandro-sumar-positivos-recursivo",
       "title": "Sumar positivos recursivo",
       "folderName": "Sumar positivos recursivo",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de recursividad.",
+      "difficulty": "easy",
+      "blurb": "Función recursiva que suma dos números enteros positivos",
       "topics": [
-        "recursividad"
+        "funciones",
+        "recursividad",
+        "matematica",
+        "variables",
+        "operadores"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/96bdc9144eabf363cb603af3b96f16ef/raw/icon.svg",
       "order": 91,
@@ -1630,10 +1848,13 @@
       "slug": "alejandro-sumar-negativos-recursivo",
       "title": "Sumar negativos recursivo",
       "folderName": "Sumar negativos recursivo",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de recursividad.",
+      "difficulty": "easy",
+      "blurb": "Repetir ejercicio anterior sumando enteros positivos y negativos con recursión.",
       "topics": [
-        "recursividad"
+        "recursividad",
+        "funciones",
+        "matematica",
+        "condiciones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/2940ce25d1e0cbd43c47f1716a4276ee/raw/icon.svg",
       "order": 92,
@@ -1647,10 +1868,12 @@
       "slug": "alejandro-multiplicacion-recursiva",
       "title": "Multiplicación recursiva",
       "folderName": "Multiplicación recursiva",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de recursividad.",
+      "difficulty": "easy",
+      "blurb": "Multiplica dos enteros positivos usando sumas sucesivas recursivas",
       "topics": [
-        "recursividad"
+        "funciones",
+        "recursividad",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/bd6037b0d647287c42158acf4ec2a16c/raw/icon.svg",
       "order": 93,
@@ -1664,10 +1887,12 @@
       "slug": "alejandro-longitud-recursiva",
       "title": "Longitud recursiva",
       "folderName": "Longitud recursiva",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de recursividad.",
+      "difficulty": "easy",
+      "blurb": "Calcula la longitud de un string usando una función recursiva.",
       "topics": [
-        "recursividad"
+        "cadenas",
+        "recursividad",
+        "funciones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/31f5d74e52badf1af16930c2fb3877b7/raw/icon.svg",
       "order": 94,
@@ -1681,10 +1906,12 @@
       "slug": "alejandro-potencia-recursiva",
       "title": "Potencia recursiva",
       "folderName": "Potencia recursiva",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de recursividad.",
+      "difficulty": "easy",
+      "blurb": "Implementa potencia(b,e) recursivamente retornando b^e",
       "topics": [
-        "recursividad"
+        "funciones",
+        "recursividad",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/3188a89e06cc10c04eb8045ba0048766/raw/icon.svg",
       "order": 95,
@@ -1698,10 +1925,14 @@
       "slug": "alejandro-serie-fibonacci",
       "title": "Serie Fibonacci",
       "folderName": "Serie Fibonacci",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de recursividad.",
+      "difficulty": "easy",
+      "blurb": "Función recursiva Fibonacci: imprimir 15 términos y probar aproximación con 1.618.",
       "topics": [
-        "recursividad"
+        "recursividad",
+        "funciones",
+        "series",
+        "matematica",
+        "ciclos"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/c36fbdacc028b7434c097fd03a54faa1/raw/icon.svg",
       "order": 96,
@@ -1715,10 +1946,14 @@
       "slug": "alejandro-mcd-recursivo",
       "title": "MCD recursivo",
       "folderName": "MCD recursivo",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de recursividad.",
+      "difficulty": "easy",
+      "blurb": "Cálculo recursivo del máximo común divisor usando el operador módulo",
       "topics": [
-        "recursividad"
+        "recursividad",
+        "funciones",
+        "operadores",
+        "matematica",
+        "teoria-de-numeros"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/2753504f0abc8fc568f636fe019a1356/raw/icon.svg",
       "order": 97,
@@ -1732,10 +1967,13 @@
       "slug": "alejandro-binario-recursivo",
       "title": "Binario recursivo",
       "folderName": "Binario recursivo",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de recursividad.",
+      "difficulty": "easy",
+      "blurb": "Imprime un entero en binario usando un algoritmo recursivo.",
       "topics": [
-        "recursividad"
+        "recursividad",
+        "funciones",
+        "conversiones",
+        "entrada-salida"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/75002e458f5af0188073f0cec98341c3/raw/icon.svg",
       "order": 98,
@@ -1749,10 +1987,13 @@
       "slug": "alejandro-invertir-string-recursivo",
       "title": "Invertir string recursivo",
       "folderName": "Invertir string recursivo",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de recursividad.",
+      "difficulty": "easy",
+      "blurb": "Invierte un string recursivamente y lo imprime al revés",
       "topics": [
-        "recursividad"
+        "recursividad",
+        "cadenas",
+        "funciones",
+        "entrada-salida"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/e6209f27cdfa64b207644899f0516c43/raw/icon.svg",
       "order": 99,
@@ -1766,10 +2007,13 @@
       "slug": "alejandro-numero-de-bits-en-1",
       "title": "Número de bits en 1",
       "folderName": "Número de bits en 1",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de recursividad.",
+      "difficulty": "easy",
+      "blurb": "Contar los bits en 1 de un número entero sin signo usando una función recursiva.",
       "topics": [
-        "recursividad"
+        "bits",
+        "recursividad",
+        "funciones",
+        "operadores"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/1b4ac0e4c54b29363d6c1221ceceb89b/raw/icon.svg",
       "order": 100,
@@ -1784,8 +2028,10 @@
       "title": "Invertir string algoritmo",
       "folderName": "Invertir string algoritmo",
       "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de recursividad.",
+      "blurb": "Implementa una función recursiva que invierte un string.",
       "topics": [
+        "funciones",
+        "cadenas",
         "recursividad"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/f7c5c43c488d2588e81ff2ab2c752de6/raw/icon.svg",
@@ -1800,10 +2046,13 @@
       "slug": "alejandro-contar-digitos-recursivo",
       "title": "Contar dígitos recursivo",
       "folderName": "Contar dígitos recursivo",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de recursividad.",
+      "difficulty": "easy",
+      "blurb": "Cuenta los dígitos de un número entero usando un algoritmo recursivo",
       "topics": [
-        "recursividad"
+        "recursividad",
+        "funciones",
+        "operadores",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/f083a1301c04fbe91b78d6649edd41a0/raw/icon.svg",
       "order": 102,
@@ -1817,10 +2066,15 @@
       "slug": "alejandro-hora-decimal",
       "title": "Hora decimal",
       "folderName": "Hora decimal",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de estructuras.",
+      "difficulty": "easy",
+      "blurb": "Convierte hora decimal a formato hh:mm:ss usando funciones y structs",
       "topics": [
-        "estructuras"
+        "entrada-salida",
+        "variables",
+        "operadores",
+        "funciones",
+        "estructuras",
+        "conversiones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/e1f0198e2973e532f7e6146987ef9cdf/raw/icon.svg",
       "order": 103,
@@ -1834,10 +2088,13 @@
       "slug": "alejandro-pausa-en-archivo",
       "title": "Pausa en archivo",
       "folderName": "Pausa en archivo",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de estructuras.",
+      "difficulty": "easy",
+      "blurb": "Imprimir un archivo de texto con pausa cada 20 líneas usando funciones estándar",
       "topics": [
-        "estructuras"
+        "archivos",
+        "cadenas",
+        "ciclos",
+        "entrada-salida"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/f1b7b06e76a76c16adebbc6cd017fde8/raw/icon.svg",
       "order": 104,
@@ -1852,9 +2109,12 @@
       "title": "Días entre fechas",
       "folderName": "Días entre fechas",
       "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de estructuras.",
+      "blurb": "Calcula los días transcurridos entre dos fechas usando una estructura con día, mes y año.",
       "topics": [
-        "estructuras"
+        "estructuras",
+        "funciones",
+        "fechas-calendario",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/3f357c44283ab308cfa0b196c5e23b50/raw/icon.svg",
       "order": 105,
@@ -1868,10 +2128,12 @@
       "slug": "alejandro-aritmetica-de-complejos",
       "title": "Aritmética de complejos",
       "folderName": "Aritmética de complejos",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de estructuras.",
+      "difficulty": "easy",
+      "blurb": "Operaciones aritméticas con números complejos usando structs y funciones.",
       "topics": [
-        "estructuras"
+        "estructuras",
+        "funciones",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/53ce1fe92a76c0a6452b96c72bd31e10/raw/icon.svg",
       "order": 106,
@@ -1885,10 +2147,15 @@
       "slug": "alejandro-promedio-de-estudiantes",
       "title": "Promedio de estudiantes",
       "folderName": "Promedio de estudiantes",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de estructuras.",
+      "difficulty": "easy",
+      "blurb": "Calcula promedios individuales y grupales de 10 estudiantes en 5 practicas, usando las 4 mejores notas.",
       "topics": [
-        "estructuras"
+        "entrada-salida",
+        "operadores",
+        "condiciones",
+        "ciclos",
+        "arreglos",
+        "matrices"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/0a6746163b78ceb6487e15e9bc6f49f3/raw/icon.svg",
       "order": 107,
@@ -1903,9 +2170,11 @@
       "title": "Geometría plana",
       "folderName": "Geometría plana",
       "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de estructuras.",
+      "blurb": "Geometría plana con structs: PUNTO, RECTA y TRIANGULO.",
       "topics": [
-        "estructuras"
+        "geometria",
+        "estructuras",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/07ed2d83e2d8e57ad75bf8986e2df077/raw/icon.svg",
       "order": 108,
@@ -1919,10 +2188,13 @@
       "slug": "alejandro-pendiente-de-recta",
       "title": "Pendiente de recta",
       "folderName": "Pendiente de recta",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de estructuras.",
+      "difficulty": "easy",
+      "blurb": "Calcular la pendiente de una recta a partir de su representación con struct.",
       "topics": [
-        "estructuras"
+        "funciones",
+        "estructuras",
+        "geometria",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/7640637277001713b1dc2037258fd418/raw/icon.svg",
       "order": 109,
@@ -1936,9 +2208,11 @@
       "slug": "alejandro-rectas-relativas",
       "title": "Rectas relativas",
       "folderName": "Rectas relativas",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de estructuras.",
+      "difficulty": "easy",
+      "blurb": "Clasificar la relación entre dos rectas usando su pendiente",
       "topics": [
+        "funciones",
+        "geometria",
         "estructuras"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/55eb404f75df152a083e3e585229732a/raw/icon.svg",
@@ -1953,10 +2227,13 @@
       "slug": "alejandro-determinar-triangulo",
       "title": "Determinar triángulo",
       "folderName": "Determinar triángulo",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de estructuras.",
+      "difficulty": "easy",
+      "blurb": "Determinar si tres puntos forman un triángulo",
       "topics": [
-        "estructuras"
+        "estructuras",
+        "geometria",
+        "funciones",
+        "condiciones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/428b650d4b480723cb7d442bced46e9c/raw/icon.svg",
       "order": 111,
@@ -1970,10 +2247,14 @@
       "slug": "alejandro-tipo-de-triangulo-1",
       "title": "Tipo de triángulo",
       "folderName": "Tipo de triángulo",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de estructuras.",
+      "difficulty": "easy",
+      "blurb": "Clasificar triángulo en equilátero, isósceles o escaleno recibiendo puntero a estructura TRIANGULO.",
       "topics": [
-        "estructuras"
+        "estructuras",
+        "punteros",
+        "funciones",
+        "condiciones",
+        "geometria"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/78fd4f40134b7f1301581dd2e54b5f79/raw/icon.svg",
       "order": 112,
@@ -1988,9 +2269,14 @@
       "title": "Intersección de rectas",
       "folderName": "Intersección de rectas",
       "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de estructuras.",
+      "blurb": "Encuentra el punto de intersección entre dos rectas",
       "topics": [
-        "estructuras"
+        "funciones",
+        "estructuras",
+        "punteros",
+        "condiciones",
+        "geometria",
+        "matematica"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/19132369ba22668e7c5c42ab6049c9d2/raw/icon.svg",
       "order": 113,
@@ -2004,10 +2290,13 @@
       "slug": "alejandro-dibujar-caja",
       "title": "Dibujar caja",
       "folderName": "Dibujar caja",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de estructuras.",
+      "difficulty": "easy",
+      "blurb": "Dibuja un rectángulo en pantalla con asteriscos dadas dos coordenadas.",
       "topics": [
-        "estructuras"
+        "funciones",
+        "ciclos",
+        "variables",
+        "entrada-salida"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/f9b3980aa5796b1cdc4c00c74f872e5e/raw/icon.svg",
       "order": 114,
@@ -2021,10 +2310,13 @@
       "slug": "alejandro-contar-lineas",
       "title": "Contar líneas",
       "folderName": "Contar líneas",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de archivos.",
+      "difficulty": "beginner",
+      "blurb": "Cuenta líneas de un archivo de texto usando redireccionamiento de entrada",
       "topics": [
-        "archivos"
+        "entrada-salida",
+        "redireccionamiento",
+        "variables",
+        "ciclos"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/caf5d658b9e98fdd2057b064b55d466f/raw/icon.svg",
       "order": 115,
@@ -2038,10 +2330,13 @@
       "slug": "alejandro-frecuencia-de-letras-archivo",
       "title": "Frecuencia de letras archivo",
       "folderName": "Frecuencia de letras archivo",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de archivos.",
+      "difficulty": "easy",
+      "blurb": "Calcula la frecuencia de cada letra en un archivo de texto usando funciones estándar de archivos",
       "topics": [
-        "archivos"
+        "archivos",
+        "arreglos",
+        "ciclos",
+        "entrada-salida"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/5bcb604fa28effffed7607ab4454f908/raw/icon.svg",
       "order": 116,
@@ -2055,10 +2350,14 @@
       "slug": "alejandro-eliminar-comentarios",
       "title": "Eliminar comentarios",
       "folderName": "Eliminar comentarios",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de archivos.",
+      "difficulty": "easy",
+      "blurb": "Programa que elimina comentarios de un archivo de código fuente en C.",
       "topics": [
-        "archivos"
+        "archivos",
+        "entrada-salida",
+        "ciclos",
+        "condiciones",
+        "cadenas"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/cd02e27291d874bac8f14d6eb6931984/raw/icon.svg",
       "order": 117,
@@ -2072,10 +2371,12 @@
       "slug": "alejandro-programa-cola",
       "title": "Programa cola",
       "folderName": "Programa cola",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de archivos.",
+      "difficulty": "easy",
+      "blurb": "Programa que imprime las 10 últimas líneas de un archivo de texto",
       "topics": [
-        "archivos"
+        "entrada-salida",
+        "archivos",
+        "cadenas"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/d6e0c46239fa37965b15c0a6fb369845/raw/icon.svg",
       "order": 118,
@@ -2089,10 +2390,12 @@
       "slug": "alejandro-contpal",
       "title": "Contpal",
       "folderName": "Contpal",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de archivos.",
+      "difficulty": "easy",
+      "blurb": "Cuenta las palabras contenidas en un archivo de texto usando entrada/salida por archivos.",
       "topics": [
-        "archivos"
+        "entrada-salida",
+        "archivos",
+        "cadenas"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/c0530ad9077f56a6232ebf2e2fe8e494/raw/icon.svg",
       "order": 119,
@@ -2106,10 +2409,14 @@
       "slug": "alejandro-histograma-de-palabras",
       "title": "Histograma de palabras",
       "folderName": "Histograma de palabras",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de archivos.",
+      "difficulty": "easy",
+      "blurb": "Construye un histograma con las longitudes de palabras de un archivo de texto usando grafarr().",
       "topics": [
-        "archivos"
+        "archivos",
+        "cadenas",
+        "arreglos",
+        "ciclos",
+        "funciones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/b07a47654ccfc2d1a4f7b811a9e984e3/raw/icon.svg",
       "order": 120,
@@ -2123,11 +2430,13 @@
       "slug": "alejandro-aleatorio-entre-0-y-n",
       "title": "Aleatorio entre 0 y n",
       "folderName": "Aleatorio entre 0 y n",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de juegos, simulacion.",
+      "difficulty": "easy",
+      "blurb": "Función aleat(n) que retorna números aleatorios entre 0 y n usando ticks del reloj.",
       "topics": [
-        "juegos",
-        "simulacion"
+        "funciones",
+        "aleatoriedad",
+        "matematica",
+        "variables"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/c055d2b5508e9b247b5bf165af748941/raw/icon.svg",
       "order": 121,
@@ -2141,10 +2450,14 @@
       "slug": "alejandro-mil-lanzamientos",
       "title": "Mil lanzamientos",
       "folderName": "Mil lanzamientos",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de juegos, simulacion.",
+      "difficulty": "beginner",
+      "blurb": "Simula 1000 lanzamientos de un dado y muestra la frecuencia de cada cara.",
       "topics": [
-        "juegos",
+        "aleatoriedad",
+        "arreglos",
+        "ciclos",
+        "entrada-salida",
+        "estadistica",
         "simulacion"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/2fd62988cfe9db6d6f7ad95e58f82030/raw/icon.svg",
@@ -2160,9 +2473,13 @@
       "title": "Tic-Tac-Toe",
       "folderName": "Tic-Tac-Toe",
       "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de juegos, simulacion.",
+      "blurb": "Programa el juego Tic-Tac-Toe (Tres en Raya) contra la computadora.",
       "topics": [
-        "juegos",
+        "entrada-salida",
+        "condiciones",
+        "ciclos",
+        "funciones",
+        "matrices",
         "simulacion"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/d075dd5f8985ec8afbd7cac36c0ff705/raw/icon.svg",
@@ -2177,11 +2494,14 @@
       "slug": "alejandro-maquina-traganiqueles",
       "title": "Máquina traganíqueles",
       "folderName": "Máquina traganíqueles",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de juegos, simulacion.",
+      "difficulty": "easy",
+      "blurb": "Simula una máquina traganíqueles con símbolos aleatorios.",
       "topics": [
-        "juegos",
-        "simulacion"
+        "aleatoriedad",
+        "simulacion",
+        "entrada-salida",
+        "condiciones",
+        "ciclos"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/37534cc6bded2da31b56d3b7cc51dfc5/raw/icon.svg",
       "order": 124,
@@ -2195,11 +2515,13 @@
       "slug": "alejandro-blackjack",
       "title": "Blackjack",
       "folderName": "Blackjack",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de juegos, simulacion.",
+      "difficulty": "easy",
+      "blurb": "Simula el Blackjack donde el jugador compite contra la banca sin pasarse de 21.",
       "topics": [
-        "juegos",
-        "simulacion"
+        "condiciones",
+        "ciclos",
+        "operadores",
+        "aleatoriedad"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/4776655db9f01eb5faa81faa576b5552/raw/icon.svg",
       "order": 125,
@@ -2214,10 +2536,13 @@
       "title": "Aleatorio entre 0 y n",
       "folderName": "Aleatorio entre 0 y n",
       "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de juegos, simulacion.",
+      "blurb": "Implementa el juego Blackjack donde el usuario compite contra la máquina como banca, con barajas aleatorias.",
       "topics": [
         "juegos",
-        "simulacion"
+        "aleatoriedad",
+        "entrada-salida",
+        "ciclos",
+        "condiciones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/37f54c4261ce3dcd42cf538f92c7e857/raw/icon.svg",
       "order": 126,
@@ -2231,11 +2556,14 @@
       "slug": "alejandro-cinco-reinas",
       "title": "Cinco reinas",
       "folderName": "Cinco reinas",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de juegos, simulacion.",
+      "difficulty": "hard",
+      "blurb": "Ubica cinco reinas en un tablero 8×8 dominando todas las casillas",
       "topics": [
-        "juegos",
-        "simulacion"
+        "matrices",
+        "ciclos",
+        "funciones",
+        "simulacion",
+        "juegos"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/276fae54808529d1b904f6d22bc1b619/raw/icon.svg",
       "order": 127,
@@ -2249,11 +2577,13 @@
       "slug": "alejandro-doce-caballos-y-alfiles",
       "title": "Doce caballos y alfiles",
       "folderName": "Doce caballos y alfiles",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de juegos, simulacion.",
+      "difficulty": "hard",
+      "blurb": "Coloca doce caballos y doce alfiles en un tablero de ajedrez sin que se ataquen.",
       "topics": [
         "juegos",
-        "simulacion"
+        "simulacion",
+        "condiciones",
+        "ciclos"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/a33bd34b9349627037b5e93b3fb8d19c/raw/icon.svg",
       "order": 128,
@@ -2267,10 +2597,12 @@
       "slug": "alejandro-tour-del-caballo",
       "title": "Tour del caballo",
       "folderName": "Tour del caballo",
-      "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de juegos, simulacion.",
+      "difficulty": "hard",
+      "blurb": "Haz que un caballo de ajedrez visite las 64 casillas del tablero exactamente una vez.",
       "topics": [
         "juegos",
+        "aleatoriedad",
+        "geometria",
         "simulacion"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/b3faf426bae261cf9a13bd98501d510a/raw/icon.svg",
@@ -2286,10 +2618,12 @@
       "title": "Misioneros y caníbales",
       "folderName": "Misioneros y caníbales",
       "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de juegos, simulacion.",
+      "blurb": "Cruza tres misioneros y tres caníbales por el río sin que los caníbales se coman a los misioneros.",
       "topics": [
-        "juegos",
-        "simulacion"
+        "condiciones",
+        "ciclos",
+        "simulacion",
+        "funciones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/27d5d283a859936ad882cc54321ff4ea/raw/icon.svg",
       "order": 130,
@@ -2304,10 +2638,12 @@
       "title": "Torre de Hanoi",
       "folderName": "Torre de Hanoi",
       "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de juegos, simulacion.",
+      "blurb": "Resuelve el clásico problema de la Torre de Hanoi usando recursividad.",
       "topics": [
-        "juegos",
-        "simulacion"
+        "recursividad",
+        "funciones",
+        "entrada-salida",
+        "condiciones"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/fe384d3a10439b73a96b833650d6a806/raw/icon.svg",
       "order": 131,
@@ -2322,9 +2658,12 @@
       "title": "Juego de la vida",
       "folderName": "Juego de la vida",
       "difficulty": "medium",
-      "blurb": "Programa que aborda conceptos de juegos, simulacion.",
+      "blurb": "Simular el juego de la vida de Conway en una cuadrícula de 15x15 con 5 ciclos.",
       "topics": [
-        "juegos",
+        "matrices",
+        "ciclos",
+        "condiciones",
+        "aleatoriedad",
         "simulacion"
       ],
       "iconUrl": "https://gist.githubusercontent.com/AxelBladelove/c4d96263dfb9dcc0c594fcee34712ce0/raw/icon.svg",

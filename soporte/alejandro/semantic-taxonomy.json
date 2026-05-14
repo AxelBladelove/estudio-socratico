@@ -1,0 +1,41 @@
+{
+  "filters": [
+    "entrada-salida",
+    "variables",
+    "operadores",
+    "condiciones",
+    "ciclos",
+    "funciones",
+    "recursividad",
+    "arreglos",
+    "matrices",
+    "cadenas",
+    "punteros",
+    "estructuras",
+    "archivos",
+    "redireccionamiento",
+    "matematica",
+    "geometria",
+    "series",
+    "conversiones",
+    "numeros-primos",
+    "teoria-de-numeros",
+    "bits",
+    "simulacion",
+    "juegos",
+    "aleatoriedad",
+    "fechas-calendario",
+    "ordenamiento-busqueda",
+    "estadistica",
+    "graficos-ascii",
+    "intermedio",
+    "avanzado"
+  ],
+  "difficulties": [
+    "beginner",
+    "easy",
+    "medium",
+    "hard",
+    "challenge"
+  ]
+}

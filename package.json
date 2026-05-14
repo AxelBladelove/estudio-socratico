@@ -19,6 +19,10 @@
     "exercism:catalog": "powershell -NoProfile -ExecutionPolicy Bypass -File soporte\\exercism\\manager.ps1 -Action catalog",
     "exercism:status": "powershell -NoProfile -ExecutionPolicy Bypass -File soporte\\exercism\\manager.ps1 -Action status",
     "alejandro:gists:publish": "node soporte/gists/publish-alejandro-gists.mjs",
-    "alejandro:gists:manifest": "node soporte/gists/inject-alejandro-manifest.mjs"
+    "alejandro:gists:manifest": "node soporte/gists/inject-alejandro-manifest.mjs",
+    "alejandro:semantic": "node soporte/alejandro/semantic-curate-alejandro.mjs",
+    "alejandro:icons": "node soporte/alejandro/iconify-icons.mjs",
+    "alejandro:semantic:report": "node soporte/alejandro/report-filter-distribution.mjs",
+    "alejandro:semantic:apply": "node soporte/alejandro/apply-semantic-results.mjs"
   }
 }
