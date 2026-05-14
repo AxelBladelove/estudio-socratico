@@ -2,5 +2,5 @@
 setlocal
 
 cd /d "%~dp0"
-call "%~dp0setup\instalar.cmd" -Actualizar
+call "%~dp0_estudio\setup\instalar.cmd" -Actualizar
 exit /b %ERRORLEVEL%

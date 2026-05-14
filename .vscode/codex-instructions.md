@@ -6,9 +6,9 @@ Este workspace esta preparado para la extension de Codex/OpenAI en VS Code
 ## Entrada Principal
 
 - Lee `AGENTS.md` como instrucciones globales del proyecto.
-- Para `@revisar`, sigue `.agent/skills/revisar/SKILL.md`.
-- Para `@ver`, sigue `.agent/skills/ver/SKILL.md`.
-- Para `@sintetizar`, sigue `.agent/skills/sintetizar/SKILL.md`.
+- Para `@revisar`, sigue `_estudio/.agent/skills/revisar/SKILL.md`.
+- Para `@ver`, sigue `_estudio/.agent/skills/ver/SKILL.md`.
+- Para `@sintetizar`, sigue `_estudio/.agent/skills/sintetizar/SKILL.md`.
 
 ## Rol
 

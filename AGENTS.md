@@ -17,7 +17,7 @@ resuelva ejercicios por el.
 ## Flujo Local
 
 - El archivo activo `.c` se compila con `F9` en VS Code/Antigravity.
-- La tarea llama a `soporte/scripts/compilar_y_grabar.bat <archivo.c>`.
+- La tarea llama a `_estudio/soporte/scripts/compilar_y_grabar.bat <archivo.c>`.
 - La identidad local del clon vive en `.estudio_usuario` y determina
   `usuario/...`.
 - Cada intento queda en `usuario/logs/<nombre_del_ejercicio>/bloqueN.log`.
@@ -32,10 +32,10 @@ resuelva ejercicios por el.
 Cuando el usuario escriba `@revisar`, `revisar`, "dame una pista" o algo
 equivalente:
 
-1. Lee `.agent/skills/revisar/SKILL.md`.
+1. Lee `_estudio/.agent/skills/revisar/SKILL.md`.
 2. Resuelve el slug activo desde `.estudio_usuario`; si falta, usa los fallbacks
    descritos en la skill.
-3. Lee `usuario/errores.md`. Si no existe, usa `errores.template.md`
+3. Lee `usuario/errores.md`. Si no existe, usa `_estudio/errores.template.md`
    como base conceptual vacia.
 4. Lee el archivo `.c` activo, el archivo indicado por el usuario o el ultimo
    archivo mencionado por el log reciente.
@@ -51,7 +51,7 @@ ambiguedad, pero no debe dictar cambios exactos ni entregar codigo final.
 Cuando el usuario escriba `@ver`, "ver esta funcion", "haz prueba de escritorio"
 o algo equivalente:
 
-1. Lee `.agent/skills/ver/SKILL.md`.
+1. Lee `_estudio/.agent/skills/ver/SKILL.md`.
 2. Lee el archivo `.c` activo o indicado.
 3. Usa la linea actual del editor o la linea que el usuario indique.
 4. Determina el alcance:
@@ -71,10 +71,10 @@ solo pidio entenderlo.
 
 Cuando el usuario escriba `@sintetizar`, `sintetizar` o "resume la sesion":
 
-1. Lee `.agent/skills/sintetizar/SKILL.md`.
+1. Lee `_estudio/.agent/skills/sintetizar/SKILL.md`.
 2. Analiza los commits y logs de la sesion.
 3. Actualiza `usuario/errores.md` sin borrar entradas existentes. Si no
-   existe, inicializalo desde `errores.template.md` antes de escribir.
+   existe, inicializalo desde `_estudio/errores.template.md` antes de escribir.
 4. Reporta los patrones documentados.
 
 ## Protocolo `@test` / `@validar`
@@ -82,7 +82,7 @@ Cuando el usuario escriba `@sintetizar`, `sintetizar` o "resume la sesion":
 Cuando el usuario escriba `@test`, `@validar`, "crea tests", "valida mi
 solucion" o algo equivalente para un ejercicio que no sea Exercism:
 
-1. Lee `.agent/skills/test/SKILL.md`.
+1. Lee `_estudio/.agent/skills/test/SKILL.md`.
 2. Lee el `.c` activo, el `README.md` visible o
    `.estudio-exercism/support/README.md`, y `.estudio-exercism.json`.
 3. Si el proveedor es Exercism, no generes tests: usa los tests oficiales.

@@ -4,7 +4,7 @@
     {
       "label": "Compilar y Grabar (Sistema Socratico)",
       "type": "shell",
-      "command": ".\\soporte\\scripts\\build.cmd",
+      "command": ".\\_estudio\\soporte\\scripts\\build.cmd",
       "args": [
         "${file}"
       ],
@@ -40,7 +40,7 @@
     {
       "label": "Ejecutar Binario",
       "type": "shell",
-      "command": ".\\soporte\\runtime\\_output.exe",
+      "command": ".\\_estudio\\soporte\\runtime\\_output.exe",
       "group": "test",
       "presentation": {
         "reveal": "always",
@@ -52,7 +52,7 @@
     {
       "label": "Compilar y Grabar (Live Share Terminal)",
       "type": "shell",
-      "command": ".\\soporte\\scripts\\build.cmd",
+      "command": ".\\_estudio\\soporte\\scripts\\build.cmd",
       "args": [
         "--inline",
         "${file}"

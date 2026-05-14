@@ -28,34 +28,34 @@ _tmp_*.txt
 .estudio_usuario
 
 # Runtime local generado por el wrapper de compilacion
-soporte/runtime/
+_estudio/soporte/runtime/
 .output/
-logs/setup/
+_estudio/logs/
 
 # Extension local de VS Code generada por setup
-soporte/vscode/**/node_modules/
-soporte/vscode/**/*.vsix
-soporte/runtime/vscode/
+_estudio/soporte/vscode/**/node_modules/
+_estudio/soporte/vscode/**/*.vsix
+_estudio/soporte/runtime/vscode/
 
 # Configuracion local de APIs auxiliares (nunca guardar tokens)
 .estudio_exercism.local.json
-soporte/exercism/config.local.json
+_estudio/soporte/exercism/config.local.json
 .estudio-drive/
 **/.estudio-tests/
 **/.estudio-drive/
 
 # Artefactos locales de pruebas de agentes
-.agent/*.exe
-.agent/*.bmp
-.agent/*_probe*.c
-.agent/*_probe*.log
-.agent/windows_console_launcher.*
-.agent/start_windows_console_launcher.ps1
+_estudio/.agent/*.exe
+_estudio/.agent/*.bmp
+_estudio/.agent/*_probe*.c
+_estudio/.agent/*_probe*.log
+_estudio/.agent/windows_console_launcher.*
+_estudio/.agent/start_windows_console_launcher.ps1
 
 # NO rastrear estos (son estado interno de maquina, no telemetria):
 logs/*/bloque_actual.txt
 usuario/logs/**/bloque_actual.txt
-usuarios/*/logs/**/bloque_actual.txt
+_estudio/usuarios/*/logs/**/bloque_actual.txt
 
 # SI rastrear estos cuando existan (son telemetria de estudio):
 # usuario/logs/<ejercicio>/bloqueN.log
@@ -63,9 +63,9 @@ usuarios/*/logs/**/bloque_actual.txt
 
 # Extension and VSIX
 *.vsix
-src/generated/
+_estudio/src/generated/
 media/generated/
-soporte/vscode/estudio-exercism/generated/
+_estudio/soporte/vscode/estudio-exercism/generated/
 .generated/gists/
 *.private-manifest.json
 *gist-state*.json

@@ -130,7 +130,7 @@ Esto revisa que todo esté en orden sin instalar ni modificar nada.
 <summary><strong>🛠️ Prefiero instalar Git/GCC/VS Code por mi cuenta</strong></summary>
 
 ```bat
-setup\instalar.cmd -SinWinget
+_estudio\setup\instalar.cmd -SinWinget
 ```
 
 Esto omite las instalaciones automáticas y solo configura el proyecto.
@@ -422,20 +422,10 @@ Funciones disponibles:
 estudio-socratico/
 ├── Ejercicios/                ← Tus archivos .c van aquí
 │   └── Blackjack.c            ← Ejemplo incluido
-├── usuario/                  ← Carpeta personal de cada estudiante
-│   └── tu_nombre/
-│       ├── logs/              ← Historial de intentos
-│       └── errores.md         ← Patrones de error (lo llena @sintetizar)
-├── soporte/
-│   ├── scripts/               ← Motor de compilación y commits
-│   ├── consola/               ← Runtime de consola estilo Code::Blocks
-│   ├── exercism/              ← Backend del panel de ejercicios
-│   └── vscode/                ← Extensión local de VS Code
-├── setup/                     ← Instalador
-├── include/                   ← conio.h y soporte de consola
-├── docs/
-│   └── guia-tecnica.md        ← Documentación técnica (para curiosos)
-├── .agent/skills/             ← Protocolos de IA (@revisar, @ver, etc.)
+├── usuario/                   ← Logs, progreso y errores del estudiante
+│   ├── logs/
+│   └── errores.md
+├── _estudio/                  ← Motor interno, setup, docs, extensión y tooling
 ├── Instalar Estudio Socratico.cmd
 └── Actualizar Estudio Socratico.cmd
 ```
@@ -555,7 +545,7 @@ externa.
 <details>
 <summary><strong>¿Dónde está la documentación técnica?</strong></summary>
 
-En [`docs/guia-tecnica.md`](docs/guia-tecnica.md). Ahí se explica la
+En [`_estudio/docs/guia-tecnica.md`](_estudio/docs/guia-tecnica.md). Ahí se explica la
 arquitectura interna: scripts, logs, ramas, runtime, setup y cómo mantener el
 framework.
 
