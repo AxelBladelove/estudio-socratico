@@ -86,6 +86,26 @@ function ConvertTo-Slug {
     return $slug
 }
 
+function Get-TemplateExerciseFileName {
+    param(
+        [object]$Exercise,
+        [string]$ProviderName,
+        [string]$ExerciseSlug
+    )
+
+    if ($ProviderName -eq "alejandro") {
+        $slug = if (-not [string]::IsNullOrWhiteSpace($Exercise.slug)) { [string]$Exercise.slug } else { $ExerciseSlug }
+        $baseName = $slug -replace '^alejandro-', ''
+        return ((ConvertTo-Slug $baseName) + ".c")
+    }
+
+    if ($Exercise.fileName) {
+        return (ConvertTo-SafeFileName $Exercise.fileName)
+    }
+
+    return "main.c"
+}
+
 function Get-UserSlug {
     param([string]$Root)
 
@@ -1278,7 +1298,7 @@ function Import-TemplateExercise {
         }
     }
 
-    $fileName = if ($exercise.fileName) { ConvertTo-SafeFileName $exercise.fileName } else { "main.c" }
+    $fileName = Get-TemplateExerciseFileName -Exercise $exercise -ProviderName $ProviderName -ExerciseSlug $ExerciseSlug
     $sourcePath = Join-Path $target $fileName
 
     # Alejandro exercises: only the comment block, no C skeleton
