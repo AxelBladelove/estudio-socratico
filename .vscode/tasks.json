@@ -35,7 +35,7 @@
           "message": 5
         }
       },
-      "detail": "Compila el archivo .c activo, ejecuta en una consola externa estilo Code::Blocks, registra telemetria en usuarios/<usuario>/... y hace un commit automatico etiquetado por usuario."
+      "detail": "Compila el archivo .c activo, ejecuta en una consola externa estilo Code::Blocks, registra telemetria en usuario/... y hace un commit automatico etiquetado por usuario."
     },
     {
       "label": "Ejecutar Binario",

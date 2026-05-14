@@ -19,12 +19,12 @@ resuelva ejercicios por el.
 - El archivo activo `.c` se compila con `F9` en VS Code/Antigravity.
 - La tarea llama a `soporte/scripts/compilar_y_grabar.bat <archivo.c>`.
 - La identidad local del clon vive en `.estudio_usuario` y determina
-  `usuarios/<usuario>/...`.
-- Cada intento queda en `usuarios/<usuario>/logs/<nombre_del_ejercicio>/bloqueN.log`.
+  `usuario/...`.
+- Cada intento queda en `usuario/logs/<nombre_del_ejercicio>/bloqueN.log`.
 - El script tambien hace commits automaticos con mensajes
   `intento_<usuario>_*_<duracion>_exitN`.
-- El setup inicial crea `usuarios/<usuario>/errores.md` vacio si hace falta.
-- No borres logs, commits ni `usuarios/<usuario>/errores.md` sin una orden
+- El setup inicial crea `usuario/errores.md` vacio si hace falta.
+- No borres logs, commits ni `usuario/errores.md` sin una orden
   explicita del usuario.
 
 ## Protocolo `@revisar`
@@ -35,7 +35,7 @@ equivalente:
 1. Lee `.agent/skills/revisar/SKILL.md`.
 2. Resuelve el slug activo desde `.estudio_usuario`; si falta, usa los fallbacks
    descritos en la skill.
-3. Lee `usuarios/<slug>/errores.md`. Si no existe, usa `errores.template.md`
+3. Lee `usuario/errores.md`. Si no existe, usa `errores.template.md`
    como base conceptual vacia.
 4. Lee el archivo `.c` activo, el archivo indicado por el usuario o el ultimo
    archivo mencionado por el log reciente.
@@ -73,7 +73,7 @@ Cuando el usuario escriba `@sintetizar`, `sintetizar` o "resume la sesion":
 
 1. Lee `.agent/skills/sintetizar/SKILL.md`.
 2. Analiza los commits y logs de la sesion.
-3. Actualiza `usuarios/<slug>/errores.md` sin borrar entradas existentes. Si no
+3. Actualiza `usuario/errores.md` sin borrar entradas existentes. Si no
    existe, inicializalo desde `errores.template.md` antes de escribir.
 4. Reporta los patrones documentados.
 

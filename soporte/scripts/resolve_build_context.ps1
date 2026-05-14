@@ -101,6 +101,33 @@ function Get-UserSlug {
     return $slug
 }
 
+function Resolve-UserDataRoot {
+    param(
+        [string]$Root,
+        [string]$Slug,
+        [switch]$Create
+    )
+
+    $canonical = Join-Path $Root 'usuario'
+    if (Test-Path -LiteralPath $canonical) {
+        return $canonical
+    }
+
+    $legacy = Join-Path $Root ('usuarios/' + $Slug)
+    if (Test-Path -LiteralPath $legacy) {
+        if ($Create) {
+            Move-Item -LiteralPath $legacy -Destination $canonical
+            return $canonical
+        }
+        return $legacy
+    }
+
+    if ($Create) {
+        New-Item -ItemType Directory -Path $canonical -Force | Out-Null
+    }
+    return $canonical
+}
+
 function Get-GitAuthor {
     param(
         [string]$Root,
@@ -183,7 +210,8 @@ function Get-ExerciseDuration {
         [datetime]$Now
     )
 
-    $userDir = Join-Path $Root ('usuarios/' + $Slug + '/logs/' + $ExerciseName)
+    $userRoot = Resolve-UserDataRoot -Root $Root -Slug $Slug
+    $userDir = Join-Path $userRoot ('logs/' + $ExerciseName)
     $legacyDir = Join-Path $Root ('logs/' + $ExerciseName)
     $candidate = $null
 
@@ -239,7 +267,8 @@ function Test-RebuildNeeded {
 $now = Get-Date
 $slug = Get-UserSlug -RawName $UserSource -Root $RepoRoot
 $gitAuthor = Get-GitAuthor -Root $RepoRoot -Slug $slug
-$markerFile = Join-Path $RepoRoot ('usuarios/' + $slug + '/logs/' + $BaseName + '/bloque_actual.txt')
+$userRoot = Resolve-UserDataRoot -Root $RepoRoot -Slug $slug -Create
+$markerFile = Join-Path $userRoot ('logs/' + $BaseName + '/bloque_actual.txt')
 $blockNumber = Get-BlockNumber -MarkerFile $markerFile -Now $now
 $duration = Get-ExerciseDuration -Root $RepoRoot -Slug $slug -ExerciseName $BaseName -Now $now
 

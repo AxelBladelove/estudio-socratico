@@ -7,14 +7,14 @@
                                  "folder":  "C:\\Users\\AxelBlade\\.gemini\\antigravity\\scratch\\estudio-socratico\\Ejercicios\\Hello World",
                                  "updatedAt":  "2026-05-09T19:07:13.5843007-04:00"
                              },
-    "exercism:grains":  {
-                            "provider":  "exercism",
-                            "slug":  "grains",
-                            "title":  "Grains",
-                            "status":  "completed",
-                            "folder":  "C:\\Users\\AxelBlade\\.gemini\\antigravity\\scratch\\estudio-socratico\\Ejercicios\\Grains",
-                            "updatedAt":  "2026-05-10T04:53:45.3468687-04:00"
-                        },
+    "alejandro:alejandro-suma-hasta-n":  {
+                                             "provider":  "alejandro",
+                                             "slug":  "alejandro-suma-hasta-n",
+                                             "title":  "Suma hasta N",
+                                             "status":  "in_progress",
+                                             "folder":  "C:\\Users\\axelb\\estudio-socratico\\Ejercicios\\Suma hasta N",
+                                             "updatedAt":  "2026-05-14T15:39:12.3975013-04:00"
+                                         },
     "alejandro:alejandro-imprimir-nombre-n-veces":  {
                                                         "provider":  "alejandro",
                                                         "slug":  "alejandro-imprimir-nombre-n-veces",
@@ -23,6 +23,14 @@
                                                         "folder":  "C:\\Users\\axelb\\estudio-socratico\\Ejercicios\\Imprimir nombre N veces",
                                                         "updatedAt":  "2026-05-14T01:46:02.6322610-04:00"
                                                     },
+    "exercism:grains":  {
+                            "provider":  "exercism",
+                            "slug":  "grains",
+                            "title":  "Grains",
+                            "status":  "completed",
+                            "folder":  "C:\\Users\\AxelBlade\\.gemini\\antigravity\\scratch\\estudio-socratico\\Ejercicios\\Grains",
+                            "updatedAt":  "2026-05-10T04:53:45.3468687-04:00"
+                        },
     "alejandro:parte-ii-5-blackjack-implementacion":  {
                                                           "provider":  "alejandro",
                                                           "slug":  "parte-ii-5-blackjack-implementacion",

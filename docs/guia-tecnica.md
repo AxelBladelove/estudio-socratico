@@ -38,7 +38,7 @@ El flujo principal es:
 6. Si compila, abre una consola externa estilo Code::Blocks usando
    `soporte/runtime/_output.exe`.
 7. Al cerrar la consola, `finalizar_intento.bat` agrega el `.c`, el log y
-   `usuarios/<slug>/errores.md` al commit automatico.
+   `usuario/errores.md` al commit automatico.
 
 ## Archivos Principales
 
@@ -70,8 +70,8 @@ axel
 Ese slug decide:
 
 ```text
-usuarios/axel/errores.md
-usuarios/axel/logs/<ejercicio>/bloqueN.log
+usuario/errores.md
+usuario/logs/<ejercicio>/bloqueN.log
 ```
 
 `.estudio_usuario` esta ignorado por Git porque cada clon puede pertenecer a una
@@ -103,7 +103,7 @@ El setup:
 - instala o valida Exercism CLI;
 - configura Git local;
 - escribe `.estudio_usuario`;
-- crea `usuarios/<slug>/errores.md` vacio si falta;
+- crea `usuario/errores.md` vacio si falta;
 - crea o cambia a la rama personal cuando es posible;
 - valida GCC/MSYS2;
 - instala `make` y `mingw32-make` en MSYS2 para tests de Exercism C;
@@ -259,7 +259,7 @@ Exercism usa la configuracion global del CLI en la PC del estudiante:
 exercism configure --token TU_TOKEN
 ```
 
-El proyecto no guarda ese token en Git ni en `usuarios/`. El setup solo valida
+El proyecto no guarda ese token en Git ni en `usuario/`. El setup solo valida
 si existe y muestra una instruccion si falta.
 
 Para traducciones automaticas se lee primero la clave compartida del repo en
@@ -305,7 +305,7 @@ lugar de abrir una ventana externa.
 Los logs por usuario son la telemetria principal:
 
 ```text
-usuarios/<slug>/logs/<ejercicio>/bloqueN.log
+usuario/logs/<ejercicio>/bloqueN.log
 ```
 
 Cada log contiene:
@@ -322,7 +322,7 @@ Cada log contiene:
 
 ## Errores.md
 
-`usuarios/<slug>/errores.md` empieza vacio en la version 1.0. La skill
+`usuario/errores.md` empieza vacio en la version 1.0. La skill
 `@sintetizar` puede actualizarlo al final de una sesion para convertirlo en una
 memoria de patrones.
 
@@ -411,7 +411,7 @@ La release 1.0 debe quedar limpia:
 
 - un solo `.c` de ejemplo: `Ejercicios/Blackjack.c`;
 - sin logs historicos versionados;
-- `usuarios/*/errores.md` vacios;
+- `usuario/errores.md` vacios;
 - runtime generado ignorado por Git;
 - setup capaz de preparar una maquina nueva;
 - README principal para estudiantes;

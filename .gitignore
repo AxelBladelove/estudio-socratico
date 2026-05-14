@@ -4,8 +4,6 @@
 a.out
 *.pdf
 .pdf
-!adjuntar/*.pdf
-!adjuntar/**/*.pdf
 
 # Objetos
 *.o
@@ -56,11 +54,12 @@ soporte/exercism/config.local.json
 
 # NO rastrear estos (son estado interno de maquina, no telemetria):
 logs/*/bloque_actual.txt
+usuario/logs/**/bloque_actual.txt
 usuarios/*/logs/**/bloque_actual.txt
 
 # SI rastrear estos cuando existan (son telemetria de estudio):
-# usuarios/<usuario>/logs/<ejercicio>/bloqueN.log
-# usuarios/<usuario>/errores.md
+# usuario/logs/<ejercicio>/bloqueN.log
+# usuario/errores.md
 
 # Extension and VSIX
 *.vsix

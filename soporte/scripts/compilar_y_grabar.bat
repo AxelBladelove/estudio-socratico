@@ -221,11 +221,12 @@ for /f "usebackq delims=" %%V in (`powershell -NoProfile -ExecutionPolicy Bypass
 set "GIT_COMMIT_NAME=%GIT_AUTHOR_NAME%"
 set "GIT_COMMIT_EMAIL=%GIT_AUTHOR_EMAIL%"
 if not exist "%USUARIO_CONFIG%" > "%USUARIO_CONFIG%" echo %USUARIO_SLUG%
-set "USUARIO_DIR=%REPO_ROOT%\usuarios\%USUARIO_SLUG%"
+set "USUARIO_DIR=%REPO_ROOT%\usuario"
+set "USUARIO_LEGACY_DIR=%REPO_ROOT%\usuarios\%USUARIO_SLUG%"
 set "LOGS_ROOT=%USUARIO_DIR%\logs"
 set "ERRORES_FILE=%USUARIO_DIR%\errores.md"
 
-if not exist "%REPO_ROOT%\usuarios\" mkdir "%REPO_ROOT%\usuarios\"
+if not exist "%USUARIO_DIR%\" if exist "%USUARIO_LEGACY_DIR%\" move "%USUARIO_LEGACY_DIR%" "%USUARIO_DIR%" >nul
 if not exist "%USUARIO_DIR%\" mkdir "%USUARIO_DIR%\"
 if not exist "%LOGS_ROOT%\" mkdir "%LOGS_ROOT%\"
 if not exist "%LOGS_ROOT%\%NOMBRE_BASE%\" mkdir "%LOGS_ROOT%\%NOMBRE_BASE%\"

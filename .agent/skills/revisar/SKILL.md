@@ -37,7 +37,7 @@ Antes de responder, intenta reunir este contexto en este orden.
 
 1. Lee `AGENTS.md` para confirmar el protocolo del repo.
 2. Lee `.estudio_usuario` y resuelve el slug activo.
-3. Lee `usuarios/<slug>/errores.md` si existe.
+3. Lee `usuario/errores.md` si existe.
 4. Lee el archivo `.c` activo, el archivo indicado por el estudiante o, si no
    hay archivo claro, el ultimo archivo mencionado en el log mas reciente.
 5. Lee el ultimo log solo cuando aporte algo:
@@ -49,7 +49,7 @@ Antes de responder, intenta reunir este contexto en este orden.
 
 Para encontrar el ultimo log, prioriza:
 
-1. `usuarios/<slug>/logs/<ejercicio>/bloqueN.log`
+1. `usuario/logs/<ejercicio>/bloqueN.log`
 2. `logs/<ejercicio>/bloqueN.log` como legado
 
 Usa el `N` mas alto o el archivo mas reciente. Si el log contiene una linea

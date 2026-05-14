@@ -128,6 +128,33 @@ function Get-UserSlug {
     return (ConvertTo-Slug $env:USERNAME)
 }
 
+function Resolve-UserDataRoot {
+    param(
+        [string]$Root,
+        [string]$Slug,
+        [switch]$Create
+    )
+
+    $canonical = Join-Path $Root "usuario"
+    if (Test-Path -LiteralPath $canonical) {
+        return $canonical
+    }
+
+    $legacy = Join-Path $Root ("usuarios\" + $Slug)
+    if (Test-Path -LiteralPath $legacy) {
+        if ($Create) {
+            Move-Item -LiteralPath $legacy -Destination $canonical
+            return $canonical
+        }
+        return $legacy
+    }
+
+    if ($Create) {
+        New-Item -ItemType Directory -Path $canonical -Force | Out-Null
+    }
+    return $canonical
+}
+
 function Get-GitAuthor {
     param(
         [string]$Root,
@@ -1068,7 +1095,8 @@ function Save-Progress {
     )
 
     $userSlug = Get-UserSlug -Root $Root
-    $dir = Join-Path $Root ("usuarios\" + $userSlug + "\exercism")
+    $userRoot = Resolve-UserDataRoot -Root $Root -Slug $userSlug -Create
+    $dir = Join-Path $userRoot "exercism"
     if (-not (Test-Path -LiteralPath $dir)) {
         New-Item -ItemType Directory -Path $dir -Force | Out-Null
     }
@@ -1461,9 +1489,10 @@ function Get-ExerciseLogContext {
     )
 
     $userSlug = Get-UserSlug -Root $Root
+    $userRoot = Resolve-UserDataRoot -Root $Root -Slug $userSlug -Create
     $title = if ($Meta.title) { $Meta.title } else { Split-Path $ExerciseRoot -Leaf }
-    $logsDir = Join-Path $Root ("usuarios\" + $userSlug + "\logs\" + (ConvertTo-Slug $title))
-    $erroresFile = Join-Path $Root ("usuarios\" + $userSlug + "\errores.md")
+    $logsDir = Join-Path $userRoot ("logs\" + (ConvertTo-Slug $title))
+    $erroresFile = Join-Path $userRoot "errores.md"
     if (-not (Test-Path $logsDir)) { New-Item -ItemType Directory -Path $logsDir -Force | Out-Null }
     if (-not (Test-Path $erroresFile)) { New-Item -ItemType File -Path $erroresFile -Force | Out-Null }
     $timestamp = Get-Date -Format "yyyy-MM-ddTHH-mm-ss"
@@ -1691,8 +1720,9 @@ function Invoke-ExercismTest {
         -Slug $meta.slug
     $makeCommand = Get-ExercismMakeCommand -SupportRoot $testWorkspace
 
-    $logsDir = Join-Path $Root ("usuarios\" + $userSlug + "\logs\" + (ConvertTo-Slug $meta.title))
-    $erroresFile = Join-Path $Root ("usuarios\" + $userSlug + "\errores.md")
+    $userRoot = Resolve-UserDataRoot -Root $Root -Slug $userSlug -Create
+    $logsDir = Join-Path $userRoot ("logs\" + (ConvertTo-Slug $meta.title))
+    $erroresFile = Join-Path $userRoot "errores.md"
     if (-not (Test-Path $logsDir)) { New-Item -ItemType Directory -Path $logsDir -Force | Out-Null }
     if (-not (Test-Path $erroresFile)) { New-Item -ItemType File -Path $erroresFile -Force | Out-Null }
 

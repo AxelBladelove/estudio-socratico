@@ -77,7 +77,7 @@ El instalador te pide solo dos cosas:
 
 Al terminar quedan listos:
 - ✅ El atajo <kbd>F9</kbd> para compilar
-- ✅ Tu carpeta personal (`usuarios/tu_nombre/`)
+- ✅ Tu carpeta personal (`usuario/`)
 - ✅ El historial de intentos vacío y listo para empezar
 - ✅ El panel de ejercicios dentro de VS Code
 
@@ -166,7 +166,7 @@ automáticamente:
 Los registros se agrupan en bloques de ~45 minutos:
 
 ```
-usuarios/tu_nombre/logs/nombre_del_ejercicio/
+usuario/logs/nombre_del_ejercicio/
 ├── bloque1.log
 ├── bloque2.log
 └── bloque3.log
@@ -247,7 +247,7 @@ Mira la barra de estado de VS Code, abajo a la izquierda. Dice algo como
 logs de la sesión, detecta patrones de error y actualiza tu archivo personal:
 
 ```
-usuarios/tu_nombre/errores.md
+usuario/errores.md
 ```
 
 Ese archivo se convierte en tu memoria de estudio: errores frecuentes,
@@ -357,7 +357,7 @@ El instalador te avisa si falta. El token **no se guarda** en el repositorio.
 Cuando te instalas por primera vez, el proyecto crea una carpeta solo para ti:
 
 ```
-usuarios/tu_nombre/
+usuario/
 ├── logs/              ← Historial de todos tus intentos
 │   ├── Blackjack/
 │   │   ├── bloque1.log
@@ -406,7 +406,7 @@ Funciones disponibles:
 estudio-socratico/
 ├── Ejercicios/                ← Tus archivos .c van aquí
 │   └── Blackjack.c            ← Ejemplo incluido
-├── usuarios/                  ← Carpeta personal de cada estudiante
+├── usuario/                  ← Carpeta personal de cada estudiante
 │   └── tu_nombre/
 │       ├── logs/              ← Historial de intentos
 │       └── errores.md         ← Patrones de error (lo llena @sintetizar)

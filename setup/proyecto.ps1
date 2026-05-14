@@ -27,7 +27,7 @@ function Ensure-ProjectFolders {
         [switch]$SoloVerificar
     )
 
-    foreach ($folder in @("logs", "Ejercicios", "usuarios")) {
+    foreach ($folder in @("logs", "Ejercicios", "usuario")) {
         New-SetupDirectory -Path (Join-Path $RepoRoot $folder) -SoloVerificar:$SoloVerificar
     }
 }
@@ -201,13 +201,57 @@ function Get-ProjectCurrentUserSlug {
 
 function Get-ProjectUserRegistryPath {
     param([string]$RepoRoot)
+    return (Join-Path $RepoRoot "usuario\registro.json")
+}
+
+function Get-LegacyProjectUserRegistryPath {
+    param([string]$RepoRoot)
     return (Join-Path $RepoRoot "usuarios\registro.json")
+}
+
+function Resolve-ProjectUserDirectory {
+    param(
+        [string]$RepoRoot,
+        [AllowNull()][string]$UsuarioSlug,
+        [switch]$Create,
+        [switch]$SoloVerificar
+    )
+
+    $canonical = Join-Path $RepoRoot "usuario"
+    if (Test-Path -LiteralPath $canonical) {
+        return $canonical
+    }
+
+    if (Test-UsableGitIdentityValue -Value $UsuarioSlug) {
+        $legacy = Join-Path $RepoRoot ("usuarios\" + (ConvertTo-ProjectUserSlug -Value $UsuarioSlug))
+        if (Test-Path -LiteralPath $legacy) {
+            if ($Create) {
+                if ($SoloVerificar) {
+                    Write-SetupInfo "[SoloVerificar] Migraria $legacy a usuario."
+                } else {
+                    Move-Item -LiteralPath $legacy -Destination $canonical
+                    Write-SetupSuccess "Carpeta de usuario migrada: $legacy -> usuario."
+                }
+                return $canonical
+            }
+            return $legacy
+        }
+    }
+
+    if ($Create -and -not $SoloVerificar) {
+        New-Item -ItemType Directory -Path $canonical -Force | Out-Null
+    }
+    return $canonical
 }
 
 function Read-ProjectUserRegistry {
     param([string]$RepoRoot)
 
     $path = Get-ProjectUserRegistryPath -RepoRoot $RepoRoot
+    $legacyPath = Get-LegacyProjectUserRegistryPath -RepoRoot $RepoRoot
+    if ((-not (Test-Path -LiteralPath $path)) -and (Test-Path -LiteralPath $legacyPath)) {
+        $path = $legacyPath
+    }
     if (-not (Test-Path -LiteralPath $path)) {
         return [pscustomobject]@{
             version = 1
@@ -222,7 +266,7 @@ function Read-ProjectUserRegistry {
         }
         return $registry
     } catch {
-        Write-SetupWarning "No pude leer usuarios\registro.json; se ignorara este registro."
+        Write-SetupWarning "No pude leer el registro de usuario; se ignorara este registro."
         return [pscustomobject]@{
             version = 1
             users = @()
@@ -268,7 +312,7 @@ function Set-ProjectUserRegistryEntry {
     $UsuarioSlug = ConvertTo-ProjectUserSlug -Value $UsuarioSlug
     $path = Get-ProjectUserRegistryPath -RepoRoot $RepoRoot
     if ($SoloVerificar) {
-        Write-SetupInfo ("[SoloVerificar] Actualizaria usuarios\registro.json: {0} -> {1}." -f $GitHubUsuario, $UsuarioSlug)
+        Write-SetupInfo ("[SoloVerificar] Actualizaria usuario\registro.json: {0} -> {1}." -f $GitHubUsuario, $UsuarioSlug)
         return
     }
 
@@ -834,22 +878,22 @@ function Move-ProjectUserDirectory {
     }
 
     $oldDir = Join-Path $RepoRoot ("usuarios\" + $PreviousUsuarioSlug)
-    $newDir = Join-Path $RepoRoot ("usuarios\" + $UsuarioSlug)
+    $newDir = Join-Path $RepoRoot "usuario"
     if (-not (Test-Path -LiteralPath $oldDir)) {
         return
     }
     if (Test-Path -LiteralPath $newDir) {
-        Write-SetupWarning "Ya existe usuarios\$UsuarioSlug; no se movera usuarios\$PreviousUsuarioSlug automaticamente."
+        Write-SetupWarning "Ya existe usuario; no se movera usuarios\$PreviousUsuarioSlug automaticamente."
         return
     }
 
     if ($SoloVerificar) {
-        Write-SetupInfo "[SoloVerificar] Renombraria usuarios\$PreviousUsuarioSlug a usuarios\$UsuarioSlug."
+        Write-SetupInfo "[SoloVerificar] Migraria usuarios\$PreviousUsuarioSlug a usuario."
         return
     }
 
     Move-Item -LiteralPath $oldDir -Destination $newDir
-    Write-SetupSuccess "Carpeta de usuario renombrada: usuarios\$PreviousUsuarioSlug -> usuarios\$UsuarioSlug."
+    Write-SetupSuccess "Carpeta de usuario migrada: usuarios\$PreviousUsuarioSlug -> usuario."
 }
 
 function Rename-ProjectUserBranch {
@@ -951,7 +995,7 @@ function Initialize-ProjectUser {
         [switch]$Reconfigurar
     )
 
-    $usuarioDir = Join-Path $RepoRoot ("usuarios\" + $UsuarioSlug)
+    $usuarioDir = Resolve-ProjectUserDirectory -RepoRoot $RepoRoot -UsuarioSlug $UsuarioSlug -Create -SoloVerificar:$SoloVerificar
     $logsDir = Join-Path $usuarioDir "logs"
     $erroresPath = Join-Path $usuarioDir "errores.md"
     $usuarioConfig = Join-Path $RepoRoot ".estudio_usuario"
@@ -966,7 +1010,7 @@ function Initialize-ProjectUser {
 
     if ($SoloVerificar) {
         Write-SetupInfo "[SoloVerificar] Escribiria .estudio_usuario con '$UsuarioSlug'."
-        Write-SetupInfo "[SoloVerificar] Prepararia usuarios\$UsuarioSlug\errores.md vacio si no existe."
+        Write-SetupInfo "[SoloVerificar] Prepararia usuario\errores.md vacio si no existe."
     } else {
         if (-not (Test-Path $usuarioDir)) {
             New-Item -ItemType Directory -Path $usuarioDir -Force | Out-Null

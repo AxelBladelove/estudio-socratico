@@ -12,13 +12,13 @@ axel
 Con ese valor, el framework usa:
 
 ```text
-usuarios/axel/errores.md
-usuarios/axel/logs/<ejercicio>/bloqueN.log
+usuario/errores.md
+usuario/logs/<ejercicio>/bloqueN.log
 ```
 
 ## Registro GitHub/Rama
 
-`usuarios/registro.json` vincula cada cuenta real de GitHub con su rama del
+`usuario/registro.json` vincula cada cuenta real de GitHub con su rama del
 proyecto:
 
 ```text
@@ -28,7 +28,7 @@ Erickcruzho   -> erick
 
 Ese registro permite que una laptop nueva reconozca la cuenta autenticada con
 `gh auth` y cambie a la rama correcta, sin crear una rama nueva por accidente.
-El alias, `.estudio_usuario`, la carpeta `usuarios/<alias>` y la rama personal
+El alias, `.estudio_usuario`, la carpeta `usuario` y la rama personal
 deben mantenerse sincronizados.
 
 ## En La Version 1.0
