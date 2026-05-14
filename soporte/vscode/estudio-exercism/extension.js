@@ -357,7 +357,6 @@ function renderCatalogHtml(catalog) {
   const providers = [
     ["all", "Todas"],
     ["exercism", "Exercism C"],
-    ["w3schools", "W3 / w3resource"],
     ["alejandro", "PDF Alejandro"],
   ];
   const tokenNotice = catalog.exercismCli && catalog.exercismCli.tokenConfigured
@@ -523,7 +522,6 @@ function statusGroupName(status) {
 
 function providerInitials(exercise) {
   if (exercise.provider === "alejandro") return "AL";
-  if (exercise.provider === "w3schools") return "W3";
   return "EX";
 }
 

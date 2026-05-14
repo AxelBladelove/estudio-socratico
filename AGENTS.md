@@ -86,7 +86,7 @@ solucion" o algo equivalente para un ejercicio que no sea Exercism:
 2. Lee el `.c` activo, el `README.md` visible o
    `.estudio-exercism/support/README.md`, y `.estudio-exercism.json`.
 3. Si el proveedor es Exercism, no generes tests: usa los tests oficiales.
-4. Para PDF Alejandro, W3Schools o w3resource, genera tests en
+4. Para PDF Alejandro, genera tests en
    `.estudio-tests/` siguiendo el layout de la skill.
 5. No cambies el codigo del estudiante ni escribas la solucion.
 6. Explica solo el alcance de los tests y como ejecutarlos.

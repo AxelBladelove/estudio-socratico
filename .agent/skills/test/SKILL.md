@@ -3,7 +3,7 @@ name: test
 description: >
   Genera o actualiza tests locales para ejercicios no-Exercism de Estudio
   Socratico cuando el usuario escriba @test, @validar, "crea tests",
-  "valida mi solucion" o pida comprobar un ejercicio PDF/W3Schools sin tests
+  "valida mi solucion" o pida comprobar un ejercicio PDF Alejandro sin tests
   oficiales. Usa el modelo IA activo del usuario, no la API key compartida de
   Gemini, y crea un harness oculto en .estudio-tests.
 ---

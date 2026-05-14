@@ -100,8 +100,8 @@ function printHelp() {
 Uso:
   npm run drive:auth
   npm run drive:check
-  npm run drive:generate -- [--provider w3schools|alejandro] [--allow-fallback]
-  npm run drive:sync -- [--provider w3schools|alejandro] [--dry-run] [--keep-local-text] [--allow-fallback]
+  npm run drive:generate -- [--provider alejandro] [--allow-fallback]
+  npm run drive:sync -- [--provider alejandro] [--dry-run] [--keep-local-text] [--allow-fallback]
   npm run drive:generate:alejandro
   npm run drive:sync:alejandro
 

@@ -21,10 +21,11 @@ motor.
 - Los ejercicios no-Exercism pueden tener tests generados por IA en
   `.estudio-tests/`; la extension solo marca completado cuando `validate`
   devuelve exit code 0.
-- W3Schools/w3resource y PDF Alejandro se exponen como catalogos estaticos con
-  metadata ligera y `driveFileId`. Los enunciados completos viven en Google
-  Drive; el texto local solo puede existir en `.estudio-drive/`, que no se sube
-  a Git.
+- PDF Alejandro se expone como catalogo estatico con metadata ligera y URLs de
+  Gist. Los enunciados completos se descargan desde Gist al importar; no deben
+  empaquetarse dentro del VSIX.
+- W3Schools / w3resource fue retirado en la version 1.2. Se planea
+  reintroducirlo desde cero en una version futura con curaduria semantica.
 
 ## Resumen De Arquitectura
 
@@ -185,16 +186,15 @@ https://api.exercism.org/v2/tracks/c/exercises
 Ese endpoint devuelve los ejercicios del track C en el orden que usa la pagina.
 Si no hay internet, el backend usa una lista minima de fallback.
 
-Los proveedores no remotos viven en:
+Los proveedores no remotos vigentes viven en:
 
 ```text
-soporte/exercism/catalogs/w3schools.json
 soporte/exercism/catalogs/alejandro.json
 ```
 
-Ambos se muestran en la misma UI. El catalogo versionado no debe guardar el
-enunciado completo del ejercicio: solo metadata para pintar tarjetas y el
-`driveFileId` publico usado al importar.
+El catalogo versionado no debe guardar el enunciado completo del ejercicio:
+solo metadata para pintar tarjetas y las URLs/Gist IDs publicos usados al
+importar.
 
 ### Google Drive De Mantenimiento
 

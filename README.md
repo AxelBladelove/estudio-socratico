@@ -266,7 +266,7 @@ conceptos que se repiten y pistas para estudiar antes de un examen.
 @validar
 ```
 
-Úsalo en ejercicios del **PDF del profesor** o de **W3Schools** cuando quieras
+Úsalo en ejercicios del **PDF del profesor** cuando quieras
 saber si tu respuesta es correcta. La IA:
 
 1. Lee el enunciado y tu archivo `.c`
@@ -283,13 +283,15 @@ saber si tu respuesta es correcta. La IA:
 ## Panel de ejercicios
 
 El proyecto incluye un **panel dentro de VS Code** para explorar e importar
-ejercicios de tres fuentes:
+ejercicios de dos fuentes:
 
 | Fuente | Descripción |
 |---|---|
 | **Exercism C** | Plataforma gratuita con ejercicios de programación en C |
-| **W3Schools / w3resource** | Ejercicios web de práctica |
 | **PDF Alejandro Liz** | Ejercicios del profesor del curso |
+
+W3Schools / w3resource fue retirado en la version 1.2. Se planea
+reintroducirlo desde cero en una version futura con curaduria semantica.
 
 ### Abrir el panel
 

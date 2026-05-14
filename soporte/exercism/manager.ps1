@@ -675,8 +675,8 @@ function Get-Catalog {
         }
     }
 
-    foreach ($catalogName in @("w3schools", "alejandro")) {
-        $providerName = if ($catalogName -eq "w3schools") { "W3Schools / w3resource" } else { "PDF Alejandro Liz" }
+    foreach ($catalogName in @("alejandro")) {
+        $providerName = "PDF Alejandro Liz"
         $order = 0
         foreach ($exercise in (Get-StaticCatalog -Root $Root -CatalogName $catalogName)) {
             $order++
@@ -1402,7 +1402,7 @@ function Get-TemplateExerciseMarkdown {
         }
     }
 
-    # Priority 2: Google Drive download (legacy w3schools/alejandro exercises)
+    # Priority 2: Google Drive download (legacy Alejandro exercises)
     if ($Exercise.driveFileId) {
         $cacheRoot = Join-Path $Root "soporte\runtime\drive-cache"
         if (-not (Test-Path -LiteralPath $cacheRoot)) {
@@ -1915,6 +1915,8 @@ try {
             if ([string]::IsNullOrWhiteSpace($Slug)) { throw "Debes indicar -Slug." }
             if ($Provider -eq "exercism") {
                 $result = Import-ExercismExercise -Root $RepoRoot -ExerciseSlug $Slug -Overwrite:$Force
+            } elseif ($Provider -in @("w3", "w3schools", "w3resource")) {
+                throw "El proveedor W3 fue eliminado de Estudio Socrático 1.2. Será reimplementado desde cero en una versión futura."
             } else {
                 $result = Import-TemplateExercise -Root $RepoRoot -ProviderName $Provider -ExerciseSlug $Slug -Overwrite:$Force
             }

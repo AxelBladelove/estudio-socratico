@@ -27,12 +27,6 @@ npm run drive:generate:alejandro
 npm run drive:sync:alejandro
 ```
 
-Para sincronizar solo W3Schools:
-
-```bat
-npm run drive:sync -- --provider w3schools
-```
-
 Para sincronizar Alejandro con paquetes provisionales creados desde la metadata
 del catalogo:
 
