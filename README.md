@@ -4,7 +4,7 @@
 
 **Un entorno de estudio para aprender Fundamentos de Programación en C,<br>con una IA que te guía sin resolver los ejercicios por ti.**
 
-![Versión](https://img.shields.io/badge/versión-1.1.6-blue?style=flat-square)
+![Versión](https://img.shields.io/badge/versión-1.2.0-blue?style=flat-square)
 ![Plataforma](https://img.shields.io/badge/plataforma-Windows-0078D6?style=flat-square&logo=windows)
 ![Lenguaje](https://img.shields.io/badge/lenguaje-C-A8B9CC?style=flat-square&logo=c)
 ![Editor](https://img.shields.io/badge/editor-VS_Code-007ACC?style=flat-square&logo=visualstudiocode)
@@ -26,6 +26,20 @@ ayuda a descubrir qué está mal en tu código. El razonamiento siempre es tuyo.
 > Está pensado para el curso de **Fundamentos de Programación** de la PUCMM con
 > el profesor Alejandro Liz, pero funciona para cualquier persona que esté
 > aprendiendo C.
+
+---
+
+## Versión 1.2.0
+
+La version 1.2 consolida el modelo actual del proyecto:
+
+- **Alejandro** queda como catalogo curado de 132 ejercicios que se importan
+  desde Gists al momento de usarlos.
+- **Exercism C** sigue funcionando como fuente oficial con sus tests y submit.
+- **W3Schools / w3resource** fue retirado de esta version. Se planea
+  reintroducirlo desde cero en una version futura con curaduria semantica.
+- La extension no empaqueta ejercicios completos ni enunciados locales dentro
+  del VSIX.
 
 ---
 
@@ -551,7 +565,7 @@ framework.
 
 <div align="center">
 
-**Estudio Socrático** · v1.1.6 · Mayo 2026
+**Estudio Socrático** · v1.2.0 · Mayo 2026
 
 *Hecho para aprender, no para copiar.*
 

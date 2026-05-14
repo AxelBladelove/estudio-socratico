@@ -403,7 +403,21 @@ Para publicar una version del framework:
 1. prepara cambios en una rama limpia;
 2. verifica setup, build y docs;
 3. mergea o empuja a `main`;
-4. actualiza `pair` y ramas personales que deban heredar el framework.
+4. crea y publica un tag semantico (`v1.2.0`, por ejemplo);
+5. crea la release en GitHub y adjunta el VSIX correspondiente cuando aplique;
+6. actualiza `pair` y ramas personales que deban heredar el framework.
+
+## Release 1.2
+
+La release 1.2 deja el proyecto en el modelo actual:
+
+- fuentes vigentes del panel: Exercism C y Alejandro;
+- Alejandro conserva 132 ejercicios curados y descarga los enunciados desde
+  Gists al importar;
+- W3Schools / w3resource queda retirado hasta una reimplementacion futura;
+- el VSIX no empaqueta ejercicios completos, catálogos generados ni
+  `instructions.md` locales;
+- el workspace usa `usuario/` como carpeta local singular.
 
 ## Release 1.0
 
