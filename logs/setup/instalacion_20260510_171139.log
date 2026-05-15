@@ -1,0 +1,26 @@
+﻿=== Inicio setup 2026-05-10 17:11:39 ===
+
+==============================================
+  Estudio Socratico - Setup Windows
+==============================================
+[OK] Raiz del proyecto verificada.
+
+==> Preparando carpetas del proyecto
+
+==> Verificando herramientas base
+[OK] Git disponible: C:\Program Files\Git\cmd\git.exe
+[OK] PowerShell disponible: C:\Users\AxelBlade\AppData\Local\Microsoft\WindowsApps\pwsh.exe
+[OK] Node.js disponible: C:\Program Files\nodejs\node.exe
+[OK] Bun disponible: C:\Users\AxelBlade\AppData\Local\Microsoft\WinGet\Packages\Oven-sh.Bun_Microsoft.Winget.Source_8wekyb3d8bbwe\bun-windows-x64\bun.exe
+[OK] Python disponible: C:\Users\AxelBlade\AppData\Local\Programs\Python\Python310\python.exe
+[OK] GitHub CLI disponible: C:\Program Files\GitHub CLI\gh.exe
+[OK] Exercism CLI disponible: C:\Users\AxelBlade\AppData\Local\Microsoft\WindowsApps\exercism.exe
+[OK] MSYS2 disponible: C:\msys64\usr\bin\bash.exe
+[OK] VS Code disponible: C:\Users\AxelBlade\AppData\Local\Programs\Microsoft VS Code\bin\code.cmd
+
+==> Conectando GitHub
+[OK] GitHub CLI responde como AxelBladelove.
+
+Cuenta GitHub detectada: AxelBladelove
+  - Revalidar esta cuenta
+  - Cambiar de cuenta

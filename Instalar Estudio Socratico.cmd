@@ -2,5 +2,5 @@
 setlocal
 
 cd /d "%~dp0"
-call "%~dp0_estudio\setup\instalar.cmd" -Reconfigurar
-exit /b %ERRORLEVEL%
+call "%~dp0_estudio\setup\Estudio.Setup.cmd" install --tui %*
+exit /b

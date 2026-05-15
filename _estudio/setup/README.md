@@ -5,29 +5,23 @@ Esta carpeta contiene el instalador de Estudio Socratico.
 ## Entrada Recomendada
 
 ```bat
-_estudio\setup\instalar.cmd
+_estudio\setup\Estudio.Setup.cmd install --tui
 ```
 
 Ese comando esta pensado para ejecutarse desde una terminal abierta en la raiz
-del repo. Por defecto abre un asistente interactivo en PowerShell: instala y
-valida todo lo necesario sin pedirte elegir componentes. La TUI solo se detiene
-cuando necesita intervencion humana: alias local del estudiante, token de
-Exercism, abrir enlaces utiles o recargar el PATH de la terminal. El usuario y
-el correo de GitHub se resuelven automaticamente desde `gh auth`. Ese alias se
-usa tambien como `user.name` local para que los commits salgan con ese nombre.
+del repo o desde el ZIP de release. En el repo de desarrollo usa `dotnet run`
+para evitar ejecutables viejos; en un paquete limpio usa `Estudio.Setup.exe`
+self-contained. La TUI muestra componentes, progreso, log en vivo y permite
+reintentar solo los pasos fallidos con `repair --only`.
 
 Si usas los accesos directos de la raiz del repo:
 
 - `Instalar Estudio Socratico.cmd` prepara un clon nuevo: valida GitHub CLI,
-  consulta `usuario/registro.json`, reutiliza la rama ya vinculada a esa
-  cuenta de GitHub si existe, pide alias si falta y crea o activa la rama
-  personal.
+  abre la TUI con `install`, valida GitHub CLI, configura alias local y prepara
+  el fork/remotes de trabajo.
 - `Actualizar Estudio Socratico.cmd` valida la cuenta actual de GitHub CLI,
-  permite conservarla o cambiarla por navegador, y luego permite conservar o
-  renombrar el alias local. Si el alias cambia para la misma cuenta de GitHub,
-  tambien se intenta renombrar la carpeta `usuario` y la rama local
-  vinculada, en vez de crear una rama nueva. Si existe `origin/<alias_antiguo>`,
-  la TUI pregunta antes de subir la nueva rama y borrar la antigua en GitHub.
+  abre la TUI con `update` y vuelve a validar/remediar los componentes
+  controlados por el framework.
 
 ## Que Hace
 
@@ -82,30 +76,28 @@ Luego abre una terminal nueva antes de importar.
 ## Modo Verificacion
 
 ```bat
-_estudio\setup\instalar.cmd -SoloVerificar -SinWinget -SinExtensiones
+_estudio\setup\Estudio.Setup.cmd verify
 ```
 
-## Modo No Interactivo
+## Empaquetar Release
 
 ```bat
-_estudio\setup\instalar.cmd -SinOnboarding -UsuarioSlug axel -GitHubUsuario AxelBladelove -GitNombre AxelBladelove -GitCorreo AxelBladelove@users.noreply.github.com
+_estudio\setup\Estudio.Setup.cmd package
 ```
 
-Usa `-SinOnboarding` solo para automatizar. Para estudiantes nuevos, el flujo
-normal recomendado es el asistente interactivo:
-
-```bat
-_estudio\setup\instalar.cmd
-```
+Genera `_estudio/setup/Estudio.Setup/publish/release/` con carpeta limpia, ZIP
+y `release-manifest.json` con hashes SHA-256.
 
 ## Archivos
 
 | Archivo | Rol |
 |---|---|
-| `instalar.cmd` | Entrada doble-clickable para Windows |
-| `instalar.ps1` | Orquestador principal |
-| `utilidades.ps1` | Logs, consola, PATH y comandos |
-| `herramientas.ps1` | Deteccion e instalacion con winget |
-| `gcc_msys2.ps1` | Instalacion de GCC via MSYS2 |
-| `vscode.ps1` | Terminal, extensiones, extension local y F9 |
-| `proyecto.ps1` | Validacion del workspace, usuario y Git local |
+| `Estudio.Setup.cmd` | Wrapper principal para repo y release |
+| `Estudio.Setup/` | Instalador 2.0 en C# con Terminal.Gui |
+| `instalar.cmd`, `instalar.ps1` y modulos `.ps1` | Legacy conservado solo para referencia/compatibilidad |
+
+## Legacy
+
+Los scripts PowerShell 1.x quedan congelados. No se eliminan para no romper
+clones antiguos ni documentacion historica, pero la ruta activa para 2.0 es
+`Estudio.Setup.cmd`. Las mejoras nuevas deben entrar al instalador C#.

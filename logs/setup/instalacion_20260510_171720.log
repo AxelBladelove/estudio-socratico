@@ -1,0 +1,70 @@
+﻿=== Inicio setup 2026-05-10 17:17:20 ===
+
+==============================================
+  Estudio Socratico - Setup Windows
+==============================================
+[OK] Raiz del proyecto verificada.
+
+==> Preparando carpetas del proyecto
+
+==> Verificando herramientas base
+[OK] Git disponible: C:\Program Files\Git\cmd\git.exe
+[OK] PowerShell disponible: C:\Users\AxelBlade\AppData\Local\Microsoft\WindowsApps\pwsh.exe
+[OK] Node.js disponible: C:\Program Files\nodejs\node.exe
+[OK] Bun disponible: C:\Users\AxelBlade\AppData\Local\Microsoft\WinGet\Packages\Oven-sh.Bun_Microsoft.Winget.Source_8wekyb3d8bbwe\bun-windows-x64\bun.exe
+[OK] Python disponible: C:\Users\AxelBlade\AppData\Local\Programs\Python\Python310\python.exe
+[OK] GitHub CLI disponible: C:\Program Files\GitHub CLI\gh.exe
+[OK] Exercism CLI disponible: C:\Users\AxelBlade\AppData\Local\Microsoft\WindowsApps\exercism.exe
+[OK] MSYS2 disponible: C:\msys64\usr\bin\bash.exe
+[OK] VS Code disponible: C:\Users\AxelBlade\AppData\Local\Programs\Microsoft VS Code\bin\code.cmd
+
+==> Conectando GitHub
+[OK] GitHub CLI responde como AxelBladelove.
+
+Cuenta GitHub detectada: AxelBladelove
+  - Revalidar esta cuenta
+  - Cambiar de cuenta
+[INFO] Seleccionado: Revalidar esta cuenta
+[INFO] Revalidando GitHub CLI en el navegador para AxelBladelove...
+[INFO] Si el navegador no vuelve a la terminal, cancela la pagina y reintenta desde el setup.
+[CMD] C:\Program Files\GitHub CLI\gh.exe auth refresh --hostname github.com --scopes repo,read:user,user:email
+[OK] GitHub autenticado como AxelBladelove.
+
+==============================================
+  Estudio Socratico - Asistente interactivo
+==============================================
+Este asistente preparara el repo para estudiar C con VS Code, GCC, Exercism y las skills socraticas.
+No tienes que elegir componentes: se instala y valida todo lo necesario por defecto.
+
+La TUI solo se detendra si necesita datos tuyos:
+  1. Identidad local del estudiante y Git.
+  2. Token global de Exercism si falta.
+  3. GEMINI_API_KEY si quieres traducciones automaticas.
+  4. Confirmaciones puntuales como abrir enlaces o recargar PATH.
+
+Repo: C:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico
+
+
+==> Cuenta GitHub reconocida
+[OK] AxelBladelove ya esta vinculada a la rama 'axel'.
+
+Que quieres hacer con esta identidad?
+  - Usar rama 'axel'
+  - Renombrar alias/rama
+[INFO] Seleccionado: Usar rama 'axel'
+[OK] Exercism CLI tiene un token configurado para esta PC.
+[INFO] Preparando configuracion local de Exercism...
+[OK] Track C de Exercism listo; hello-world ya existe en el workspace local.
+[OK] GEMINI_API_KEY local esta configurado para traducciones automaticas.
+
+==> Configurando Git local
+[OK] Repositorio Git ya existe.
+[INFO] Configurando github.user local...
+[INFO] Configurando user.name local...
+[INFO] Configurando user.email local...
+[INFO] Vinculando alias local con GitHub...
+[INFO] Guardando alias local de estudio...
+[INFO] Guardando rama vinculada a esta cuenta GitHub...
+[ERROR] Method invocation failed because [System.Management.Automation.PSObject] does not contain a method named 'op_Addition'.
+[INFO] Log: C:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\logs\setup\instalacion_20260510_171720.log
+=== Fin setup 2026-05-10 17:17:46 ===

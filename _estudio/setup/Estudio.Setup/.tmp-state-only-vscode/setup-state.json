@@ -1,0 +1,14 @@
+{
+  "setupVersion": "2.0.0-dev",
+  "alias": "axel",
+  "githubUser": "AxelBladelove",
+  "forkOwner": "AxelBladelove",
+  "forkName": "estudio-socratico-axel",
+  "upstream": "AxelBladelove/estudio-socratico",
+  "workspace": "C:\\Users\\AxelBlade\\.gemini\\antigravity\\scratch\\estudio-socratico",
+  "mode": "Repair",
+  "lastSuccessfulStep": "verify-final",
+  "installedComponents": {
+    "vscode-settings": "ok"
+  }
+}

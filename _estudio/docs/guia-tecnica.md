@@ -4,6 +4,21 @@ Esta guia es para quien quiera mantener, extender o depurar Estudio Socratico.
 El README principal esta escrito para estudiantes; este archivo explica el
 motor.
 
+## Cambios Clave En 2.0
+
+- `Estudio.Setup.cmd install --tui` es la entrada principal. La interfaz usa
+  Terminal.Gui y muestra progreso, log en vivo y reintentos por componente.
+- `Estudio.Setup.cmd package` publica un instalador self-contained `win-x64`,
+  genera `release-manifest.json` con SHA-256 y produce un ZIP limpio bajo
+  `_estudio/setup/Estudio.Setup/publish/release/`.
+- El cambio de cuenta GitHub se resuelve desde `gh auth`; el fork de trabajo se
+  calcula como `estudio-socratico-<alias>` y `origin/upstream` se reparan desde
+  el instalador.
+- El cambio de alias se centraliza en `.estudio_usuario`; si cambia, el
+  instalador crea backup local antes de reescribirlo.
+- Los scripts PowerShell de setup 1.x quedan congelados como legacy. Se
+  conservan para compatibilidad, pero la ruta activa es el instalador C#.
+
 ## Cambios Clave En 1.2
 
 - `npm run setup` ejecuta la TUI completa y `npm run setup:update` valida una
@@ -85,19 +100,21 @@ Fallbacks si falta `.estudio_usuario`:
 3. `git config --local user.name`
 4. usuario de Windows
 
-## Setup 1.0
+## Setup 2.0
 
 Entrada recomendada:
 
 ```bat
-_estudio\setup\instalar.cmd
+_estudio\setup\Estudio.Setup.cmd install --tui
 ```
 
 El setup:
 
 - valida la raiz del proyecto;
-- pide el alias local solo cuando hace falta o cuando se lanza una reconfiguracion interactiva;
-- revalida GitHub CLI por navegador en los accesos directos de instalar y actualizar;
+- muestra progreso/reintentos desde Terminal.Gui;
+- usa `install`, `update`, `repair`, `verify` y `package`;
+- valida el alias local y permite sobrescribirlo con `--alias`;
+- revalida GitHub CLI con `gh auth status`;
 - resuelve el usuario y el correo de GitHub desde `gh auth` sin pedirlos a mano;
 - usa el alias como `user.name` local para que ese mismo nombre aparezca en los commits;
 - instala o valida herramientas base;
@@ -117,20 +134,17 @@ Parametros utiles:
 
 | Parametro | Uso |
 |---|---|
-| `-SoloVerificar` | Muestra que haria sin modificar sistema |
-| `-SinWinget` | No instala herramientas automaticamente |
-| `-SinExtensiones` | No instala extensiones de VS Code |
-| `-SinOnboarding` | Usa argumentos/configuracion sin preguntar |
-| `-SinRamaUsuario` | No crea ni cambia rama personal |
-| `-UsuarioSlug <slug>` | Define slug local |
-| `-GitHubUsuario <usuario>` | Define `github.user` |
-| `-GitNombre <nombre>` | Define `user.name` |
-| `-GitCorreo <correo>` | Define `user.email` |
+| `--tui` | Abre la interfaz visual |
+| `--alias <slug>` | Define alias local para este clon |
+| `--only <step-id>` | Ejecuta solo un componente; puede repetirse |
+| `--state-root <ruta>` | Cambia carpeta de estado/log/reporte |
 
-Ejemplo no interactivo:
+Ejemplos:
 
 ```powershell
-_estudio\setup\instalar.cmd -SinOnboarding -UsuarioSlug axel -GitHubUsuario AxelBladelove -GitNombre AxelBladelove -GitCorreo AxelBladelove@users.noreply.github.com
+_estudio\setup\Estudio.Setup.cmd verify
+_estudio\setup\Estudio.Setup.cmd repair --only msys2-toolchain
+_estudio\setup\Estudio.Setup.cmd package
 ```
 
 ## Build Normal

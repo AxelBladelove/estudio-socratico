@@ -1,0 +1,38 @@
+ 
+============================================================ 
+INTENTO: 2026-05-15T15-38-52 
+ARCHIVO: C:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\_estudio\.agent\f9_probe.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+#include <stdio.h>
+
+int main(void)
+{
+    printf("F9 MVP OK\n");
+    return 0;
+}
+ 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+(Compilacion limpia. Cero errores y advertencias.) 
+[EXIT CODE: 0] 
+ 
+============================================================ 
+INTENTO: 2026-05-15T16-03-29 
+ARCHIVO: C:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\_estudio\.agent\f9_probe.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+#include <stdio.h>
+
+int main(void)
+{
+    printf("F9 MVP OK\n");
+    return 0;
+}
+ 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+(Compilacion limpia. Cero errores y advertencias.) 
+[EXIT CODE: 0] 

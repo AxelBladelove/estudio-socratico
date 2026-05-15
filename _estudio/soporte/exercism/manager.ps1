@@ -398,7 +398,12 @@ function Get-ProjectGeminiConfig {
         return $null
     }
 
-    $paths = @(
+    $paths = @()
+    if (-not [string]::IsNullOrWhiteSpace($env:APPDATA)) {
+        $paths += (Join-Path $env:APPDATA "EstudioSocratico\config.json")
+    }
+
+    $paths += @(
         (Join-Path $script:ResolvedRepoRoot "_estudio\soporte\exercism\config.local.json"),
         (Join-Path $script:ResolvedRepoRoot "_estudio\soporte\exercism\config.json"),
         (Join-Path $script:ResolvedRepoRoot ".estudio_exercism.local.json")
@@ -479,6 +484,25 @@ function Get-StaticCatalog {
     $text = [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8)
     $raw = $text | ConvertFrom-Json
     return @($raw.exercises)
+}
+
+function Get-CatalogStatus {
+    param([string]$Root)
+
+    $alejandro = @(Get-StaticCatalog -Root $Root -CatalogName "alejandro")
+    $withInstructionSource = @($alejandro | Where-Object {
+        -not [string]::IsNullOrWhiteSpace($_.gistInstructionsUrl) -or
+        -not [string]::IsNullOrWhiteSpace($_.instructionMarkdown) -or
+        -not [string]::IsNullOrWhiteSpace($_.driveFileId)
+    })
+
+    return [pscustomobject]@{
+        alejandro = [pscustomobject]@{
+            available = ($alejandro.Count -gt 0)
+            count = $alejandro.Count
+            withInstructionSource = $withInstructionSource.Count
+        }
+    }
 }
 
 function Get-ExercismCatalog {
@@ -1904,6 +1928,7 @@ try {
                     tokenConfigured = if ($cli) { Test-ExercismToken -Cli $cli } else { $false }
                 }
                 geminiConfigured = -not [string]::IsNullOrWhiteSpace((Get-GeminiApiKey))
+                catalog = Get-CatalogStatus -Root $RepoRoot
             })
             exit 0
         }

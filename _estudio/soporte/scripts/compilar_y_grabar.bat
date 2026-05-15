@@ -20,11 +20,15 @@ if /i "%~1"=="--inline" (
 )
 
 set "SCRIPT_DIR=%~dp0"
+for %%S in ("%SCRIPT_DIR%.") do set "SCRIPT_DIR=%%~fS\"
 set "REPO_ROOT=%CD%"
 if not exist "%REPO_ROOT%\AGENTS.md" (
     pushd "%SCRIPT_DIR%..\..\.." >nul
     set "REPO_ROOT=%CD%"
     popd >nul
+)
+if exist "%REPO_ROOT%\_estudio\soporte\scripts\resolve_build_context.ps1" (
+    set "SCRIPT_DIR=%REPO_ROOT%\_estudio\soporte\scripts\"
 )
 
 set "INPUT_PATH=%~1"
@@ -290,7 +294,7 @@ if not defined GCC_EXE if exist "C:\msys64\clang64\bin\gcc.exe" set "GCC_EXE=C:\
 
 if not defined GCC_EXE (
     echo [ERROR] No se encontro gcc.exe en PATH ni en rutas comunes de MSYS2.
-    echo [TIP] Instala GCC con _estudio\setup\instalar.cmd o agrega tu compilador al PATH de Windows.
+    echo [TIP] Instala GCC con _estudio\setup\Estudio.Setup.cmd install --tui o agrega tu compilador al PATH de Windows.
     exit /b 1
 )
 

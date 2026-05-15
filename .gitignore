@@ -70,3 +70,17 @@ _estudio/soporte/vscode/estudio-exercism/generated/
 *.private-manifest.json
 *gist-state*.json
 catalog.private.json
+
+# Estudio Setup 2.0 local build artifacts
+_estudio/setup/Estudio.Setup.exe
+_estudio/setup/Estudio.Setup.pdb
+_estudio/setup/Estudio.Setup/**/bin/
+_estudio/setup/Estudio.Setup/**/obj/
+_estudio/setup/Estudio.Setup/publish/
+_estudio/setup/Estudio.Setup/.tmp-state/
+
+# Private/generated runtime config must never be committed.
+runtime-config.private.json
+runtime-config.bootstrap.json
+gemini-key.local.json
+app-config.generated.json
