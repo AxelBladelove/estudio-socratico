@@ -117,6 +117,8 @@ public sealed class FileSetupMarkdownReportWriter
             "git-remotes" => "`git-remotes`: reparar origin/upstream con el modo `repair` cuando estes listo.",
             "git-project-update" => "`git-project-update`: confirma que `upstream` existe y apunta al repo principal.",
             "vscode-settings" => "`vscode-settings`: reparar settings de VS Code con backup automatico.",
+            "exercism-cli" => "`exercism-cli`: instalar Exercism CLI con winget o reintentar desde la TUI.",
+            "exercism-c-track" => "`exercism-c-track`: pegar el token desde https://exercism.org/settings/api_cli; si falta unir el track, abrir https://exercism.org/tracks/c y reintentar fallidos.",
             "msys2-toolchain" => "`msys2-toolchain`: instalar o reparar MSYS2 UCRT64/GCC.",
             "user-path" => "`user-path`: agregar `C:\\msys64\\ucrt64\\bin` al PATH de usuario.",
             "gemini-runtime-config" => "`gemini-runtime-config`: proveer runtime-config.private.json o runtime-config.bootstrap.json y ejecutar instalacion cuando este disponible.",

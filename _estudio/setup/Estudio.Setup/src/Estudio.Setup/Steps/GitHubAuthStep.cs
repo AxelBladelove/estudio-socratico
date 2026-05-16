@@ -39,7 +39,9 @@ public sealed class GitHubAuthStep : ISetupStep
 
     public Task<StepResult> RepairAsync(SetupContext context, CancellationToken cancellationToken)
     {
-        return LoginAsync(context, cancellationToken);
+        return context.Options.ForceGitHubRelogin
+            ? LoginAsync(context, cancellationToken)
+            : VerifyAsync(context, cancellationToken);
     }
 
     public async Task<StepResult> VerifyAsync(SetupContext context, CancellationToken cancellationToken)

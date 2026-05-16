@@ -15,9 +15,10 @@ Ese comando esta pensado para ejecutarse desde una terminal abierta en la raiz
 del repo o desde el ZIP de release. En el repo de desarrollo usa `dotnet run`
 para el backend cuando no existen ejecutables publicados; en un paquete limpio
 usa `Estudio.Setup.Textual.exe` y `Estudio.Setup.exe` self-contained. La TUI
-Textual muestra componentes, progreso, log en vivo, campo de alias, cambio de
-cuenta GitHub, botones de reinstalacion/desinstalacion y reintentos solo de
-pasos fallidos con `repair --only`.
+Textual muestra componentes, progreso, log en vivo, campo de alias, campo de
+token Exercism, cambio de cuenta GitHub, botones de
+reinstalacion/desinstalacion y reintentos solo de pasos fallidos con
+`repair --only`.
 
 Si usas los accesos directos de la raiz del repo:
 
@@ -76,6 +77,8 @@ GitHub CLI, VS Code, Node, PowerShell ni MSYS2.
 - crea o reutiliza el fork `estudio-socratico-<alias>` y configura remotes;
 - instala o valida herramientas base;
 - instala o valida Exercism CLI;
+- configura Exercism CLI con el token pegado en la TUI;
+- verifica que el track C este listo descargando `hello-world`;
 - instala o valida GCC/MSYS2;
 - instala `make` y `mingw32-make` para los tests de Exercism C;
 - compila herramientas locales del framework;
@@ -86,14 +89,25 @@ GitHub CLI, VS Code, Node, PowerShell ni MSYS2.
 
 ## Exercism
 
-El setup no guarda tokens en el repo. Solo valida si el CLI global tiene token:
+El setup no guarda tokens en el repo. La TUI muestra el enlace oficial:
 
-```bat
-exercism configure --token TU_TOKEN
+```text
+https://exercism.org/settings/api_cli
 ```
 
-Cada estudiante configura su token en su propia PC. La extension local usa esa
-configuracion para descargar, probar y enviar ejercicios.
+El estudiante copia su token desde esa pagina, lo pega en el campo
+`Exercism Token` y reintenta los pasos fallidos si la instalacion ya habia
+avanzado. El backend guarda el token en la configuracion global de Exercism CLI
+de esa PC y valida el track C descargando `hello-world`.
+
+Si Exercism responde que la cuenta aun no esta unida al track C, el setup abre:
+
+```text
+https://exercism.org/tracks/c
+```
+
+Despues de pulsar `Join the C Track` en la web, usa `Fallidos` en la TUI para
+continuar desde ese punto.
 
 Para traducir README al importar ejercicios, el backend usa primero la clave
 compartida del proyecto en:

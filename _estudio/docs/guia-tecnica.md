@@ -289,14 +289,19 @@ interna y archivos de solucion. No guarda tokens.
 
 ### Tokens
 
-Exercism usa la configuracion global del CLI en la PC del estudiante:
+Exercism usa la configuracion global del CLI en la PC del estudiante. En 2.0
+la ruta principal es pegar el token en el campo `Exercism Token` de la TUI; el
+backend ejecuta la configuracion global y luego valida el track C descargando
+`hello-world`.
 
-```bat
-exercism configure --token TU_TOKEN
+```text
+https://exercism.org/settings/api_cli
 ```
 
-El proyecto no guarda ese token en Git ni en `usuario/`. El setup solo valida
-si existe y muestra una instruccion si falta.
+El proyecto no guarda ese token en Git ni en `usuario/`. Si Exercism indica que
+la cuenta aun no esta unida al track C, el setup abre
+`https://exercism.org/tracks/c` y el usuario puede reintentar solo los pasos
+fallidos desde la TUI.
 
 Para traducciones automaticas se lee primero la clave compartida del repo en
 `_estudio/soporte/exercism/config.json`, luego `_estudio/soporte/exercism/config.local.json`,

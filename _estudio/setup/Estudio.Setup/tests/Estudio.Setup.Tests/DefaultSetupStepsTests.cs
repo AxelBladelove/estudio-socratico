@@ -30,8 +30,10 @@ public class DefaultSetupStepsTests
                 "vscode-extension-package",
                 "vscode-extension",
                 "powershell7",
+                "exercism-cli",
                 "msys2-toolchain",
                 "user-path",
+                "exercism-c-track",
                 "gemini-runtime-config",
                 "exercise-catalog",
             },
@@ -50,6 +52,17 @@ public class DefaultSetupStepsTests
         Assert.Equal((@"C:\msys64\ucrt64\bin\gcc.exe", "--version"), runner.Calls[1]);
         Assert.Equal((@"C:\msys64\ucrt64\bin\mingw32-make.exe", "--version"), runner.Calls[2]);
         Assert.Equal((@"C:\msys64\ucrt64\bin\gdb.exe", "--version"), runner.Calls[3]);
+    }
+
+    [Fact]
+    public async Task Exercism_cli_step_checks_version_subcommand()
+    {
+        var runner = new RecordingCommandRunner();
+        var exercism = DefaultSetupSteps.Create(runner).Single(step => step.Id == "exercism-cli");
+
+        await exercism.DetectAsync(new SetupContext(new SetupOptions(SetupMode.Verify)), CancellationToken.None);
+
+        Assert.Equal(("exercism", "version"), runner.Calls.Single());
     }
 
     private sealed class NoopCommandRunner : ICommandRunner

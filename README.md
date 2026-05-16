@@ -92,11 +92,14 @@ del setup, el archivo equivalente es:
 Estudio.Setup.cmd
 ```
 
-El instalador te pide solo dos cosas:
+El instalador te pide lo minimo para dejar la PC lista:
 
 - **Tu nombre corto** — un alias como `axel` o `juan`, que identifica tus
   archivos dentro del proyecto.
 - **Iniciar sesión en GitHub** — para vincular tus commits.
+- **Token de Exercism** — lo copias desde
+  `https://exercism.org/settings/api_cli` y lo pegas en la TUI para preparar el
+  track de C.
 
 Al terminar quedan listos:
 - ✅ El atajo <kbd>F9</kbd> para compilar
@@ -403,16 +406,20 @@ Desde el panel también puedes:
 <details>
 <summary><strong>⚙️ Configurar Exercism (solo una vez)</strong></summary>
 
-Exercism usa un token personal que se configura una sola vez en tu computadora:
+Exercism usa un token personal que se configura una sola vez en tu computadora.
+El instalador muestra este enlace:
 
-```bat
-exercism configure --token TU_TOKEN_AQUI
+```text
+https://exercism.org/settings/api_cli
 ```
 
-El instalador te avisa si falta. El token **no se guarda** en el repositorio.
+Copia tu token, pegalo en el campo `Exercism Token` de la TUI y usa
+`Fallidos` si la instalacion ya habia avanzado. El token **no se guarda** en el
+repositorio.
 
-> [!TIP]
-> Puedes encontrar tu token en https://exercism.org/settings/api_cli
+Si Exercism todavia exige unir la cuenta al track, el instalador abre
+`https://exercism.org/tracks/c`; pulsa `Join the C Track` en la web y reintenta
+los fallidos.
 
 </details>
 

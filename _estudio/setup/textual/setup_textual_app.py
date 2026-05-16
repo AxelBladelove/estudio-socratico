@@ -32,11 +32,16 @@ DEFAULT_STEP_IDS = (
     "vscode-extension-package",
     "vscode-extension",
     "powershell7",
+    "exercism-cli",
     "msys2-toolchain",
     "user-path",
+    "exercism-c-track",
     "gemini-runtime-config",
     "exercise-catalog",
 )
+
+EXERCISM_TOKEN_ENV = "ESTUDIO_EXERCISM_TOKEN"
+EXERCISM_TOKEN_URL = "https://exercism.org/settings/api_cli"
 
 STATUS_LABELS = {
     "pending": "PEND",
@@ -63,6 +68,7 @@ MODE_TOKENS = {"install", "update", "reinstall", "repair", "uninstall", "verify"
 class SetupCommand:
     mode: str
     alias: str = ""
+    exercism_token: str = ""
     change_github: bool = False
     only_step_ids: tuple[str, ...] = ()
     passthrough_args: tuple[str, ...] = ()
@@ -209,6 +215,17 @@ def build_core_command(core_path: Path, command: SetupCommand) -> list[str]:
     return args
 
 
+def build_core_environment(command: SetupCommand, base_env: dict[str, str] | None = None) -> dict[str, str]:
+    env = dict(os.environ if base_env is None else base_env)
+    env["ESTUDIO_SETUP_TEXTUAL_BYPASS"] = "1"
+    token = command.exercism_token.strip()
+    if token:
+        env[EXERCISM_TOKEN_ENV] = token
+    else:
+        env.pop(EXERCISM_TOKEN_ENV, None)
+    return env
+
+
 def resolve_core_path(explicit: str | None) -> Path:
     if explicit:
         return Path(explicit).expanduser().resolve()
@@ -279,6 +296,11 @@ class EstudioSetupDesk(App):
         margin-right: 2;
     }
 
+    #token-box {
+        width: 48;
+        margin-right: 2;
+    }
+
     .field-label {
         height: 1;
         color: #8bd8ff;
@@ -286,6 +308,14 @@ class EstudioSetupDesk(App):
     }
 
     #alias {
+        height: 1;
+        width: 100%;
+        border: none;
+        background: #18212b;
+        color: #e8edf2;
+    }
+
+    #exercism-token {
         height: 1;
         width: 100%;
         border: none;
@@ -479,6 +509,9 @@ class EstudioSetupDesk(App):
                 with Vertical(id="alias-box"):
                     yield Static("ALIAS", classes="field-label")
                     yield Input(placeholder="alias local", id="alias")
+                with Vertical(id="token-box"):
+                    yield Static(f"EXERCISM TOKEN  {EXERCISM_TOKEN_URL}", classes="field-label", id="exercism-token-url")
+                    yield Input(placeholder="pega token y reintenta fallidos", id="exercism-token", password=True)
                 yield Static(
                     "[I] Instalar   [U] Update   [R] Reinstalar   [V] Verificar   "
                     "[X] Desinstalar   [G] GitHub   [F] Fallidos   [Q] Salir",
@@ -581,6 +614,7 @@ class EstudioSetupDesk(App):
         return SetupCommand(
             mode=mode,
             alias=self.query_one("#alias", Input).value,
+            exercism_token=self.query_one("#exercism-token", Input).value,
             change_github=change_github,
             only_step_ids=only_step_ids,
             passthrough_args=self.initial_command.passthrough_args,
@@ -598,8 +632,7 @@ class EstudioSetupDesk(App):
         args = build_core_command(self.core_path, command)
         self.call_from_thread(self.write_log, "> " + " ".join(args))
         try:
-            env = os.environ.copy()
-            env["ESTUDIO_SETUP_TEXTUAL_BYPASS"] = "1"
+            env = build_core_environment(command)
             process = subprocess.Popen(
                 args,
                 stdout=subprocess.PIPE,

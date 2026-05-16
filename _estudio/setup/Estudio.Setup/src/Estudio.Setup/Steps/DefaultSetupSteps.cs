@@ -47,8 +47,10 @@ public static class DefaultSetupSteps
                 commandRunner,
                 codeCommand),
             new WingetPackageStep("powershell7", "PowerShell 7", "Microsoft.PowerShell", "pwsh", "--version", commandRunner),
+            new WingetPackageStep("exercism-cli", "Exercism CLI", "Exercism.CLI", "exercism", "version", commandRunner),
             new Msys2ToolchainStep(commandRunner),
             new UserPathStep(new UserEnvironment(), new[] { Msys2ToolchainStep.Ucrt64Bin }),
+            new ExercismCTrackStep(commandRunner),
             new GeminiRuntimeConfigStep(
                 RuntimeConfigPaths.ResolveConfigPath(appDataRoot),
                 geminiRuntimeConfigProvider),

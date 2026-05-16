@@ -7,7 +7,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from setup_textual_app import EstudioSetupDesk, InstallerState, SetupCommand, build_core_command, parse_progress_event
+from setup_textual_app import (
+    EXERCISM_TOKEN_ENV,
+    EstudioSetupDesk,
+    InstallerState,
+    SetupCommand,
+    build_core_command,
+    build_core_environment,
+    parse_progress_event,
+)
 
 
 class SetupTextualTests(unittest.TestCase):
@@ -15,6 +23,7 @@ class SetupTextualTests(unittest.TestCase):
         command = SetupCommand(
             mode="reinstall",
             alias="axel",
+            exercism_token="secret-token",
             change_github=True,
             only_step_ids=("git", "vscode-settings"),
             passthrough_args=("--tui", "--state-root", r"C:\Temp\Estudio"),
@@ -30,7 +39,23 @@ class SetupTextualTests(unittest.TestCase):
         self.assertIn("--change-github", result)
         self.assertEqual(result.count("--only"), 2)
         self.assertNotIn("--tui", result)
+        self.assertNotIn("secret-token", result)
         self.assertIn(r"C:\Temp\Estudio", result)
+
+    def test_build_core_environment_passes_exercism_token_outside_command_line(self) -> None:
+        command = SetupCommand(mode="repair", exercism_token="token-from-ui")
+
+        env = build_core_environment(command, {"PATH": r"C:\Windows"})
+
+        self.assertEqual(env[EXERCISM_TOKEN_ENV], "token-from-ui")
+        self.assertEqual(env["ESTUDIO_SETUP_TEXTUAL_BYPASS"], "1")
+
+    def test_build_core_environment_clears_stale_exercism_token_when_input_is_empty(self) -> None:
+        command = SetupCommand(mode="verify", exercism_token="")
+
+        env = build_core_environment(command, {EXERCISM_TOKEN_ENV: "old-token"})
+
+        self.assertNotIn(EXERCISM_TOKEN_ENV, env)
 
     def test_parse_progress_event_accepts_json_lines(self) -> None:
         event = parse_progress_event(
@@ -106,6 +131,8 @@ class SetupTextualTests(unittest.TestCase):
                 for selector in (
                     "#brand-strip",
                     "#command-strip",
+                    "#exercism-token-url",
+                    "#exercism-token",
                     "#component-matrix",
                     "#pipeline",
                     "#step-inspector",
