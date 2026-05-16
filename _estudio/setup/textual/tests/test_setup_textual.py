@@ -186,6 +186,8 @@ class SetupTextualTests(unittest.TestCase):
         self.assertIn("Estudio.Setup.Textual.exe", wrapper)
         self.assertIn("ESTUDIO_SETUP_TEXTUAL_BYPASS", wrapper)
         self.assertIn("Estudio.Setup.exe", wrapper)
+        self.assertIn("import textual", wrapper)
+        self.assertIn("py -3", wrapper)
 
 
 if __name__ == "__main__":
