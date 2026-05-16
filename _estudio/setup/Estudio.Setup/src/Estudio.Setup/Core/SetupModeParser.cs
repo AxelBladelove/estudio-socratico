@@ -15,6 +15,7 @@ public static class SetupModeParser
         var onlyStepIds = new List<string>();
         var helpRequested = false;
         var tuiRequested = false;
+        var forceGitHubRelogin = false;
         for (var index = 0; index < args.Count; index++)
         {
             var arg = args[index];
@@ -41,6 +42,12 @@ public static class SetupModeParser
             if (normalized is "tui" or "visual")
             {
                 tuiRequested = true;
+                continue;
+            }
+
+            if (normalized is "change-github" or "cambiar-github" or "github-relogin" or "relogin-github")
+            {
+                forceGitHubRelogin = true;
                 continue;
             }
 
@@ -80,7 +87,8 @@ public static class SetupModeParser
             aliasOverride,
             helpRequested,
             onlyStepIds.Count == 0 ? null : onlyStepIds.ToArray(),
-            tuiRequested);
+            tuiRequested,
+            forceGitHubRelogin);
     }
 
     private static string Normalize(string value)

@@ -25,10 +25,12 @@ public static class DefaultSetupSteps
         return new ISetupStep[]
         {
             new WingetPackageStep("git", "Git", "Git.Git", "git", "--version", commandRunner),
-            new GitSafetyBackupStep(commandRunner),
-            new LocalAliasStep(resolvedWorkspaceRoot, studentAlias),
             new WingetPackageStep("github-cli", "GitHub CLI", "GitHub.cli", "gh", "--version", commandRunner),
             new GitHubAuthStep(commandRunner),
+            new GitIdentityStep(commandRunner, studentAlias),
+            new GitSafetyBackupStep(commandRunner),
+            new GitHubAliasRenameStep(commandRunner, resolvedWorkspaceRoot, studentAlias),
+            new LocalAliasStep(resolvedWorkspaceRoot, studentAlias),
             new GitHubForkStep(commandRunner, studentAlias),
             new GitRemoteStep(commandRunner, studentAlias),
             new GitProjectUpdateStep(commandRunner),

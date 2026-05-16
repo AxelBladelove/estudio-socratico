@@ -67,6 +67,18 @@ public class SetupModeParserTests
         Assert.Equal("axel_02", options.AliasOverride);
     }
 
+    [Theory]
+    [InlineData("--change-github")]
+    [InlineData("--cambiar-github")]
+    [InlineData("--github-relogin")]
+    public void Parse_accepts_github_relogin_flag(string arg)
+    {
+        var options = SetupModeParser.Parse(new[] { "update", arg });
+
+        Assert.Equal(SetupMode.Update, options.Mode);
+        Assert.True(options.ForceGitHubRelogin);
+    }
+
     [Fact]
     public void Parse_accepts_only_step_filter()
     {
@@ -123,6 +135,7 @@ public class SetupModeParserTests
         Assert.Contains("update", text);
         Assert.Contains("package", text);
         Assert.Contains("--alias", text);
+        Assert.Contains("--change-github", text);
         Assert.Contains("--only", text);
         Assert.Contains("--tui", text);
         Assert.Contains("--state-root", text);

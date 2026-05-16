@@ -6,4 +6,5 @@ public sealed record SetupOptions(
     string? AliasOverride = null,
     bool HelpRequested = false,
     IReadOnlyList<string>? OnlyStepIds = null,
-    bool TuiRequested = false);
+    bool TuiRequested = false,
+    bool ForceGitHubRelogin = false);

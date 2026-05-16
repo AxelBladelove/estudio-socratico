@@ -11,11 +11,13 @@ motor.
 - `Estudio.Setup.cmd package` publica un instalador self-contained `win-x64`,
   genera `release-manifest.json` con SHA-256 y produce un ZIP limpio bajo
   `_estudio/setup/Estudio.Setup/publish/release/`.
-- El cambio de cuenta GitHub se resuelve desde `gh auth`; el fork de trabajo se
-  calcula como `estudio-socratico-<alias>` y `origin/upstream` se reparan desde
-  el instalador.
+- El cambio de cuenta GitHub se resuelve desde `gh auth`; la TUI expone una
+  accion `Cambiar GitHub` que fuerza logout/login web, vuelve a resolver el
+  usuario y repara fork/remotes.
 - El cambio de alias se centraliza en `.estudio_usuario`; si cambia, el
-  instalador crea backup local antes de reescribirlo.
+  instalador intenta renombrar el fork `estudio-socratico-<alias-viejo>` a
+  `estudio-socratico-<alias-nuevo>`, crea backup local antes de reescribirlo y
+  luego repara `origin/upstream`.
 - Los scripts PowerShell de setup 1.x quedan congelados como legacy. Se
   conservan para compatibilidad, pero la ruta activa es el instalador C#.
 
@@ -112,9 +114,11 @@ El setup:
 
 - valida la raiz del proyecto;
 - muestra progreso/reintentos desde Terminal.Gui;
+- muestra acciones explicitas para cambiar cuenta GitHub y aplicar alias nuevo;
 - usa `install`, `update`, `repair`, `verify` y `package`;
 - valida el alias local y permite sobrescribirlo con `--alias`;
-- revalida GitHub CLI con `gh auth status`;
+- revalida GitHub CLI con `gh auth status` y permite forzar relogin con
+  `--change-github`;
 - resuelve el usuario y el correo de GitHub desde `gh auth` sin pedirlos a mano;
 - usa el alias como `user.name` local para que ese mismo nombre aparezca en los commits;
 - instala o valida herramientas base;
@@ -136,6 +140,7 @@ Parametros utiles:
 |---|---|
 | `--tui` | Abre la interfaz visual |
 | `--alias <slug>` | Define alias local para este clon |
+| `--change-github` | Fuerza logout/login de GitHub CLI durante `update` |
 | `--only <step-id>` | Ejecuta solo un componente; puede repetirse |
 | `--state-root <ruta>` | Cambia carpeta de estado/log/reporte |
 
@@ -144,6 +149,8 @@ Ejemplos:
 ```powershell
 _estudio\setup\Estudio.Setup.cmd verify
 _estudio\setup\Estudio.Setup.cmd repair --only msys2-toolchain
+_estudio\setup\Estudio.Setup.cmd update --change-github
+_estudio\setup\Estudio.Setup.cmd update --alias nuevo_alias
 _estudio\setup\Estudio.Setup.cmd package
 ```
 

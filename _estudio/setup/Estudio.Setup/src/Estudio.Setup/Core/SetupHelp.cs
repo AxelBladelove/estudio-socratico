@@ -17,6 +17,7 @@ public static class SetupHelp
 
         Opciones:
           --alias <valor>       Usa un alias temporal para calcular fork/settings.
+          --change-github       Fuerza logout/login de GitHub CLI antes de reparar fork/remotes.
           --only <step-id>      Ejecuta solo un componente. Puede repetirse.
           --state-root <ruta>   Guarda setup-state, logs y reporte en otra carpeta.
           --tui                 Abre la interfaz Terminal.Gui de progreso/reintentos.

@@ -37,6 +37,31 @@ public sealed class SetupRunCoordinatorTests : IDisposable
         Assert.Equal(new[] { "run-started:Verify", "phase-started:git.detect", "phase-finished:git.detect", "phase-started:git.verify", "phase-finished:git.verify", "run-finished:ok" }, progress.Events);
     }
 
+    [Fact]
+    public async Task RunAndPersistAsync_records_github_user_after_forced_relogin_flow()
+    {
+        var options = new SetupOptions(
+            SetupMode.Update,
+            StateRoot: _tempRoot,
+            ForceGitHubRelogin: true);
+        var workspaceRoot = Path.Combine(_tempRoot, "workspace");
+        Directory.CreateDirectory(workspaceRoot);
+        var coordinator = new SetupRunCoordinator(
+            (_, _, _) => new ISetupStep[] { new PassingStep("github-auth") },
+            (_, _) => Task.FromResult<string?>("new-octocat"));
+
+        var artifacts = await coordinator.RunAndPersistAsync(
+            options,
+            workspaceRoot,
+            "axel",
+            new NoopCommandRunner(),
+            NullSetupProgressSink.Instance,
+            CancellationToken.None);
+
+        Assert.True(artifacts.Report.Success);
+        Assert.Contains("\"githubUser\": \"new-octocat\"", File.ReadAllText(artifacts.StatePath));
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_tempRoot))

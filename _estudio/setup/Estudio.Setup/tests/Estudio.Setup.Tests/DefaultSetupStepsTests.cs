@@ -15,10 +15,12 @@ public class DefaultSetupStepsTests
             new[]
             {
                 "git",
-                "git-safety-backup",
-                "local-alias",
                 "github-cli",
                 "github-auth",
+                "git-identity",
+                "git-safety-backup",
+                "github-alias-rename",
+                "local-alias",
                 "github-fork",
                 "git-remotes",
                 "git-project-update",

@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using Estudio.Setup.Core;
+using Estudio.Setup.Profile;
 using Estudio.Setup.Services;
 using Estudio.Setup.Steps;
 using Terminal.Gui.App;
@@ -23,6 +24,14 @@ public static class TerminalGuiSetupApp
         var lastExitCode = 1;
         var isRunning = false;
         SetupRunArtifacts? lastArtifacts = null;
+        var currentAlias = studentAlias;
+        var baselineOptions = options with
+        {
+            AliasOverride = studentAlias,
+            TuiRequested = true,
+            ForceGitHubRelogin = false,
+            OnlyStepIds = null,
+        };
         var currentModel = CreateModel(options, commandRunner, studentAlias, workspaceRoot);
         var componentItems = new ObservableCollection<string>();
         var coordinator = new SetupRunCoordinator();
@@ -38,6 +47,32 @@ public static class TerminalGuiSetupApp
             Y = 0,
             Width = Dim.Fill(),
             Text = $"Alias: {studentAlias} | Modo inicial: {options.Mode}",
+        };
+        var aliasLabel = new Label
+        {
+            X = 0,
+            Y = 3,
+            Text = "Alias:",
+        };
+        var aliasField = new TextField
+        {
+            X = Pos.Right(aliasLabel) + 1,
+            Y = 3,
+            Width = 24,
+            Height = 1,
+            Text = studentAlias,
+        };
+        var applyAliasButton = new Button
+        {
+            X = Pos.Right(aliasField) + 1,
+            Y = 3,
+            Text = "Aplicar alias",
+        };
+        var changeGitHubButton = new Button
+        {
+            X = Pos.Right(applyAliasButton) + 1,
+            Y = 3,
+            Text = "Cambiar GitHub",
         };
         var progressBar = new ProgressBar
         {
@@ -58,7 +93,7 @@ public static class TerminalGuiSetupApp
         var components = new ListView
         {
             X = 0,
-            Y = 4,
+            Y = 5,
             Width = Dim.Percent(48),
             Height = Dim.Fill(4),
         };
@@ -66,7 +101,7 @@ public static class TerminalGuiSetupApp
         var log = new TextView
         {
             X = Pos.Right(components) + 1,
-            Y = 4,
+            Y = 5,
             Width = Dim.Fill(),
             Height = Dim.Fill(4),
             Multiline = true,
@@ -105,13 +140,30 @@ public static class TerminalGuiSetupApp
             Text = "Salir",
         };
 
-        window.Add(title, progressBar, progressLabel, components, log, artifactLabel, verifyButton, repairButton, retryButton, exitButton);
+        window.Add(title, progressBar, progressLabel, aliasLabel, aliasField, applyAliasButton, changeGitHubButton, components, log, artifactLabel, verifyButton, repairButton, retryButton, exitButton);
 
-        verifyButton.Accepted += (_, _) => StartRun(SetupTuiRunPlanner.ForMode(options, SetupMode.Verify));
-        repairButton.Accepted += (_, _) => StartRun(SetupTuiRunPlanner.ForMode(options, SetupMode.Repair));
+        verifyButton.Accepted += (_, _) => StartRun(SetupTuiRunPlanner.ForMode(baselineOptions, SetupMode.Verify));
+        repairButton.Accepted += (_, _) => StartRun(SetupTuiRunPlanner.ForMode(baselineOptions, SetupMode.Repair));
+        applyAliasButton.Accepted += (_, _) =>
+        {
+            var requestedAlias = aliasField.Text?.ToString()?.Trim() ?? string.Empty;
+            try
+            {
+                LocalStudentProfile.ValidateAlias(requestedAlias);
+            }
+            catch (ArgumentException ex)
+            {
+                artifactLabel.Text = $"Alias invalido: {ex.Message}";
+                artifactLabel.SetNeedsDraw();
+                return;
+            }
+
+            StartRun(SetupTuiRunPlanner.ChangeAlias(baselineOptions, requestedAlias));
+        };
+        changeGitHubButton.Accepted += (_, _) => StartRun(SetupTuiRunPlanner.ChangeGitHub(baselineOptions));
         retryButton.Accepted += (_, _) =>
         {
-            var retryOptions = SetupTuiRunPlanner.RetryFailed(options, currentModel.FailedStepIds());
+            var retryOptions = SetupTuiRunPlanner.RetryFailed(baselineOptions, currentModel.FailedStepIds());
             if (retryOptions is not null)
             {
                 StartRun(retryOptions);
@@ -123,7 +175,7 @@ public static class TerminalGuiSetupApp
         _ = Task.Run(async () =>
         {
             await Task.Delay(150, cancellationToken);
-            StartRun(options);
+            StartRun(options with { AliasOverride = studentAlias, TuiRequested = true });
         }, cancellationToken);
 
         app.Run(window);
@@ -139,12 +191,14 @@ public static class TerminalGuiSetupApp
             _ = Task.Run(async () =>
             {
                 isRunning = true;
-                currentModel = CreateModel(runOptions, commandRunner, studentAlias, workspaceRoot);
+                var runAlias = runOptions.AliasOverride ?? currentAlias;
+                currentModel = CreateModel(runOptions, commandRunner, runAlias, workspaceRoot);
                 var progress = new TerminalGuiProgressSink(currentModel, snapshot => app.Invoke(() => Refresh(snapshot)));
 
                 app.Invoke(() =>
                 {
                     SetButtonsEnabled(false);
+                    title.Text = $"Alias: {runAlias} | Modo: {runOptions.Mode}";
                     artifactLabel.Text = $"Ejecutando {runOptions.Mode}...";
                     Refresh(SetupTuiPresenter.CreateSnapshot(currentModel));
                 });
@@ -154,7 +208,7 @@ public static class TerminalGuiSetupApp
                     lastArtifacts = await coordinator.RunAndPersistAsync(
                         runOptions,
                         workspaceRoot,
-                        studentAlias,
+                        runAlias,
                         commandRunner,
                         progress,
                         cancellationToken);
@@ -162,6 +216,18 @@ public static class TerminalGuiSetupApp
                     app.Invoke(() =>
                     {
                         artifactLabel.Text = $"Estado: {lastArtifacts.StatePath} | Reporte: {lastArtifacts.ReportPath}";
+                        if (lastArtifacts.Report.Success)
+                        {
+                            currentAlias = runAlias;
+                            baselineOptions = baselineOptions with
+                            {
+                                AliasOverride = currentAlias,
+                                ForceGitHubRelogin = false,
+                                OnlyStepIds = null,
+                            };
+                            aliasField.Text = currentAlias;
+                            title.Text = $"Alias: {currentAlias} | Modo: {runOptions.Mode}";
+                        }
                     });
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -210,6 +276,8 @@ public static class TerminalGuiSetupApp
             verifyButton.Enabled = enabled;
             repairButton.Enabled = enabled;
             retryButton.Enabled = enabled && currentModel.FailedStepIds().Count > 0;
+            applyAliasButton.Enabled = enabled;
+            changeGitHubButton.Enabled = enabled;
             exitButton.Enabled = true;
         }
     }

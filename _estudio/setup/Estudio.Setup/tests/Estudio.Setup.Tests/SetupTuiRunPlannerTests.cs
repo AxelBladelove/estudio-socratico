@@ -49,4 +49,43 @@ public sealed class SetupTuiRunPlannerTests
 
         Assert.Null(planned);
     }
+
+    [Fact]
+    public void ChangeGitHub_uses_update_mode_and_forces_relogin()
+    {
+        var baseline = new SetupOptions(
+            SetupMode.Install,
+            StateRoot: "state",
+            AliasOverride: "axel",
+            OnlyStepIds: new[] { "node" },
+            TuiRequested: true);
+
+        var planned = SetupTuiRunPlanner.ChangeGitHub(baseline);
+
+        Assert.Equal(SetupMode.Update, planned.Mode);
+        Assert.Equal("state", planned.StateRoot);
+        Assert.Equal("axel", planned.AliasOverride);
+        Assert.True(planned.TuiRequested);
+        Assert.True(planned.ForceGitHubRelogin);
+        Assert.Null(planned.OnlyStepIds);
+    }
+
+    [Fact]
+    public void ChangeAlias_uses_update_mode_with_new_alias()
+    {
+        var baseline = new SetupOptions(
+            SetupMode.Verify,
+            StateRoot: "state",
+            AliasOverride: "old",
+            ForceGitHubRelogin: true);
+
+        var planned = SetupTuiRunPlanner.ChangeAlias(baseline, "new_alias");
+
+        Assert.Equal(SetupMode.Update, planned.Mode);
+        Assert.Equal("state", planned.StateRoot);
+        Assert.Equal("new_alias", planned.AliasOverride);
+        Assert.True(planned.TuiRequested);
+        Assert.False(planned.ForceGitHubRelogin);
+        Assert.Null(planned.OnlyStepIds);
+    }
 }

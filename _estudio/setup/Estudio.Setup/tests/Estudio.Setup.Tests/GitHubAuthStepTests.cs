@@ -45,17 +45,68 @@ public class GitHubAuthStepTests
     }
 
     [Fact]
-    public async Task InstallAsync_does_not_launch_interactive_login_and_returns_guided_missing()
+    public async Task UpdateAsync_reuses_existing_session_when_relogin_was_not_requested()
     {
-        var runner = new QueueCommandRunner();
+        var runner = new QueueCommandRunner(CommandResult.Success("Logged in to github.com"));
+        var step = new GitHubAuthStep(runner);
+
+        var result = await step.UpdateAsync(new SetupContext(new SetupOptions(SetupMode.Update)), CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(("gh", "auth status"), runner.Calls.Single());
+    }
+
+    [Fact]
+    public async Task UpdateAsync_logs_out_and_runs_web_login_when_relogin_is_requested()
+    {
+        var runner = new QueueCommandRunner(
+            CommandResult.Success("logged out"),
+            CommandResult.Success("logged in"),
+            CommandResult.Success("Logged in to github.com"));
+        var step = new GitHubAuthStep(runner);
+
+        var result = await step.UpdateAsync(
+            new SetupContext(new SetupOptions(SetupMode.Update, ForceGitHubRelogin: true)),
+            CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(("gh", "auth logout --hostname github.com --yes"), runner.Calls[0]);
+        Assert.Equal(("gh", "auth login --hostname github.com --web --git-protocol https"), runner.Calls[1]);
+        Assert.Equal(("gh", "auth status"), runner.Calls[2]);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_continues_login_when_forced_logout_reports_no_existing_session()
+    {
+        var runner = new QueueCommandRunner(
+            CommandResult.Failure(1, string.Empty, "not logged in"),
+            CommandResult.Success("logged in"),
+            CommandResult.Success("Logged in to github.com"));
+        var step = new GitHubAuthStep(runner);
+
+        var result = await step.UpdateAsync(
+            new SetupContext(new SetupOptions(SetupMode.Update, ForceGitHubRelogin: true)),
+            CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(("gh", "auth logout --hostname github.com --yes"), runner.Calls[0]);
+        Assert.Equal(("gh", "auth login --hostname github.com --web --git-protocol https"), runner.Calls[1]);
+        Assert.Equal(("gh", "auth status"), runner.Calls[2]);
+    }
+
+    [Fact]
+    public async Task InstallAsync_runs_guided_web_login_when_missing()
+    {
+        var runner = new QueueCommandRunner(
+            CommandResult.Success("logged in"),
+            CommandResult.Success("Logged in to github.com"));
         var step = new GitHubAuthStep(runner);
 
         var result = await step.InstallAsync(new SetupContext(new SetupOptions(SetupMode.Install)), CancellationToken.None);
 
-        Assert.False(result.Success);
-        Assert.True(result.IsMissing);
-        Assert.Contains("gh auth login", result.Message);
-        Assert.Empty(runner.Calls);
+        Assert.True(result.Success);
+        Assert.Equal(("gh", "auth login --hostname github.com --web --git-protocol https"), runner.Calls[0]);
+        Assert.Equal(("gh", "auth status"), runner.Calls[1]);
     }
 
     private sealed class QueueCommandRunner : ICommandRunner

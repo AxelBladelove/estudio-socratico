@@ -35,12 +35,12 @@ public sealed class SetupRunCoordinator
         ISetupProgressSink? progress,
         CancellationToken cancellationToken)
     {
-        var githubUser = await _githubUserResolver(commandRunner, cancellationToken);
-        var metadata = SetupStateMetadata.ForWorkspace(studentAlias, workspaceRoot, githubUser);
         var engine = new SetupEngine(
             _stepFactory(commandRunner, studentAlias, workspaceRoot),
             progress ?? NullSetupProgressSink.Instance);
         var report = await engine.RunAsync(options, cancellationToken);
+        var githubUser = await _githubUserResolver(commandRunner, cancellationToken);
+        var metadata = SetupStateMetadata.ForWorkspace(studentAlias, workspaceRoot, githubUser);
         var stateRoot = SetupPathDefaults.ResolveStateRoot(options.StateRoot);
         var statePath = await new FileSetupStateStore(stateRoot)
             .SaveAsync(options, report, metadata, cancellationToken);

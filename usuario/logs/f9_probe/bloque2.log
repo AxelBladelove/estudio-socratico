@@ -1,0 +1,19 @@
+ 
+============================================================ 
+INTENTO: 2026-05-15T21-21-47 
+ARCHIVO: C:\Users\AxelBlade\.gemini\antigravity\scratch\estudio-socratico\_estudio\.agent\f9_probe.c 
+============================================================ 
+[CODIGO FUENTE] 
+------------------------------------------------------------ 
+#include <stdio.h>
+
+int main(void)
+{
+    printf("F9 MVP OK\n");
+    return 0;
+}
+ 
+------------------------------------------------------------ 
+[OUTPUT DEL COMPILADOR] 
+(Compilacion limpia. Cero errores y advertencias.) 
+[EXIT CODE: 0] 

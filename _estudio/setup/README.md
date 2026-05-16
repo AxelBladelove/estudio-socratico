@@ -11,8 +11,9 @@ _estudio\setup\Estudio.Setup.cmd install --tui
 Ese comando esta pensado para ejecutarse desde una terminal abierta en la raiz
 del repo o desde el ZIP de release. En el repo de desarrollo usa `dotnet run`
 para evitar ejecutables viejos; en un paquete limpio usa `Estudio.Setup.exe`
-self-contained. La TUI muestra componentes, progreso, log en vivo y permite
-reintentar solo los pasos fallidos con `repair --only`.
+self-contained. La TUI muestra componentes, progreso, log en vivo, campo de
+alias, cambio de cuenta GitHub y reintentos solo de pasos fallidos con
+`repair --only`.
 
 Si usas los accesos directos de la raiz del repo:
 
@@ -23,20 +24,35 @@ Si usas los accesos directos de la raiz del repo:
   abre la TUI con `update` y vuelve a validar/remediar los componentes
   controlados por el framework.
 
+## Cambio De Identidad
+
+Desde la TUI:
+
+- `Cambiar GitHub` fuerza `gh auth logout` + `gh auth login --web`, vuelve a
+  resolver el usuario autenticado y repara fork/remotes con esa cuenta.
+- `Aplicar alias` usa el valor escrito en el campo `Alias`, intenta renombrar
+  el fork `estudio-socratico-<alias-viejo>` a `estudio-socratico-<alias-nuevo>`
+  cuando existe y luego actualiza `.estudio_usuario`.
+
+Desde CLI:
+
+```bat
+_estudio\setup\Estudio.Setup.cmd update --change-github
+_estudio\setup\Estudio.Setup.cmd update --alias nuevo_alias
+```
+
 ## Que Hace
 
 - valida que el repo este completo;
-- pide el alias local del estudiante si hace falta;
+- valida el alias local del estudiante y permite cambiarlo desde TUI o `--alias`;
 - valida GitHub CLI y abre el flujo web cuando falta sesion o decides cambiar
   de cuenta;
-- lee `usuario/registro.json` para saber si tu cuenta de GitHub ya tiene rama
-  vinculada;
 - resuelve usuario y correo de GitHub desde `gh auth` sin pedirlos a mano;
 - usa el alias como nombre local de Git para los commits de ese clon;
 - configura Git local;
 - crea `.estudio_usuario`;
 - prepara `usuario/errores.md`;
-- crea, activa o renombra la rama personal segun el flujo;
+- crea o reutiliza el fork `estudio-socratico-<alias>` y configura remotes;
 - instala o valida herramientas base;
 - instala o valida Exercism CLI;
 - instala o valida GCC/MSYS2;

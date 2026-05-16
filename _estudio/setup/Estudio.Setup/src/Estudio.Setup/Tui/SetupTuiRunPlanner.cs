@@ -11,6 +11,30 @@ public static class SetupTuiRunPlanner
             Mode = mode,
             OnlyStepIds = null,
             TuiRequested = true,
+            ForceGitHubRelogin = false,
+        };
+    }
+
+    public static SetupOptions ChangeGitHub(SetupOptions baseline)
+    {
+        return baseline with
+        {
+            Mode = SetupMode.Update,
+            OnlyStepIds = null,
+            TuiRequested = true,
+            ForceGitHubRelogin = true,
+        };
+    }
+
+    public static SetupOptions ChangeAlias(SetupOptions baseline, string alias)
+    {
+        return baseline with
+        {
+            Mode = SetupMode.Update,
+            AliasOverride = alias,
+            OnlyStepIds = null,
+            TuiRequested = true,
+            ForceGitHubRelogin = false,
         };
     }
 
@@ -26,6 +50,7 @@ public static class SetupTuiRunPlanner
             Mode = SetupMode.Repair,
             OnlyStepIds = failedStepIds.ToArray(),
             TuiRequested = true,
+            ForceGitHubRelogin = false,
         };
     }
 }
