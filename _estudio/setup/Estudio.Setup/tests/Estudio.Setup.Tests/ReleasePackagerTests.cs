@@ -52,8 +52,8 @@ public sealed class ReleasePackagerTests : IDisposable
         Assert.Contains("Estudio.Setup.Textual.exe", File.ReadAllText(result.ManifestPath));
         Assert.Contains("Estudio.Setup.cmd", result.Files);
         var readme = await File.ReadAllTextAsync(Path.Combine(result.PackageDirectory, "README.txt"));
-        Assert.Contains("install --tui", readme);
-        Assert.Contains("reinstall --tui", readme);
+        Assert.Contains("verificacion automatica", readme);
+        Assert.Contains("instalar, actualizar, reinstalar o desinstalar", readme);
         Assert.Contains("uninstall", readme);
         Assert.Contains("verify", readme);
     }
@@ -72,6 +72,8 @@ public sealed class ReleasePackagerTests : IDisposable
         await WriteWorkspaceFile(workspaceRoot, "AGENTS.md", "# Agentes");
         await WriteWorkspaceFile(workspaceRoot, ".vscode/tasks.json", "{}");
         await WriteWorkspaceFile(workspaceRoot, "Ejercicios/README.md", "# Ejercicios");
+        await WriteWorkspaceFile(workspaceRoot, "Instalar Estudio Socratico.cmd", "@echo off");
+        await WriteWorkspaceFile(workspaceRoot, "Actualizar Estudio Socratico.cmd", "@echo off");
         await WriteWorkspaceFile(workspaceRoot, "_estudio/soporte/vscode/estudio-exercism/package.json", "{}");
         await WriteWorkspaceFile(workspaceRoot, "_estudio/soporte/exercism/catalogs/alejandro.json", "[]");
         await WriteWorkspaceFile(workspaceRoot, "_estudio/soporte/runtime/secret.txt", "runtime");
@@ -102,6 +104,8 @@ public sealed class ReleasePackagerTests : IDisposable
         Assert.Contains(".vscode/tasks.json", result.Files);
         Assert.Contains("Ejercicios/README.md", result.Files);
         Assert.Contains("README.md", result.Files);
+        Assert.DoesNotContain("Instalar Estudio Socratico.cmd", result.Files);
+        Assert.DoesNotContain("Actualizar Estudio Socratico.cmd", result.Files);
         Assert.DoesNotContain("_estudio/soporte/runtime/secret.txt", result.Files);
         Assert.DoesNotContain(".estudio-drive/token.json", result.Files);
         Assert.DoesNotContain("02-gemini-api-key-runtime-config-2.md", result.Files);

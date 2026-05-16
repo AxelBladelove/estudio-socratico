@@ -6,7 +6,7 @@ public static class SetupModeParser
     {
         if (args.Count == 0)
         {
-            return new SetupOptions(SetupMode.Install, TuiRequested: true);
+            return new SetupOptions(SetupMode.Verify, TuiRequested: true);
         }
 
         SetupMode? mode = null;
@@ -91,7 +91,7 @@ public static class SetupModeParser
         }
 
         return new SetupOptions(
-            mode ?? SetupMode.Install,
+            mode ?? SetupMode.Verify,
             stateRoot,
             aliasOverride,
             helpRequested,

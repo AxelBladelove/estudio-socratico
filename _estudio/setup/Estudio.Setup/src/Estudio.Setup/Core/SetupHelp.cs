@@ -7,7 +7,7 @@ public static class SetupHelp
 
         Uso:
           Estudio.Setup.exe [install|update|reinstall|repair|uninstall|verify|package] [opciones]
-          Estudio.Setup.exe sin argumentos abre install --tui.
+          Estudio.Setup.exe sin argumentos abre verify --tui y deja elegir el modo desde la UI.
 
         Modos:
           install   Instala o completa componentes faltantes.

@@ -294,7 +294,7 @@ if not defined GCC_EXE if exist "C:\msys64\clang64\bin\gcc.exe" set "GCC_EXE=C:\
 
 if not defined GCC_EXE (
     echo [ERROR] No se encontro gcc.exe en PATH ni en rutas comunes de MSYS2.
-    echo [TIP] Instala GCC con _estudio\setup\Estudio.Setup.cmd install --tui o agrega tu compilador al PATH de Windows.
+    echo [TIP] Abre Estudio.Setup.cmd y usa Instalar o Reinstalar para dejar GCC listo, o agrega tu compilador al PATH de Windows.
     exit /b 1
 )
 

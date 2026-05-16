@@ -219,11 +219,9 @@ public sealed class ReleasePackager
         return $"""
             Estudio Socratico Setup {version}
 
-            Doble clic en Estudio.Setup.cmd abre el instalador Textual.
-            Ejecuta Estudio.Setup.cmd install --tui para instalacion visual.
-            Ejecuta Estudio.Setup.cmd reinstall --tui para reinstalar integraciones locales.
-            Ejecuta Estudio.Setup.cmd uninstall para desinstalar integraciones locales.
-            Ejecuta Estudio.Setup.cmd verify para diagnostico no destructivo.
+            Doble clic en Estudio.Setup.cmd abre el instalador visual.
+            Sin argumentos, el instalador ejecuta una verificacion automatica y desde la UI puedes elegir instalar, actualizar, reinstalar o desinstalar.
+            Tambien puedes usar Estudio.Setup.cmd verify, update, reinstall o uninstall desde terminal cuando quieras forzar un modo concreto.
             """;
     }
 
@@ -255,10 +253,6 @@ public sealed class ReleasePackager
         CopyRootFile(workspaceRoot, packageDirectory, "AGENTS.md");
         CopyRootFile(workspaceRoot, packageDirectory, "package.json");
         CopyRootFile(workspaceRoot, packageDirectory, ".gitignore");
-        CopyRootFile(workspaceRoot, packageDirectory, "Instalar Estudio Socratico.cmd");
-        CopyRootFile(workspaceRoot, packageDirectory, "Actualizar Estudio Socratico.cmd");
-        CopyRootFile(workspaceRoot, packageDirectory, "Reinstalar Estudio Socratico.cmd");
-        CopyRootFile(workspaceRoot, packageDirectory, "Desinstalar Estudio Socratico.cmd");
 
         CopyDirectoryIfExists(Path.Combine(workspaceRoot, ".vscode"), Path.Combine(packageDirectory, ".vscode"));
         CopyDirectoryIfExists(Path.Combine(workspaceRoot, "Ejercicios"), Path.Combine(packageDirectory, "Ejercicios"));

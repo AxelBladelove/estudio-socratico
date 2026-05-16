@@ -82,24 +82,23 @@ Cuando aprendes C, los errores no siempre son fáciles de entender:
 ```
 
 ```bat
-Instalar Estudio Socratico.cmd
-```
-
-Se abre el instalador visual de Estudio Socratico. Si usas el ZIP empaquetado
-del setup, el archivo equivalente es:
-
-```bat
 Estudio.Setup.cmd
 ```
 
-El instalador te pide lo minimo para dejar la PC lista:
+Se abre el instalador visual de Estudio Socratico. Lo primero que hace es una
+verificacion automatica de lo que ya tienes y de lo que falta. Desde esa misma
+pantalla eliges si quieres instalar, actualizar, reinstalar, desinstalar o
+volver a verificar.
 
-- **Tu nombre corto** — un alias como `axel` o `juan`, que identifica tus
-  archivos dentro del proyecto.
+Si ya habias usado el instalador antes, la TUI precarga lo que pueda resolver
+sin preguntarte otra vez:
+
+- **Tu alias local** — si `.estudio_usuario`, `ESTUDIO_USUARIO` o la
+  configuracion Git local ya lo definen, aparece escrito automaticamente.
 - **Iniciar sesión en GitHub** — para vincular tus commits.
-- **Token de Exercism** — lo copias desde
-  `https://exercism.org/settings/api_cli` y lo pegas en la TUI para preparar el
-  track de C.
+- **Token de Exercism** — si la PC ya lo tiene guardado, aparece precargado; si
+  no, puedes copiarlo desde `https://exercism.org/settings/api_cli` y pegarlo en
+  la TUI.
 
 Al terminar quedan listos:
 - ✅ El atajo <kbd>F9</kbd> para compilar
@@ -110,11 +109,14 @@ Al terminar quedan listos:
 <details>
 <summary><strong>🔄 Ya lo tengo instalado, solo quiero actualizar</strong></summary>
 
-Haz doble clic en:
+Abre:
 
 ```bat
-Actualizar Estudio Socratico.cmd
+Estudio.Setup.cmd
 ```
+
+Deja que termine la verificacion inicial y luego usa `Actualizar` dentro del
+instalador.
 
 O desde la terminal:
 
@@ -130,11 +132,13 @@ personales.
 <details>
 <summary><strong>♻️ Quiero reinstalar integraciones locales</strong></summary>
 
-Haz doble clic en:
+Abre:
 
 ```bat
-Reinstalar Estudio Socratico.cmd
+Estudio.Setup.cmd
 ```
+
+Despues de la verificacion inicial, usa `Reinstalar` dentro del instalador.
 
 O desde la terminal:
 
@@ -150,11 +154,13 @@ borrar tus ejercicios.
 <details>
 <summary><strong>🧹 Quiero desinstalar integraciones locales</strong></summary>
 
-Haz doble clic en:
+Abre:
 
 ```bat
-Desinstalar Estudio Socratico.cmd
+Estudio.Setup.cmd
 ```
+
+Despues de la verificacion inicial, usa `Desinstalar` dentro del instalador.
 
 O desde la terminal:
 
@@ -477,15 +483,12 @@ Funciones disponibles:
 
 ```
 estudio-socratico/
+├── Estudio.Setup.cmd           ← Instalador principal; verifica primero y luego eliges modo
 ├── Ejercicios/                ← Tus archivos .c van aquí
 ├── usuario/                   ← Logs, progreso y errores del estudiante
 │   ├── logs/
 │   └── errores.md
-├── _estudio/                  ← Motor interno, setup, docs, extensión y tooling
-├── Instalar Estudio Socratico.cmd
-├── Actualizar Estudio Socratico.cmd
-├── Reinstalar Estudio Socratico.cmd
-└── Desinstalar Estudio Socratico.cmd
+└── _estudio/                  ← Motor interno, setup, docs, extensión y tooling
 ```
 
 ---
@@ -509,7 +512,7 @@ La version base del framework vive en `main`. Tu identidad local vive en
 Ejecuta el instalador de nuevo:
 
 ```bat
-Instalar Estudio Socratico.cmd
+Estudio.Setup.cmd
 ```
 
 Luego cierra VS Code completamente y vuelve a abrirlo.

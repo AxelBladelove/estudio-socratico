@@ -16,6 +16,7 @@
     }
   },
   "files.exclude": {
+    "Estudio.Setup.cmd": false,
     ".agent": true,
     ".git": true,
     ".github": true,
@@ -37,8 +38,6 @@
     ".estudio_usuario.example": true,
     "_estudio/errores.template.md": true,
     "AGENTS.md": true,
-    "Instalar Estudio Socratico.cmd": true,
-    "Actualizar Estudio Socratico.cmd": true,
     "*.cmd": true,
     "01-migracion-ejercicios-a-gist.md": true,
     "04-prompt-curacion-pdf-alejandro-a-gists.md": true,
@@ -62,6 +61,7 @@
     "**/.exercism": true
   },
   "search.exclude": {
+    "Estudio.Setup.cmd": false,
     ".agent": true,
     ".git": true,
     ".github": true,
@@ -83,8 +83,6 @@
     ".estudio_usuario.example": true,
     "_estudio/errores.template.md": true,
     "AGENTS.md": true,
-    "Instalar Estudio Socratico.cmd": true,
-    "Actualizar Estudio Socratico.cmd": true,
     "*.cmd": true,
     "01-migracion-ejercicios-a-gist.md": true,
     "04-prompt-curacion-pdf-alejandro-a-gists.md": true,

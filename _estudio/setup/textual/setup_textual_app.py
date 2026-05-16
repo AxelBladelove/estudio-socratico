@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import argparse
+import configparser
 import json
 import os
+import re
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -42,6 +44,8 @@ DEFAULT_STEP_IDS = (
 
 EXERCISM_TOKEN_ENV = "ESTUDIO_EXERCISM_TOKEN"
 EXERCISM_TOKEN_URL = "https://exercism.org/settings/api_cli"
+LOCAL_ALIAS_ENV = "ESTUDIO_USUARIO"
+ALIAS_PATTERN = re.compile(r"^[A-Za-z0-9_](?:[A-Za-z0-9_-]*[A-Za-z0-9_])?$")
 
 STATUS_LABELS = {
     "pending": "PEND",
@@ -247,6 +251,92 @@ def resolve_core_path(explicit: str | None) -> Path:
     if repo_core.exists():
         return repo_core
     return release_core
+
+
+def looks_like_workspace_root(path: Path) -> bool:
+    return (
+        (path / ".git").exists()
+        or (path / "_estudio" / "setup" / "Estudio.Setup.cmd").exists()
+        or ((path / "Estudio.Setup.cmd").exists() and (path / "_estudio" / "setup").exists())
+    )
+
+
+def resolve_workspace_root(start_path: Path | None = None) -> Path:
+    current = (start_path or Path.cwd()).resolve()
+    fallback: Path | None = None
+    while True:
+        if (current / ".estudio_usuario").exists():
+            return current
+        if fallback is None and looks_like_workspace_root(current):
+            fallback = current
+        if current.parent == current:
+            break
+        current = current.parent
+    return fallback or (start_path or Path.cwd()).resolve()
+
+
+def is_valid_alias(value: str) -> bool:
+    return bool(ALIAS_PATTERN.fullmatch(value.strip()))
+
+
+def read_saved_alias(workspace_root: Path) -> str:
+    identity_path = workspace_root / ".estudio_usuario"
+    if not identity_path.exists():
+        return ""
+    try:
+        return identity_path.read_text(encoding="utf-8").strip()
+    except OSError:
+        return ""
+
+
+def read_git_config_alias(workspace_root: Path) -> str:
+    config_path = workspace_root / ".git" / "config"
+    if not config_path.exists():
+        return ""
+    parser = configparser.ConfigParser(interpolation=None)
+    try:
+        parser.read(config_path, encoding="utf-8")
+    except (configparser.Error, OSError):
+        return ""
+    for section_name, key_name in (("github", "user"), ("user", "name")):
+        value = parser.get(section_name, key_name, fallback="").strip()
+        if is_valid_alias(value):
+            return value
+    return ""
+
+
+def resolve_initial_alias(start_path: Path | None = None) -> str:
+    workspace_root = resolve_workspace_root(start_path)
+    for candidate in (
+        read_saved_alias(workspace_root),
+        os.environ.get(LOCAL_ALIAS_ENV, ""),
+        read_git_config_alias(workspace_root),
+        os.environ.get("USERNAME", ""),
+        os.environ.get("USER", ""),
+    ):
+        if is_valid_alias(candidate):
+            return candidate.strip()
+    return "estudiante"
+
+
+def load_saved_exercism_token(appdata_path: str | None = None) -> str:
+    token = os.environ.get(EXERCISM_TOKEN_ENV, "").strip()
+    if token:
+        return token
+    appdata_root = appdata_path or os.environ.get("APPDATA", "")
+    if not appdata_root:
+        return ""
+    config_path = Path(appdata_root) / "exercism" / "user.json"
+    if not config_path.exists():
+        return ""
+    try:
+        value = json.loads(config_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return ""
+    if not isinstance(value, dict):
+        return ""
+    token_value = str(value.get("token", "")).strip()
+    return token_value
 
 
 class EstudioSetupDesk(App):
@@ -556,12 +646,18 @@ class EstudioSetupDesk(App):
     def on_mount(self) -> None:
         self.title = "Estudio Socratico Setup 2.0"
         self.sub_title = str(self.core_path)
-        self.query_one("#alias", Input).value = self.initial_command.alias
+        alias_value = self.initial_command.alias or resolve_initial_alias()
+        token_value = self.initial_command.exercism_token or load_saved_exercism_token()
+        self.query_one("#alias", Input).value = alias_value
+        self.query_one("#exercism-token", Input).value = token_value
         self.refresh_steps()
         self.refresh_pipeline()
         self.refresh_inspector()
         self.update_context()
-        self.update_status("Listo", "Elige una accion o usa las teclas. El modo inicial corre automaticamente.")
+        self.update_status(
+            "Listo",
+            "La verificacion inicial corre automaticamente. Luego puedes instalar, actualizar, reinstalar o desinstalar.",
+        )
         self.query_one("#alias", Input).focus()
         self.call_after_refresh(self.start_initial_run)
 
@@ -805,7 +901,7 @@ def compact_path(value: str, max_length: int = 72) -> str:
 
 def parse_args(argv: list[str]) -> tuple[Path, SetupCommand]:
     parser = argparse.ArgumentParser()
-    parser.add_argument("mode", nargs="?", default="install")
+    parser.add_argument("mode", nargs="?", default="verify")
     parser.add_argument("--core")
     parser.add_argument("--alias", default="")
     parser.add_argument("--change-github", action="store_true")
@@ -813,10 +909,11 @@ def parse_args(argv: list[str]) -> tuple[Path, SetupCommand]:
     mode = known.mode.lower()
     if mode not in MODE_TOKENS:
         passthrough = [known.mode, *passthrough]
-        mode = "install"
+        mode = "verify"
     return resolve_core_path(known.core), SetupCommand(
         mode=mode,
-        alias=known.alias,
+        alias=known.alias or resolve_initial_alias(),
+        exercism_token=load_saved_exercism_token(),
         change_github=known.change_github,
         passthrough_args=tuple(passthrough),
     )

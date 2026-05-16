@@ -6,7 +6,9 @@ motor.
 
 ## Cambios Clave En 2.0
 
-- `Estudio.Setup.cmd install --tui` es la entrada principal. La interfaz
+- `Estudio.Setup.cmd` es la entrada principal. Sin argumentos abre en
+  `verify`, ejecuta un diagnostico automatico y desde la misma UI deja elegir
+  `install`, `update`, `reinstall`, `uninstall` o `verify` otra vez. La interfaz
   principal usa Textual empaquetado como `Estudio.Setup.Textual.exe`; el backend
   self-contained sigue siendo `Estudio.Setup.exe` en C#.
 - El backend puede emitir progreso line-delimited JSON con `--events-json`.
@@ -31,12 +33,11 @@ motor.
 
 ## Cambios Clave En 1.2
 
-- `npm run setup` ejecuta la TUI completa y `npm run setup:update` valida una
-  instalacion existente reutilizando alias/rama si ya estan configurados.
-- `Instalar Estudio Socratico.cmd` fuerza reconfiguracion interactiva del alias
-  local y revalida GitHub CLI por navegador; `Actualizar Estudio Socratico.cmd`
-  mantiene el alias actual, revalida GitHub CLI por navegador y no cambia la
-  rama activa del workspace.
+- `npm run setup` abre el instalador unificado y arranca en verificacion.
+  `npm run setup:update` y compania siguen existiendo solo como atajos de CLI.
+- Los wrappers raiz `Instalar/Actualizar/Reinstalar/Desinstalar` dejan de ser
+  la ruta recomendada; la entrada interactiva queda unificada en
+  `Estudio.Setup.cmd`.
 - La identidad del estudiante se resuelve como alias local vinculado a
   `gh auth`; Git local toma `github.user` y `user.email` desde la cuenta
   autenticada, mientras el alias se usa para `user.name`, rama y
@@ -118,23 +119,27 @@ Fallbacks si falta `.estudio_usuario`:
 Entrada recomendada:
 
 ```bat
-_estudio\setup\Estudio.Setup.cmd install --tui
+_estudio\setup\Estudio.Setup.cmd
 ```
 
 El setup:
 
+- arranca en `verify` cuando se abre sin argumentos;
 - valida la raiz del proyecto;
 - muestra progreso/reintentos desde Textual;
 - muestra acciones explicitas para cambiar cuenta GitHub y aplicar alias nuevo;
 - usa `install`, `update`, `reinstall`, `repair`, `uninstall`, `verify` y
   `package`;
 - valida el alias local y permite sobrescribirlo con `--alias`;
+- precarga alias desde `.estudio_usuario`, `ESTUDIO_USUARIO`, Git local o el
+  usuario de Windows cuando no hace falta volver a preguntarlo;
 - revalida GitHub CLI con `gh auth status` y permite forzar relogin con
   `--change-github`;
 - resuelve el usuario y el correo de GitHub desde `gh auth` sin pedirlos a mano;
 - usa el alias como `user.name` local para que ese mismo nombre aparezca en los commits;
 - instala o valida herramientas base;
 - instala o valida Exercism CLI;
+- precarga el token de Exercism si ya existe en la configuracion global de la PC;
 - configura Git local;
 - escribe `.estudio_usuario`;
 - crea `usuario/errores.md` vacio si falta;

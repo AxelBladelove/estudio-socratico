@@ -5,7 +5,7 @@ Esta carpeta contiene el instalador de Estudio Socratico.
 ## Entrada Recomendada
 
 ```bat
-_estudio\setup\Estudio.Setup.cmd install --tui
+_estudio\setup\Estudio.Setup.cmd
 ```
 
 En un ZIP de release, doble clic en `Estudio.Setup.cmd` o `Estudio.Setup.exe`
@@ -20,16 +20,9 @@ token Exercism, cambio de cuenta GitHub, botones de
 reinstalacion/desinstalacion y reintentos solo de pasos fallidos con
 `repair --only`.
 
-Si usas los accesos directos de la raiz del repo:
-
-- `Instalar Estudio Socratico.cmd` prepara un clon nuevo: valida GitHub CLI,
-  abre Textual con `install`, valida GitHub CLI, configura alias local y prepara
-  el fork/remotes de trabajo.
-- `Actualizar Estudio Socratico.cmd` valida la cuenta actual de GitHub CLI,
-  abre Textual con `update` y vuelve a validar/remediar los componentes
-  controlados por el framework.
-- `Reinstalar Estudio Socratico.cmd` ejecuta `reinstall --tui`.
-- `Desinstalar Estudio Socratico.cmd` ejecuta `uninstall --tui`.
+Sin argumentos, el instalador arranca en `verify`, ejecuta un diagnostico
+automatico y luego te deja elegir `Instalar`, `Actualizar`, `Reinstalar`,
+`Desinstalar` o volver a `Verificar` desde la misma UI.
 
 ## Cambio De Identidad
 
@@ -40,6 +33,8 @@ Desde la TUI:
 - `Aplicar alias` usa el valor escrito en el campo `Alias`, intenta renombrar
   el fork `estudio-socratico-<alias-viejo>` a `estudio-socratico-<alias-nuevo>`
   cuando existe y luego actualiza `.estudio_usuario`.
+- Si `.estudio_usuario`, `ESTUDIO_USUARIO`, Git local o la configuracion global
+  de Exercism ya existen, la TUI precarga alias y token automaticamente.
 
 Desde CLI:
 
@@ -77,7 +72,7 @@ GitHub CLI, VS Code, Node, PowerShell ni MSYS2.
 - crea o reutiliza el fork `estudio-socratico-<alias>` y configura remotes;
 - instala o valida herramientas base;
 - instala o valida Exercism CLI;
-- configura Exercism CLI con el token pegado en la TUI;
+- configura Exercism CLI con el token pegado o precargado en la TUI;
 - verifica que el track C este listo descargando `hello-world`;
 - instala o valida GCC/MSYS2;
 - instala `make` y `mingw32-make` para los tests de Exercism C;
@@ -99,6 +94,8 @@ El estudiante copia su token desde esa pagina, lo pega en el campo
 `Exercism Token` y reintenta los pasos fallidos si la instalacion ya habia
 avanzado. El backend guarda el token en la configuracion global de Exercism CLI
 de esa PC y valida el track C descargando `hello-world`.
+
+Si la PC ya tenia un token global de Exercism, la TUI lo muestra precargado.
 
 Si Exercism responde que la cuenta aun no esta unida al track C, el setup abre:
 

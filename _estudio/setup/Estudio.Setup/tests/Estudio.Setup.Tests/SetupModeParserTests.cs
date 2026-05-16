@@ -5,7 +5,7 @@ namespace Estudio.Setup.Tests;
 public class SetupModeParserTests
 {
     [Theory]
-    [InlineData(new string[] { }, SetupMode.Install)]
+    [InlineData(new string[] { }, SetupMode.Verify)]
     [InlineData(new[] { "install" }, SetupMode.Install)]
     [InlineData(new[] { "--install" }, SetupMode.Install)]
     [InlineData(new[] { "-Actualizar" }, SetupMode.Update)]
@@ -28,11 +28,20 @@ public class SetupModeParserTests
     }
 
     [Fact]
-    public void Parse_defaults_to_tui_install_when_no_arguments_are_provided()
+    public void Parse_defaults_to_tui_verify_when_no_arguments_are_provided()
     {
         var options = SetupModeParser.Parse(Array.Empty<string>());
 
-        Assert.Equal(SetupMode.Install, options.Mode);
+        Assert.Equal(SetupMode.Verify, options.Mode);
+        Assert.True(options.TuiRequested);
+    }
+
+    [Fact]
+    public void Parse_defaults_to_verify_when_only_visual_flag_is_provided()
+    {
+        var options = SetupModeParser.Parse(new[] { "--tui" });
+
+        Assert.Equal(SetupMode.Verify, options.Mode);
         Assert.True(options.TuiRequested);
     }
 

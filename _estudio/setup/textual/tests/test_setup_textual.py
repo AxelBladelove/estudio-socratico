@@ -2,7 +2,9 @@ import json
 import sys
 import unittest
 import asyncio
+import tempfile
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -14,7 +16,10 @@ from setup_textual_app import (
     SetupCommand,
     build_core_command,
     build_core_environment,
+    load_saved_exercism_token,
     parse_progress_event,
+    parse_args,
+    resolve_initial_alias,
 )
 
 
@@ -74,6 +79,31 @@ class SetupTextualTests(unittest.TestCase):
         self.assertIsNotNone(event)
         self.assertEqual(event["type"], "phase-finished")
         self.assertEqual(event["stepId"], "git")
+
+    def test_parse_args_defaults_to_verify_when_no_mode_is_provided(self) -> None:
+        _, command = parse_args([])
+
+        self.assertEqual(command.mode, "verify")
+
+    def test_resolve_initial_alias_reads_identity_file_then_git_config(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            (root / ".git").mkdir()
+            (root / ".git" / "config").write_text("[user]\n\tname = axel_git\n", encoding="utf-8")
+            self.assertEqual(resolve_initial_alias(root), "axel_git")
+            (root / ".estudio_usuario").write_text("axel_local\n", encoding="utf-8")
+            self.assertEqual(resolve_initial_alias(root), "axel_local")
+
+    def test_load_saved_exercism_token_reads_appdata_user_json(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            appdata = Path(temp_root) / "AppData"
+            (appdata / "exercism").mkdir(parents=True)
+            (appdata / "exercism" / "user.json").write_text('{"token": "secret-token"}', encoding="utf-8")
+
+            with mock.patch.dict("os.environ", {}, clear=False):
+                token = load_saved_exercism_token(str(appdata))
+
+            self.assertEqual(token, "secret-token")
 
     def test_installer_state_tracks_progress_and_failed_steps(self) -> None:
         state = InstallerState(("git", "vscode-settings"))

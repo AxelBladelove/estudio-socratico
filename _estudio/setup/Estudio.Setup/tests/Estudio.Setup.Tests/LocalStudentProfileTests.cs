@@ -42,11 +42,43 @@ public class LocalStudentProfileTests
     }
 
     [Fact]
-    public void ResolveAlias_returns_fallback_when_identity_file_is_missing()
+    public void ResolveAlias_uses_windows_user_when_no_other_alias_source_exists()
     {
         var alias = LocalStudentProfile.ResolveAlias(MakeTempRoot());
 
-        Assert.Equal("estudiante", alias);
+        Assert.Equal(Environment.UserName, alias);
+    }
+
+    [Fact]
+    public void ResolveAlias_uses_environment_variable_when_identity_file_is_missing()
+    {
+        var root = MakeTempRoot();
+        Directory.CreateDirectory(root);
+        Environment.SetEnvironmentVariable("ESTUDIO_USUARIO", "axel_env");
+        try
+        {
+            var alias = LocalStudentProfile.ResolveAlias(root);
+
+            Assert.Equal("axel_env", alias);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("ESTUDIO_USUARIO", null);
+        }
+    }
+
+    [Fact]
+    public async Task ResolveAlias_uses_local_git_config_when_identity_file_is_missing()
+    {
+        var root = MakeTempRoot();
+        Directory.CreateDirectory(Path.Combine(root, ".git"));
+        await File.WriteAllTextAsync(
+            Path.Combine(root, ".git", "config"),
+            "[github]\n\tuser = axel_git\n[user]\n\tname = estudiante\n");
+
+        var alias = LocalStudentProfile.ResolveAlias(root);
+
+        Assert.Equal("axel_git", alias);
     }
 
     [Fact]
@@ -68,6 +100,19 @@ public class LocalStudentProfileTests
         var nested = Path.Combine(root, "_estudio", "setup");
         Directory.CreateDirectory(nested);
         await File.WriteAllTextAsync(Path.Combine(root, ".estudio_usuario"), "axel");
+
+        var found = LocalStudentProfile.FindWorkspaceRoot(nested);
+
+        Assert.Equal(Path.GetFullPath(root), found);
+    }
+
+    [Fact]
+    public void FindWorkspaceRoot_uses_git_repo_root_when_identity_file_is_missing()
+    {
+        var root = MakeTempRoot();
+        var nested = Path.Combine(root, "_estudio", "setup", "textual");
+        Directory.CreateDirectory(Path.Combine(root, ".git"));
+        Directory.CreateDirectory(nested);
 
         var found = LocalStudentProfile.FindWorkspaceRoot(nested);
 
