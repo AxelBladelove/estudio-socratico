@@ -38,109 +38,199 @@ public static class TerminalGuiSetupApp
 
         using Window window = new()
         {
-            Title = "Estudio Socratico Setup 2.0 (Esc para salir)",
+            Title = " Estudio Socratico Setup 2.0 ",
+            SchemeName = SetupTuiTheme.Base,
         };
 
         var title = new Label
         {
-            X = 0,
+            X = 1,
             Y = 0,
             Width = Dim.Fill(),
-            Text = $"Alias: {studentAlias} | Modo inicial: {options.Mode}",
+            Text = "Estudio Socratico Setup 2.0",
+            SchemeName = SetupTuiTheme.Accent,
+        };
+        var contextLabel = new Label
+        {
+            X = 1,
+            Y = 1,
+            Width = Dim.Fill(2),
+            Text = $"Alias: {studentAlias} | Modo inicial: {options.Mode} | Tema: EstudioDark",
+            SchemeName = SetupTuiTheme.Dialog,
+        };
+        var navigationLabel = new Label
+        {
+            X = 1,
+            Y = 2,
+            Width = Dim.Fill(2),
+            Text = "Flechas: componentes | Tab: controles | Enter: ejecutar | Esc: salir",
+            SchemeName = SetupTuiTheme.Menu,
+        };
+        var progressBar = new ProgressBar
+        {
+            X = 1,
+            Y = 4,
+            Width = Dim.Fill(2),
+            Height = 1,
+            ProgressBarFormat = ProgressBarFormat.SimplePlusPercentage,
+            ProgressBarStyle = ProgressBarStyle.Continuous,
+            SchemeName = SetupTuiTheme.Accent,
+        };
+        var progressLabel = new Label
+        {
+            X = 1,
+            Y = 5,
+            Width = Dim.Fill(2),
+            Text = "Progreso 0/0 | OK 0 | Avisos 0 | Fallos 0",
+            SchemeName = SetupTuiTheme.Dialog,
+        };
+        var accountFrame = new FrameView
+        {
+            X = 0,
+            Y = 7,
+            Width = Dim.Fill(),
+            Height = 4,
+            Title = " Cuenta ",
+            SchemeName = SetupTuiTheme.Dialog,
         };
         var aliasLabel = new Label
         {
-            X = 0,
-            Y = 3,
+            X = 1,
+            Y = 0,
             Text = "Alias:",
+            SchemeName = SetupTuiTheme.Dialog,
         };
         var aliasField = new TextField
         {
             X = Pos.Right(aliasLabel) + 1,
-            Y = 3,
+            Y = 0,
             Width = 24,
             Height = 1,
             Text = studentAlias,
+            SchemeName = SetupTuiTheme.Base,
         };
         var applyAliasButton = new Button
         {
-            X = Pos.Right(aliasField) + 1,
-            Y = 3,
+            X = Pos.Right(aliasField) + 2,
+            Y = 0,
             Text = "Aplicar alias",
+            SchemeName = SetupTuiTheme.Accent,
         };
         var changeGitHubButton = new Button
         {
-            X = Pos.Right(applyAliasButton) + 1,
-            Y = 3,
+            X = Pos.Right(applyAliasButton) + 2,
+            Y = 0,
             Text = "Cambiar GitHub",
+            SchemeName = SetupTuiTheme.Accent,
         };
-        var progressBar = new ProgressBar
+        var accountHelp = new Label
+        {
+            X = Pos.Right(changeGitHubButton) + 2,
+            Y = 0,
+            Width = Dim.Fill(1),
+            Text = "local + GitHub CLI",
+            SchemeName = SetupTuiTheme.Menu,
+        };
+        accountFrame.Add(aliasLabel, aliasField, applyAliasButton, changeGitHubButton, accountHelp);
+
+        var componentsFrame = new FrameView
         {
             X = 0,
-            Y = 1,
-            Width = Dim.Fill(),
-            Height = 1,
-            ProgressBarFormat = ProgressBarFormat.SimplePlusPercentage,
-            ProgressBarStyle = ProgressBarStyle.Continuous,
-        };
-        var progressLabel = new Label
-        {
-            X = 0,
-            Y = 2,
-            Width = Dim.Fill(),
-            Text = "Progreso: 0/0",
+            Y = 11,
+            Width = Dim.Percent(46),
+            Height = Dim.Fill(5),
+            Title = " Componentes ",
+            SchemeName = SetupTuiTheme.Dialog,
         };
         var components = new ListView
         {
-            X = 0,
-            Y = 5,
-            Width = Dim.Percent(48),
-            Height = Dim.Fill(4),
+            X = 1,
+            Y = 0,
+            Width = Dim.Fill(2),
+            Height = Dim.Fill(1),
+            CanFocus = true,
+            SchemeName = SetupTuiTheme.Base,
         };
         components.SetSource(componentItems);
+        componentsFrame.Add(components);
+
+        var activityFrame = new FrameView
+        {
+            X = Pos.Right(componentsFrame) + 1,
+            Y = 11,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(5),
+            Title = " Actividad ",
+            SchemeName = SetupTuiTheme.Dialog,
+        };
         var log = new TextView
         {
-            X = Pos.Right(components) + 1,
-            Y = 5,
-            Width = Dim.Fill(),
-            Height = Dim.Fill(4),
+            X = 1,
+            Y = 1,
+            Width = Dim.Fill(2),
+            Height = Dim.Fill(2),
             Multiline = true,
             ReadOnly = true,
             WordWrap = false,
+            CanFocus = false,
+            SchemeName = SetupTuiTheme.Base,
         };
+        var logHelp = new Label
+        {
+            X = 1,
+            Y = 0,
+            Width = Dim.Fill(2),
+            Text = "Ultimos eventos del instalador",
+            SchemeName = SetupTuiTheme.Menu,
+        };
+        activityFrame.Add(logHelp, log);
+
         var artifactLabel = new Label
         {
-            X = 0,
-            Y = Pos.AnchorEnd(3),
-            Width = Dim.Fill(),
+            X = 1,
+            Y = Pos.AnchorEnd(4),
+            Width = Dim.Fill(2),
             Text = "Estado: esperando primera ejecucion...",
+            SchemeName = SetupTuiTheme.Dialog,
         };
         var verifyButton = new Button
         {
-            X = 0,
-            Y = Pos.AnchorEnd(1),
+            X = 1,
+            Y = Pos.AnchorEnd(2),
             Text = "Verificar",
+            SchemeName = SetupTuiTheme.Accent,
         };
         var repairButton = new Button
         {
-            X = Pos.Right(verifyButton) + 1,
-            Y = Pos.AnchorEnd(1),
+            X = Pos.Right(verifyButton) + 2,
+            Y = Pos.AnchorEnd(2),
             Text = "Reparar",
+            SchemeName = SetupTuiTheme.Accent,
         };
         var retryButton = new Button
         {
-            X = Pos.Right(repairButton) + 1,
-            Y = Pos.AnchorEnd(1),
+            X = Pos.Right(repairButton) + 2,
+            Y = Pos.AnchorEnd(2),
             Text = "Reintentar fallidos",
+            SchemeName = SetupTuiTheme.Accent,
         };
         var exitButton = new Button
         {
-            X = Pos.AnchorEnd(8),
-            Y = Pos.AnchorEnd(1),
+            X = Pos.AnchorEnd(9),
+            Y = Pos.AnchorEnd(2),
             Text = "Salir",
+            SchemeName = SetupTuiTheme.Dialog,
+        };
+        var footerHelp = new Label
+        {
+            X = 1,
+            Y = Pos.AnchorEnd(1),
+            Width = Dim.Fill(2),
+            Text = "Los avisos no bloquean si la herramienta queda verificada. Reintentar fallidos usa solo los componentes con MISS/FAIL.",
+            SchemeName = SetupTuiTheme.Menu,
         };
 
-        window.Add(title, progressBar, progressLabel, aliasLabel, aliasField, applyAliasButton, changeGitHubButton, components, log, artifactLabel, verifyButton, repairButton, retryButton, exitButton);
+        window.Add(title, contextLabel, navigationLabel, progressBar, progressLabel, accountFrame, componentsFrame, activityFrame, artifactLabel, verifyButton, repairButton, retryButton, exitButton, footerHelp);
 
         verifyButton.Accepted += (_, _) => StartRun(SetupTuiRunPlanner.ForMode(baselineOptions, SetupMode.Verify));
         repairButton.Accepted += (_, _) => StartRun(SetupTuiRunPlanner.ForMode(baselineOptions, SetupMode.Repair));
@@ -172,6 +262,7 @@ public static class TerminalGuiSetupApp
         exitButton.Accepted += (_, _) => app.RequestStop();
 
         Refresh(SetupTuiPresenter.CreateSnapshot(currentModel));
+        components.SetFocus();
         _ = Task.Run(async () =>
         {
             await Task.Delay(150, cancellationToken);
@@ -198,7 +289,7 @@ public static class TerminalGuiSetupApp
                 app.Invoke(() =>
                 {
                     SetButtonsEnabled(false);
-                    title.Text = $"Alias: {runAlias} | Modo: {runOptions.Mode}";
+                    contextLabel.Text = $"Alias: {runAlias} | Modo: {runOptions.Mode} | Tema: EstudioDark";
                     artifactLabel.Text = $"Ejecutando {runOptions.Mode}...";
                     Refresh(SetupTuiPresenter.CreateSnapshot(currentModel));
                 });
@@ -226,7 +317,7 @@ public static class TerminalGuiSetupApp
                                 OnlyStepIds = null,
                             };
                             aliasField.Text = currentAlias;
-                            title.Text = $"Alias: {currentAlias} | Modo: {runOptions.Mode}";
+                            contextLabel.Text = $"Alias: {currentAlias} | Modo: {runOptions.Mode} | Tema: EstudioDark";
                         }
                     });
                 }
@@ -280,6 +371,14 @@ public static class TerminalGuiSetupApp
             changeGitHubButton.Enabled = enabled;
             exitButton.Enabled = true;
         }
+    }
+
+    private static class SetupTuiTheme
+    {
+        public const string Accent = "Accent";
+        public const string Base = "Base";
+        public const string Dialog = "Dialog";
+        public const string Menu = "Menu";
     }
 
     private static SetupTuiProgressModel CreateModel(

@@ -68,14 +68,43 @@ public class WingetPackageStepTests
         Assert.Contains("package not found", result.Message);
     }
 
+    [Fact]
+    public async Task UpdateAsync_returns_warning_when_winget_upgrade_fails_but_tool_still_verifies()
+    {
+        var runner = new FakeCommandRunner(
+            CommandResult.Failure(-1978335212, string.Empty, "winget upgrade failed"),
+            CommandResult.Success("git version 2.49.0.windows.1"));
+        var step = new WingetPackageStep(
+            id: "git",
+            name: "Git",
+            packageId: "Git.Git",
+            fileName: "git",
+            versionArguments: "--version",
+            runner);
+
+        var result = await step.UpdateAsync(new SetupContext(new SetupOptions(SetupMode.Update)), CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.True(result.IsWarning);
+        Assert.Contains("winget upgrade", result.Message);
+        Assert.Contains("git version 2.49.0.windows.1", result.Message);
+        Assert.Equal(
+            new[]
+            {
+                ("winget", "upgrade --exact --id Git.Git --silent --accept-package-agreements --accept-source-agreements"),
+                ("git", "--version"),
+            },
+            runner.Calls);
+    }
+
     private sealed class FakeCommandRunner : ICommandRunner
     {
-        private readonly CommandResult _result;
+        private readonly Queue<CommandResult> _results;
         private readonly List<(string FileName, string Arguments)> _calls = new();
 
-        public FakeCommandRunner(CommandResult result)
+        public FakeCommandRunner(params CommandResult[] results)
         {
-            _result = result;
+            _results = new Queue<CommandResult>(results);
         }
 
         public IReadOnlyList<(string FileName, string Arguments)> Calls => _calls;
@@ -83,7 +112,7 @@ public class WingetPackageStepTests
         public Task<CommandResult> RunAsync(string fileName, string arguments, CancellationToken cancellationToken)
         {
             _calls.Add((fileName, arguments));
-            return Task.FromResult(_result);
+            return Task.FromResult(_results.Count == 0 ? CommandResult.Failure(99, string.Empty, "unexpected command") : _results.Dequeue());
         }
     }
 }

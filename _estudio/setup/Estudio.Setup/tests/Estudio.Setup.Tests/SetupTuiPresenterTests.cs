@@ -14,12 +14,12 @@ public sealed class SetupTuiPresenterTests
 
         var snapshot = SetupTuiPresenter.CreateSnapshot(model);
 
-        Assert.Equal("Progreso: 1/2", snapshot.ProgressText);
+        Assert.Equal("Progreso 1/2 | OK 1 | Avisos 0 | Fallos 1", snapshot.ProgressText);
         Assert.Equal(
             new[]
             {
-                "[OK] git - git version 2.50.0",
-                "[FALTA] node - node no esta instalado",
+                "OK    git                           git version 2.50.0",
+                "MISS  node                          node no esta instalado",
             },
             snapshot.ComponentLines);
         Assert.Equal(

@@ -39,7 +39,7 @@ public sealed class WingetPackageStep : ISetupStep
 
     public Task<StepResult> UpdateAsync(SetupContext context, CancellationToken cancellationToken)
     {
-        return RunWingetAsync("upgrade", cancellationToken);
+        return RunWingetAsync("upgrade", context, cancellationToken);
     }
 
     public Task<StepResult> RepairAsync(SetupContext context, CancellationToken cancellationToken)
@@ -52,7 +52,7 @@ public sealed class WingetPackageStep : ISetupStep
         return _toolCheck.VerifyAsync(context, cancellationToken);
     }
 
-    private async Task<StepResult> RunWingetAsync(string verb, CancellationToken cancellationToken)
+    private async Task<StepResult> RunWingetAsync(string verb, SetupContext? context, CancellationToken cancellationToken)
     {
         var arguments = $"{verb} --exact --id {_packageId} --silent --accept-package-agreements --accept-source-agreements";
         var result = await _commandRunner.RunAsync("winget", arguments, cancellationToken);
@@ -72,7 +72,21 @@ public sealed class WingetPackageStep : ISetupStep
             details = FirstLine(result.StandardOutput);
         }
 
+        if (verb == "upgrade" && context is not null)
+        {
+            var verified = await _toolCheck.VerifyAsync(context, cancellationToken);
+            if (verified.Success)
+            {
+                return StepResult.Warning($"{Name}: winget {verb} termino con codigo {result.ExitCode}, pero la herramienta sigue disponible. {verified.Message}");
+            }
+        }
+
         return StepResult.Fail($"{Name}: winget {verb} termino con codigo {result.ExitCode}. {details}");
+    }
+
+    private Task<StepResult> RunWingetAsync(string verb, CancellationToken cancellationToken)
+    {
+        return RunWingetAsync(verb, context: null, cancellationToken);
     }
 
     private static string FirstLine(string text)
