@@ -46,6 +46,20 @@ public class GeminiRuntimeConfigStepTests
     }
 
     [Fact]
+    public async Task UninstallAsync_removes_local_runtime_config_when_present()
+    {
+        var configPath = Path.Combine(MakeTempRoot(), "config.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
+        await File.WriteAllTextAsync(configPath, "{}");
+        var step = new GeminiRuntimeConfigStep(configPath, new FakeRuntimeConfigProvider(MakeSource()));
+
+        var result = await step.UninstallAsync(new SetupContext(new SetupOptions(SetupMode.Uninstall)), CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.False(File.Exists(configPath));
+    }
+
+    [Fact]
     public async Task InstallAsync_returns_fail_without_writing_file_when_runtime_config_is_invalid()
     {
         var configPath = Path.Combine(MakeTempRoot(), "config.json");

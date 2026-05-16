@@ -16,6 +16,7 @@ public static class SetupModeParser
         var helpRequested = false;
         var tuiRequested = false;
         var forceGitHubRelogin = false;
+        var jsonProgressRequested = false;
         for (var index = 0; index < args.Count; index++)
         {
             var arg = args[index];
@@ -45,6 +46,12 @@ public static class SetupModeParser
                 continue;
             }
 
+            if (normalized is "events-json" or "json-progress")
+            {
+                jsonProgressRequested = true;
+                continue;
+            }
+
             if (normalized is "change-github" or "cambiar-github" or "github-relogin" or "relogin-github")
             {
                 forceGitHubRelogin = true;
@@ -62,7 +69,9 @@ public static class SetupModeParser
                 "" => (SetupMode?)null,
                 "install" or "instalar" or "reconfigurar" => SetupMode.Install,
                 "update" or "actualizar" => SetupMode.Update,
+                "reinstall" or "reinstalar" => SetupMode.Reinstall,
                 "repair" or "reparar" => SetupMode.Repair,
+                "uninstall" or "desinstalar" => SetupMode.Uninstall,
                 "verify" or "verificar" or "solo-verificar" or "soloverificar" => SetupMode.Verify,
                 "package" or "pack" or "empaquetar" or "release" => SetupMode.Package,
                 _ => throw new ArgumentException($"Argumento de modo no reconocido: {arg}", nameof(args)),
@@ -88,7 +97,8 @@ public static class SetupModeParser
             helpRequested,
             onlyStepIds.Count == 0 ? null : onlyStepIds.ToArray(),
             tuiRequested,
-            forceGitHubRelogin);
+            forceGitHubRelogin,
+            jsonProgressRequested);
     }
 
     private static string Normalize(string value)

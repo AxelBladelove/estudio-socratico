@@ -3,7 +3,7 @@ using Estudio.Setup.Services;
 
 namespace Estudio.Setup.Steps;
 
-public sealed class VsixExtensionStep : ISetupStep
+public sealed class VsixExtensionStep : ISetupStep, IUninstallSetupStep
 {
     private readonly string _vsixPath;
     private readonly string _extensionId;
@@ -48,6 +48,32 @@ public sealed class VsixExtensionStep : ISetupStep
     public Task<StepResult> RepairAsync(SetupContext context, CancellationToken cancellationToken)
     {
         return InstallOrRepairAsync(cancellationToken);
+    }
+
+    public async Task<StepResult> UninstallAsync(SetupContext context, CancellationToken cancellationToken)
+    {
+        var result = await _commandRunner.RunAsync(
+            _codeCommand,
+            $"--uninstall-extension {_extensionId}",
+            cancellationToken);
+        if (!result.WasStarted)
+        {
+            return StepResult.Warning("VS Code: code no esta disponible; no se pudo confirmar la extension.");
+        }
+
+        if (!result.IsSuccess)
+        {
+            var detail = FirstNonEmptyLine(result.StandardError);
+            if (detail.Contains("not installed", StringComparison.OrdinalIgnoreCase)
+                || detail.Contains("no esta instalada", StringComparison.OrdinalIgnoreCase))
+            {
+                return StepResult.Warning($"VSIX: extension {_extensionId} ya no estaba instalada.");
+            }
+
+            return StepResult.Fail($"VSIX: desinstalacion fallo. {detail}");
+        }
+
+        return StepResult.Ok($"VSIX: extension {_extensionId} desinstalada.");
     }
 
     public async Task<StepResult> VerifyAsync(SetupContext context, CancellationToken cancellationToken)

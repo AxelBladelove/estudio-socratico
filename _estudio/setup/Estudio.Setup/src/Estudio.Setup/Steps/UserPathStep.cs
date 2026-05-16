@@ -3,7 +3,7 @@ using Estudio.Setup.Services;
 
 namespace Estudio.Setup.Steps;
 
-public sealed class UserPathStep : ISetupStep
+public sealed class UserPathStep : ISetupStep, IUninstallSetupStep
 {
     private readonly IUserEnvironment _environment;
     private readonly IReadOnlyList<string> _requiredEntries;
@@ -35,6 +35,25 @@ public sealed class UserPathStep : ISetupStep
     public Task<StepResult> RepairAsync(SetupContext context, CancellationToken cancellationToken)
     {
         return EnsurePathAsync();
+    }
+
+    public Task<StepResult> UninstallAsync(SetupContext context, CancellationToken cancellationToken)
+    {
+        var entries = ReadEntries();
+        var filtered = entries
+            .Where(entry => !_requiredEntries.Any(required => string.Equals(
+                Normalize(entry),
+                Normalize(required),
+                StringComparison.OrdinalIgnoreCase)))
+            .ToArray();
+
+        if (filtered.Length == entries.Count)
+        {
+            return Task.FromResult(StepResult.Warning("PATH: no habia entradas de Estudio Socratico para remover."));
+        }
+
+        _environment.SetUserVariable("PATH", string.Join(Path.PathSeparator, filtered));
+        return Task.FromResult(StepResult.Ok("PATH: entradas de Estudio Socratico removidas del PATH de usuario."));
     }
 
     public Task<StepResult> VerifyAsync(SetupContext context, CancellationToken cancellationToken)

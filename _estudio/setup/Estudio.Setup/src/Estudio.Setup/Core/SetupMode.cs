@@ -4,7 +4,9 @@ public enum SetupMode
 {
     Install,
     Update,
+    Reinstall,
     Repair,
+    Uninstall,
     Verify,
     Package,
 }

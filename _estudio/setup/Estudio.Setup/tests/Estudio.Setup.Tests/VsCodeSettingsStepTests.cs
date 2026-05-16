@@ -156,6 +156,40 @@ public class VsCodeSettingsStepTests
         Assert.Contains("PowerShell 7", result.Message);
     }
 
+    [Fact]
+    public async Task UninstallAsync_removes_estudio_keys_and_preserves_other_settings()
+    {
+        var root = MakeTempRoot();
+        var settingsPath = Path.Combine(root, "settings.json");
+        Directory.CreateDirectory(root);
+        await File.WriteAllTextAsync(
+            settingsPath,
+            """
+            {
+              "editor.fontSize": 16,
+              "terminal.integrated.defaultProfile.windows": "PowerShell 7",
+              "terminal.integrated.profiles.windows": {
+                "PowerShell 7": { "path": "pwsh.exe" }
+              },
+              "estudioSocratico.alias": "axel",
+              "estudioSocratico.configPath": "%APPDATA%\\EstudioSocratico\\config.json"
+            }
+            """);
+        var step = new VsCodeSettingsStep(
+            settingsPath,
+            alias: "axel",
+            configPath: @"%APPDATA%\EstudioSocratico\config.json");
+
+        var result = await step.UninstallAsync(new SetupContext(new SetupOptions(SetupMode.Uninstall)), CancellationToken.None);
+
+        Assert.True(result.Success);
+        using var document = JsonDocument.Parse(await File.ReadAllTextAsync(settingsPath));
+        Assert.Equal(16, document.RootElement.GetProperty("editor.fontSize").GetInt32());
+        Assert.False(document.RootElement.TryGetProperty("estudioSocratico.alias", out _));
+        Assert.False(document.RootElement.TryGetProperty("estudioSocratico.configPath", out _));
+        Assert.Single(Directory.GetFiles(root, "settings.json.*.bak"));
+    }
+
     private static string MakeTempRoot()
     {
         return Path.Combine(Path.GetTempPath(), "estudio-setup-tests", Guid.NewGuid().ToString("N"));

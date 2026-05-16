@@ -10,6 +10,7 @@ namespace Estudio.Setup.Release;
 public sealed class ReleasePackager
 {
     private readonly Func<ReleasePackageContext, CancellationToken, Task> _publishAsync;
+    private readonly Func<ReleasePackageContext, CancellationToken, Task> _buildTextualAsync;
 
     public ReleasePackager(ICommandRunner commandRunner)
         : this(async (context, cancellationToken) =>
@@ -41,13 +42,70 @@ public sealed class ReleasePackager
             {
                 throw new InvalidOperationException($"dotnet publish fallo. {FirstNonEmpty(result.StandardError, result.StandardOutput)}");
             }
+        },
+        async (context, cancellationToken) =>
+        {
+            var appPath = ResolveTextualAppPath(context.ProjectPath);
+            var requirementsPath = Path.Combine(Path.GetDirectoryName(appPath)!, "requirements.txt");
+            var installResult = await commandRunner.RunAsync(
+                "py",
+                $"-3.10 -m pip install -r {Quote(requirementsPath)}",
+                cancellationToken);
+            if (!installResult.WasStarted)
+            {
+                throw new InvalidOperationException("No se pudo ejecutar python para preparar el instalador Textual.");
+            }
+
+            if (!installResult.IsSuccess)
+            {
+                throw new InvalidOperationException($"pip install fallo. {FirstNonEmpty(installResult.StandardError, installResult.StandardOutput)}");
+            }
+
+            var buildRoot = Path.Combine(Path.GetDirectoryName(appPath)!, "build");
+            var arguments = string.Join(
+                " ",
+                "-3.10",
+                "-m",
+                "PyInstaller",
+                "--noconfirm",
+                "--clean",
+                "--onefile",
+                "--name",
+                "Estudio.Setup.Textual",
+                "--distpath",
+                Quote(context.PackageDirectory),
+                "--workpath",
+                Quote(Path.Combine(buildRoot, "work")),
+                "--specpath",
+                Quote(Path.Combine(buildRoot, "spec")),
+                "--collect-all",
+                "textual",
+                Quote(appPath));
+            var result = await commandRunner.RunAsync("py", arguments, cancellationToken);
+            if (!result.WasStarted)
+            {
+                throw new InvalidOperationException("No se pudo ejecutar python para empaquetar el instalador Textual.");
+            }
+
+            if (!result.IsSuccess)
+            {
+                throw new InvalidOperationException($"PyInstaller fallo. {FirstNonEmpty(result.StandardError, result.StandardOutput)}");
+            }
         })
     {
     }
 
     public ReleasePackager(Func<ReleasePackageContext, CancellationToken, Task> publishAsync)
+        : this(publishAsync, (_, _) => Task.CompletedTask)
+    {
+    }
+
+    public ReleasePackager(
+        Func<ReleasePackageContext, CancellationToken, Task> publishAsync,
+        Func<ReleasePackageContext, CancellationToken, Task> buildTextualAsync)
     {
         _publishAsync = publishAsync;
+        _buildTextualAsync = buildTextualAsync;
     }
 
     public async Task<ReleasePackageResult> CreateAsync(
@@ -76,6 +134,13 @@ public sealed class ReleasePackager
         if (!File.Exists(setupExe))
         {
             throw new InvalidOperationException($"dotnet publish no genero {setupExe}.");
+        }
+
+        await _buildTextualAsync(context, cancellationToken);
+        var textualExe = Path.Combine(packageDirectory, "Estudio.Setup.Textual.exe");
+        if (!File.Exists(textualExe))
+        {
+            throw new InvalidOperationException($"El empaquetado Textual no genero {textualExe}.");
         }
 
         RemoveDebugSymbols(packageDirectory);
@@ -153,9 +218,19 @@ public sealed class ReleasePackager
         return $"""
             Estudio Socratico Setup {version}
 
+            Doble clic en Estudio.Setup.cmd abre el instalador Textual.
             Ejecuta Estudio.Setup.cmd install --tui para instalacion visual.
+            Ejecuta Estudio.Setup.cmd reinstall --tui para reinstalar integraciones locales.
+            Ejecuta Estudio.Setup.cmd uninstall para desinstalar integraciones locales.
             Ejecuta Estudio.Setup.cmd verify para diagnostico no destructivo.
             """;
+    }
+
+    private static string ResolveTextualAppPath(string projectPath)
+    {
+        var projectDirectory = Path.GetDirectoryName(Path.GetFullPath(projectPath))
+            ?? throw new InvalidOperationException("No se pudo resolver el proyecto Estudio.Setup.");
+        return Path.GetFullPath(Path.Combine(projectDirectory, "..", "..", "..", "textual", "setup_textual_app.py"));
     }
 
     private static void DeleteGeneratedDirectory(string path, string outputRoot)

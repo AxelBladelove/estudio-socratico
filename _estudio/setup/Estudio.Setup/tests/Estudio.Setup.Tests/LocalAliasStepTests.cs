@@ -106,6 +106,21 @@ public class LocalAliasStepTests
         Assert.Equal("axel 02", await File.ReadAllTextAsync(Path.Combine(root, ".estudio_usuario.20260515120000.bak")));
     }
 
+    [Fact]
+    public async Task UninstallAsync_removes_identity_file_when_present()
+    {
+        var root = MakeTempRoot();
+        Directory.CreateDirectory(root);
+        var identityPath = Path.Combine(root, ".estudio_usuario");
+        await File.WriteAllTextAsync(identityPath, "axel\r\n");
+        var step = new LocalAliasStep(root, "axel");
+
+        var result = await step.UninstallAsync(new SetupContext(new SetupOptions(SetupMode.Uninstall)), CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.False(File.Exists(identityPath));
+    }
+
     private static string MakeTempRoot()
     {
         return Path.Combine(Path.GetTempPath(), "estudio-setup-tests", Guid.NewGuid().ToString("N"));

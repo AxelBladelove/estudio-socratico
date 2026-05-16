@@ -61,6 +61,18 @@ public class VsixExtensionStepTests
         Assert.True(result.IsMissing);
     }
 
+    [Fact]
+    public async Task UninstallAsync_runs_code_uninstall_extension()
+    {
+        var runner = new QueueCommandRunner(CommandResult.Success("uninstalled"));
+        var step = new VsixExtensionStep(CreateVsix(), "estudio-socratico.estudio-exercism", runner);
+
+        var result = await step.UninstallAsync(new SetupContext(new SetupOptions(SetupMode.Uninstall)), CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(("code", "--uninstall-extension estudio-socratico.estudio-exercism"), runner.Calls.Single());
+    }
+
     private static string CreateVsix()
     {
         var path = Path.Combine(MakeTempRoot(), "estudio-exercism.vsix");

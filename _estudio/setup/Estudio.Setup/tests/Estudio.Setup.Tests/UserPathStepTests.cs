@@ -42,6 +42,18 @@ public class UserPathStepTests
         Assert.Equal(@"C:\msys64\ucrt64\bin;C:\NewTool;C:\Tools", environment.UserPath);
     }
 
+    [Fact]
+    public async Task UninstallAsync_removes_required_entries_from_user_path()
+    {
+        var environment = new FakeUserEnvironment(@"C:\Tools;C:\msys64\ucrt64\bin;C:\Other");
+        var step = new UserPathStep(environment, new[] { @"C:\msys64\ucrt64\bin" });
+
+        var result = await step.UninstallAsync(new SetupContext(new SetupOptions(SetupMode.Uninstall)), CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(@"C:\Tools;C:\Other", environment.UserPath);
+    }
+
     private sealed class FakeUserEnvironment : IUserEnvironment
     {
         public FakeUserEnvironment(string? userPath)

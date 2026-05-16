@@ -3,7 +3,7 @@ using Estudio.Setup.Profile;
 
 namespace Estudio.Setup.Steps;
 
-public sealed class LocalAliasStep : ISetupStep
+public sealed class LocalAliasStep : ISetupStep, IUninstallSetupStep
 {
     private readonly string _workspaceRoot;
     private readonly string _alias;
@@ -37,6 +37,18 @@ public sealed class LocalAliasStep : ISetupStep
     public Task<StepResult> RepairAsync(SetupContext context, CancellationToken cancellationToken)
     {
         return WriteAliasAsync(cancellationToken);
+    }
+
+    public Task<StepResult> UninstallAsync(SetupContext context, CancellationToken cancellationToken)
+    {
+        var path = ResolveIdentityPath(_workspaceRoot);
+        if (!File.Exists(path))
+        {
+            return Task.FromResult(StepResult.Warning($"Alias: {path} ya no existe."));
+        }
+
+        File.Delete(path);
+        return Task.FromResult(StepResult.Ok($"Alias: {path} eliminado."));
     }
 
     public Task<StepResult> VerifyAsync(SetupContext context, CancellationToken cancellationToken)

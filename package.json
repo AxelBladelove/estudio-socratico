@@ -6,6 +6,8 @@
   "scripts": {
     "setup": "call _estudio\\setup\\Estudio.Setup.cmd install --tui",
     "setup:update": "call _estudio\\setup\\Estudio.Setup.cmd update --tui",
+    "setup:reinstall": "call _estudio\\setup\\Estudio.Setup.cmd reinstall --tui",
+    "setup:uninstall": "call _estudio\\setup\\Estudio.Setup.cmd uninstall --tui",
     "setup:dry": "call _estudio\\setup\\Estudio.Setup.cmd verify",
     "setup:package": "call _estudio\\setup\\Estudio.Setup.cmd package",
     "check": "call _estudio\\setup\\Estudio.Setup.cmd verify",

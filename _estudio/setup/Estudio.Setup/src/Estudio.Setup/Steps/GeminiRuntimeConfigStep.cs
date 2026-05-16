@@ -4,7 +4,7 @@ using Estudio.Setup.Runtime;
 
 namespace Estudio.Setup.Steps;
 
-public sealed class GeminiRuntimeConfigStep : ISetupStep, INonBlockingSetupStep
+public sealed class GeminiRuntimeConfigStep : ISetupStep, INonBlockingSetupStep, IUninstallSetupStep
 {
     private readonly string _configPath;
     private readonly IGeminiRuntimeConfigProvider _provider;
@@ -36,6 +36,25 @@ public sealed class GeminiRuntimeConfigStep : ISetupStep, INonBlockingSetupStep
     public Task<StepResult> RepairAsync(SetupContext context, CancellationToken cancellationToken)
     {
         return WriteConfigAsync(cancellationToken);
+    }
+
+    public Task<StepResult> UninstallAsync(SetupContext context, CancellationToken cancellationToken)
+    {
+        if (!File.Exists(_configPath))
+        {
+            return Task.FromResult(StepResult.Warning($"Gemini: config local ya no existe en {_configPath}."));
+        }
+
+        File.Delete(_configPath);
+        var directory = Path.GetDirectoryName(_configPath);
+        if (!string.IsNullOrWhiteSpace(directory)
+            && Directory.Exists(directory)
+            && !Directory.EnumerateFileSystemEntries(directory).Any())
+        {
+            Directory.Delete(directory);
+        }
+
+        return Task.FromResult(StepResult.Ok($"Gemini: config local eliminada de {_configPath}."));
     }
 
     public Task<StepResult> VerifyAsync(SetupContext context, CancellationToken cancellationToken)

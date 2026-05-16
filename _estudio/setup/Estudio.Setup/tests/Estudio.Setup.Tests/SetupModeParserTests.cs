@@ -10,8 +10,12 @@ public class SetupModeParserTests
     [InlineData(new[] { "--install" }, SetupMode.Install)]
     [InlineData(new[] { "-Actualizar" }, SetupMode.Update)]
     [InlineData(new[] { "--update" }, SetupMode.Update)]
+    [InlineData(new[] { "reinstall" }, SetupMode.Reinstall)]
+    [InlineData(new[] { "reinstalar" }, SetupMode.Reinstall)]
     [InlineData(new[] { "repair" }, SetupMode.Repair)]
     [InlineData(new[] { "-Reparar" }, SetupMode.Repair)]
+    [InlineData(new[] { "uninstall" }, SetupMode.Uninstall)]
+    [InlineData(new[] { "desinstalar" }, SetupMode.Uninstall)]
     [InlineData(new[] { "verify" }, SetupMode.Verify)]
     [InlineData(new[] { "-SoloVerificar" }, SetupMode.Verify)]
     [InlineData(new[] { "package" }, SetupMode.Package)]
@@ -109,6 +113,15 @@ public class SetupModeParserTests
     }
 
     [Fact]
+    public void Parse_accepts_json_progress_flag_for_textual_frontend()
+    {
+        var options = SetupModeParser.Parse(new[] { "verify", "--events-json" });
+
+        Assert.Equal(SetupMode.Verify, options.Mode);
+        Assert.True(options.JsonProgressRequested);
+    }
+
+    [Fact]
     public void Parse_rejects_missing_alias_value()
     {
         var error = Assert.Throws<ArgumentException>(() => SetupModeParser.Parse(new[] { "verify", "--alias" }));
@@ -142,11 +155,14 @@ public class SetupModeParserTests
 
         Assert.Contains("install", text);
         Assert.Contains("update", text);
+        Assert.Contains("reinstall", text);
+        Assert.Contains("uninstall", text);
         Assert.Contains("package", text);
         Assert.Contains("--alias", text);
         Assert.Contains("--change-github", text);
         Assert.Contains("--only", text);
         Assert.Contains("--tui", text);
+        Assert.Contains("--events-json", text);
         Assert.Contains("--state-root", text);
     }
 }

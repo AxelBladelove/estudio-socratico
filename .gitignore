@@ -78,6 +78,9 @@ _estudio/setup/Estudio.Setup/**/bin/
 _estudio/setup/Estudio.Setup/**/obj/
 _estudio/setup/Estudio.Setup/publish/
 _estudio/setup/Estudio.Setup/.tmp-state/
+_estudio/setup/textual/build/
+_estudio/setup/textual/__pycache__/
+_estudio/setup/textual/**/*.pyc
 
 # Private/generated runtime config must never be committed.
 runtime-config.private.json

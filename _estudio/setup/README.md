@@ -9,23 +9,26 @@ _estudio\setup\Estudio.Setup.cmd install --tui
 ```
 
 En un ZIP de release, doble clic en `Estudio.Setup.cmd` o `Estudio.Setup.exe`
-abre `install --tui` por defecto.
+abre la interfaz Textual por defecto.
 
 Ese comando esta pensado para ejecutarse desde una terminal abierta en la raiz
 del repo o desde el ZIP de release. En el repo de desarrollo usa `dotnet run`
-para evitar ejecutables viejos; en un paquete limpio usa `Estudio.Setup.exe`
-self-contained. La TUI muestra componentes, progreso, log en vivo, campo de
-alias, cambio de cuenta GitHub y reintentos solo de pasos fallidos con
-`repair --only`.
+para el backend cuando no existen ejecutables publicados; en un paquete limpio
+usa `Estudio.Setup.Textual.exe` y `Estudio.Setup.exe` self-contained. La TUI
+Textual muestra componentes, progreso, log en vivo, campo de alias, cambio de
+cuenta GitHub, botones de reinstalacion/desinstalacion y reintentos solo de
+pasos fallidos con `repair --only`.
 
 Si usas los accesos directos de la raiz del repo:
 
 - `Instalar Estudio Socratico.cmd` prepara un clon nuevo: valida GitHub CLI,
-  abre la TUI con `install`, valida GitHub CLI, configura alias local y prepara
+  abre Textual con `install`, valida GitHub CLI, configura alias local y prepara
   el fork/remotes de trabajo.
 - `Actualizar Estudio Socratico.cmd` valida la cuenta actual de GitHub CLI,
-  abre la TUI con `update` y vuelve a validar/remediar los componentes
+  abre Textual con `update` y vuelve a validar/remediar los componentes
   controlados por el framework.
+- `Reinstalar Estudio Socratico.cmd` ejecuta `reinstall --tui`.
+- `Desinstalar Estudio Socratico.cmd` ejecuta `uninstall --tui`.
 
 ## Cambio De Identidad
 
@@ -43,6 +46,21 @@ Desde CLI:
 _estudio\setup\Estudio.Setup.cmd update --change-github
 _estudio\setup\Estudio.Setup.cmd update --alias nuevo_alias
 ```
+
+## Reinstalar Y Desinstalar
+
+```bat
+_estudio\setup\Estudio.Setup.cmd reinstall --tui
+_estudio\setup\Estudio.Setup.cmd uninstall --tui
+```
+
+`reinstall` fuerza la fase reparable de cada componente y luego verifica. Es el
+modo correcto cuando la extension, settings o alias quedaron a medias.
+
+`uninstall` es idempotente y prudente: elimina integraciones locales de Estudio
+como extension VS Code, claves propias en `settings.json`, `.estudio_usuario`,
+config local Gemini y entradas PATH agregadas por el setup. No desinstala Git,
+GitHub CLI, VS Code, Node, PowerShell ni MSYS2.
 
 ## Que Hace
 
@@ -105,18 +123,24 @@ _estudio\setup\Estudio.Setup.cmd package
 ```
 
 Genera `_estudio/setup/Estudio.Setup/publish/release/` con carpeta limpia, ZIP
-y `release-manifest.json` con hashes SHA-256.
+y `release-manifest.json` con hashes SHA-256. El empaquetado usa el launcher
+Windows `py -3.10` para construir `Estudio.Setup.Textual.exe` con PyInstaller;
+el usuario final no necesita Python.
 
 ## Archivos
 
 | Archivo | Rol |
 |---|---|
 | `Estudio.Setup.cmd` | Wrapper principal para repo y release |
-| `Estudio.Setup/` | Instalador 2.0 en C# con Terminal.Gui |
+| `Estudio.Setup.Textual.exe` | UI visual Textual empaquetada en release |
+| `Estudio.Setup.exe` | Backend 2.0 self-contained en C# |
+| `textual/` | Fuente de la UI Textual y pruebas unitarias |
+| `Estudio.Setup/` | Backend C# y fallback Terminal.Gui |
 | `instalar.cmd`, `instalar.ps1` y modulos `.ps1` | Legacy conservado solo para referencia/compatibilidad |
 
 ## Legacy
 
 Los scripts PowerShell 1.x quedan congelados. No se eliminan para no romper
 clones antiguos ni documentacion historica, pero la ruta activa para 2.0 es
-`Estudio.Setup.cmd`. Las mejoras nuevas deben entrar al instalador C#.
+`Estudio.Setup.cmd` con Textual encima del backend C#. Las mejoras de sistema
+deben entrar al backend C#; las mejoras visuales deben entrar en `textual/`.

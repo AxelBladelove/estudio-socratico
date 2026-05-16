@@ -4,7 +4,7 @@ using Estudio.Setup.Core;
 
 namespace Estudio.Setup.Steps;
 
-public sealed class VsCodeSettingsStep : ISetupStep
+public sealed class VsCodeSettingsStep : ISetupStep, IUninstallSetupStep
 {
     private const string DefaultProfileKey = "terminal.integrated.defaultProfile.windows";
     private const string ProfilesKey = "terminal.integrated.profiles.windows";
@@ -60,6 +60,11 @@ public sealed class VsCodeSettingsStep : ISetupStep
     public Task<StepResult> RepairAsync(SetupContext context, CancellationToken cancellationToken)
     {
         return WriteSettingsAsync(cancellationToken);
+    }
+
+    public Task<StepResult> UninstallAsync(SetupContext context, CancellationToken cancellationToken)
+    {
+        return RemoveSettingsAsync(cancellationToken);
     }
 
     public Task<StepResult> VerifyAsync(SetupContext context, CancellationToken cancellationToken)
@@ -125,6 +130,39 @@ public sealed class VsCodeSettingsStep : ISetupStep
         }
 
         return StepResult.Ok("VS Code: settings de Estudio Socratico listos.");
+    }
+
+    private async Task<StepResult> RemoveSettingsAsync(CancellationToken cancellationToken)
+    {
+        if (!File.Exists(_settingsPath))
+        {
+            return StepResult.Warning($"VS Code: settings.json no existe en {_settingsPath}.");
+        }
+
+        JsonObject settings;
+        try
+        {
+            settings = await ReadSettingsObjectAsync(cancellationToken);
+        }
+        catch (JsonException ex)
+        {
+            return StepResult.Fail($"VS Code: settings.json no es JSON valido. {ex.Message}");
+        }
+
+        var removedAlias = settings.Remove("estudioSocratico.alias");
+        var removedConfigPath = settings.Remove("estudioSocratico.configPath");
+        if (!removedAlias && !removedConfigPath)
+        {
+            return StepResult.Warning("VS Code: settings no tenian claves de Estudio Socratico.");
+        }
+
+        BackupExistingSettings();
+        await File.WriteAllTextAsync(
+            _settingsPath,
+            settings.ToJsonString(WriteOptions),
+            cancellationToken);
+
+        return StepResult.Ok($"VS Code: claves de Estudio Socratico removidas de {_settingsPath}.");
     }
 
     private async Task<JsonObject> ReadSettingsObjectAsync(CancellationToken cancellationToken)

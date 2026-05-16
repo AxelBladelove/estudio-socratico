@@ -29,7 +29,7 @@ try
 
     var studentAlias = options.AliasOverride ?? LocalStudentProfile.ResolveAlias(workspaceRoot);
     LocalStudentProfile.ValidateAlias(studentAlias);
-    if (options.TuiRequested)
+    if (options.TuiRequested && !options.JsonProgressRequested)
     {
         return await TerminalGuiSetupApp.RunAsync(
             options,
@@ -39,13 +39,23 @@ try
             CancellationToken.None);
     }
 
+    var jsonProgress = options.JsonProgressRequested ? new JsonSetupProgressSink(Console.Out) : null;
+    ISetupProgressSink progressSink = jsonProgress is not null
+        ? jsonProgress
+        : NullSetupProgressSink.Instance;
     var artifacts = await new SetupRunCoordinator().RunAndPersistAsync(
         options,
         workspaceRoot,
         studentAlias,
         commandRunner,
-        NullSetupProgressSink.Instance,
+        progressSink,
         CancellationToken.None);
+
+    if (jsonProgress is not null)
+    {
+        await jsonProgress.WriteArtifactsAsync(artifacts, CancellationToken.None);
+        return artifacts.Report.Success ? 0 : 1;
+    }
 
     Console.WriteLine("Estudio.Setup 2.0");
     Console.WriteLine($"Modo: {options.Mode}");

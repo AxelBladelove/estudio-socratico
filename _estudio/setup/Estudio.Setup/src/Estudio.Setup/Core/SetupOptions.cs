@@ -7,4 +7,5 @@ public sealed record SetupOptions(
     bool HelpRequested = false,
     IReadOnlyList<string>? OnlyStepIds = null,
     bool TuiRequested = false,
-    bool ForceGitHubRelogin = false);
+    bool ForceGitHubRelogin = false,
+    bool JsonProgressRequested = false);

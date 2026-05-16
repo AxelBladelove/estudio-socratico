@@ -101,6 +101,59 @@ public class SetupEngineTests
         Assert.Equal(new[] { "git-safety-backup.detect", "git-safety-backup.repair", "git-safety-backup.verify" }, step.Calls);
     }
 
+    [Fact]
+    public async Task Reinstall_mode_repairs_detected_step_before_verification()
+    {
+        var step = new RecordingStep(
+            id: "vscode-extension",
+            detect: StepResult.Ok("extension found"),
+            install: StepResult.Ok("extension reinstalled"),
+            verify: StepResult.Ok("extension ok"));
+        var engine = new SetupEngine(new[] { step });
+
+        var report = await engine.RunAsync(new SetupOptions(SetupMode.Reinstall), CancellationToken.None);
+
+        Assert.True(report.Success);
+        Assert.Equal(new[] { "vscode-extension.detect", "vscode-extension.repair", "vscode-extension.verify" }, step.Calls);
+        Assert.Contains(report.Steps, step => step.StepId == "vscode-extension" && step.Phase == "reinstall");
+    }
+
+    [Fact]
+    public async Task Uninstall_mode_runs_uninstall_action_without_final_verification()
+    {
+        var step = new RecordingUninstallStep(
+            id: "vscode-extension",
+            detect: StepResult.Ok("extension found"),
+            uninstall: StepResult.Ok("extension removed"),
+            verify: StepResult.Fail("should not verify after uninstall"));
+        var engine = new SetupEngine(new[] { step });
+
+        var report = await engine.RunAsync(new SetupOptions(SetupMode.Uninstall), CancellationToken.None);
+
+        Assert.True(report.Success);
+        Assert.Equal(new[] { "vscode-extension.detect", "vscode-extension.uninstall" }, step.Calls);
+        Assert.DoesNotContain(report.Steps, step => step.Phase == "verify");
+    }
+
+    [Fact]
+    public async Task Uninstall_mode_treats_steps_without_uninstall_as_idempotent_noop()
+    {
+        var step = new RecordingStep(
+            id: "git",
+            detect: StepResult.Ok("git found"),
+            verify: StepResult.Fail("should not verify after uninstall"));
+        var engine = new SetupEngine(new[] { step });
+
+        var report = await engine.RunAsync(new SetupOptions(SetupMode.Uninstall), CancellationToken.None);
+
+        Assert.True(report.Success);
+        Assert.Equal(new[] { "git.detect" }, step.Calls);
+        var uninstall = Assert.Single(report.Steps, step => step.Phase == "uninstall");
+        Assert.True(uninstall.Result.Success);
+        Assert.True(uninstall.Result.IsWarning);
+        Assert.Contains("no requiere desinstalacion", uninstall.Result.Message);
+    }
+
 
     [Fact]
     public async Task Verify_mode_reports_missing_step_without_running_verify()
@@ -316,6 +369,67 @@ public class SetupEngineTests
         {
             _calls.Add($"{Id}.verify");
             return Task.FromResult(_verify);
+        }
+    }
+
+    private sealed class RecordingUninstallStep : ISetupStep, IUninstallSetupStep
+    {
+        private readonly StepResult _detect;
+        private readonly StepResult _uninstall;
+        private readonly StepResult _verify;
+        private readonly List<string> _calls = new();
+
+        public RecordingUninstallStep(
+            string id,
+            StepResult? detect = null,
+            StepResult? uninstall = null,
+            StepResult? verify = null)
+        {
+            Id = id;
+            Name = id;
+            _detect = detect ?? StepResult.Ok("detected");
+            _uninstall = uninstall ?? StepResult.Ok("uninstalled");
+            _verify = verify ?? StepResult.Ok("verified");
+        }
+
+        public string Id { get; }
+        public string Name { get; }
+        public IReadOnlyList<string> Calls => _calls;
+
+        public Task<StepResult> DetectAsync(SetupContext context, CancellationToken cancellationToken)
+        {
+            _calls.Add($"{Id}.detect");
+            return Task.FromResult(_detect);
+        }
+
+        public Task<StepResult> InstallAsync(SetupContext context, CancellationToken cancellationToken)
+        {
+            _calls.Add($"{Id}.install");
+            return Task.FromResult(StepResult.Ok("installed"));
+        }
+
+        public Task<StepResult> UpdateAsync(SetupContext context, CancellationToken cancellationToken)
+        {
+            _calls.Add($"{Id}.update");
+            return Task.FromResult(StepResult.Ok("updated"));
+        }
+
+        public Task<StepResult> RepairAsync(SetupContext context, CancellationToken cancellationToken)
+        {
+            _calls.Add($"{Id}.repair");
+            return Task.FromResult(StepResult.Ok("repaired"));
+        }
+
+        public Task<StepResult> VerifyAsync(SetupContext context, CancellationToken cancellationToken)
+        {
+            _calls.Add($"{Id}.verify");
+            return Task.FromResult(_verify);
+        }
+
+        public Task<StepResult> UninstallAsync(SetupContext context, CancellationToken cancellationToken)
+        {
+            _calls.Add($"{Id}.uninstall");
+            return Task.FromResult(_uninstall);
         }
     }
 

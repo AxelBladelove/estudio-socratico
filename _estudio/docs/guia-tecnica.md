@@ -6,11 +6,17 @@ motor.
 
 ## Cambios Clave En 2.0
 
-- `Estudio.Setup.cmd install --tui` es la entrada principal. La interfaz usa
-  Terminal.Gui y muestra progreso, log en vivo y reintentos por componente.
+- `Estudio.Setup.cmd install --tui` es la entrada principal. La interfaz
+  principal usa Textual empaquetado como `Estudio.Setup.Textual.exe`; el backend
+  self-contained sigue siendo `Estudio.Setup.exe` en C#.
+- El backend puede emitir progreso line-delimited JSON con `--events-json`.
+  Textual consume esos eventos para mostrar pasos, log, progreso, artefactos y
+  reintentos.
 - `Estudio.Setup.cmd package` publica un instalador self-contained `win-x64`,
-  genera `release-manifest.json` con SHA-256 y produce un ZIP limpio bajo
-  `_estudio/setup/Estudio.Setup/publish/release/`.
+  empaqueta tambien la UI Textual con PyInstaller, genera
+  `release-manifest.json` con SHA-256 y produce un ZIP limpio bajo
+  `_estudio/setup/Estudio.Setup/publish/release/`. El build de release usa
+  `py -3.10`; el usuario final no necesita Python.
 - El cambio de cuenta GitHub se resuelve desde `gh auth`; la TUI expone una
   accion `Cambiar GitHub` que fuerza logout/login web, vuelve a resolver el
   usuario y repara fork/remotes.
@@ -18,8 +24,10 @@ motor.
   instalador intenta renombrar el fork `estudio-socratico-<alias-viejo>` a
   `estudio-socratico-<alias-nuevo>`, crea backup local antes de reescribirlo y
   luego repara `origin/upstream`.
+- `reinstall` y `uninstall` son modos de primera clase. `uninstall` elimina
+  integraciones locales del framework sin quitar herramientas globales.
 - Los scripts PowerShell de setup 1.x quedan congelados como legacy. Se
-  conservan para compatibilidad, pero la ruta activa es el instalador C#.
+  conservan para compatibilidad, pero la ruta activa es Textual + backend C#.
 
 ## Cambios Clave En 1.2
 
@@ -71,7 +79,10 @@ El flujo principal es:
 | `_estudio/soporte/consola/conio.c` | Implementacion local de funciones de consola |
 | `_estudio/include/conio.h` | Cabecera usada por ejercicios C |
 | `_estudio/include/estudio_stdio_cp437.h` | Compatibilidad de `printf` con simbolos CP437 |
-| `_estudio/setup/instalar.ps1` | Orquestador del setup |
+| `_estudio/setup/Estudio.Setup.cmd` | Wrapper activo: Textual primero, backend C# como fallback |
+| `_estudio/setup/textual/setup_textual_app.py` | UI principal Textual |
+| `_estudio/setup/Estudio.Setup/src/Estudio.Setup/` | Backend C# del instalador |
+| `_estudio/setup/instalar.ps1` | Orquestador legacy del setup |
 | `_estudio/setup/proyecto.ps1` | Validacion del repo, onboarding y Git local |
 | `_estudio/setup/vscode.ps1` | F9, extensiones y terminal |
 | `_estudio/soporte/exercism/manager.ps1` | Backend para catalogo, import, test y submit de ejercicios externos |
@@ -113,9 +124,10 @@ _estudio\setup\Estudio.Setup.cmd install --tui
 El setup:
 
 - valida la raiz del proyecto;
-- muestra progreso/reintentos desde Terminal.Gui;
+- muestra progreso/reintentos desde Textual;
 - muestra acciones explicitas para cambiar cuenta GitHub y aplicar alias nuevo;
-- usa `install`, `update`, `repair`, `verify` y `package`;
+- usa `install`, `update`, `reinstall`, `repair`, `uninstall`, `verify` y
+  `package`;
 - valida el alias local y permite sobrescribirlo con `--alias`;
 - revalida GitHub CLI con `gh auth status` y permite forzar relogin con
   `--change-github`;
@@ -139,6 +151,7 @@ Parametros utiles:
 | Parametro | Uso |
 |---|---|
 | `--tui` | Abre la interfaz visual |
+| `--events-json` | Emite eventos JSON para la UI Textual |
 | `--alias <slug>` | Define alias local para este clon |
 | `--change-github` | Fuerza logout/login de GitHub CLI durante `update` |
 | `--only <step-id>` | Ejecuta solo un componente; puede repetirse |
@@ -148,6 +161,8 @@ Ejemplos:
 
 ```powershell
 _estudio\setup\Estudio.Setup.cmd verify
+_estudio\setup\Estudio.Setup.cmd reinstall --tui
+_estudio\setup\Estudio.Setup.cmd uninstall --tui
 _estudio\setup\Estudio.Setup.cmd repair --only msys2-toolchain
 _estudio\setup\Estudio.Setup.cmd update --change-github
 _estudio\setup\Estudio.Setup.cmd update --alias nuevo_alias
@@ -415,18 +430,28 @@ Modelo recomendado:
 
 | Rama | Rol |
 |---|---|
-| `main` | Framework estable |
-| `pair` | Trabajo compartido |
-| `<slug>` | Trabajo personal |
+| `main` | Framework estable y base limpia 2.0 |
 
 Para publicar una version del framework:
 
 1. prepara cambios en una rama limpia;
 2. verifica setup, build y docs;
 3. mergea o empuja a `main`;
-4. crea y publica un tag semantico (`v1.2.0`, por ejemplo);
-5. crea la release en GitHub y adjunta el VSIX correspondiente cuando aplique;
-6. actualiza `pair` y ramas personales que deban heredar el framework.
+4. elimina ramas remotas/personales obsoletas si la release reinicia la base;
+5. crea y publica un tag semantico (`v2.0.0`, por ejemplo);
+6. crea la release en GitHub y adjunta el ZIP de setup cuando aplique.
+
+## Release 2.0
+
+La release 2.0 debe quedar limpia:
+
+- rama base unica `main`;
+- sin logs historicos versionados ni estado personal del estudiante;
+- instalador Textual empaquetado con backend C# self-contained;
+- modos `install`, `update`, `reinstall`, `repair`, `uninstall`, `verify` y
+  `package` verificados;
+- README, AGENTS y skills apuntando a `usuario/`, `_estudio/` y rutas reales;
+- backup externo de ejercicios personales antes de borrar datos locales.
 
 ## Release 1.2
 

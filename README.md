@@ -4,7 +4,7 @@
 
 **Un entorno de estudio para aprender Fundamentos de Programación en C,<br>con una IA que te guía sin resolver los ejercicios por ti.**
 
-![Versión](https://img.shields.io/badge/versión-1.2.0-blue?style=flat-square)
+![Versión](https://img.shields.io/badge/versión-2.0.0-blue?style=flat-square)
 ![Plataforma](https://img.shields.io/badge/plataforma-Windows-0078D6?style=flat-square&logo=windows)
 ![Lenguaje](https://img.shields.io/badge/lenguaje-C-A8B9CC?style=flat-square&logo=c)
 ![Editor](https://img.shields.io/badge/editor-VS_Code-007ACC?style=flat-square&logo=visualstudiocode)
@@ -29,17 +29,19 @@ ayuda a descubrir qué está mal en tu código. El razonamiento siempre es tuyo.
 
 ---
 
-## Versión 1.2.0
+## Versión 2.0.0
 
-La version 1.2 consolida el modelo actual del proyecto:
+La version 2.0 deja el proyecto listo como base limpia para empezar desde cero:
 
-- **Alejandro** queda como catalogo curado de 132 ejercicios que se importan
-  desde Gists al momento de usarlos.
-- **Exercism C** sigue funcionando como fuente oficial con sus tests y submit.
-- **W3Schools / w3resource** fue retirado de esta version. Se planea
-  reintroducirlo desde cero en una version futura con curaduria semantica.
-- La extension no empaqueta ejercicios completos ni enunciados locales dentro
-  del VSIX.
+- **Instalador visual Textual** como entrada principal, con progreso, log,
+  botones, flechas, reintentos y cambio de cuenta GitHub.
+- **Backend self-contained en C#** para instalar, actualizar, reinstalar,
+  desinstalar, verificar y empaquetar sin depender de Python en la PC del
+  estudiante.
+- **Release limpio**: el framework vive en `main`; los logs, alias y memoria del
+  estudiante se generan localmente al usar el proyecto.
+- **Alejandro** sigue como catalogo curado desde Gists y **Exercism C** conserva
+  sus tests oficiales.
 
 ---
 
@@ -83,6 +85,13 @@ Cuando aprendes C, los errores no siempre son fáciles de entender:
 Instalar Estudio Socratico.cmd
 ```
 
+Se abre el instalador visual de Estudio Socratico. Si usas el ZIP empaquetado
+del setup, el archivo equivalente es:
+
+```bat
+Estudio.Setup.cmd
+```
+
 El instalador te pide solo dos cosas:
 
 - **Tu nombre corto** — un alias como `axel` o `juan`, que identifica tus
@@ -116,6 +125,47 @@ personales.
 </details>
 
 <details>
+<summary><strong>♻️ Quiero reinstalar integraciones locales</strong></summary>
+
+Haz doble clic en:
+
+```bat
+Reinstalar Estudio Socratico.cmd
+```
+
+O desde la terminal:
+
+```bash
+npm run setup:reinstall
+```
+
+Esto reaplica configuracion local, extension, alias y componentes reparables sin
+borrar tus ejercicios.
+
+</details>
+
+<details>
+<summary><strong>🧹 Quiero desinstalar integraciones locales</strong></summary>
+
+Haz doble clic en:
+
+```bat
+Desinstalar Estudio Socratico.cmd
+```
+
+O desde la terminal:
+
+```bash
+npm run setup:uninstall
+```
+
+Esto quita la extension/configuracion local de Estudio, `.estudio_usuario`,
+config local Gemini y entradas PATH agregadas por el setup. No desinstala Git,
+VS Code, Node ni herramientas globales del sistema.
+
+</details>
+
+<details>
 <summary><strong>🔍 Solo quiero verificar sin cambiar nada</strong></summary>
 
 ```bash
@@ -144,7 +194,7 @@ Esto omite las instalaciones automáticas y solo configura el proyecto.
 ### 1️⃣ Abre tu archivo `.c`
 
 Todos tus ejercicios van en la carpeta `Ejercicios/`. El proyecto trae un
-ejemplo:
+directorio limpio para que empieces desde cero. Puedes crear archivos como:
 
 ```
 Ejercicios/Blackjack.c
@@ -421,33 +471,26 @@ Funciones disponibles:
 ```
 estudio-socratico/
 ├── Ejercicios/                ← Tus archivos .c van aquí
-│   └── Blackjack.c            ← Ejemplo incluido
 ├── usuario/                   ← Logs, progreso y errores del estudiante
 │   ├── logs/
 │   └── errores.md
 ├── _estudio/                  ← Motor interno, setup, docs, extensión y tooling
 ├── Instalar Estudio Socratico.cmd
-└── Actualizar Estudio Socratico.cmd
+├── Actualizar Estudio Socratico.cmd
+├── Reinstalar Estudio Socratico.cmd
+└── Desinstalar Estudio Socratico.cmd
 ```
 
 ---
 
-## Ramas de Git
+## Git
 
 > No necesitas saber nada de Git para usar esto. El instalador configura todo y
 > los commits se hacen solos cada vez que compilas.
 
-Si varios estudiantes usan el mismo repositorio en GitHub, el proyecto usa
-**ramas** para separar el trabajo de cada uno:
-
-| Rama | Para qué |
-|---|---|
-| `main` | Versión base del framework |
-| `axel`, `juan`, etc. | Trabajo personal de cada estudiante |
-| `pair` | Trabajo compartido (ej. sesiones Live Share) |
-
-El instalador crea tu rama personal automáticamente con el mismo nombre que tu
-alias.
+La version base del framework vive en `main`. Tu identidad local vive en
+`.estudio_usuario`, tus intentos en `usuario/logs/` y tu memoria de estudio en
+`usuario/errores.md`. Esos datos son locales del clon del estudiante.
 
 ---
 
@@ -555,7 +598,7 @@ framework.
 
 <div align="center">
 
-**Estudio Socrático** · v1.2.0 · Mayo 2026
+**Estudio Socrático** · v2.0.0 · Mayo 2026
 
 *Hecho para aprender, no para copiar.*
 

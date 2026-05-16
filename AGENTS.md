@@ -27,6 +27,20 @@ resuelva ejercicios por el.
 - No borres logs, commits ni `usuario/errores.md` sin una orden
   explicita del usuario.
 
+## Setup 2.0 Y Estado Limpio
+
+- La entrada visual principal es `_estudio/setup/Estudio.Setup.cmd`, que abre
+  Textual cuando existe `Estudio.Setup.Textual.exe` y usa el backend C# como
+  motor.
+- Modos activos: `install`, `update`, `reinstall`, `repair`, `uninstall`,
+  `verify` y `package`.
+- `reinstall` reaplica componentes reparables y verifica.
+- `uninstall` limpia integraciones locales de Estudio sin desinstalar
+  herramientas globales como Git, VS Code, Node, GitHub CLI o MSYS2.
+- La version base del framework debe mantenerse limpia en `main`: no versionar
+  logs personales, aliases locales, builds temporales ni archivos generados de
+  estudiantes, salvo fixtures/documentacion intencional.
+
 ## Protocolo `@revisar`
 
 Cuando el usuario escriba `@revisar`, `revisar`, "dame una pista" o algo
