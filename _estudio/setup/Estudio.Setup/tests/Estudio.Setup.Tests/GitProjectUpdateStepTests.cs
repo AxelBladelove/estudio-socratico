@@ -39,6 +39,23 @@ public class GitProjectUpdateStepTests
     }
 
     [Fact]
+    public async Task UpdateAsync_returns_warning_when_origin_is_archived_after_local_merge()
+    {
+        var runner = new QueueCommandRunner(
+            CommandResult.Success("fetched"),
+            CommandResult.Success("merged"),
+            CommandResult.Failure(1, string.Empty, "remote: This repository was archived so it is read-only."));
+        var step = new GitProjectUpdateStep(runner);
+
+        var result = await step.UpdateAsync(new SetupContext(new SetupOptions(SetupMode.Update)), CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.True(result.IsWarning);
+        Assert.Contains("solo lectura", result.Message);
+        Assert.Equal(3, runner.Calls.Count);
+    }
+
+    [Fact]
     public async Task VerifyAsync_checks_that_upstream_and_origin_are_reachable()
     {
         var runner = new QueueCommandRunner(

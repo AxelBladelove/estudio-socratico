@@ -44,7 +44,7 @@ public sealed class WingetPackageStep : ISetupStep
 
     public Task<StepResult> RepairAsync(SetupContext context, CancellationToken cancellationToken)
     {
-        return RunWingetAsync("install", cancellationToken);
+        return RunWingetAsync("install", context, cancellationToken);
     }
 
     public Task<StepResult> VerifyAsync(SetupContext context, CancellationToken cancellationToken)
@@ -58,6 +58,15 @@ public sealed class WingetPackageStep : ISetupStep
         var result = await _commandRunner.RunAsync("winget", arguments, cancellationToken);
         if (!result.WasStarted)
         {
+            var verifiedWithoutWinget = await WarningIfToolStillVerifiesAsync(
+                context,
+                $"{Name}: winget no esta disponible para {verb}, pero la herramienta sigue disponible.",
+                cancellationToken);
+            if (verifiedWithoutWinget is not null)
+            {
+                return verifiedWithoutWinget;
+            }
+
             return StepResult.Missing($"winget no esta disponible para instalar {Name}.");
         }
 
@@ -72,13 +81,13 @@ public sealed class WingetPackageStep : ISetupStep
             details = FirstLine(result.StandardOutput);
         }
 
-        if (verb == "upgrade" && context is not null)
+        var verifiedAfterFailure = await WarningIfToolStillVerifiesAsync(
+            context,
+            $"{Name}: winget {verb} termino con codigo {result.ExitCode}, pero la herramienta sigue disponible.",
+            cancellationToken);
+        if (verifiedAfterFailure is not null)
         {
-            var verified = await _toolCheck.VerifyAsync(context, cancellationToken);
-            if (verified.Success)
-            {
-                return StepResult.Warning($"{Name}: winget {verb} termino con codigo {result.ExitCode}, pero la herramienta sigue disponible. {verified.Message}");
-            }
+            return verifiedAfterFailure;
         }
 
         return StepResult.Fail($"{Name}: winget {verb} termino con codigo {result.ExitCode}. {details}");
@@ -87,6 +96,25 @@ public sealed class WingetPackageStep : ISetupStep
     private Task<StepResult> RunWingetAsync(string verb, CancellationToken cancellationToken)
     {
         return RunWingetAsync(verb, context: null, cancellationToken);
+    }
+
+    private async Task<StepResult?> WarningIfToolStillVerifiesAsync(
+        SetupContext? context,
+        string warningPrefix,
+        CancellationToken cancellationToken)
+    {
+        if (context is null)
+        {
+            return null;
+        }
+
+        var verified = await _toolCheck.VerifyAsync(context, cancellationToken);
+        if (!verified.Success)
+        {
+            return null;
+        }
+
+        return StepResult.Warning($"{warningPrefix} {verified.Message}");
     }
 
     private static string FirstLine(string text)

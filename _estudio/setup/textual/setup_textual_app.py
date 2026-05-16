@@ -61,6 +61,16 @@ STATUS_CLASSES = {
     "error": "bad",
 }
 
+MODE_LABELS = {
+    "install": "instalar",
+    "update": "actualizar",
+    "reinstall": "reinstalar",
+    "repair": "reparar",
+    "uninstall": "desinstalar",
+    "verify": "verificar",
+    "package": "package",
+}
+
 MODE_TOKENS = {"install", "update", "reinstall", "repair", "uninstall", "verify", "package"}
 
 
@@ -387,15 +397,15 @@ class EstudioSetupDesk(App):
     }
 
     #pipeline {
-        height: 7;
+        height: 10;
         border: hkey #35475c;
-        padding: 1 2;
+        padding: 0 2;
         background: #0d141c;
         margin-bottom: 1;
     }
 
     #phase-row {
-        height: 3;
+        height: 5;
     }
 
     .phase-card {
@@ -417,11 +427,12 @@ class EstudioSetupDesk(App):
     }
 
     #status {
-        height: 4;
+        height: 3;
         border: hkey #35475c;
-        padding: 1 2;
+        padding: 0 2;
         background: #0d141c;
         margin-bottom: 1;
+        content-align: left middle;
     }
 
     #log-panel {
@@ -496,6 +507,7 @@ class EstudioSetupDesk(App):
         self.core_path = core_path
         self.initial_command = initial_command
         self.state = InstallerState()
+        self.state.mode = initial_command.mode
         self._started_initial = False
 
     def compose(self) -> ComposeResult:
@@ -510,10 +522,10 @@ class EstudioSetupDesk(App):
                     yield Static("ALIAS", classes="field-label")
                     yield Input(placeholder="alias local", id="alias")
                 with Vertical(id="token-box"):
-                    yield Static(f"EXERCISM TOKEN  {EXERCISM_TOKEN_URL}", classes="field-label", id="exercism-token-url")
+                    yield Static("EXERCISM TOKEN", classes="field-label", id="exercism-token-url")
                     yield Input(placeholder="pega token y reintenta fallidos", id="exercism-token", password=True)
                 yield Static(
-                    "[I] Instalar   [U] Update   [R] Reinstalar   [V] Verificar   "
+                    "[I] Instalar   [U] Actualizar   [R] Reinstalar   [V] Verificar   "
                     "[X] Desinstalar   [G] GitHub   [F] Fallidos   [Q] Salir",
                     id="command-ribbon",
                     markup=False,
@@ -755,8 +767,9 @@ class EstudioSetupDesk(App):
     def update_context(self) -> None:
         running = "EN CURSO" if self.state.running else "LISTO"
         failures = len(self.state.failed_step_ids())
+        mode_label = MODE_LABELS.get(self.state.mode, self.state.mode)
         self.query_one("#run-context", Static).update(
-            f"{running}  |  modo {self.state.mode}  |  {self.state.completed_count}/{self.state.total_count} ok  |  fallos {failures}"
+            f"{running}  |  modo {mode_label}  |  {self.state.completed_count}/{self.state.total_count} ok  |  fallos {failures}"
         )
 
     def active_or_relevant_step(self) -> StepState:
@@ -774,7 +787,10 @@ class EstudioSetupDesk(App):
         return f"[{css}]{title}[/]\n[{css}]{label}[/]"
 
     def update_status(self, title: str, detail: str) -> None:
-        self.query_one("#status", Static).update(f"[b]{title}[/b]\n{detail}")
+        message = f"[b]{title}[/b]"
+        if detail:
+            message += f"  {detail}"
+        self.query_one("#status", Static).update(message)
 
     def write_log(self, message: str) -> None:
         self.query_one("#log", RichLog).write(message)

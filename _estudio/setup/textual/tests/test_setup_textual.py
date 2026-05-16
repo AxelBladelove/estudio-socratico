@@ -153,7 +153,30 @@ class SetupTextualTests(unittest.TestCase):
                 self.assertEqual(len(list(app.query("#command-strip Button"))), 0)
                 ribbon = app.query_one("#command-ribbon")
                 self.assertIn("[I]", ribbon.content)
+                self.assertIn("Actualizar", ribbon.content)
                 self.assertIn("[X]", ribbon.content)
+
+        asyncio.run(run())
+
+    def test_layout_keeps_pipeline_visible_and_status_non_empty(self) -> None:
+        async def run() -> None:
+            app = EstudioSetupDesk(Path("missing.exe"), SetupCommand(mode="package"))
+            async with app.run_test() as pilot:
+                await pilot.pause()
+                self.assertGreaterEqual(app.query_one("#phase-row").size.height, 5)
+                self.assertIn("Listo", app.query_one("#status").content)
+
+        asyncio.run(run())
+
+    def test_top_bar_uses_localized_mode_and_compact_token_label(self) -> None:
+        async def run() -> None:
+            app = EstudioSetupDesk(Path("missing.exe"), SetupCommand(mode="update", alias="axel"))
+            async with app.run_test() as pilot:
+                await pilot.pause()
+                context = app.query_one("#run-context")
+                token_label = app.query_one("#exercism-token-url")
+                self.assertIn("modo actualizar", context.content)
+                self.assertEqual(token_label.content, "EXERCISM TOKEN")
 
         asyncio.run(run())
 

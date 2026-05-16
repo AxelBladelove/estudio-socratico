@@ -62,32 +62,50 @@ public sealed class GitProjectUpdateStep : ISetupStep
         var fetch = await _commandRunner.RunAsync("git", "fetch upstream", cancellationToken);
         if (!fetch.IsSuccess)
         {
-            return StepResult.Fail($"Git: fetch upstream fallo. {FirstNonEmptyLine(fetch.StandardError)}");
+            return StepResult.Fail($"Git: fetch upstream fallo. {FirstNonEmptyLine(fetch.StandardError, fetch.StandardOutput)}");
         }
 
         var merge = await _commandRunner.RunAsync("git", "merge upstream/main", cancellationToken);
         if (!merge.IsSuccess)
         {
-            return StepResult.Fail($"Git: merge upstream/main fallo. {FirstNonEmptyLine(merge.StandardError)}");
+            return StepResult.Fail($"Git: merge upstream/main fallo. {FirstNonEmptyLine(merge.StandardError, merge.StandardOutput)}");
         }
 
         var push = await _commandRunner.RunAsync("git", "push origin main", cancellationToken);
         if (!push.IsSuccess)
         {
-            return StepResult.Fail($"Git: push origin main fallo. {FirstNonEmptyLine(push.StandardError)}");
+            var detail = FirstNonEmptyLine(push.StandardError, push.StandardOutput);
+            if (IsReadOnlyOrigin(detail))
+            {
+                return StepResult.Warning($"Git: proyecto actualizado desde upstream/main, pero origin/main quedo sin publicar porque el remoto es de solo lectura. {detail}");
+            }
+
+            return StepResult.Fail($"Git: push origin main fallo. {detail}");
         }
 
         return StepResult.Ok("Git: proyecto actualizado desde upstream/main y publicado en origin/main.");
     }
 
-    private static string FirstNonEmptyLine(string text)
+    private static bool IsReadOnlyOrigin(string detail)
     {
-        using var reader = new StringReader(text);
-        while (reader.ReadLine() is { } line)
+        return detail.Contains("read-only", StringComparison.OrdinalIgnoreCase)
+            || detail.Contains("read only", StringComparison.OrdinalIgnoreCase)
+            || detail.Contains("archived", StringComparison.OrdinalIgnoreCase)
+            || detail.Contains("solo lectura", StringComparison.OrdinalIgnoreCase)
+            || detail.Contains("solo-lectura", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string FirstNonEmptyLine(params string[] texts)
+    {
+        foreach (var text in texts)
         {
-            if (!string.IsNullOrWhiteSpace(line))
+            using var reader = new StringReader(text);
+            while (reader.ReadLine() is { } line)
             {
-                return line.Trim();
+                if (!string.IsNullOrWhiteSpace(line))
+                {
+                    return line.Trim();
+                }
             }
         }
 

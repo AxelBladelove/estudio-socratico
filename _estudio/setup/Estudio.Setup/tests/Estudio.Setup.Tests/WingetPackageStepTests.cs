@@ -97,6 +97,35 @@ public class WingetPackageStepTests
             runner.Calls);
     }
 
+    [Fact]
+    public async Task RepairAsync_returns_warning_when_winget_install_fails_but_tool_still_verifies()
+    {
+        var runner = new FakeCommandRunner(
+            CommandResult.Failure(-1978335189, string.Empty, string.Empty),
+            CommandResult.Success("git version 2.54.0.windows.1"));
+        var step = new WingetPackageStep(
+            id: "git",
+            name: "Git",
+            packageId: "Git.Git",
+            fileName: "git",
+            versionArguments: "--version",
+            runner);
+
+        var result = await step.RepairAsync(new SetupContext(new SetupOptions(SetupMode.Reinstall)), CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.True(result.IsWarning);
+        Assert.Contains("winget install", result.Message);
+        Assert.Contains("git version 2.54.0.windows.1", result.Message);
+        Assert.Equal(
+            new[]
+            {
+                ("winget", "install --exact --id Git.Git --silent --accept-package-agreements --accept-source-agreements"),
+                ("git", "--version"),
+            },
+            runner.Calls);
+    }
+
     private sealed class FakeCommandRunner : ICommandRunner
     {
         private readonly Queue<CommandResult> _results;
