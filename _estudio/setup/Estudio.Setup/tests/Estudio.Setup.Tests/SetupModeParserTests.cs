@@ -24,6 +24,15 @@ public class SetupModeParserTests
     }
 
     [Fact]
+    public void Parse_defaults_to_tui_install_when_no_arguments_are_provided()
+    {
+        var options = SetupModeParser.Parse(Array.Empty<string>());
+
+        Assert.Equal(SetupMode.Install, options.Mode);
+        Assert.True(options.TuiRequested);
+    }
+
+    [Fact]
     public void Parse_rejects_unknown_mode_arguments()
     {
         var error = Assert.Throws<ArgumentException>(() => SetupModeParser.Parse(new[] { "--surprise" }));

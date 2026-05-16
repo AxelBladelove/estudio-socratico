@@ -8,6 +8,9 @@ Esta carpeta contiene el instalador de Estudio Socratico.
 _estudio\setup\Estudio.Setup.cmd install --tui
 ```
 
+En un ZIP de release, doble clic en `Estudio.Setup.cmd` o `Estudio.Setup.exe`
+abre `install --tui` por defecto.
+
 Ese comando esta pensado para ejecutarse desde una terminal abierta en la raiz
 del repo o desde el ZIP de release. En el repo de desarrollo usa `dotnet run`
 para evitar ejecutables viejos; en un paquete limpio usa `Estudio.Setup.exe`
