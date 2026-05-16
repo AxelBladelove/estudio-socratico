@@ -13,7 +13,7 @@ public static class CommandPathResolver
         foreach (var directory in SplitPath(pathValue))
         {
             var exact = Path.Combine(directory, fileName);
-            if (File.Exists(exact))
+            if (Path.HasExtension(fileName) && File.Exists(exact))
             {
                 return exact;
             }
@@ -25,6 +25,11 @@ public static class CommandPathResolver
                 {
                     return candidate;
                 }
+            }
+
+            if (File.Exists(exact))
+            {
+                return exact;
             }
         }
 

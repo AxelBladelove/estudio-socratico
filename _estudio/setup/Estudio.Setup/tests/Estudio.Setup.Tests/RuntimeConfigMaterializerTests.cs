@@ -8,12 +8,12 @@ public class RuntimeConfigMaterializerTests
     public void ToLocalJson_reconstructs_key_parts_without_exposing_runtime_shape()
     {
         var source = new GeminiRuntimeConfigSource(
-            new GeminiRuntimeSection("shared", "gemini-2.5-flash", "parts", new[] { "AIza", "123" }),
+            new GeminiRuntimeSection("shared", "gemini-2.5-flash", "parts", new[] { "test-key-", "123" }),
             new ContentRuntimeSection("gist", "bundled-vsix"));
 
         var json = RuntimeConfigMaterializer.ToLocalJson(source);
 
-        Assert.Contains(@"""apiKey"": ""AIza123""", json);
+        Assert.Contains(@"""apiKey"": ""test-key-123""", json);
         Assert.Contains(@"""model"": ""gemini-2.5-flash""", json);
         Assert.Contains(@"""catalogSource"": ""bundled-vsix""", json);
         Assert.DoesNotContain("keyParts", json);
@@ -23,7 +23,7 @@ public class RuntimeConfigMaterializerTests
     public void ToLocalJson_rejects_unknown_key_encoding()
     {
         var source = new GeminiRuntimeConfigSource(
-            new GeminiRuntimeSection("shared", "gemini-2.5-flash", "plain", new[] { "AIza123" }),
+            new GeminiRuntimeSection("shared", "gemini-2.5-flash", "plain", new[] { "test-key-123" }),
             new ContentRuntimeSection("gist", "bundled-vsix"));
 
         var ex = Assert.Throws<InvalidOperationException>(() => RuntimeConfigMaterializer.ToLocalJson(source));
@@ -47,7 +47,7 @@ public class RuntimeConfigMaterializerTests
     public void ToLocalJson_rejects_missing_model()
     {
         var source = new GeminiRuntimeConfigSource(
-            new GeminiRuntimeSection("shared", string.Empty, "parts", new[] { "AIza", "123" }),
+            new GeminiRuntimeSection("shared", string.Empty, "parts", new[] { "test-key-", "123" }),
             new ContentRuntimeSection("gist", "bundled-vsix"));
 
         var ex = Assert.Throws<InvalidOperationException>(() => RuntimeConfigMaterializer.ToLocalJson(source));

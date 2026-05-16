@@ -16,7 +16,7 @@ public class GeminiRuntimeConfigStepTests
 
         Assert.True(result.Success);
         var json = await File.ReadAllTextAsync(configPath);
-        Assert.Contains(@"""apiKey"": ""AIza123""", json);
+        Assert.Contains(@"""apiKey"": ""test-key-123""", json);
         Assert.Contains(@"""provider"": ""gist""", json);
     }
 
@@ -84,7 +84,7 @@ public class GeminiRuntimeConfigStepTests
             configPath,
             """
             {
-              "gemini": { "apiKey": "AIza123" },
+              "gemini": { "apiKey": "test-key-123" },
               "content": { "provider": "gist" }
             }
             """);
@@ -134,7 +134,7 @@ public class GeminiRuntimeConfigStepTests
     private static GeminiRuntimeConfigSource MakeSource()
     {
         return new GeminiRuntimeConfigSource(
-            new GeminiRuntimeSection("shared", "gemini-2.5-flash", "parts", new[] { "AIza", "123" }),
+            new GeminiRuntimeSection("shared", "gemini-2.5-flash", "parts", new[] { "test-key-", "123" }),
             new ContentRuntimeSection("gist", "bundled-vsix"));
     }
 

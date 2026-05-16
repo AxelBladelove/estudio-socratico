@@ -17,7 +17,7 @@ public class FileGeminiRuntimeConfigProviderTests
                 "mode": "shared",
                 "model": "gemini-2.5-flash",
                 "keyEncoding": "parts",
-                "keyParts": ["AIza", "123"]
+                "keyParts": ["test-key-", "123"]
               },
               "content": {
                 "provider": "gist",
@@ -31,7 +31,7 @@ public class FileGeminiRuntimeConfigProviderTests
 
         Assert.NotNull(source);
         Assert.Equal("shared", source.Gemini.Mode);
-        Assert.Equal(new[] { "AIza", "123" }, source.Gemini.KeyParts);
+        Assert.Equal(new[] { "test-key-", "123" }, source.Gemini.KeyParts);
         Assert.Equal("gist", source.Content.Provider);
     }
 

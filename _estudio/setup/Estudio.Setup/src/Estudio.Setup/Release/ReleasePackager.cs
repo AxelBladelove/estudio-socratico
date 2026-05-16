@@ -143,6 +143,7 @@ public sealed class ReleasePackager
             throw new InvalidOperationException($"El empaquetado Textual no genero {textualExe}.");
         }
 
+        CopyWorkspacePayload(ResolveWorkspaceRoot(request), packageDirectory);
         RemoveDebugSymbols(packageDirectory);
         File.Copy(context.WrapperPath, Path.Combine(packageDirectory, "Estudio.Setup.cmd"), overwrite: true);
         await File.WriteAllTextAsync(
@@ -231,6 +232,146 @@ public sealed class ReleasePackager
         var projectDirectory = Path.GetDirectoryName(Path.GetFullPath(projectPath))
             ?? throw new InvalidOperationException("No se pudo resolver el proyecto Estudio.Setup.");
         return Path.GetFullPath(Path.Combine(projectDirectory, "..", "..", "..", "textual", "setup_textual_app.py"));
+    }
+
+    private static string ResolveWorkspaceRoot(ReleasePackageRequest request)
+    {
+        var wrapperDirectory = Path.GetDirectoryName(Path.GetFullPath(request.WrapperPath));
+        if (wrapperDirectory is not null
+            && string.Equals(Path.GetFileName(wrapperDirectory), "setup", StringComparison.OrdinalIgnoreCase)
+            && string.Equals(Path.GetFileName(Directory.GetParent(wrapperDirectory)?.FullName), "_estudio", StringComparison.OrdinalIgnoreCase))
+        {
+            return Directory.GetParent(wrapperDirectory)!.Parent!.FullName;
+        }
+
+        var projectDirectory = Path.GetDirectoryName(Path.GetFullPath(request.ProjectPath))
+            ?? throw new InvalidOperationException("No se pudo resolver el proyecto Estudio.Setup.");
+        return Path.GetFullPath(Path.Combine(projectDirectory, "..", "..", "..", "..", ".."));
+    }
+
+    private static void CopyWorkspacePayload(string workspaceRoot, string packageDirectory)
+    {
+        CopyRootFile(workspaceRoot, packageDirectory, "README.md");
+        CopyRootFile(workspaceRoot, packageDirectory, "AGENTS.md");
+        CopyRootFile(workspaceRoot, packageDirectory, "package.json");
+        CopyRootFile(workspaceRoot, packageDirectory, ".gitignore");
+        CopyRootFile(workspaceRoot, packageDirectory, "Instalar Estudio Socratico.cmd");
+        CopyRootFile(workspaceRoot, packageDirectory, "Actualizar Estudio Socratico.cmd");
+        CopyRootFile(workspaceRoot, packageDirectory, "Reinstalar Estudio Socratico.cmd");
+        CopyRootFile(workspaceRoot, packageDirectory, "Desinstalar Estudio Socratico.cmd");
+
+        CopyDirectoryIfExists(Path.Combine(workspaceRoot, ".vscode"), Path.Combine(packageDirectory, ".vscode"));
+        CopyDirectoryIfExists(Path.Combine(workspaceRoot, "Ejercicios"), Path.Combine(packageDirectory, "Ejercicios"));
+        CopyDirectoryIfExists(Path.Combine(workspaceRoot, "_estudio", ".agent"), Path.Combine(packageDirectory, "_estudio", ".agent"));
+        CopyDirectoryIfExists(Path.Combine(workspaceRoot, "_estudio", "docs"), Path.Combine(packageDirectory, "_estudio", "docs"));
+        CopyDirectoryIfExists(Path.Combine(workspaceRoot, "_estudio", "include"), Path.Combine(packageDirectory, "_estudio", "include"));
+        CopyDirectoryIfExists(Path.Combine(workspaceRoot, "_estudio", "soporte"), Path.Combine(packageDirectory, "_estudio", "soporte"));
+        CopySetupScripts(workspaceRoot, packageDirectory);
+    }
+
+    private static void CopyRootFile(string workspaceRoot, string packageDirectory, string fileName)
+    {
+        var source = Path.Combine(workspaceRoot, fileName);
+        if (!File.Exists(source) || IsExcludedFile(source))
+        {
+            return;
+        }
+
+        var destination = Path.Combine(packageDirectory, fileName);
+        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+        File.Copy(source, destination, overwrite: true);
+    }
+
+    private static void CopySetupScripts(string workspaceRoot, string packageDirectory)
+    {
+        var source = Path.Combine(workspaceRoot, "_estudio", "setup");
+        if (!Directory.Exists(source))
+        {
+            return;
+        }
+
+        var destination = Path.Combine(packageDirectory, "_estudio", "setup");
+        Directory.CreateDirectory(destination);
+        foreach (var file in Directory.EnumerateFiles(source, "*", SearchOption.TopDirectoryOnly))
+        {
+            if (IsExcludedFile(file))
+            {
+                continue;
+            }
+
+            var extension = Path.GetExtension(file);
+            if (extension is not ".cmd" and not ".ps1" and not ".md")
+            {
+                continue;
+            }
+
+            File.Copy(file, Path.Combine(destination, Path.GetFileName(file)), overwrite: true);
+        }
+    }
+
+    private static void CopyDirectoryIfExists(string source, string destination)
+    {
+        if (!Directory.Exists(source) || IsExcludedDirectory(source))
+        {
+            return;
+        }
+
+        Directory.CreateDirectory(destination);
+        foreach (var file in Directory.EnumerateFiles(source, "*", SearchOption.TopDirectoryOnly))
+        {
+            if (IsExcludedFile(file))
+            {
+                continue;
+            }
+
+            File.Copy(file, Path.Combine(destination, Path.GetFileName(file)), overwrite: true);
+        }
+
+        foreach (var directory in Directory.EnumerateDirectories(source, "*", SearchOption.TopDirectoryOnly))
+        {
+            if (IsExcludedDirectory(directory))
+            {
+                continue;
+            }
+
+            CopyDirectoryIfExists(directory, Path.Combine(destination, Path.GetFileName(directory)));
+        }
+    }
+
+    private static bool IsExcludedDirectory(string path)
+    {
+        var name = Path.GetFileName(Path.TrimEndingDirectorySeparator(path));
+        return name.Equals(".git", StringComparison.OrdinalIgnoreCase)
+            || name.Equals(".estudio-drive", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("node_modules", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("runtime", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("usuarios", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("usuario", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("logs", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("bin", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("obj", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("publish", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("build", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("__pycache__", StringComparison.OrdinalIgnoreCase)
+            || name.Equals(".tmp-state", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("generated", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsExcludedFile(string path)
+    {
+        var name = Path.GetFileName(path);
+        var extension = Path.GetExtension(path);
+        return name.Equals(".estudio_usuario", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("runtime-config.private.json", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("runtime-config.bootstrap.json", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("gemini-key.local.json", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("app-config.generated.json", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("catalog.private.json", StringComparison.OrdinalIgnoreCase)
+            || name.EndsWith(".private-manifest.json", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("gist-state", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".pdb", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".pyc", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".vsix", StringComparison.OrdinalIgnoreCase);
     }
 
     private static void DeleteGeneratedDirectory(string path, string outputRoot)

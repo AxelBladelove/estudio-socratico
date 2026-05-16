@@ -27,6 +27,12 @@ _tmp_*.txt
 # Identidad local del clon (no se comparte)
 .estudio_usuario
 
+# Duplicados y borradores locales de trabajo
+soporte/
+usuarios/
+02-*.md
+03-*.md
+
 # Runtime local generado por el wrapper de compilacion
 _estudio/soporte/runtime/
 .output/

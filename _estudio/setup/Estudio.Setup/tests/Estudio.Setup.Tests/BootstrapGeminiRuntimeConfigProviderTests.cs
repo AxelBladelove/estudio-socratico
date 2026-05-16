@@ -43,7 +43,7 @@ public class BootstrapGeminiRuntimeConfigProviderTests
                         "mode": "shared",
                         "model": "gemini-2.5-flash",
                         "keyEncoding": "parts",
-                        "keyParts": ["AIza", "remote"]
+                        "keyParts": ["test-key-", "remote"]
                       },
                       "content": {
                         "provider": "gist",
@@ -60,7 +60,7 @@ public class BootstrapGeminiRuntimeConfigProviderTests
         Assert.NotNull(source);
         Assert.Equal(new Uri("https://gist.githubusercontent.com/example/runtime-config.json"), requestedUri);
         Assert.Equal("shared", source.Gemini.Mode);
-        Assert.Equal(new[] { "AIza", "remote" }, source.Gemini.KeyParts);
+        Assert.Equal(new[] { "test-key-", "remote" }, source.Gemini.KeyParts);
         Assert.Equal("bundled-vsix", source.Content.CatalogSource);
     }
 

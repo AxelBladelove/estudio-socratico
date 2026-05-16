@@ -19,6 +19,20 @@ public class CommandPathResolverTests : IDisposable
     }
 
     [Fact]
+    public void Resolve_prefers_windows_executable_extension_over_extensionless_script()
+    {
+        Directory.CreateDirectory(_tempRoot);
+        var npmShellScript = Path.Combine(_tempRoot, "npm");
+        var npmCmd = Path.Combine(_tempRoot, "npm.cmd");
+        File.WriteAllText(npmShellScript, "#!/bin/sh");
+        File.WriteAllText(npmCmd, "@echo off");
+
+        var resolved = CommandPathResolver.Resolve("npm", _tempRoot, ".EXE;.CMD;.BAT");
+
+        Assert.Equal(npmCmd, resolved, StringComparer.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Resolve_keeps_rooted_path_unchanged()
     {
         var rooted = @"C:\msys64\ucrt64\bin\gcc.exe";

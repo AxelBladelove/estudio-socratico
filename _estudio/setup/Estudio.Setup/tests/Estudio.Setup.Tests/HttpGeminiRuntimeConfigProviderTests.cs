@@ -19,7 +19,7 @@ public class HttpGeminiRuntimeConfigProviderTests
                         "mode": "shared",
                         "model": "gemini-2.5-flash",
                         "keyEncoding": "parts",
-                        "keyParts": ["AIza", "remote"]
+                        "keyParts": ["test-key-", "remote"]
                       },
                       "content": {
                         "provider": "gist",
@@ -33,7 +33,7 @@ public class HttpGeminiRuntimeConfigProviderTests
 
         Assert.NotNull(source);
         Assert.Equal("gemini-2.5-flash", source.Gemini.Model);
-        Assert.Equal(new[] { "AIza", "remote" }, source.Gemini.KeyParts);
+        Assert.Equal(new[] { "test-key-", "remote" }, source.Gemini.KeyParts);
     }
 
     [Fact]

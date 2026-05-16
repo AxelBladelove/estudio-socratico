@@ -9,7 +9,7 @@ public class EnvironmentGeminiRuntimeConfigProviderTests
     {
         var values = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
         {
-            ["GEMINI_API_KEY"] = "AIza-env",
+            ["GEMINI_API_KEY"] = "test-key-env",
         };
         var provider = new EnvironmentGeminiRuntimeConfigProvider(values.GetValueOrDefault);
 
@@ -19,7 +19,7 @@ public class EnvironmentGeminiRuntimeConfigProviderTests
         Assert.Equal("shared", source.Gemini.Mode);
         Assert.Equal("gemini-2.5-flash", source.Gemini.Model);
         Assert.Equal("parts", source.Gemini.KeyEncoding);
-        Assert.Equal(new[] { "AIza-env" }, source.Gemini.KeyParts);
+        Assert.Equal(new[] { "test-key-env" }, source.Gemini.KeyParts);
         Assert.Equal("gist", source.Content.Provider);
         Assert.Equal("bundled-vsix", source.Content.CatalogSource);
     }

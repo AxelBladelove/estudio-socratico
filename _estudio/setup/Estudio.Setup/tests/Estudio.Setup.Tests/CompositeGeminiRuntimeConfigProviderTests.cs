@@ -33,7 +33,7 @@ public class CompositeGeminiRuntimeConfigProviderTests
     private static GeminiRuntimeConfigSource Source(string mode)
     {
         return new GeminiRuntimeConfigSource(
-            new GeminiRuntimeSection(mode, "gemini-2.5-flash", "parts", new[] { "AIza", "123" }),
+            new GeminiRuntimeSection(mode, "gemini-2.5-flash", "parts", new[] { "test-key-", "123" }),
             new ContentRuntimeSection("gist", "bundled-vsix"));
     }
 

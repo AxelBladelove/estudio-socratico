@@ -58,6 +58,66 @@ public sealed class ReleasePackagerTests : IDisposable
         Assert.Contains("verify", readme);
     }
 
+    [Fact]
+    public async Task CreateAsync_copies_clean_workspace_payload_for_standalone_installer()
+    {
+        var workspaceRoot = Path.Combine(_tempRoot, "workspace");
+        var projectPath = Path.Combine(workspaceRoot, "_estudio", "setup", "Estudio.Setup", "src", "Estudio.Setup", "Estudio.Setup.csproj");
+        var wrapperPath = Path.Combine(workspaceRoot, "_estudio", "setup", "Estudio.Setup.cmd");
+        Directory.CreateDirectory(Path.GetDirectoryName(projectPath)!);
+        Directory.CreateDirectory(Path.GetDirectoryName(wrapperPath)!);
+        await File.WriteAllTextAsync(projectPath, "<Project />");
+        await File.WriteAllTextAsync(wrapperPath, "@echo off");
+        await WriteWorkspaceFile(workspaceRoot, "README.md", "# Estudio");
+        await WriteWorkspaceFile(workspaceRoot, "AGENTS.md", "# Agentes");
+        await WriteWorkspaceFile(workspaceRoot, ".vscode/tasks.json", "{}");
+        await WriteWorkspaceFile(workspaceRoot, "Ejercicios/README.md", "# Ejercicios");
+        await WriteWorkspaceFile(workspaceRoot, "_estudio/soporte/vscode/estudio-exercism/package.json", "{}");
+        await WriteWorkspaceFile(workspaceRoot, "_estudio/soporte/exercism/catalogs/alejandro.json", "[]");
+        await WriteWorkspaceFile(workspaceRoot, "_estudio/soporte/runtime/secret.txt", "runtime");
+        await WriteWorkspaceFile(workspaceRoot, ".estudio-drive/token.json", "{}");
+        await WriteWorkspaceFile(workspaceRoot, "02-gemini-api-key-runtime-config-2.md", "draft");
+        await WriteWorkspaceFile(workspaceRoot, "soporte/runtime/old.txt", "legacy");
+        var packager = new ReleasePackager(
+            async (context, _) =>
+            {
+                await File.WriteAllTextAsync(Path.Combine(context.PackageDirectory, "Estudio.Setup.exe"), "fake exe");
+            },
+            async (context, _) =>
+            {
+                await File.WriteAllTextAsync(Path.Combine(context.PackageDirectory, "Estudio.Setup.Textual.exe"), "fake textual exe");
+            });
+
+        var result = await packager.CreateAsync(
+            new ReleasePackageRequest(
+                ProjectPath: projectPath,
+                WrapperPath: wrapperPath,
+                OutputRoot: Path.Combine(workspaceRoot, "_estudio", "setup", "Estudio.Setup", "publish", "release"),
+                Version: "2.0.0",
+                RuntimeIdentifier: "win-x64"),
+            CancellationToken.None);
+
+        Assert.Contains("_estudio/soporte/vscode/estudio-exercism/package.json", result.Files);
+        Assert.Contains("_estudio/soporte/exercism/catalogs/alejandro.json", result.Files);
+        Assert.Contains(".vscode/tasks.json", result.Files);
+        Assert.Contains("Ejercicios/README.md", result.Files);
+        Assert.Contains("README.md", result.Files);
+        Assert.DoesNotContain("_estudio/soporte/runtime/secret.txt", result.Files);
+        Assert.DoesNotContain(".estudio-drive/token.json", result.Files);
+        Assert.DoesNotContain("02-gemini-api-key-runtime-config-2.md", result.Files);
+        Assert.DoesNotContain("soporte/runtime/old.txt", result.Files);
+    }
+
+    private static async Task WriteWorkspaceFile(string workspaceRoot, string relativePath, string contents)
+    {
+        var path = Path.Combine(
+            new[] { workspaceRoot }
+                .Concat(relativePath.Split('/', StringSplitOptions.RemoveEmptyEntries))
+                .ToArray());
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        await File.WriteAllTextAsync(path, contents);
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_tempRoot))

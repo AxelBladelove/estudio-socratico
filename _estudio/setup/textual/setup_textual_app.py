@@ -39,10 +39,10 @@ DEFAULT_STEP_IDS = (
 )
 
 STATUS_LABELS = {
-    "pending": "PENDIENTE",
-    "running": "EN CURSO",
+    "pending": "PEND",
+    "running": "RUN",
     "ok": "OK",
-    "warning": "ADVERTENCIA",
+    "warning": "WARN",
     "missing": "FALTA",
     "error": "ERROR",
 }
@@ -267,20 +267,50 @@ class EstudioSetupDesk(App):
     }
 
     #command-strip {
-        height: 5;
+        height: 4;
         border: tall #35475c;
         background: #0f171f;
-        padding: 1 2;
+        padding: 0 2;
         margin-bottom: 1;
     }
 
-    #alias {
-        width: 24;
+    #alias-box {
+        width: 28;
         margin-right: 2;
     }
 
+    .field-label {
+        height: 1;
+        color: #8bd8ff;
+        text-style: bold;
+    }
+
+    #alias {
+        height: 1;
+        width: 100%;
+        border: none;
+        background: #18212b;
+        color: #e8edf2;
+    }
+
+    #command-ribbon {
+        width: 1fr;
+        content-align: center middle;
+        color: #cbd5df;
+    }
+
+    #command-ribbon .key {
+        color: #8bd8ff;
+        text-style: bold;
+    }
+
+    #command-ribbon .danger {
+        color: #ff7a7a;
+        text-style: bold;
+    }
+
     #console-grid {
-        height: 100%;
+        height: 1fr;
     }
 
     .panel {
@@ -298,7 +328,7 @@ class EstudioSetupDesk(App):
     }
 
     #component-matrix {
-        width: 34%;
+        width: 32%;
         margin-right: 1;
     }
 
@@ -308,7 +338,7 @@ class EstudioSetupDesk(App):
     }
 
     #step-inspector {
-        width: 28%;
+        width: 27%;
     }
 
     ListView {
@@ -327,7 +357,7 @@ class EstudioSetupDesk(App):
     }
 
     #pipeline {
-        height: 8;
+        height: 7;
         border: hkey #35475c;
         padding: 1 2;
         background: #0d141c;
@@ -357,7 +387,7 @@ class EstudioSetupDesk(App):
     }
 
     #status {
-        height: 6;
+        height: 4;
         border: hkey #35475c;
         padding: 1 2;
         background: #0d141c;
@@ -374,7 +404,7 @@ class EstudioSetupDesk(App):
     }
 
     #selected-step {
-        height: 3;
+        height: 2;
         color: #8bd8ff;
         text-style: bold;
     }
@@ -385,13 +415,8 @@ class EstudioSetupDesk(App):
     }
 
     #artifact-paths {
-        height: 5;
+        height: 7;
         color: #9ba8b5;
-    }
-
-    Button {
-        margin-right: 1;
-        min-width: 12;
     }
 
     .pending {
@@ -451,15 +476,15 @@ class EstudioSetupDesk(App):
                 yield Static("Setup Console 2.0", id="brand-subtitle")
                 yield Static(id="run-context")
             with Horizontal(id="command-strip"):
-                yield Input(placeholder="alias local", id="alias")
-                yield Button("Instalar", id="install", variant="primary")
-                yield Button("Actualizar", id="update")
-                yield Button("Reinstalar", id="reinstall")
-                yield Button("Verificar", id="verify")
-                yield Button("Desinstalar", id="uninstall", variant="error")
-                yield Button("GitHub", id="github")
-                yield Button("Fallidos", id="retry")
-                yield Button("Salir", id="quit")
+                with Vertical(id="alias-box"):
+                    yield Static("ALIAS", classes="field-label")
+                    yield Input(placeholder="alias local", id="alias")
+                yield Static(
+                    "[I] Instalar   [U] Update   [R] Reinstalar   [V] Verificar   "
+                    "[X] Desinstalar   [G] GitHub   [F] Fallidos   [Q] Salir",
+                    id="command-ribbon",
+                    markup=False,
+                )
             with Horizontal(id="console-grid"):
                 with Vertical(classes="panel", id="component-matrix"):
                     yield Static("Matriz de componentes", classes="panel-title")
@@ -641,7 +666,7 @@ class EstudioSetupDesk(App):
         elif event_type == "artifacts":
             self.update_status(
                 "Artefactos de setup",
-                f"Estado: {self.state.state_path}\nReporte: {self.state.report_path}",
+                "Estado, log y reporte quedaron registrados en el perfil local.",
             )
         for line in self.state.log_lines[-2:]:
             if line:
@@ -686,9 +711,9 @@ class EstudioSetupDesk(App):
         paths = "\n".join(
             line
             for line in (
-                f"Estado: {self.state.state_path}" if self.state.state_path else "",
-                f"Log: {self.state.log_path}" if self.state.log_path else "",
-                f"Reporte: {self.state.report_path}" if self.state.report_path else "",
+                f"Estado: {compact_path(self.state.state_path)}" if self.state.state_path else "",
+                f"Log: {compact_path(self.state.log_path)}" if self.state.log_path else "",
+                f"Reporte: {compact_path(self.state.report_path)}" if self.state.report_path else "",
             )
             if line
         )
@@ -720,6 +745,13 @@ class EstudioSetupDesk(App):
 
     def write_log(self, message: str) -> None:
         self.query_one("#log", RichLog).write(message)
+
+
+def compact_path(value: str, max_length: int = 72) -> str:
+    if len(value) <= max_length:
+        return value
+    head, tail = value[:24], value[-(max_length - 27) :]
+    return f"{head}...{tail}"
 
 
 def parse_args(argv: list[str]) -> tuple[Path, SetupCommand]:

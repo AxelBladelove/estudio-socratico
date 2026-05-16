@@ -118,6 +118,18 @@ class SetupTextualTests(unittest.TestCase):
 
         asyncio.run(run())
 
+    def test_command_strip_uses_compact_ribbon_instead_of_terminal_buttons(self) -> None:
+        async def run() -> None:
+            app = EstudioSetupDesk(Path("missing.exe"), SetupCommand(mode="package"))
+            async with app.run_test() as pilot:
+                await pilot.pause()
+                self.assertEqual(len(list(app.query("#command-strip Button"))), 0)
+                ribbon = app.query_one("#command-ribbon")
+                self.assertIn("[I]", ribbon.content)
+                self.assertIn("[X]", ribbon.content)
+
+        asyncio.run(run())
+
     def test_wrapper_prefers_packaged_textual_executable(self) -> None:
         wrapper = (ROOT.parent / "Estudio.Setup.cmd").read_text(encoding="utf-8")
 
