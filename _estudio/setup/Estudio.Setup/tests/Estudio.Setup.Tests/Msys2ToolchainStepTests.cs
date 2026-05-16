@@ -12,6 +12,8 @@ public class Msys2ToolchainStepTests
         var runner = new QueueCommandRunner(
             CommandResult.NotFound(Msys2ToolchainStep.PacmanPath),
             CommandResult.Success("msys2 installed"),
+            CommandResult.Success("pacman"),
+            CommandResult.NotFound(Msys2ToolchainStep.GccPath),
             CommandResult.Success("system updated"),
             CommandResult.Success("toolchain installed"));
         var step = new Msys2ToolchainStep(runner, MakeTempRoot());
@@ -22,9 +24,11 @@ public class Msys2ToolchainStepTests
         Assert.Equal("winget", runner.Calls[1].FileName);
         Assert.Contains("MSYS2.MSYS2", runner.Calls[1].Arguments);
         Assert.Equal(Msys2ToolchainStep.PacmanPath, runner.Calls[2].FileName);
-        Assert.Contains("-Syu --noconfirm", runner.Calls[2].Arguments);
-        Assert.Equal(Msys2ToolchainStep.PacmanPath, runner.Calls[3].FileName);
-        Assert.Contains("mingw-w64-ucrt-x86_64-toolchain", runner.Calls[3].Arguments);
+        Assert.Equal(Msys2ToolchainStep.GccPath, runner.Calls[3].FileName);
+        Assert.Equal(Msys2ToolchainStep.PacmanPath, runner.Calls[4].FileName);
+        Assert.Contains("-Syu --noconfirm", runner.Calls[4].Arguments);
+        Assert.Equal(Msys2ToolchainStep.PacmanPath, runner.Calls[5].FileName);
+        Assert.Contains("mingw-w64-ucrt-x86_64-toolchain", runner.Calls[5].Arguments);
     }
 
     [Fact]
@@ -32,6 +36,10 @@ public class Msys2ToolchainStepTests
     {
         var runner = new QueueCommandRunner(
             CommandResult.Success("pacman"),
+            CommandResult.Success("pacman"),
+            CommandResult.Success("gcc"),
+            CommandResult.Success("make"),
+            CommandResult.Success("gdb"),
             CommandResult.Success("system updated"),
             CommandResult.Success("toolchain installed"));
         var step = new Msys2ToolchainStep(runner, MakeTempRoot());
@@ -40,7 +48,52 @@ public class Msys2ToolchainStepTests
 
         Assert.True(result.Success);
         Assert.DoesNotContain(runner.Calls, call => call.FileName == "winget");
-        Assert.Equal(3, runner.Calls.Count);
+        Assert.Equal(5, runner.Calls.Count);
+        Assert.DoesNotContain(runner.Calls, call => call.Arguments.Contains("-Syu --noconfirm", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task RepairAsync_skips_pacman_sync_when_toolchain_is_already_healthy()
+    {
+        var runner = new QueueCommandRunner(
+            CommandResult.Success("pacman"),
+            CommandResult.Success("pacman"),
+            CommandResult.Success("gcc"),
+            CommandResult.Success("make"),
+            CommandResult.Success("gdb"));
+        var step = new Msys2ToolchainStep(runner, MakeTempRoot());
+
+        var result = await step.RepairAsync(new SetupContext(new SetupOptions(SetupMode.Reinstall)), CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Contains("no requirio reinstalar", result.Message);
+        Assert.Equal(5, runner.Calls.Count);
+        Assert.DoesNotContain(runner.Calls, call => call.Arguments.Contains("-Syu --noconfirm", StringComparison.Ordinal));
+        Assert.DoesNotContain(runner.Calls, call => call.Arguments.Contains("mingw-w64-ucrt-x86_64-toolchain", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task InstallAsync_returns_warning_when_pacman_sync_fails_but_toolchain_still_verifies()
+    {
+        var runner = new QueueCommandRunner(
+            CommandResult.Success("pacman"),
+            CommandResult.Success("pacman"),
+            CommandResult.Success("gcc"),
+            CommandResult.Success("make"),
+            CommandResult.Success("gdb"),
+            CommandResult.Failure(1, string.Empty, "ssl failed"),
+            CommandResult.Success("pacman"),
+            CommandResult.Success("gcc"),
+            CommandResult.Success("make"),
+            CommandResult.Success("gdb"));
+        var step = new Msys2ToolchainStep(runner, MakeTempRoot());
+
+        var result = await step.InstallAsync(new SetupContext(new SetupOptions(SetupMode.Install)), CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.True(result.IsWarning);
+        Assert.Contains("pacman -Syu fallo", result.Message);
+        Assert.Contains("toolchain UCRT64 detectado", result.Message);
     }
 
     [Fact]

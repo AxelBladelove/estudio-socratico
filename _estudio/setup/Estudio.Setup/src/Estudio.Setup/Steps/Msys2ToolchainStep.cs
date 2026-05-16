@@ -40,17 +40,32 @@ public sealed class Msys2ToolchainStep : ISetupStep
 
     public Task<StepResult> InstallAsync(SetupContext context, CancellationToken cancellationToken)
     {
-        return EnsureToolchainAsync(installMsys2IfMissing: true, cancellationToken);
+        return EnsureToolchainAsync(
+            context,
+            installMsys2IfMissing: true,
+            refreshPackageDatabases: true,
+            modeLabel: "instalar",
+            cancellationToken);
     }
 
     public Task<StepResult> UpdateAsync(SetupContext context, CancellationToken cancellationToken)
     {
-        return EnsureToolchainAsync(installMsys2IfMissing: false, cancellationToken);
+        return EnsureToolchainAsync(
+            context,
+            installMsys2IfMissing: false,
+            refreshPackageDatabases: false,
+            modeLabel: "actualizar",
+            cancellationToken);
     }
 
     public Task<StepResult> RepairAsync(SetupContext context, CancellationToken cancellationToken)
     {
-        return EnsureToolchainAsync(installMsys2IfMissing: true, cancellationToken);
+        return EnsureToolchainAsync(
+            context,
+            installMsys2IfMissing: true,
+            refreshPackageDatabases: false,
+            modeLabel: "reinstalar",
+            cancellationToken);
     }
 
     public async Task<StepResult> VerifyAsync(SetupContext context, CancellationToken cancellationToken)
@@ -83,9 +98,13 @@ public sealed class Msys2ToolchainStep : ISetupStep
     }
 
     private async Task<StepResult> EnsureToolchainAsync(
+        SetupContext context,
         bool installMsys2IfMissing,
+        bool refreshPackageDatabases,
+        string modeLabel,
         CancellationToken cancellationToken)
     {
+        var pacmanWasInstalledByThisRun = false;
         var pacman = await _commandRunner.RunAsync(PacmanPath, "--version", cancellationToken);
         if (!pacman.WasStarted)
         {
@@ -107,12 +126,34 @@ public sealed class Msys2ToolchainStep : ISetupStep
             {
                 return StepResult.Fail($"MSYS2: winget install fallo. {FirstNonEmptyLine(msys2.StandardError)}");
             }
+
+            pacmanWasInstalledByThisRun = true;
         }
 
-        var update = await _commandRunner.RunAsync(PacmanPath, "-Syu --noconfirm", cancellationToken);
-        if (!update.IsSuccess)
+        var currentToolchain = await RunToolChecksAsync(
+            context,
+            check => check.VerifyAsync(context, cancellationToken));
+        if (currentToolchain.Success && !refreshPackageDatabases)
         {
-            return StepResult.Fail($"MSYS2: pacman -Syu fallo. {FirstNonEmptyLine(update.StandardError)}");
+            return StepResult.Ok($"MSYS2: toolchain UCRT64 ya estaba listo; no requirio {modeLabel} ni sincronizar pacman.");
+        }
+
+        if (refreshPackageDatabases || pacmanWasInstalledByThisRun)
+        {
+            var update = await _commandRunner.RunAsync(PacmanPath, "-Syu --noconfirm", cancellationToken);
+            if (!update.IsSuccess)
+            {
+                var fallback = await WarningIfToolchainStillVerifiesAsync(
+                    context,
+                    $"MSYS2: pacman -Syu fallo. {FirstNonEmptyLine(update.StandardError, update.StandardOutput)}",
+                    cancellationToken);
+                if (fallback is not null)
+                {
+                    return fallback;
+                }
+
+                return StepResult.Fail($"MSYS2: pacman -Syu fallo. {FirstNonEmptyLine(update.StandardError, update.StandardOutput)}");
+            }
         }
 
         var toolchain = await _commandRunner.RunAsync(
@@ -121,20 +162,48 @@ public sealed class Msys2ToolchainStep : ISetupStep
             cancellationToken);
         if (!toolchain.IsSuccess)
         {
-            return StepResult.Fail($"MSYS2: instalacion del toolchain UCRT64 fallo. {FirstNonEmptyLine(toolchain.StandardError)}");
+            var fallback = await WarningIfToolchainStillVerifiesAsync(
+                context,
+                $"MSYS2: instalacion del toolchain UCRT64 fallo. {FirstNonEmptyLine(toolchain.StandardError, toolchain.StandardOutput)}",
+                cancellationToken);
+            if (fallback is not null)
+            {
+                return fallback;
+            }
+
+            return StepResult.Fail($"MSYS2: instalacion del toolchain UCRT64 fallo. {FirstNonEmptyLine(toolchain.StandardError, toolchain.StandardOutput)}");
         }
 
         return StepResult.Ok("MSYS2: toolchain UCRT64 instalado/actualizado.");
     }
 
-    private static string FirstNonEmptyLine(string text)
+    private async Task<StepResult?> WarningIfToolchainStillVerifiesAsync(
+        SetupContext context,
+        string warningMessage,
+        CancellationToken cancellationToken)
     {
-        using var reader = new StringReader(text);
-        while (reader.ReadLine() is { } line)
+        var currentToolchain = await RunToolChecksAsync(
+            context,
+            check => check.VerifyAsync(context, cancellationToken));
+        if (!currentToolchain.Success)
         {
-            if (!string.IsNullOrWhiteSpace(line))
+            return null;
+        }
+
+        return StepResult.Warning($"{warningMessage} {currentToolchain.Message}");
+    }
+
+    private static string FirstNonEmptyLine(params string[] texts)
+    {
+        foreach (var text in texts)
+        {
+            using var reader = new StringReader(text);
+            while (reader.ReadLine() is { } line)
             {
-                return line.Trim();
+                if (!string.IsNullOrWhiteSpace(line))
+                {
+                    return line.Trim();
+                }
             }
         }
 
