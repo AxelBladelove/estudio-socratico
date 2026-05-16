@@ -74,6 +74,7 @@ class StepState:
     status: str = "pending"
     phase: str = ""
     message: str = ""
+    phases: dict[str, str] | None = None
 
 
 class InstallerState:
@@ -86,6 +87,7 @@ class InstallerState:
         self.state_path = ""
         self.log_path = ""
         self.report_path = ""
+        self.active_step_id = ""
 
     @property
     def completed_count(self) -> int:
@@ -105,10 +107,21 @@ class InstallerState:
         self.state_path = ""
         self.log_path = ""
         self.report_path = ""
+        self.active_step_id = ""
         for step in self.steps.values():
             step.status = "pending"
             step.phase = ""
             step.message = ""
+            step.phases = None
+
+    def phase_statuses_for(self, step_id: str) -> dict[str, str]:
+        step = self._step(step_id)
+        phases = step.phases or {}
+        return {
+            "detect": phases.get("detect", "pending"),
+            "action": phases.get("action", "pending"),
+            "verify": phases.get("verify", "pending"),
+        }
 
     def apply(self, event: dict[str, Any]) -> None:
         event_type = event.get("type")
@@ -119,17 +132,21 @@ class InstallerState:
 
         if event_type == "phase-started":
             step = self._step(str(event.get("stepId", "")))
+            self.active_step_id = step.step_id
             step.status = "running"
             step.phase = str(event.get("phase", ""))
             step.message = f"{step.phase}..."
+            self._set_phase_status(step, step.phase, "running")
             self.log_lines.append(f"{step.step_id}.{step.phase}: iniciando")
             return
 
         if event_type == "phase-finished":
             step = self._step(str(event.get("stepId", "")))
+            self.active_step_id = step.step_id
             step.status = str(event.get("status", "error"))
             step.phase = str(event.get("phase", ""))
             step.message = str(event.get("message", ""))
+            self._set_phase_status(step, step.phase, step.status)
             self.log_lines.append(f"{step.step_id}.{step.phase}: {step.message}")
             return
 
@@ -148,6 +165,20 @@ class InstallerState:
         if step_id not in self.steps:
             self.steps[step_id] = StepState(step_id)
         return self.steps[step_id]
+
+    @staticmethod
+    def _set_phase_status(step: StepState, phase: str, status: str) -> None:
+        if step.phases is None:
+            step.phases = {}
+        step.phases[phase_bucket(phase)] = status
+
+
+def phase_bucket(phase: str) -> str:
+    if phase == "detect":
+        return "detect"
+    if phase == "verify":
+        return "verify"
+    return "action"
 
 
 def parse_progress_event(line: str) -> dict[str, Any] | None:
@@ -194,105 +225,203 @@ def resolve_core_path(explicit: str | None) -> Path:
 class EstudioSetupDesk(App):
     CSS = """
     Screen {
-        background: #0d1113;
-        color: #e9eef0;
+        background: #0b1016;
+        color: #e8edf2;
     }
 
     Header {
-        background: #16615f;
-        color: white;
+        background: #18212b;
+        color: #e8edf2;
     }
 
-    #layout {
+    #app-shell {
         height: 1fr;
+        padding: 1 2;
     }
 
-    .panel {
-        border: tall #2d4a50;
-        padding: 1;
-        background: #12181b;
+    #brand-strip {
+        height: 4;
+        border: hkey #35475c;
+        background: #101923;
+        padding: 0 2;
+        margin-bottom: 1;
+    }
+
+    #brand-title {
+        width: 34;
+        content-align: left middle;
+        color: #8bd8ff;
+        text-style: bold;
+    }
+
+    #brand-subtitle {
+        width: 32;
+        content-align: left middle;
+        color: #d9b76e;
+    }
+
+    #run-context {
+        width: 1fr;
+        content-align: right middle;
+        color: #9ba8b5;
+    }
+
+    #command-strip {
+        height: 5;
+        border: tall #35475c;
+        background: #0f171f;
+        padding: 1 2;
+        margin-bottom: 1;
+    }
+
+    #alias {
+        width: 24;
+        margin-right: 2;
+    }
+
+    #console-grid {
         height: 100%;
     }
 
-    #steps-panel {
-        width: 38%;
-    }
-
-    #work-panel {
-        width: 62%;
+    .panel {
+        border: tall #35475c;
+        padding: 1;
+        background: #101820;
+        height: 100%;
     }
 
     .panel-title {
-        color: #8cebd8;
+        color: #8bd8ff;
         text-style: bold;
+        height: 1;
         margin-bottom: 1;
+    }
+
+    #component-matrix {
+        width: 34%;
+        margin-right: 1;
+    }
+
+    #operation-deck {
+        width: 1fr;
+        margin-right: 1;
+    }
+
+    #step-inspector {
+        width: 28%;
     }
 
     ListView {
         height: 1fr;
-        scrollbar-color: #8cebd8 #1d272b;
+        scrollbar-color: #8bd8ff #18212b;
     }
 
     ListItem {
-        height: 2;
+        height: 1;
         padding: 0 1;
     }
 
     ListItem.--highlight {
-        background: #244a50;
-        color: white;
+        background: #26394c;
+        color: #ffffff;
     }
 
-    Input {
-        margin-bottom: 1;
-    }
-
-    Button {
-        margin-right: 1;
-        margin-bottom: 1;
-        min-width: 14;
-    }
-
-    #status {
-        height: 7;
-        border: tall #2d4a50;
+    #pipeline {
+        height: 8;
+        border: hkey #35475c;
         padding: 1 2;
-        background: #0d1215;
+        background: #0d141c;
+        margin-bottom: 1;
+    }
+
+    #phase-row {
+        height: 3;
+    }
+
+    .phase-card {
+        width: 1fr;
+        border: round #35475c;
+        padding: 0 1;
+        margin-right: 1;
+        content-align: center middle;
+        background: #101923;
+    }
+
+    #phase-verify {
+        margin-right: 0;
     }
 
     #progress {
-        height: 3;
-        padding: 0 2;
-        background: #0d1215;
+        height: 2;
+        margin-top: 1;
+    }
+
+    #status {
+        height: 6;
+        border: hkey #35475c;
+        padding: 1 2;
+        background: #0d141c;
+        margin-bottom: 1;
+    }
+
+    #log-panel {
+        height: 1fr;
     }
 
     #log {
         height: 1fr;
-        border: tall #2d4a50;
-        padding: 1;
-        background: #0d1215;
+        background: #090f15;
+    }
+
+    #selected-step {
+        height: 3;
+        color: #8bd8ff;
+        text-style: bold;
+    }
+
+    #selected-message {
+        height: 1fr;
+        color: #cbd5df;
+    }
+
+    #artifact-paths {
+        height: 5;
+        color: #9ba8b5;
+    }
+
+    Button {
+        margin-right: 1;
+        min-width: 12;
     }
 
     .pending {
-        color: #89969c;
+        color: #667483;
     }
 
     .running {
-        color: #ffd166;
+        color: #d9b76e;
         text-style: bold;
     }
 
     .ok {
-        color: #8cebd8;
+        color: #77dfb2;
     }
 
     .warning {
-        color: #f7c56b;
+        color: #e6b45c;
     }
 
     .bad {
-        color: #ff7c7c;
+        color: #ff7a7a;
         text-style: bold;
+    }
+
+    .cyan {
+        color: #8bd8ff;
+    }
+
+    .muted {
+        color: #9ba8b5;
     }
     """
 
@@ -316,26 +445,42 @@ class EstudioSetupDesk(App):
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
-        with Horizontal(id="layout"):
-            with Vertical(classes="panel", id="steps-panel"):
-                yield Static("Componentes", classes="panel-title")
-                yield ListView(id="steps")
-            with Vertical(classes="panel", id="work-panel"):
-                yield Static("Instalador 2.0", classes="panel-title")
-                yield Input(placeholder="Alias local, por ejemplo axel", id="alias")
-                with Horizontal():
-                    yield Button("Instalar", id="install", variant="primary")
-                    yield Button("Actualizar", id="update")
-                    yield Button("Reinstalar", id="reinstall")
-                    yield Button("Verificar", id="verify")
-                with Horizontal():
-                    yield Button("Desinstalar", id="uninstall", variant="error")
-                    yield Button("Cambiar GitHub", id="github")
-                    yield Button("Reintentar fallidos", id="retry")
-                    yield Button("Salir", id="quit")
-                yield Static(id="status")
-                yield ProgressBar(total=100, show_eta=False, id="progress")
-                yield RichLog(id="log", wrap=True, highlight=True)
+        with Vertical(id="app-shell"):
+            with Horizontal(id="brand-strip"):
+                yield Static("ESTUDIO SOCRATICO", id="brand-title")
+                yield Static("Setup Console 2.0", id="brand-subtitle")
+                yield Static(id="run-context")
+            with Horizontal(id="command-strip"):
+                yield Input(placeholder="alias local", id="alias")
+                yield Button("Instalar", id="install", variant="primary")
+                yield Button("Actualizar", id="update")
+                yield Button("Reinstalar", id="reinstall")
+                yield Button("Verificar", id="verify")
+                yield Button("Desinstalar", id="uninstall", variant="error")
+                yield Button("GitHub", id="github")
+                yield Button("Fallidos", id="retry")
+                yield Button("Salir", id="quit")
+            with Horizontal(id="console-grid"):
+                with Vertical(classes="panel", id="component-matrix"):
+                    yield Static("Matriz de componentes", classes="panel-title")
+                    yield ListView(id="steps")
+                with Vertical(id="operation-deck"):
+                    with Vertical(id="pipeline"):
+                        yield Static("Pipeline de ejecucion", classes="panel-title")
+                        with Horizontal(id="phase-row"):
+                            yield Static(id="phase-detect", classes="phase-card")
+                            yield Static(id="phase-action", classes="phase-card")
+                            yield Static(id="phase-verify", classes="phase-card")
+                        yield ProgressBar(total=100, show_eta=False, id="progress")
+                    yield Static(id="status")
+                    with Vertical(classes="panel", id="log-panel"):
+                        yield Static("Salida del backend", classes="panel-title")
+                        yield RichLog(id="log", wrap=True, highlight=True)
+                with Vertical(classes="panel", id="step-inspector"):
+                    yield Static("Inspector", classes="panel-title")
+                    yield Static(id="selected-step")
+                    yield Static(id="selected-message")
+                    yield Static(id="artifact-paths")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -343,6 +488,9 @@ class EstudioSetupDesk(App):
         self.sub_title = str(self.core_path)
         self.query_one("#alias", Input).value = self.initial_command.alias
         self.refresh_steps()
+        self.refresh_pipeline()
+        self.refresh_inspector()
+        self.update_context()
         self.update_status("Listo", "Elige una accion o usa las teclas. El modo inicial corre automaticamente.")
         self.query_one("#alias", Input).focus()
         self.call_after_refresh(self.start_initial_run)
@@ -468,6 +616,9 @@ class EstudioSetupDesk(App):
             self.write_log(f"Proceso finalizo con codigo {exit_code}.")
         self.refresh_steps()
         self.refresh_progress()
+        self.refresh_pipeline()
+        self.refresh_inspector()
+        self.update_context()
 
     def apply_event(self, event: dict[str, Any]) -> None:
         self.state.apply(event)
@@ -497,6 +648,9 @@ class EstudioSetupDesk(App):
                 self.write_log(line)
         self.refresh_steps()
         self.refresh_progress()
+        self.refresh_pipeline()
+        self.refresh_inspector()
+        self.update_context()
 
     def refresh_steps(self) -> None:
         view = self.query_one("#steps", ListView)
@@ -514,6 +668,52 @@ class EstudioSetupDesk(App):
         total = max(1, self.state.total_count)
         progress = int((self.state.completed_count / total) * 100)
         bar.update(total=100, progress=progress)
+
+    def refresh_pipeline(self) -> None:
+        active = self.active_or_relevant_step()
+        phases = self.state.phase_statuses_for(active.step_id)
+        self.query_one("#phase-detect", Static).update(self.phase_card("DETECTAR", phases["detect"]))
+        self.query_one("#phase-action", Static).update(self.phase_card("EJECUTAR", phases["action"]))
+        self.query_one("#phase-verify", Static).update(self.phase_card("VERIFICAR", phases["verify"]))
+
+    def refresh_inspector(self) -> None:
+        step = self.active_or_relevant_step()
+        label = STATUS_LABELS.get(step.status, step.status)
+        css = STATUS_CLASSES.get(step.status, "pending")
+        phase = f" · {step.phase}" if step.phase else ""
+        self.query_one("#selected-step", Static).update(f"[{css}]{label}[/]  {step.step_id}{phase}")
+        self.query_one("#selected-message", Static).update(step.message or "Esperando actividad del backend.")
+        paths = "\n".join(
+            line
+            for line in (
+                f"Estado: {self.state.state_path}" if self.state.state_path else "",
+                f"Log: {self.state.log_path}" if self.state.log_path else "",
+                f"Reporte: {self.state.report_path}" if self.state.report_path else "",
+            )
+            if line
+        )
+        self.query_one("#artifact-paths", Static).update(paths or "Los artefactos apareceran aqui al finalizar.")
+
+    def update_context(self) -> None:
+        running = "EN CURSO" if self.state.running else "LISTO"
+        failures = len(self.state.failed_step_ids())
+        self.query_one("#run-context", Static).update(
+            f"{running}  |  modo {self.state.mode}  |  {self.state.completed_count}/{self.state.total_count} ok  |  fallos {failures}"
+        )
+
+    def active_or_relevant_step(self) -> StepState:
+        if self.state.active_step_id:
+            return self.state._step(self.state.active_step_id)
+        failed = self.state.failed_step_ids()
+        if failed:
+            return self.state._step(failed[0])
+        return next(iter(self.state.steps.values()))
+
+    @staticmethod
+    def phase_card(title: str, status: str) -> str:
+        label = STATUS_LABELS.get(status, status)
+        css = STATUS_CLASSES.get(status, "pending")
+        return f"[{css}]{title}[/]\n[{css}]{label}[/]"
 
     def update_status(self, title: str, detail: str) -> None:
         self.query_one("#status", Static).update(f"[b]{title}[/b]\n{detail}")

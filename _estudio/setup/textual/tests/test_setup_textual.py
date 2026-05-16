@@ -1,12 +1,13 @@
 import json
 import sys
 import unittest
+import asyncio
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from setup_textual_app import InstallerState, SetupCommand, build_core_command, parse_progress_event
+from setup_textual_app import EstudioSetupDesk, InstallerState, SetupCommand, build_core_command, parse_progress_event
 
 
 class SetupTextualTests(unittest.TestCase):
@@ -75,6 +76,47 @@ class SetupTextualTests(unittest.TestCase):
 
         self.assertEqual(state.completed_count, 1)
         self.assertEqual(state.failed_step_ids(), ("vscode-settings",))
+
+    def test_installer_state_tracks_active_pipeline_phases(self) -> None:
+        state = InstallerState(("git",))
+        state.apply({"type": "phase-started", "stepId": "git", "phase": "detect"})
+        state.apply(
+            {
+                "type": "phase-finished",
+                "stepId": "git",
+                "phase": "detect",
+                "status": "ok",
+                "message": "Git listo.",
+                "success": True,
+            }
+        )
+        state.apply({"type": "phase-started", "stepId": "git", "phase": "verify"})
+
+        self.assertEqual(state.active_step_id, "git")
+        self.assertEqual(
+            state.phase_statuses_for("git"),
+            {"detect": "ok", "action": "pending", "verify": "running"},
+        )
+
+    def test_setup_console_layout_uses_terminal_gui_inspired_sections(self) -> None:
+        async def run() -> None:
+            app = EstudioSetupDesk(Path("missing.exe"), SetupCommand(mode="package"))
+            async with app.run_test() as pilot:
+                await pilot.pause()
+                for selector in (
+                    "#brand-strip",
+                    "#command-strip",
+                    "#component-matrix",
+                    "#pipeline",
+                    "#step-inspector",
+                    "#log-panel",
+                    "#phase-detect",
+                    "#phase-action",
+                    "#phase-verify",
+                ):
+                    self.assertIsNotNone(app.query_one(selector))
+
+        asyncio.run(run())
 
     def test_wrapper_prefers_packaged_textual_executable(self) -> None:
         wrapper = (ROOT.parent / "Estudio.Setup.cmd").read_text(encoding="utf-8")
