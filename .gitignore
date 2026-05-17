@@ -26,6 +26,7 @@ _tmp_*.txt
 
 # Identidad local del clon (no se comparte)
 .estudio_usuario
+.estudio_usuario*.bak
 
 # Duplicados y borradores locales de trabajo
 soporte/
