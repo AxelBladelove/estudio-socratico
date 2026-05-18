@@ -2,15 +2,19 @@ using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Estudio.Setup.Runtime;
 using Estudio.Setup.Services;
 using Estudio.Setup.State;
+using Estudio.Setup.Steps;
 
 namespace Estudio.Setup.Release;
 
 public sealed class ReleasePackager
 {
+    private const string DefaultPublishedExecutableFileName = "Estudio.Setup.Windows.exe";
+
     private readonly Func<ReleasePackageContext, CancellationToken, Task> _publishAsync;
-    private readonly Func<ReleasePackageContext, CancellationToken, Task> _buildTextualAsync;
+    private readonly Func<ReleasePackageContext, CancellationToken, Task> _buildLauncherAsync;
 
     public ReleasePackager(ICommandRunner commandRunner)
         : this(async (context, cancellationToken) =>
@@ -43,55 +47,7 @@ public sealed class ReleasePackager
                 throw new InvalidOperationException($"dotnet publish fallo. {FirstNonEmpty(result.StandardError, result.StandardOutput)}");
             }
         },
-        async (context, cancellationToken) =>
-        {
-            var appPath = ResolveTextualAppPath(context.ProjectPath);
-            var requirementsPath = Path.Combine(Path.GetDirectoryName(appPath)!, "requirements.txt");
-            var installResult = await commandRunner.RunAsync(
-                "py",
-                $"-3.10 -m pip install -r {Quote(requirementsPath)}",
-                cancellationToken);
-            if (!installResult.WasStarted)
-            {
-                throw new InvalidOperationException("No se pudo ejecutar python para preparar el instalador Textual.");
-            }
-
-            if (!installResult.IsSuccess)
-            {
-                throw new InvalidOperationException($"pip install fallo. {FirstNonEmpty(installResult.StandardError, installResult.StandardOutput)}");
-            }
-
-            var buildRoot = Path.Combine(Path.GetDirectoryName(appPath)!, "build");
-            var arguments = string.Join(
-                " ",
-                "-3.10",
-                "-m",
-                "PyInstaller",
-                "--noconfirm",
-                "--clean",
-                "--onefile",
-                "--name",
-                "Estudio.Setup.Textual",
-                "--distpath",
-                Quote(context.PackageDirectory),
-                "--workpath",
-                Quote(Path.Combine(buildRoot, "work")),
-                "--specpath",
-                Quote(Path.Combine(buildRoot, "spec")),
-                "--collect-all",
-                "textual",
-                Quote(appPath));
-            var result = await commandRunner.RunAsync("py", arguments, cancellationToken);
-            if (!result.WasStarted)
-            {
-                throw new InvalidOperationException("No se pudo ejecutar python para empaquetar el instalador Textual.");
-            }
-
-            if (!result.IsSuccess)
-            {
-                throw new InvalidOperationException($"PyInstaller fallo. {FirstNonEmpty(result.StandardError, result.StandardOutput)}");
-            }
-        })
+        (_, _) => Task.CompletedTask)
     {
     }
 
@@ -102,10 +58,10 @@ public sealed class ReleasePackager
 
     public ReleasePackager(
         Func<ReleasePackageContext, CancellationToken, Task> publishAsync,
-        Func<ReleasePackageContext, CancellationToken, Task> buildTextualAsync)
+        Func<ReleasePackageContext, CancellationToken, Task> buildLauncherAsync)
     {
         _publishAsync = publishAsync;
-        _buildTextualAsync = buildTextualAsync;
+        _buildLauncherAsync = buildLauncherAsync;
     }
 
     public async Task<ReleasePackageResult> CreateAsync(
@@ -114,7 +70,7 @@ public sealed class ReleasePackager
     {
         var outputRoot = Path.GetFullPath(request.OutputRoot);
         Directory.CreateDirectory(outputRoot);
-        var packageName = $"estudio-socratico-setup-{Sanitize(request.Version)}-{request.RuntimeIdentifier}";
+        var packageName = $"EstudioSocratico-{Sanitize(request.Version)}-{request.RuntimeIdentifier}";
         var packageDirectory = Path.Combine(outputRoot, packageName);
         var zipPath = Path.Combine(outputRoot, $"{packageName}.zip");
         DeleteGeneratedDirectory(packageDirectory, outputRoot);
@@ -129,30 +85,33 @@ public sealed class ReleasePackager
             request.RuntimeIdentifier,
             "Release");
         await _publishAsync(context, cancellationToken);
+        await _buildLauncherAsync(context, cancellationToken);
 
-        var setupExe = Path.Combine(packageDirectory, "Estudio.Setup.exe");
+        var setupExe = Path.Combine(packageDirectory, ResolvePublishedExecutableFileName(context.ProjectPath));
         if (!File.Exists(setupExe))
         {
             throw new InvalidOperationException($"dotnet publish no genero {setupExe}.");
         }
 
-        await _buildTextualAsync(context, cancellationToken);
-        var textualExe = Path.Combine(packageDirectory, "Estudio.Setup.Textual.exe");
-        if (!File.Exists(textualExe))
-        {
-            throw new InvalidOperationException($"El empaquetado Textual no genero {textualExe}.");
-        }
-
-        CopyWorkspacePayload(ResolveWorkspaceRoot(request), packageDirectory);
         RemoveDebugSymbols(packageDirectory);
-        File.Copy(context.WrapperPath, Path.Combine(packageDirectory, "Estudio.Setup.cmd"), overwrite: true);
+        PromoteInstallerExecutable(packageDirectory, setupExe);
+
+        var workspaceRoot = ResolveWorkspaceRoot(request);
+        var payloadRoot = SetupPackageLayout.ResolvePayloadRoot(packageDirectory);
+        Directory.CreateDirectory(payloadRoot);
+        CreateFrameworkArchive(workspaceRoot, payloadRoot);
+        CopyBundledVsix(workspaceRoot, payloadRoot);
+        CopyBundledRuntimeConfig(workspaceRoot, payloadRoot);
+        RemoveDebugSymbols(packageDirectory);
         await File.WriteAllTextAsync(
-            Path.Combine(packageDirectory, "README.txt"),
+            Path.Combine(packageDirectory, SetupPackageLayout.ReadmeFileName),
             BuildReadme(request.Version),
             cancellationToken);
+        PruneVisibleRoot(packageDirectory);
 
-        var files = BuildFileEntries(packageDirectory);
-        var manifestPath = Path.Combine(packageDirectory, "release-manifest.json");
+        var manifestPath = Path.Combine(payloadRoot, SetupPackageLayout.ManifestFileName);
+        var checksumsPath = Path.Combine(payloadRoot, SetupPackageLayout.ChecksumsFileName);
+        var manifestFiles = BuildFileEntries(packageDirectory, manifestPath, checksumsPath);
         await using (var stream = File.Create(manifestPath))
         {
             await JsonSerializer.SerializeAsync(
@@ -161,10 +120,17 @@ public sealed class ReleasePackager
                     request.Version,
                     request.RuntimeIdentifier,
                     DateTimeOffset.UtcNow,
-                    files),
+                    manifestFiles),
                 new JsonSerializerOptions { WriteIndented = true },
                 cancellationToken);
         }
+
+        await File.WriteAllTextAsync(
+            checksumsPath,
+            BuildChecksums(manifestFiles),
+            cancellationToken);
+
+        var files = BuildFileEntries(packageDirectory);
 
         ZipFile.CreateFromDirectory(packageDirectory, zipPath, CompressionLevel.Optimal, includeBaseDirectory: false);
 
@@ -181,22 +147,32 @@ public sealed class ReleasePackager
         string runtimeIdentifier = "win-x64")
     {
         return new ReleasePackageRequest(
-            ProjectPath: Path.Combine(workspaceRoot, "_estudio", "setup", "Estudio.Setup", "src", "Estudio.Setup", "Estudio.Setup.csproj"),
+            ProjectPath: Path.Combine(workspaceRoot, "_estudio", "setup", "Estudio.Setup", "src", "Estudio.Setup.Windows", "Estudio.Setup.Windows.csproj"),
             WrapperPath: Path.Combine(workspaceRoot, "_estudio", "setup", "Estudio.Setup.cmd"),
             OutputRoot: Path.Combine(workspaceRoot, "_estudio", "setup", "Estudio.Setup", "publish", "release"),
             Version: version,
             RuntimeIdentifier: runtimeIdentifier);
     }
 
-    private static IReadOnlyList<ReleaseFileEntry> BuildFileEntries(string packageDirectory)
+    private static IReadOnlyList<ReleaseFileEntry> BuildFileEntries(string packageDirectory, params string[] excludedPaths)
     {
+        var excluded = excludedPaths
+            .Select(path => Path.GetRelativePath(packageDirectory, Path.GetFullPath(path)).Replace('\\', '/'))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
         return Directory
             .EnumerateFiles(packageDirectory, "*", SearchOption.AllDirectories)
             .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
-            .Select(path => new ReleaseFileEntry(
-                Path.GetRelativePath(packageDirectory, path).Replace('\\', '/'),
-                new FileInfo(path).Length,
-                Sha256(path)))
+            .Select(path => new
+            {
+                FullPath = path,
+                RelativePath = Path.GetRelativePath(packageDirectory, path).Replace('\\', '/'),
+            })
+            .Where(file => !excluded.Contains(file.RelativePath))
+            .Select(file => new ReleaseFileEntry(
+                file.RelativePath,
+                new FileInfo(file.FullPath).Length,
+                Sha256(file.FullPath)))
             .ToArray();
     }
 
@@ -219,17 +195,12 @@ public sealed class ReleasePackager
         return $"""
             Estudio Socratico Setup {version}
 
-            Doble clic en Estudio.Setup.cmd abre el instalador visual.
-            Sin argumentos, el instalador ejecuta una verificacion automatica y desde la UI puedes elegir instalar, actualizar, reinstalar o desinstalar.
-            Tambien puedes usar Estudio.Setup.cmd verify, update, reinstall o uninstall desde terminal cuando quieras forzar un modo concreto.
-            """;
-    }
+            1. Doble clic en {SetupPackageLayout.InstallerExecutableFileName}.
+            2. El instalador creara tu workspace real en una carpeta limpia fuera de este ZIP.
+            3. La carpeta payload contiene el framework empaquetado, la extension VS Code y hashes de verificacion.
 
-    private static string ResolveTextualAppPath(string projectPath)
-    {
-        var projectDirectory = Path.GetDirectoryName(Path.GetFullPath(projectPath))
-            ?? throw new InvalidOperationException("No se pudo resolver el proyecto Estudio.Setup.");
-        return Path.GetFullPath(Path.Combine(projectDirectory, "..", "..", "..", "textual", "setup_textual_app.py"));
+            Si abres el instalador desde terminal, sin argumentos hace verify automaticamente.
+            """;
     }
 
     private static string ResolveWorkspaceRoot(ReleasePackageRequest request)
@@ -247,20 +218,83 @@ public sealed class ReleasePackager
         return Path.GetFullPath(Path.Combine(projectDirectory, "..", "..", "..", "..", ".."));
     }
 
-    private static void CopyWorkspacePayload(string workspaceRoot, string packageDirectory)
+    private static void CreateFrameworkArchive(string workspaceRoot, string payloadRoot)
     {
-        CopyRootFile(workspaceRoot, packageDirectory, "README.md");
-        CopyRootFile(workspaceRoot, packageDirectory, "AGENTS.md");
-        CopyRootFile(workspaceRoot, packageDirectory, "package.json");
-        CopyRootFile(workspaceRoot, packageDirectory, ".gitignore");
+        var stagingRoot = Path.Combine(payloadRoot, ".framework-staging");
+        DeleteIfExists(stagingRoot);
+        Directory.CreateDirectory(stagingRoot);
+        try
+        {
+            CopyFrameworkPayload(workspaceRoot, stagingRoot);
+            var frameworkPath = Path.Combine(payloadRoot, SetupPackageLayout.FrameworkArchiveFileName);
+            DeleteIfExists(frameworkPath);
+            ZipFile.CreateFromDirectory(stagingRoot, frameworkPath, CompressionLevel.Optimal, includeBaseDirectory: false);
+        }
+        finally
+        {
+            DeleteIfExists(stagingRoot);
+        }
+    }
 
-        CopyDirectoryIfExists(Path.Combine(workspaceRoot, ".vscode"), Path.Combine(packageDirectory, ".vscode"));
-        CopyDirectoryIfExists(Path.Combine(workspaceRoot, "Ejercicios"), Path.Combine(packageDirectory, "Ejercicios"));
-        CopyDirectoryIfExists(Path.Combine(workspaceRoot, "_estudio", ".agent"), Path.Combine(packageDirectory, "_estudio", ".agent"));
-        CopyDirectoryIfExists(Path.Combine(workspaceRoot, "_estudio", "docs"), Path.Combine(packageDirectory, "_estudio", "docs"));
-        CopyDirectoryIfExists(Path.Combine(workspaceRoot, "_estudio", "include"), Path.Combine(packageDirectory, "_estudio", "include"));
-        CopyDirectoryIfExists(Path.Combine(workspaceRoot, "_estudio", "soporte"), Path.Combine(packageDirectory, "_estudio", "soporte"));
-        CopySetupScripts(workspaceRoot, packageDirectory);
+    private static void CopyFrameworkPayload(string workspaceRoot, string destinationRoot)
+    {
+        CopyRootFile(workspaceRoot, destinationRoot, "README.md");
+        CopyRootFile(workspaceRoot, destinationRoot, "AGENTS.md");
+        CopyRootFile(workspaceRoot, destinationRoot, "package.json");
+        CopyRootFile(workspaceRoot, destinationRoot, ".gitignore");
+
+        CopyDirectoryIfExists(Path.Combine(workspaceRoot, ".vscode"), Path.Combine(destinationRoot, ".vscode"));
+        CopyDirectoryIfExists(Path.Combine(workspaceRoot, "Ejercicios"), Path.Combine(destinationRoot, "Ejercicios"));
+        CopyDirectoryIfExists(Path.Combine(workspaceRoot, "_estudio", ".agent"), Path.Combine(destinationRoot, "_estudio", ".agent"));
+        CopyDirectoryIfExists(Path.Combine(workspaceRoot, "_estudio", "docs"), Path.Combine(destinationRoot, "_estudio", "docs"));
+        CopyDirectoryIfExists(Path.Combine(workspaceRoot, "_estudio", "include"), Path.Combine(destinationRoot, "_estudio", "include"));
+        CopyDirectoryIfExists(Path.Combine(workspaceRoot, "_estudio", "soporte"), Path.Combine(destinationRoot, "_estudio", "soporte"));
+        CopySetupScripts(workspaceRoot, destinationRoot);
+    }
+
+    private static void CopyBundledVsix(string workspaceRoot, string payloadRoot)
+    {
+        var candidates = new[]
+        {
+            VsixExtensionPaths.ResolveVsixPath(workspaceRoot),
+            Path.Combine(workspaceRoot, "extension", VsixExtensionPaths.ReleasePackageFileName),
+            VsixExtensionPaths.ResolvePackagedVsixPath(workspaceRoot),
+        };
+
+        var source = candidates.FirstOrDefault(File.Exists);
+        if (source is null)
+        {
+            return;
+        }
+
+        var destination = Path.Combine(payloadRoot, VsixExtensionPaths.ReleasePackageFileName);
+        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+        File.Copy(source, destination, overwrite: true);
+    }
+
+    private static void CopyBundledRuntimeConfig(string workspaceRoot, string payloadRoot)
+    {
+        CopyIfExists(
+            RuntimeConfigPaths.ResolveWorkspaceRuntimeConfigBootstrapPath(workspaceRoot),
+            Path.Combine(payloadRoot, "runtime-config.bootstrap.json"));
+    }
+
+    private static void PromoteInstallerExecutable(string packageDirectory, string setupExe)
+    {
+        var installerPath = Path.Combine(packageDirectory, SetupPackageLayout.InstallerExecutableFileName);
+        DeleteIfExists(installerPath);
+        File.Move(setupExe, installerPath);
+    }
+
+    private static void CopyIfExists(string source, string destination)
+    {
+        if (!File.Exists(source))
+        {
+            return;
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+        File.Copy(source, destination, overwrite: true);
     }
 
     private static void CopyRootFile(string workspaceRoot, string packageDirectory, string fileName)
@@ -301,6 +335,13 @@ public sealed class ReleasePackager
 
             File.Copy(file, Path.Combine(destination, Path.GetFileName(file)), overwrite: true);
         }
+    }
+
+    private static string BuildChecksums(IReadOnlyList<ReleaseFileEntry> files)
+    {
+        return string.Join(
+            Environment.NewLine,
+            files.Select(file => $"{file.Sha256} *{file.Path}")) + Environment.NewLine;
     }
 
     private static void CopyDirectoryIfExists(string source, string destination)
@@ -390,6 +431,49 @@ public sealed class ReleasePackager
         File.Delete(path);
     }
 
+    private static void DeleteIfExists(string path)
+    {
+        if (File.Exists(path))
+        {
+            File.Delete(path);
+            return;
+        }
+
+        if (Directory.Exists(path))
+        {
+            Directory.Delete(path, recursive: true);
+        }
+    }
+
+    private static void PruneVisibleRoot(string packageDirectory)
+    {
+        var allowedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            SetupPackageLayout.InstallerExecutableFileName,
+            SetupPackageLayout.ReadmeFileName,
+        };
+        var allowedDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            SetupPackageLayout.PayloadDirectoryName,
+        };
+
+        foreach (var file in Directory.EnumerateFiles(packageDirectory, "*", SearchOption.TopDirectoryOnly))
+        {
+            if (!allowedFiles.Contains(Path.GetFileName(file)))
+            {
+                File.Delete(file);
+            }
+        }
+
+        foreach (var directory in Directory.EnumerateDirectories(packageDirectory, "*", SearchOption.TopDirectoryOnly))
+        {
+            if (!allowedDirectories.Contains(Path.GetFileName(directory)))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
     private static void EnsureInside(string path, string outputRoot)
     {
         var fullPath = Path.GetFullPath(path);
@@ -420,6 +504,12 @@ public sealed class ReleasePackager
     private static string FirstNonEmpty(params string[] values)
     {
         return values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value))?.Trim() ?? string.Empty;
+    }
+
+    private static string ResolvePublishedExecutableFileName(string projectPath)
+    {
+        var projectName = Path.GetFileNameWithoutExtension(projectPath);
+        return string.IsNullOrWhiteSpace(projectName) ? DefaultPublishedExecutableFileName : projectName + ".exe";
     }
 
     private sealed record ReleaseManifest(

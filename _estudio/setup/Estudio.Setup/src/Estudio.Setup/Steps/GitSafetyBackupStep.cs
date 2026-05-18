@@ -8,10 +8,12 @@ public sealed class GitSafetyBackupStep : ISetupStep, INonBlockingSetupStep
     public const string BackupCommitMessage = "chore(estudio): backup automatico antes de actualizar";
 
     private readonly ICommandRunner _commandRunner;
+    private readonly CommandExecutionOptions _workspaceExecution;
 
-    public GitSafetyBackupStep(ICommandRunner commandRunner)
+    public GitSafetyBackupStep(ICommandRunner commandRunner, string? workspaceRoot = null)
     {
         _commandRunner = commandRunner;
+        _workspaceExecution = new CommandExecutionOptions(WorkingDirectory: workspaceRoot ?? Directory.GetCurrentDirectory());
     }
 
     public string Id => "git-safety-backup";
@@ -44,7 +46,7 @@ public sealed class GitSafetyBackupStep : ISetupStep, INonBlockingSetupStep
 
     private async Task<StepResult> CheckStatusAsync(CancellationToken cancellationToken)
     {
-        var status = await _commandRunner.RunAsync("git", "status --porcelain", cancellationToken);
+        var status = await _commandRunner.RunAsync("git", "status --porcelain", _workspaceExecution, cancellationToken);
         if (!status.WasStarted)
         {
             return StepResult.Missing("Git: git no esta disponible para crear backup.");
@@ -62,7 +64,7 @@ public sealed class GitSafetyBackupStep : ISetupStep, INonBlockingSetupStep
 
     private async Task<StepResult> CreateBackupCommitIfNeededAsync(CancellationToken cancellationToken)
     {
-        var status = await _commandRunner.RunAsync("git", "status --porcelain", cancellationToken);
+        var status = await _commandRunner.RunAsync("git", "status --porcelain", _workspaceExecution, cancellationToken);
         if (!status.WasStarted)
         {
             return StepResult.Missing("Git: git no esta disponible para crear backup.");
@@ -78,7 +80,7 @@ public sealed class GitSafetyBackupStep : ISetupStep, INonBlockingSetupStep
             return StepResult.Ok("Git: no hay cambios locales que respaldar.");
         }
 
-        var add = await _commandRunner.RunAsync("git", "add -A", cancellationToken);
+        var add = await _commandRunner.RunAsync("git", "add -A", _workspaceExecution, cancellationToken);
         if (!add.IsSuccess)
         {
             return StepResult.Fail($"Git: no se pudo preparar backup. {FirstNonEmptyLine(add.StandardError)}");
@@ -87,6 +89,7 @@ public sealed class GitSafetyBackupStep : ISetupStep, INonBlockingSetupStep
         var commit = await _commandRunner.RunAsync(
             "git",
             $"commit -m \"{BackupCommitMessage}\"",
+            _workspaceExecution,
             cancellationToken);
         if (commit.IsSuccess)
         {

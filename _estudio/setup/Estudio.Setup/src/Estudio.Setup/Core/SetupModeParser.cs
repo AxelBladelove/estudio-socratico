@@ -12,11 +12,13 @@ public static class SetupModeParser
         SetupMode? mode = null;
         string? stateRoot = null;
         string? aliasOverride = null;
+        string? workspaceRoot = null;
         var onlyStepIds = new List<string>();
         var helpRequested = false;
         var tuiRequested = false;
         var forceGitHubRelogin = false;
         var jsonProgressRequested = false;
+        var engine = SetupExecutionEngine.Legacy;
         for (var index = 0; index < args.Count; index++)
         {
             var arg = args[index];
@@ -40,6 +42,12 @@ public static class SetupModeParser
                 continue;
             }
 
+            if (normalized is "workspace-root" or "install-root")
+            {
+                workspaceRoot = ReadOptionValue(args, ref index, inlineValue, "--workspace-root");
+                continue;
+            }
+
             if (normalized is "tui" or "visual")
             {
                 tuiRequested = true;
@@ -49,6 +57,26 @@ public static class SetupModeParser
             if (normalized is "events-json" or "json-progress")
             {
                 jsonProgressRequested = true;
+                continue;
+            }
+
+            if (normalized == "desired-state")
+            {
+                engine = MergeEngine(engine, SetupExecutionEngine.DesiredState, arg);
+                continue;
+            }
+
+            if (normalized == "engine")
+            {
+                var engineValue = Normalize(ReadOptionValue(args, ref index, inlineValue, "--engine"));
+                var parsedEngine = engineValue switch
+                {
+                    "legacy" => SetupExecutionEngine.Legacy,
+                    "desired-state" => SetupExecutionEngine.DesiredState,
+                    _ => throw new ArgumentException($"Engine no reconocido: {engineValue}", nameof(args)),
+                };
+
+                engine = MergeEngine(engine, parsedEngine, arg);
                 continue;
             }
 
@@ -94,11 +122,23 @@ public static class SetupModeParser
             mode ?? SetupMode.Verify,
             stateRoot,
             aliasOverride,
+            workspaceRoot,
             helpRequested,
             onlyStepIds.Count == 0 ? null : onlyStepIds.ToArray(),
             tuiRequested,
             forceGitHubRelogin,
-            jsonProgressRequested);
+            jsonProgressRequested,
+            engine);
+    }
+
+    private static SetupExecutionEngine MergeEngine(SetupExecutionEngine current, SetupExecutionEngine requested, string arg)
+    {
+        if (current != requested && current != SetupExecutionEngine.Legacy)
+        {
+            throw new ArgumentException($"Se recibieron engines incompatibles alrededor de {arg}.", nameof(arg));
+        }
+
+        return requested;
     }
 
     private static string Normalize(string value)

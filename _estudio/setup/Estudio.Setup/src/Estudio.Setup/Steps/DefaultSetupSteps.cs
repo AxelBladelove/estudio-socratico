@@ -21,28 +21,30 @@ public static class DefaultSetupSteps
             new BootstrapGeminiRuntimeConfigProvider(RuntimeConfigPaths.ResolveWorkspaceRuntimeConfigBootstrapPath(resolvedWorkspaceRoot)),
             new EnvironmentGeminiRuntimeConfigProvider());
         var codeCommand = VsCodeCliPathResolver.ResolveCodeCommand();
+        var setupRoot = AppContext.BaseDirectory;
 
         return new ISetupStep[]
         {
             new WingetPackageStep("git", "Git", "Git.Git", "git", "--version", commandRunner),
             new WingetPackageStep("github-cli", "GitHub CLI", "GitHub.cli", "gh", "--version", commandRunner),
             new GitHubAuthStep(commandRunner),
-            new GitIdentityStep(commandRunner, studentAlias),
-            new GitSafetyBackupStep(commandRunner),
+            new GitHubForkStep(commandRunner, studentAlias),
+            new GitWorkspaceStep(commandRunner, studentAlias, resolvedWorkspaceRoot),
+            new GitIdentityStep(commandRunner, studentAlias, resolvedWorkspaceRoot),
+            new GitSafetyBackupStep(commandRunner, resolvedWorkspaceRoot),
             new GitHubAliasRenameStep(commandRunner, resolvedWorkspaceRoot, studentAlias),
             new LocalAliasStep(resolvedWorkspaceRoot, studentAlias),
-            new GitHubForkStep(commandRunner, studentAlias),
-            new GitRemoteStep(commandRunner, studentAlias),
-            new GitProjectUpdateStep(commandRunner),
+            new GitRemoteStep(commandRunner, studentAlias, resolvedWorkspaceRoot),
+            new GitProjectUpdateStep(commandRunner, resolvedWorkspaceRoot),
             new WingetPackageStep("node", "Node.js", "OpenJS.NodeJS.LTS", "node", "--version", commandRunner),
             new WingetPackageStep("vscode", "Visual Studio Code", "Microsoft.VisualStudioCode", codeCommand, "--version", commandRunner),
             new VsCodeSettingsStep(
                 VsCodeSettingsPaths.ResolveSettingsPath(appDataRoot),
                 studentAlias,
                 RuntimeConfigPaths.ResolveConfigPath(appDataRoot)),
-            new VsixPackageStep(resolvedWorkspaceRoot, commandRunner),
+            new VsixPackageStep(resolvedWorkspaceRoot, commandRunner, setupRoot),
             new VsixExtensionStep(
-                VsixExtensionPaths.ResolveVsixPath(resolvedWorkspaceRoot),
+                VsixExtensionPaths.ResolveInstallableVsixPath(setupRoot, resolvedWorkspaceRoot),
                 VsixExtensionPaths.ExtensionId,
                 commandRunner,
                 codeCommand),

@@ -98,7 +98,7 @@ public class VsixExtensionStepTests
 
         public IReadOnlyList<(string FileName, string Arguments)> Calls => _calls;
 
-        public Task<CommandResult> RunAsync(string fileName, string arguments, CancellationToken cancellationToken)
+        public Task<CommandResult> RunAsync(string fileName, string arguments, CommandExecutionOptions executionOptions, CancellationToken cancellationToken)
         {
             _calls.Add((fileName, arguments));
             return Task.FromResult(_results.Dequeue());

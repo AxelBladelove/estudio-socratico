@@ -54,6 +54,30 @@ public class VsixExtensionPathsTests
             resolved);
     }
 
+    [Fact]
+    public void ResolveBundledVsixPath_prefers_release_payload_folder()
+    {
+        var root = MakeTempRoot();
+        var bundled = Path.Combine(root, "payload", VsixExtensionPaths.ReleasePackageFileName);
+        Directory.CreateDirectory(Path.GetDirectoryName(bundled)!);
+        File.WriteAllText(bundled, "vsix");
+
+        var resolved = VsixExtensionPaths.ResolveBundledVsixPath(root);
+
+        Assert.Equal(bundled, resolved);
+    }
+
+    [Fact]
+    public void ResolveInstallableVsixPath_falls_back_to_workspace_runtime_when_release_bundle_is_absent()
+    {
+        var setupRoot = MakeTempRoot();
+        var workspaceRoot = MakeTempRoot();
+
+        var resolved = VsixExtensionPaths.ResolveInstallableVsixPath(setupRoot, workspaceRoot);
+
+        Assert.Equal(Path.Combine(workspaceRoot, "_estudio", "soporte", "runtime", "vscode", "estudio-exercism.vsix"), resolved);
+    }
+
     private static string MakeTempRoot()
     {
         return Path.Combine(Path.GetTempPath(), "estudio-setup-tests", Guid.NewGuid().ToString("N"));

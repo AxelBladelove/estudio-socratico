@@ -1,5 +1,6 @@
 using System.Text;
 using Estudio.Setup.Core;
+using Estudio.Setup.Security;
 
 namespace Estudio.Setup.State;
 
@@ -34,12 +35,12 @@ public sealed class FileSetupLogWriter
         builder.AppendLine($"Fecha: {now:yyyy-MM-dd HH:mm:ss zzz}");
         builder.AppendLine("Estudio.Setup 2.0");
         builder.AppendLine($"Modo: {options.Mode}");
-        builder.AppendLine($"Alias: {studentAlias}");
-        builder.AppendLine($"Ultimo paso exitoso: {report.LastSuccessfulStep}");
+        builder.AppendLine($"Alias: {SensitiveDataRedactor.Redact(studentAlias)}");
+        builder.AppendLine($"Ultimo paso exitoso: {SensitiveDataRedactor.Redact(report.LastSuccessfulStep)}");
 
         foreach (var step in report.Steps)
         {
-            builder.AppendLine($"{MarkerFor(step.Result)} {step.StepId}.{step.Phase}: {step.Result.Message}");
+            builder.AppendLine($"{MarkerFor(step.Result)} {SensitiveDataRedactor.Redact(step.StepId)}.{SensitiveDataRedactor.Redact(step.Phase)}: {SensitiveDataRedactor.Redact(step.Result.Message)}");
         }
 
         builder.AppendLine(report.Success ? "Resultado: OK" : "Resultado: ERROR");

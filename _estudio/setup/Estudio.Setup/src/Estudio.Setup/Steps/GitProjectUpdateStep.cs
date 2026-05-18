@@ -6,10 +6,12 @@ namespace Estudio.Setup.Steps;
 public sealed class GitProjectUpdateStep : ISetupStep
 {
     private readonly ICommandRunner _commandRunner;
+    private readonly CommandExecutionOptions _workspaceExecution;
 
-    public GitProjectUpdateStep(ICommandRunner commandRunner)
+    public GitProjectUpdateStep(ICommandRunner commandRunner, string? workspaceRoot = null)
     {
         _commandRunner = commandRunner;
+        _workspaceExecution = new CommandExecutionOptions(WorkingDirectory: workspaceRoot ?? Directory.GetCurrentDirectory());
     }
 
     public string Id => "git-project-update";
@@ -37,7 +39,7 @@ public sealed class GitProjectUpdateStep : ISetupStep
 
     public async Task<StepResult> VerifyAsync(SetupContext context, CancellationToken cancellationToken)
     {
-        var upstream = await _commandRunner.RunAsync("git", "ls-remote upstream main", cancellationToken);
+        var upstream = await _commandRunner.RunAsync("git", "ls-remote upstream main", _workspaceExecution, cancellationToken);
         if (!upstream.WasStarted)
         {
             return StepResult.Missing("Git: git no esta disponible para verificar upstream.");
@@ -48,7 +50,7 @@ public sealed class GitProjectUpdateStep : ISetupStep
             return StepResult.Missing($"Git: upstream/main no esta disponible. {FirstNonEmptyLine(upstream.StandardError)}");
         }
 
-        var origin = await _commandRunner.RunAsync("git", "ls-remote origin main", cancellationToken);
+        var origin = await _commandRunner.RunAsync("git", "ls-remote origin main", _workspaceExecution, cancellationToken);
         if (!origin.IsSuccess)
         {
             return StepResult.Missing($"Git: origin/main no esta disponible. {FirstNonEmptyLine(origin.StandardError)}");
@@ -59,19 +61,19 @@ public sealed class GitProjectUpdateStep : ISetupStep
 
     private async Task<StepResult> UpdateProjectAsync(CancellationToken cancellationToken)
     {
-        var fetch = await _commandRunner.RunAsync("git", "fetch upstream", cancellationToken);
+        var fetch = await _commandRunner.RunAsync("git", "fetch upstream", _workspaceExecution, cancellationToken);
         if (!fetch.IsSuccess)
         {
             return StepResult.Fail($"Git: fetch upstream fallo. {FirstNonEmptyLine(fetch.StandardError, fetch.StandardOutput)}");
         }
 
-        var merge = await _commandRunner.RunAsync("git", "merge upstream/main", cancellationToken);
+        var merge = await _commandRunner.RunAsync("git", "merge upstream/main", _workspaceExecution, cancellationToken);
         if (!merge.IsSuccess)
         {
             return StepResult.Fail($"Git: merge upstream/main fallo. {FirstNonEmptyLine(merge.StandardError, merge.StandardOutput)}");
         }
 
-        var push = await _commandRunner.RunAsync("git", "push origin main", cancellationToken);
+        var push = await _commandRunner.RunAsync("git", "push origin main", _workspaceExecution, cancellationToken);
         if (!push.IsSuccess)
         {
             var detail = FirstNonEmptyLine(push.StandardError, push.StandardOutput);

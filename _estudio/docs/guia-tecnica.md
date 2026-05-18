@@ -8,17 +8,28 @@ motor.
 
 - `Estudio.Setup.cmd` es la entrada principal. Sin argumentos abre en
   `verify`, ejecuta un diagnostico automatico y desde la misma UI deja elegir
-  `install`, `update`, `reinstall`, `uninstall` o `verify` otra vez. La interfaz
-  principal usa Textual empaquetado como `Estudio.Setup.Textual.exe`; el backend
-  self-contained sigue siendo `Estudio.Setup.exe` en C#.
+  `install`, `update`, `reinstall`, `uninstall` o `verify` otra vez. En el repo,
+  el wrapper sigue siendo `Estudio.Setup.cmd`; en release, la entrada visible es
+  `Instalar Estudio Socrático.exe`, ahora generado desde `Estudio.Setup.Windows`
+  y montado sobre el engine `desired-state`.
 - El backend puede emitir progreso line-delimited JSON con `--events-json`.
   Textual consume esos eventos para mostrar pasos, log, progreso, artefactos y
   reintentos.
-- `Estudio.Setup.cmd package` publica un instalador self-contained `win-x64`,
-  empaqueta tambien la UI Textual con PyInstaller, genera
-  `release-manifest.json` con SHA-256 y produce un ZIP limpio bajo
-  `_estudio/setup/Estudio.Setup/publish/release/`. El build de release usa
-  `py -3.10`; el usuario final no necesita Python.
+- `Estudio.Setup.cmd package` publica un release limpio bajo
+  `_estudio/setup/Estudio.Setup/publish/release/` con este layout:
+
+  ```text
+  Instalar Estudio Socrático.exe
+  README.txt
+  payload/
+    manifest.json
+    checksums.sha256
+    estudio-framework.zip
+    estudio-socratico-2.0.0.vsix
+  ```
+
+  El root del ZIP ya no expone `_estudio/`, `src/`, `package.json` ni scripts
+  internos del repo fuente.
 - El cambio de cuenta GitHub se resuelve desde `gh auth`; la TUI expone una
   accion `Cambiar GitHub` que fuerza logout/login web, vuelve a resolver el
   usuario y repara fork/remotes.
@@ -30,6 +41,9 @@ motor.
   integraciones locales del framework sin quitar herramientas globales.
 - Los scripts PowerShell de setup 1.x quedan congelados como legacy. Se
   conservan para compatibilidad, pero la ruta activa es Textual + backend C#.
+  Desde Fase 4, la experiencia visual principal para usuario final es la app
+  Windows nativa; Textual/Terminal.Gui quedan como fallback de desarrollo o
+  diagnostico.
 
 ## Cambios Clave En 1.2
 
@@ -81,6 +95,7 @@ El flujo principal es:
 | `_estudio/include/conio.h` | Cabecera usada por ejercicios C |
 | `_estudio/include/estudio_stdio_cp437.h` | Compatibilidad de `printf` con simbolos CP437 |
 | `_estudio/setup/Estudio.Setup.cmd` | Wrapper activo: Textual primero, backend C# como fallback |
+| `_estudio/setup/Estudio.Setup/src/Estudio.Setup.Windows/` | UI Windows nativa del instalador |
 | `_estudio/setup/textual/setup_textual_app.py` | UI principal Textual |
 | `_estudio/setup/Estudio.Setup/src/Estudio.Setup/` | Backend C# del instalador |
 | `_estudio/setup/instalar.ps1` | Orquestador legacy del setup |
@@ -157,6 +172,8 @@ Parametros utiles:
 |---|---|
 | `--tui` | Abre la interfaz visual |
 | `--events-json` | Emite eventos JSON para la UI Textual |
+| `--desired-state` | Fuerza el engine nuevo basado en nodos |
+| `--engine desired-state` | Seleccion explicita del motor nuevo |
 | `--alias <slug>` | Define alias local para este clon |
 | `--change-github` | Fuerza logout/login de GitHub CLI durante `update` |
 | `--only <step-id>` | Ejecuta solo un componente; puede repetirse |
@@ -168,6 +185,8 @@ Ejemplos:
 _estudio\setup\Estudio.Setup.cmd verify
 _estudio\setup\Estudio.Setup.cmd reinstall --tui
 _estudio\setup\Estudio.Setup.cmd uninstall --tui
+_estudio\setup\Estudio.Setup.cmd install --desired-state
+_estudio\setup\Estudio.Setup.cmd verify --engine desired-state
 _estudio\setup\Estudio.Setup.cmd repair --only msys2-toolchain
 _estudio\setup\Estudio.Setup.cmd update --change-github
 _estudio\setup\Estudio.Setup.cmd update --alias nuevo_alias

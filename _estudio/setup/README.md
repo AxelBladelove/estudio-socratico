@@ -2,6 +2,11 @@
 
 Esta carpeta contiene el instalador de Estudio Socratico.
 
+Desde Fase 4, la experiencia principal del release ya no es Textual ni la TUI.
+El ejecutable visible del usuario es la app Windows nativa `Estudio.Setup.Windows`
+publicada como `Instalar Estudio Socrático.exe`, montada sobre el engine
+`desired-state`.
+
 ## Entrada Recomendada
 
 ```bat
@@ -9,16 +14,18 @@ _estudio\setup\Estudio.Setup.cmd
 ```
 
 En un ZIP de release, doble clic en `Estudio.Setup.cmd` o `Estudio.Setup.exe`
-abre la interfaz Textual por defecto.
+ya no es la ruta recomendada. El release limpio expone:
+
+```text
+Instalar Estudio Socrático.exe
+README.txt
+payload/
+```
 
 Ese comando esta pensado para ejecutarse desde una terminal abierta en la raiz
-del repo o desde el ZIP de release. En el repo de desarrollo usa `dotnet run`
-para el backend cuando no existen ejecutables publicados; en un paquete limpio
-usa `Estudio.Setup.Textual.exe` y `Estudio.Setup.exe` self-contained. La TUI
-Textual muestra componentes, progreso, log en vivo, campo de alias, campo de
-token Exercism, cambio de cuenta GitHub, botones de
-reinstalacion/desinstalacion y reintentos solo de pasos fallidos con
-`repair --only`.
+del repo. En desarrollo sigue usando `dotnet run` para el backend cuando no
+existen ejecutables publicados. En release, el usuario final ve solo el
+instalador Windows principal y un `payload/` con framework, VSIX y hashes.
 
 Sin argumentos, el instalador arranca en `verify`, ejecuta un diagnostico
 automatico y luego te deja elegir `Instalar`, `Actualizar`, `Reinstalar`,
@@ -127,6 +134,21 @@ Luego abre una terminal nueva antes de importar.
 _estudio\setup\Estudio.Setup.cmd verify
 ```
 
+## Engine Desired-State Opt-In
+
+Mientras conviven el flujo legacy y el engine nuevo por nodos, puedes activar
+el engine nuevo desde CLI con cualquiera de estas opciones:
+
+```bat
+_estudio\setup\Estudio.Setup.cmd install --desired-state
+_estudio\setup\Estudio.Setup.cmd verify --engine desired-state
+```
+
+Ese modo ejecuta bloques de alto nivel como GitHub, workspace, VS Code,
+extension, compilador y ejercicios sin volver a tratar el ZIP como workspace.
+La TUI Terminal.Gui sigue viva como fallback de diagnostico para legacy. La UI
+Windows del release usa `desired-state` como camino principal.
+
 ## Empaquetar Release
 
 ```bat
@@ -134,17 +156,20 @@ _estudio\setup\Estudio.Setup.cmd package
 ```
 
 Genera `_estudio/setup/Estudio.Setup/publish/release/` con carpeta limpia, ZIP
-y `release-manifest.json` con hashes SHA-256. El empaquetado usa el launcher
-Windows `py -3.10` para construir `Estudio.Setup.Textual.exe` con PyInstaller;
-el usuario final no necesita Python.
+y `payload/manifest.json` con hashes SHA-256. El root del ZIP queda limpio para
+usuario final: `Instalar Estudio Socrático.exe`, `README.txt` y `payload/`.
+`payload/` contiene el framework comprimido, el VSIX ya empaquetado y
+`checksums.sha256`. El usuario final no necesita Python ni Node en su PC.
 
 ## Archivos
 
 | Archivo | Rol |
 |---|---|
-| `Estudio.Setup.cmd` | Wrapper principal para repo y release |
-| `Estudio.Setup.Textual.exe` | UI visual Textual empaquetada en release |
-| `Estudio.Setup.exe` | Backend 2.0 self-contained en C# |
+| `Estudio.Setup.cmd` | Wrapper principal para desarrollo dentro del repo |
+| `Instalar Estudio Socrático.exe` | Entrada visible del release final |
+| `Estudio.Setup.Windows` | UI Windows nativa del instalador 2.0 |
+| `payload/` | Framework comprimido, VSIX y hashes de verificacion |
+| `Estudio.Setup.exe` | Backend 2.0 self-contained usado durante desarrollo/pruebas |
 | `textual/` | Fuente de la UI Textual y pruebas unitarias |
 | `Estudio.Setup/` | Backend C# y fallback Terminal.Gui |
 | `instalar.cmd`, `instalar.ps1` y modulos `.ps1` | Legacy conservado solo para referencia/compatibilidad |
@@ -153,5 +178,6 @@ el usuario final no necesita Python.
 
 Los scripts PowerShell 1.x quedan congelados. No se eliminan para no romper
 clones antiguos ni documentacion historica, pero la ruta activa para 2.0 es
-`Estudio.Setup.cmd` con Textual encima del backend C#. Las mejoras de sistema
-deben entrar al backend C#; las mejoras visuales deben entrar en `textual/`.
+`Estudio.Setup.cmd` dentro del repo y `Instalar Estudio Socrático.exe` en los
+releases. Las mejoras de sistema deben entrar al backend C#; las mejoras
+visuales futuras deben entrar en la UI Windows dedicada.

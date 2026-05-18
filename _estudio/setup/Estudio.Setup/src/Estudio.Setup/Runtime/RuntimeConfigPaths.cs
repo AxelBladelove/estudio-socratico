@@ -1,3 +1,5 @@
+using Estudio.Setup.Services;
+
 namespace Estudio.Setup.Runtime;
 
 public static class RuntimeConfigPaths
@@ -16,12 +18,24 @@ public static class RuntimeConfigPaths
     public static string ResolveBundledRuntimeConfigPath(string? setupRoot = null)
     {
         var root = string.IsNullOrWhiteSpace(setupRoot) ? AppContext.BaseDirectory : setupRoot;
+        var payloadPath = Path.Combine(SetupPackageLayout.ResolvePayloadRoot(root), "runtime-config.private.json");
+        if (Directory.Exists(Path.GetDirectoryName(payloadPath)!) || File.Exists(payloadPath))
+        {
+            return payloadPath;
+        }
+
         return Path.Combine(root, "runtime-config.private.json");
     }
 
     public static string ResolveBundledRuntimeConfigBootstrapPath(string? setupRoot = null)
     {
         var root = string.IsNullOrWhiteSpace(setupRoot) ? AppContext.BaseDirectory : setupRoot;
+        var payloadPath = Path.Combine(SetupPackageLayout.ResolvePayloadRoot(root), "runtime-config.bootstrap.json");
+        if (Directory.Exists(Path.GetDirectoryName(payloadPath)!) || File.Exists(payloadPath))
+        {
+            return payloadPath;
+        }
+
         return Path.Combine(root, "runtime-config.bootstrap.json");
     }
 

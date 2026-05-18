@@ -8,11 +8,13 @@ public sealed class GitIdentityStep : ISetupStep
 {
     private readonly ICommandRunner _commandRunner;
     private readonly string _alias;
+    private readonly CommandExecutionOptions _workspaceExecution;
 
-    public GitIdentityStep(ICommandRunner commandRunner, string alias)
+    public GitIdentityStep(ICommandRunner commandRunner, string alias, string? workspaceRoot = null)
     {
         _commandRunner = commandRunner;
         _alias = alias;
+        _workspaceExecution = new CommandExecutionOptions(WorkingDirectory: workspaceRoot ?? Directory.GetCurrentDirectory());
     }
 
     public string Id => "git-identity";
@@ -118,7 +120,7 @@ public sealed class GitIdentityStep : ISetupStep
         string name,
         CancellationToken cancellationToken)
     {
-        var result = await _commandRunner.RunAsync("git", $"config --local --get {name}", cancellationToken);
+        var result = await _commandRunner.RunAsync("git", $"config --local --get {name}", _workspaceExecution, cancellationToken);
         if (!result.WasStarted)
         {
             return (false, string.Empty, StepResult.Missing("Git: git no esta disponible para leer identidad local."));
@@ -137,7 +139,7 @@ public sealed class GitIdentityStep : ISetupStep
         string value,
         CancellationToken cancellationToken)
     {
-        var result = await _commandRunner.RunAsync("git", $"config --local {name} {value}", cancellationToken);
+        var result = await _commandRunner.RunAsync("git", $"config --local {name} {value}", _workspaceExecution, cancellationToken);
         if (!result.WasStarted)
         {
             return StepResult.Missing("Git: git no esta disponible para escribir identidad local.");

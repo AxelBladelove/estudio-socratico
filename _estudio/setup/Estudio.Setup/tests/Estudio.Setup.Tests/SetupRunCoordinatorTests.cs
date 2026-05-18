@@ -137,7 +137,7 @@ public sealed class SetupRunCoordinatorTests : IDisposable
 
     private sealed class NoopCommandRunner : ICommandRunner
     {
-        public Task<CommandResult> RunAsync(string fileName, string arguments, CancellationToken cancellationToken)
+        public Task<CommandResult> RunAsync(string fileName, string arguments, CommandExecutionOptions executionOptions, CancellationToken cancellationToken)
         {
             return Task.FromResult(CommandResult.Success(string.Empty));
         }

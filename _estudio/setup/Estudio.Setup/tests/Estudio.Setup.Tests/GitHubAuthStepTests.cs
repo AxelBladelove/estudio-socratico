@@ -82,7 +82,7 @@ public class GitHubAuthStepTests
             CancellationToken.None);
 
         Assert.True(result.Success);
-        Assert.Equal(("gh", "auth logout --hostname github.com --yes"), runner.Calls[0]);
+        Assert.Equal(("gh", "auth logout --hostname github.com"), runner.Calls[0]);
         Assert.Equal(("gh", "auth login --hostname github.com --web --git-protocol https"), runner.Calls[1]);
         Assert.Equal(("gh", "auth status"), runner.Calls[2]);
     }
@@ -101,7 +101,7 @@ public class GitHubAuthStepTests
             CancellationToken.None);
 
         Assert.True(result.Success);
-        Assert.Equal(("gh", "auth logout --hostname github.com --yes"), runner.Calls[0]);
+        Assert.Equal(("gh", "auth logout --hostname github.com"), runner.Calls[0]);
         Assert.Equal(("gh", "auth login --hostname github.com --web --git-protocol https"), runner.Calls[1]);
         Assert.Equal(("gh", "auth status"), runner.Calls[2]);
     }
@@ -133,7 +133,7 @@ public class GitHubAuthStepTests
 
         public IReadOnlyList<(string FileName, string Arguments)> Calls => _calls;
 
-        public Task<CommandResult> RunAsync(string fileName, string arguments, CancellationToken cancellationToken)
+        public Task<CommandResult> RunAsync(string fileName, string arguments, CommandExecutionOptions executionOptions, CancellationToken cancellationToken)
         {
             _calls.Add((fileName, arguments));
             return Task.FromResult(_results.Dequeue());

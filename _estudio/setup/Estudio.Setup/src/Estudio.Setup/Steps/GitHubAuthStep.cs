@@ -61,7 +61,7 @@ public sealed class GitHubAuthStep : ISetupStep
     {
         if (context.Options.ForceGitHubRelogin)
         {
-            var logout = await _commandRunner.RunAsync("gh", "auth logout --hostname github.com --yes", cancellationToken);
+            var logout = await _commandRunner.RunAsync("gh", "auth logout --hostname github.com", cancellationToken);
             if (!logout.WasStarted)
             {
                 return StepResult.Missing("GitHub: gh no esta disponible para cerrar la sesion actual.");

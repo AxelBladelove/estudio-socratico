@@ -33,6 +33,7 @@ public class SetupModeParserTests
         var options = SetupModeParser.Parse(Array.Empty<string>());
 
         Assert.Equal(SetupMode.Verify, options.Mode);
+        Assert.Equal(SetupExecutionEngine.Legacy, options.Engine);
         Assert.True(options.TuiRequested);
     }
 
@@ -89,6 +90,24 @@ public class SetupModeParserTests
         Assert.Equal("axel_02", options.AliasOverride);
     }
 
+    [Fact]
+    public void Parse_accepts_workspace_root_option()
+    {
+        var options = SetupModeParser.Parse(new[] { "install", "--workspace-root", "C:\\Users\\Axel\\Estudio Socratico-axel" });
+
+        Assert.Equal(SetupMode.Install, options.Mode);
+        Assert.Equal("C:\\Users\\Axel\\Estudio Socratico-axel", options.WorkspaceRoot);
+    }
+
+    [Fact]
+    public void Parse_accepts_workspace_root_option_with_equals()
+    {
+        var options = SetupModeParser.Parse(new[] { "install", "--workspace-root=C:\\Users\\Axel\\Estudio Socratico-axel" });
+
+        Assert.Equal(SetupMode.Install, options.Mode);
+        Assert.Equal("C:\\Users\\Axel\\Estudio Socratico-axel", options.WorkspaceRoot);
+    }
+
     [Theory]
     [InlineData("--change-github")]
     [InlineData("--cambiar-github")]
@@ -130,6 +149,25 @@ public class SetupModeParserTests
         Assert.True(options.JsonProgressRequested);
     }
 
+    [Theory]
+    [InlineData("--desired-state")]
+    [InlineData("--engine", "desired-state")]
+    public void Parse_accepts_desired_state_engine_flags(params string[] args)
+    {
+        var options = SetupModeParser.Parse(new[] { "verify" }.Concat(args).ToArray());
+
+        Assert.Equal(SetupMode.Verify, options.Mode);
+        Assert.Equal(SetupExecutionEngine.DesiredState, options.Engine);
+    }
+
+    [Fact]
+    public void Parse_accepts_explicit_legacy_engine_flag()
+    {
+        var options = SetupModeParser.Parse(new[] { "verify", "--engine", "legacy" });
+
+        Assert.Equal(SetupExecutionEngine.Legacy, options.Engine);
+    }
+
     [Fact]
     public void Parse_rejects_missing_alias_value()
     {
@@ -169,9 +207,12 @@ public class SetupModeParserTests
         Assert.Contains("package", text);
         Assert.Contains("--alias", text);
         Assert.Contains("--change-github", text);
+        Assert.Contains("--workspace-root", text);
         Assert.Contains("--only", text);
         Assert.Contains("--tui", text);
         Assert.Contains("--events-json", text);
         Assert.Contains("--state-root", text);
+        Assert.Contains("--desired-state", text);
+        Assert.Contains("--engine", text);
     }
 }

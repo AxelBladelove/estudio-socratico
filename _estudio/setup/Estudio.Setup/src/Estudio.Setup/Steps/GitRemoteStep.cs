@@ -9,11 +9,13 @@ public sealed class GitRemoteStep : ISetupStep
 
     private readonly ICommandRunner _commandRunner;
     private readonly string _alias;
+    private readonly CommandExecutionOptions _workspaceExecution;
 
-    public GitRemoteStep(ICommandRunner commandRunner, string alias)
+    public GitRemoteStep(ICommandRunner commandRunner, string alias, string? workspaceRoot = null)
     {
         _commandRunner = commandRunner;
         _alias = alias;
+        _workspaceExecution = new CommandExecutionOptions(WorkingDirectory: workspaceRoot ?? Directory.GetCurrentDirectory());
     }
 
     public string Id => "git-remotes";
@@ -86,7 +88,7 @@ public sealed class GitRemoteStep : ISetupStep
         var originCommand = origin.Success
             ? $"remote set-url origin {expectedOriginUrl}"
             : $"remote add origin {expectedOriginUrl}";
-        var originUpdate = await _commandRunner.RunAsync("git", originCommand, cancellationToken);
+        var originUpdate = await _commandRunner.RunAsync("git", originCommand, _workspaceExecution, cancellationToken);
         if (!originUpdate.IsSuccess)
         {
             return StepResult.Fail($"Git: no se pudo configurar origin. {FirstNonEmptyLine(originUpdate.StandardError)}");
@@ -96,7 +98,7 @@ public sealed class GitRemoteStep : ISetupStep
         var upstreamCommand = upstream.Success
             ? $"remote set-url upstream {MainRepoUrl}"
             : $"remote add upstream {MainRepoUrl}";
-        var upstreamUpdate = await _commandRunner.RunAsync("git", upstreamCommand, cancellationToken);
+        var upstreamUpdate = await _commandRunner.RunAsync("git", upstreamCommand, _workspaceExecution, cancellationToken);
         if (!upstreamUpdate.IsSuccess)
         {
             return StepResult.Fail($"Git: no se pudo configurar upstream. {FirstNonEmptyLine(upstreamUpdate.StandardError)}");
@@ -120,7 +122,7 @@ public sealed class GitRemoteStep : ISetupStep
         string remoteName,
         CancellationToken cancellationToken)
     {
-        var result = await _commandRunner.RunAsync("git", $"remote get-url {remoteName}", cancellationToken);
+        var result = await _commandRunner.RunAsync("git", $"remote get-url {remoteName}", _workspaceExecution, cancellationToken);
         if (!result.WasStarted)
         {
             return (false, string.Empty, StepResult.Missing("Git: git no esta disponible para leer remotes."));

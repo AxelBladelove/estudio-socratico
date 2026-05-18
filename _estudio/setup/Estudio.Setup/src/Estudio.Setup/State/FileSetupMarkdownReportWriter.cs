@@ -1,5 +1,6 @@
 using System.Text;
 using Estudio.Setup.Core;
+using Estudio.Setup.Security;
 
 namespace Estudio.Setup.State;
 
@@ -25,9 +26,9 @@ public sealed class FileSetupMarkdownReportWriter
         builder.AppendLine("# Estudio.Setup Report");
         builder.AppendLine();
         builder.AppendLine($"- Modo: `{options.Mode}`");
-        builder.AppendLine($"- Alias: `{studentAlias}`");
+        builder.AppendLine($"- Alias: `{SensitiveDataRedactor.Redact(studentAlias)}`");
         builder.AppendLine($"- Resultado: `{(report.Success ? "OK" : "ERROR")}`");
-        builder.AppendLine($"- Ultimo paso exitoso: `{report.LastSuccessfulStep}`");
+        builder.AppendLine($"- Ultimo paso exitoso: `{SensitiveDataRedactor.Redact(report.LastSuccessfulStep)}`");
         builder.AppendLine();
         builder.AppendLine("## Resumen");
         builder.AppendLine();
@@ -49,7 +50,7 @@ public sealed class FileSetupMarkdownReportWriter
         {
             foreach (var step in pending)
             {
-                builder.AppendLine($"- `{Escape(step.StepId)}.{Escape(step.Phase)}`: {Escape(step.Result.Message)}");
+                builder.AppendLine($"- `{Escape(SensitiveDataRedactor.Redact(step.StepId))}.{Escape(SensitiveDataRedactor.Redact(step.Phase))}`: {Escape(SensitiveDataRedactor.Redact(step.Result.Message))}");
             }
         }
 
@@ -81,7 +82,7 @@ public sealed class FileSetupMarkdownReportWriter
 
         foreach (var step in report.Steps)
         {
-            builder.AppendLine($"| {MarkerFor(step.Result)} | {Escape(step.StepId)} | {Escape(step.Phase)} | {Escape(step.Result.Message)} |");
+            builder.AppendLine($"| {MarkerFor(step.Result)} | {Escape(SensitiveDataRedactor.Redact(step.StepId))} | {Escape(SensitiveDataRedactor.Redact(step.Phase))} | {Escape(SensitiveDataRedactor.Redact(step.Result.Message))} |");
         }
 
         await File.WriteAllTextAsync(path, builder.ToString(), cancellationToken);

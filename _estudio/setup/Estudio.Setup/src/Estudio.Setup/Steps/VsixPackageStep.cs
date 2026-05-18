@@ -5,11 +5,13 @@ namespace Estudio.Setup.Steps;
 
 public sealed class VsixPackageStep : ISetupStep
 {
+    private readonly string _setupRoot;
     private readonly string _workspaceRoot;
     private readonly ICommandRunner _commandRunner;
 
-    public VsixPackageStep(string workspaceRoot, ICommandRunner commandRunner)
+    public VsixPackageStep(string workspaceRoot, ICommandRunner commandRunner, string? setupRoot = null)
     {
+        _setupRoot = string.IsNullOrWhiteSpace(setupRoot) ? AppContext.BaseDirectory : setupRoot;
         _workspaceRoot = workspaceRoot;
         _commandRunner = commandRunner;
     }
@@ -19,7 +21,7 @@ public sealed class VsixPackageStep : ISetupStep
 
     public Task<StepResult> DetectAsync(SetupContext context, CancellationToken cancellationToken)
     {
-        var targetPath = VsixExtensionPaths.ResolveVsixPath(_workspaceRoot);
+        var targetPath = VsixExtensionPaths.ResolveInstallableVsixPath(_setupRoot, _workspaceRoot);
         if (File.Exists(targetPath))
         {
             return Task.FromResult(StepResult.Ok($"VSIX: paquete runtime listo en {targetPath}."));
@@ -50,6 +52,12 @@ public sealed class VsixPackageStep : ISetupStep
 
     private async Task<StepResult> PackageAsync(CancellationToken cancellationToken)
     {
+        var bundledPath = VsixExtensionPaths.ResolveBundledVsixPath(_setupRoot);
+        if (File.Exists(bundledPath))
+        {
+            return StepResult.Ok($"VSIX: release ya trae paquete en {bundledPath}." );
+        }
+
         var sourceDirectory = VsixExtensionPaths.ResolveExtensionSourceDirectory(_workspaceRoot);
         if (!Directory.Exists(sourceDirectory))
         {

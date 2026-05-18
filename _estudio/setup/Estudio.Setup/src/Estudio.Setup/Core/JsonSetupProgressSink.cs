@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Estudio.Setup.Security;
 
 namespace Estudio.Setup.Core;
 
@@ -28,20 +29,20 @@ public sealed class JsonSetupProgressSink : ISetupProgressSink
             SetupPhaseStarted started => WriteLineAsync(new
             {
                 type = "phase-started",
-                stepId = started.StepId,
-                stepName = started.StepName,
-                phase = started.Phase,
+                stepId = SensitiveDataRedactor.Redact(started.StepId),
+                stepName = SensitiveDataRedactor.Redact(started.StepName),
+                phase = SensitiveDataRedactor.Redact(started.Phase),
             }, cancellationToken),
             SetupPhaseFinished finished => WriteLineAsync(new
             {
                 type = "phase-finished",
-                stepId = finished.Execution.StepId,
-                phase = finished.Execution.Phase,
+                stepId = SensitiveDataRedactor.Redact(finished.Execution.StepId),
+                phase = SensitiveDataRedactor.Redact(finished.Execution.Phase),
                 status = StatusFor(finished.Execution.Result),
                 success = finished.Execution.Result.Success,
                 missing = finished.Execution.Result.IsMissing,
                 warning = finished.Execution.Result.IsWarning,
-                message = finished.Execution.Result.Message,
+                message = SensitiveDataRedactor.Redact(finished.Execution.Result.Message),
             }, cancellationToken),
             SetupRunFinished finished => WriteLineAsync(new
             {
@@ -60,7 +61,7 @@ public sealed class JsonSetupProgressSink : ISetupProgressSink
         {
             type = "artifacts",
             success = artifacts.Report.Success,
-            alias = artifacts.Alias,
+            alias = SensitiveDataRedactor.Redact(artifacts.Alias),
             statePath = artifacts.StatePath,
             logPath = artifacts.LogPath,
             reportPath = artifacts.ReportPath,

@@ -55,6 +55,23 @@ public class VsixPackageStepTests
         Assert.True(result.IsMissing);
     }
 
+    [Fact]
+    public async Task InstallAsync_prefers_release_bundled_vsix_without_running_npm()
+    {
+        var setupRoot = MakeTempRoot();
+        var bundledVsix = Path.Combine(setupRoot, "extension", VsixExtensionPaths.ReleasePackageFileName);
+        Directory.CreateDirectory(Path.GetDirectoryName(bundledVsix)!);
+        await File.WriteAllTextAsync(bundledVsix, "release vsix");
+        var runner = new QueueCommandRunner();
+        var step = new VsixPackageStep(MakeTempRoot(), runner, setupRoot);
+
+        var result = await step.InstallAsync(new SetupContext(new SetupOptions(SetupMode.Install)), CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Empty(runner.Calls);
+        Assert.Contains("release ya trae paquete", result.Message);
+    }
+
     private static string MakeWorkspaceWithExtensionProject()
     {
         var root = MakeTempRoot();
@@ -84,7 +101,7 @@ public class VsixPackageStepTests
 
         public IReadOnlyList<(string FileName, string Arguments)> Calls => _calls;
 
-        public Task<CommandResult> RunAsync(string fileName, string arguments, CancellationToken cancellationToken)
+        public Task<CommandResult> RunAsync(string fileName, string arguments, CommandExecutionOptions executionOptions, CancellationToken cancellationToken)
         {
             _calls.Add((fileName, arguments));
             return Task.FromResult(_results.Dequeue());

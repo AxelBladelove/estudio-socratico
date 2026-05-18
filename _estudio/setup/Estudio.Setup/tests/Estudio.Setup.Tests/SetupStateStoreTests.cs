@@ -26,7 +26,7 @@ public class SetupStateStoreTests : IDisposable
         using var document = JsonDocument.Parse(await File.ReadAllTextAsync(path));
         var root = document.RootElement;
 
-        Assert.Equal("2.0.0", root.GetProperty("setupVersion").GetString());
+        Assert.Equal(FileSetupStateStore.CurrentSetupVersion, root.GetProperty("setupVersion").GetString());
         Assert.Equal("Verify", root.GetProperty("mode").GetString());
         Assert.Equal("verify-final", root.GetProperty("lastSuccessfulStep").GetString());
         Assert.Equal("ok", root.GetProperty("installedComponents").GetProperty("git").GetString());

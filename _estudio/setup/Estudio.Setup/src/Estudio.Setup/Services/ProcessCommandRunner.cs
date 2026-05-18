@@ -8,6 +8,7 @@ public sealed class ProcessCommandRunner : ICommandRunner
     public async Task<CommandResult> RunAsync(
         string fileName,
         string arguments,
+        CommandExecutionOptions executionOptions,
         CancellationToken cancellationToken)
     {
         var effectivePath = ProcessEnvironmentPath.Merge(
@@ -28,6 +29,12 @@ public sealed class ProcessCommandRunner : ICommandRunner
             UseShellExecute = false,
             CreateNoWindow = true,
         };
+
+        if (!string.IsNullOrWhiteSpace(executionOptions.WorkingDirectory))
+        {
+            startInfo.WorkingDirectory = executionOptions.WorkingDirectory;
+        }
+
         startInfo.Environment["PATH"] = effectivePath;
 
         using var process = new Process { StartInfo = startInfo };

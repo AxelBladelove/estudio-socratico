@@ -5,7 +5,7 @@ namespace Estudio.Setup.State;
 
 public sealed class FileSetupStateStore
 {
-    public const string CurrentSetupVersion = "2.0.0";
+    public const string CurrentSetupVersion = "2.0.0-rc5";
 
     private readonly string _stateRoot;
 
@@ -25,10 +25,47 @@ public sealed class FileSetupStateStore
         SetupStateMetadata metadata,
         CancellationToken cancellationToken)
     {
+        return await SaveAsync(
+            options,
+            metadata,
+            report.LastSuccessfulStep,
+            BuildComponentState(report),
+            cancellationToken);
+    }
+
+    public async Task<string> SaveAsync(
+        SetupOptions options,
+        DesiredStateSetupReport report,
+        SetupStateMetadata metadata,
+        CancellationToken cancellationToken)
+    {
+        var summary = SetupExecutionSummary.FromDesiredState(report);
+        return await SaveAsync(
+            options,
+            metadata,
+            SetupExecutionSummary.LastSuccessfulDesiredStateBlockId(report),
+            summary.ToDictionary(block => block.Id, block => ToState(block.Status), StringComparer.OrdinalIgnoreCase),
+            cancellationToken);
+    }
+
+    private async Task<string> SaveAsync(
+        SetupOptions options,
+        SetupStateMetadata metadata,
+        string lastSuccessfulStep,
+        IReadOnlyDictionary<string, string> installedComponents,
+        CancellationToken cancellationToken)
+    {
         Directory.CreateDirectory(_stateRoot);
         var path = Path.Combine(_stateRoot, "setup-state.json");
+        var storedComponents = new SortedDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var component in installedComponents)
+        {
+            storedComponents[component.Key] = component.Value;
+        }
+
         var state = new PersistedSetupState(
             setupVersion: CurrentSetupVersion,
+            engine: options.Engine == SetupExecutionEngine.DesiredState ? "desired-state" : "legacy",
             alias: metadata.Alias,
             githubUser: metadata.GithubUser,
             forkOwner: metadata.ForkOwner,
@@ -36,8 +73,8 @@ public sealed class FileSetupStateStore
             upstream: metadata.Upstream,
             workspace: metadata.Workspace,
             mode: options.Mode.ToString(),
-            lastSuccessfulStep: report.LastSuccessfulStep,
-            installedComponents: BuildComponentState(report));
+            lastSuccessfulStep: lastSuccessfulStep,
+            installedComponents: storedComponents);
 
         await using var stream = File.Create(path);
         await JsonSerializer.SerializeAsync(
@@ -75,8 +112,23 @@ public sealed class FileSetupStateStore
         return result.Success ? "ok" : "failed";
     }
 
+    private static string ToState(SetupExecutionBlockStatus status)
+    {
+        return status switch
+        {
+            SetupExecutionBlockStatus.Ready => "ok",
+            SetupExecutionBlockStatus.Applied => "applied",
+            SetupExecutionBlockStatus.Repaired => "repaired",
+            SetupExecutionBlockStatus.Pending => "missing",
+            SetupExecutionBlockStatus.Warning => "warning",
+            SetupExecutionBlockStatus.Failed => "failed",
+            _ => "failed",
+        };
+    }
+
     private sealed record PersistedSetupState(
         string setupVersion,
+        string engine,
         string? alias,
         string? githubUser,
         string? forkOwner,

@@ -17,11 +17,12 @@ public class DefaultSetupStepsTests
                 "git",
                 "github-cli",
                 "github-auth",
+                "github-fork",
+                "git-workspace",
                 "git-identity",
                 "git-safety-backup",
                 "github-alias-rename",
                 "local-alias",
-                "github-fork",
                 "git-remotes",
                 "git-project-update",
                 "node",
@@ -67,7 +68,7 @@ public class DefaultSetupStepsTests
 
     private sealed class NoopCommandRunner : ICommandRunner
     {
-        public Task<CommandResult> RunAsync(string fileName, string arguments, CancellationToken cancellationToken)
+        public Task<CommandResult> RunAsync(string fileName, string arguments, CommandExecutionOptions executionOptions, CancellationToken cancellationToken)
         {
             return Task.FromResult(CommandResult.Success(string.Empty));
         }
@@ -79,7 +80,7 @@ public class DefaultSetupStepsTests
 
         public IReadOnlyList<(string FileName, string Arguments)> Calls => _calls;
 
-        public Task<CommandResult> RunAsync(string fileName, string arguments, CancellationToken cancellationToken)
+        public Task<CommandResult> RunAsync(string fileName, string arguments, CommandExecutionOptions executionOptions, CancellationToken cancellationToken)
         {
             _calls.Add((fileName, arguments));
             return Task.FromResult(CommandResult.Success(string.Empty));
