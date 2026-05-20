@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>EstudioSocratico.Configurator.App</RootNamespace>
+    <AssemblyName>EstudioSocratico.Configurator.App</AssemblyName>
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <Platforms>x64</Platforms>
+    <PublishSingleFile>false</PublishSingleFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.0.1" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3719.77" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\EstudioSocratico.Configurator.Core\EstudioSocratico.Configurator.Core.csproj" />
+    <ProjectReference Include="..\EstudioSocratico.Configurator.Engine\EstudioSocratico.Configurator.Engine.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="app.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="wwwroot\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!--
+    WinUI 3 unpackaged: dotnet publish omits compiled XAML resources (.xbf)
+    and the application PRI file. Without these, the app crashes at startup
+    with 0xc000027b in Microsoft.UI.Xaml.dll. This target copies them from
+    the build output after publish completes.
+  -->
+  <Target Name="CopyWinUIResourcesToPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <_XbfFiles Include="$(OutputPath)\**\*.xbf" />
+      <_AppPri Include="$(OutputPath)\$(AssemblyName).pri" Condition="Exists('$(OutputPath)\$(AssemblyName).pri')" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_XbfFiles)" DestinationFolder="$(PublishDir)\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_AppPri)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+    <Message Importance="high" Text="Copied WinUI XAML resources (.xbf and .pri) to publish directory." />
+  </Target>
+</Project>

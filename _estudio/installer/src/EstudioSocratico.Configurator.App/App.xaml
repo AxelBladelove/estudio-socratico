@@ -1,0 +1,21 @@
+<Application
+    x:Class="EstudioSocratico.Configurator.App.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    RequestedTheme="Dark">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+            </ResourceDictionary.MergedDictionaries>
+            <Color x:Key="AccentDark">#FF4FA3FF</Color>
+            <Color x:Key="AccentGreen">#FF34D399</Color>
+            <SolidColorBrush x:Key="AppBackgroundBrush" Color="#FF0B0F17" />
+            <SolidColorBrush x:Key="PanelBrush" Color="#FF121826" />
+            <SolidColorBrush x:Key="PanelSoftBrush" Color="#FF182033" />
+            <SolidColorBrush x:Key="StrokeBrush" Color="#FF263248" />
+            <SolidColorBrush x:Key="MutedTextBrush" Color="#FF9AA7BD" />
+            <SolidColorBrush x:Key="GoodBrush" Color="{StaticResource AccentGreen}" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

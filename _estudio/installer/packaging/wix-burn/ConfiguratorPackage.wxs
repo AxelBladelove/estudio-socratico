@@ -1,0 +1,39 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package
+      Name="Estudio Socratico Configurador"
+      Manufacturer="Estudio Socratico"
+      Version="$(var.ProductVersion)"
+      UpgradeCode="{93E3EB67-5D12-45BC-B479-A128CEF2D030}"
+      Scope="perMachine">
+
+    <MajorUpgrade DowngradeErrorMessage="Ya existe una version mas reciente de Estudio Socratico Configurador." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="Estudio Socratico Configurador" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="Estudio Socratico" />
+    </StandardDirectory>
+
+    <ComponentGroup Id="PublishedAppFiles" Directory="INSTALLFOLDER">
+      <Files Include="$(var.AppPublishDir)\**" />
+    </ComponentGroup>
+
+    <Component Id="StartMenuShortcut" Directory="ApplicationProgramsFolder" Guid="{770F7286-A257-48C1-B15B-9B7EB17ABA52}">
+      <Shortcut
+          Id="EstudioSocraticoConfiguratorShortcut"
+          Name="Estudio Socratico Configurador"
+          Target="[INSTALLFOLDER]EstudioSocratico.Configurator.App.exe"
+          WorkingDirectory="INSTALLFOLDER" />
+      <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+      <RegistryValue Root="HKCU" Key="Software\EstudioSocratico\Configurator" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <Feature Id="MainFeature" Title="Estudio Socratico Configurador" Level="1">
+      <ComponentGroupRef Id="PublishedAppFiles" />
+      <ComponentRef Id="StartMenuShortcut" />
+    </Feature>
+  </Package>
+</Wix>

@@ -1,0 +1,33 @@
+<Window
+    x:Class="EstudioSocratico.Configurator.App.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls"
+    mc:Ignorable="d"
+    Title="Estudio Socrático Configurador">
+
+    <Grid x:Name="Root" Background="#0f1419">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Custom title bar area for window drag -->
+        <Grid x:Name="TitleBar" Grid.Row="0" Background="#0f1419">
+            <TextBlock
+                Text="Estudio Socrático Configurador"
+                FontSize="12"
+                Foreground="#8b949e"
+                VerticalAlignment="Center"
+                Margin="16,0,0,0" />
+        </Grid>
+
+        <!-- WebView2 fills the rest of the window -->
+        <controls:WebView2
+            x:Name="AppWebView"
+            Grid.Row="1"
+            DefaultBackgroundColor="#0f1419" />
+    </Grid>
+</Window>

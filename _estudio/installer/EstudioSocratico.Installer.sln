@@ -1,0 +1,51 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.0.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4A882D}") = "EstudioSocratico.Configurator.Core", "src\EstudioSocratico.Configurator.Core\EstudioSocratico.Configurator.Core.csproj", "{007B16ED-ABFE-4ACA-961E-7A0F0138B3B2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4A882D}") = "EstudioSocratico.Configurator.Engine", "src\EstudioSocratico.Configurator.Engine\EstudioSocratico.Configurator.Engine.csproj", "{E1796892-4368-47C7-9A87-B31F882FB54B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4A882D}") = "EstudioSocratico.Configurator.App", "src\EstudioSocratico.Configurator.App\EstudioSocratico.Configurator.App.csproj", "{6B4D3778-6065-4D76-AFDC-BD3C1AE33316}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4A882D}") = "EstudioSocratico.Configurator.Elevated", "src\EstudioSocratico.Configurator.Elevated\EstudioSocratico.Configurator.Elevated.csproj", "{EFEB505D-6B3C-4E86-897E-F836CC906590}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4A882D}") = "EstudioSocratico.Configurator.Cli", "src\EstudioSocratico.Configurator.Cli\EstudioSocratico.Configurator.Cli.csproj", "{F6A517A2-F3A4-4D8C-86EC-29F3BD8ECF57}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4A882D}") = "EstudioSocratico.Configurator.Tests", "src\EstudioSocratico.Configurator.Tests\EstudioSocratico.Configurator.Tests.csproj", "{8CF44DCD-3FD5-4C07-9AF1-72EFF5685952}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{007B16ED-ABFE-4ACA-961E-7A0F0138B3B2}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{007B16ED-ABFE-4ACA-961E-7A0F0138B3B2}.Debug|x64.Build.0 = Debug|Any CPU
+		{007B16ED-ABFE-4ACA-961E-7A0F0138B3B2}.Release|x64.ActiveCfg = Release|Any CPU
+		{007B16ED-ABFE-4ACA-961E-7A0F0138B3B2}.Release|x64.Build.0 = Release|Any CPU
+		{E1796892-4368-47C7-9A87-B31F882FB54B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E1796892-4368-47C7-9A87-B31F882FB54B}.Debug|x64.Build.0 = Debug|Any CPU
+		{E1796892-4368-47C7-9A87-B31F882FB54B}.Release|x64.ActiveCfg = Release|Any CPU
+		{E1796892-4368-47C7-9A87-B31F882FB54B}.Release|x64.Build.0 = Release|Any CPU
+		{6B4D3778-6065-4D76-AFDC-BD3C1AE33316}.Debug|x64.ActiveCfg = Debug|x64
+		{6B4D3778-6065-4D76-AFDC-BD3C1AE33316}.Debug|x64.Build.0 = Debug|x64
+		{6B4D3778-6065-4D76-AFDC-BD3C1AE33316}.Release|x64.ActiveCfg = Release|x64
+		{6B4D3778-6065-4D76-AFDC-BD3C1AE33316}.Release|x64.Build.0 = Release|x64
+		{EFEB505D-6B3C-4E86-897E-F836CC906590}.Debug|x64.ActiveCfg = Debug|x64
+		{EFEB505D-6B3C-4E86-897E-F836CC906590}.Debug|x64.Build.0 = Debug|x64
+		{EFEB505D-6B3C-4E86-897E-F836CC906590}.Release|x64.ActiveCfg = Release|x64
+		{EFEB505D-6B3C-4E86-897E-F836CC906590}.Release|x64.Build.0 = Release|x64
+		{F6A517A2-F3A4-4D8C-86EC-29F3BD8ECF57}.Debug|x64.ActiveCfg = Debug|x64
+		{F6A517A2-F3A4-4D8C-86EC-29F3BD8ECF57}.Debug|x64.Build.0 = Debug|x64
+		{F6A517A2-F3A4-4D8C-86EC-29F3BD8ECF57}.Release|x64.ActiveCfg = Release|x64
+		{F6A517A2-F3A4-4D8C-86EC-29F3BD8ECF57}.Release|x64.Build.0 = Release|x64
+		{8CF44DCD-3FD5-4C07-9AF1-72EFF5685952}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8CF44DCD-3FD5-4C07-9AF1-72EFF5685952}.Debug|x64.Build.0 = Debug|Any CPU
+		{8CF44DCD-3FD5-4C07-9AF1-72EFF5685952}.Release|x64.ActiveCfg = Release|Any CPU
+		{8CF44DCD-3FD5-4C07-9AF1-72EFF5685952}.Release|x64.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

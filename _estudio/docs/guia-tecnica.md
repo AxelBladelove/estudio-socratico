@@ -6,52 +6,15 @@ motor.
 
 ## Cambios Clave En 2.0
 
-- `Estudio.Setup.cmd` es la entrada principal. Sin argumentos abre en
-  `verify`, ejecuta un diagnostico automatico y desde la misma UI deja elegir
-  `install`, `update`, `reinstall`, `uninstall` o `verify` otra vez. En el repo,
-  el wrapper sigue siendo `Estudio.Setup.cmd`; en release, la entrada visible es
-  `Instalar Estudio Socrático.exe`, ahora generado desde `Estudio.Setup.Windows`
-  y montado sobre el engine `desired-state`.
-- El backend puede emitir progreso line-delimited JSON con `--events-json`.
-  Textual consume esos eventos para mostrar pasos, log, progreso, artefactos y
-  reintentos.
-- `Estudio.Setup.cmd package` publica un release limpio bajo
-  `_estudio/setup/Estudio.Setup/publish/release/` con este layout:
-
-  ```text
-  Instalar Estudio Socrático.exe
-  README.txt
-  payload/
-    manifest.json
-    checksums.sha256
-    estudio-framework.zip
-    estudio-socratico-2.0.0.vsix
-  ```
-
-  El root del ZIP ya no expone `_estudio/`, `src/`, `package.json` ni scripts
-  internos del repo fuente.
-- El cambio de cuenta GitHub se resuelve desde `gh auth`; la TUI expone una
-  accion `Cambiar GitHub` que fuerza logout/login web, vuelve a resolver el
-  usuario y repara fork/remotes.
-- El cambio de alias se centraliza en `.estudio_usuario`; si cambia, el
-  instalador intenta renombrar el fork `estudio-socratico-<alias-viejo>` a
-  `estudio-socratico-<alias-nuevo>`, crea backup local antes de reescribirlo y
-  luego repara `origin/upstream`.
-- `reinstall` y `uninstall` son modos de primera clase. `uninstall` elimina
-  integraciones locales del framework sin quitar herramientas globales.
-- Los scripts PowerShell de setup 1.x quedan congelados como legacy. Se
-  conservan para compatibilidad, pero la ruta activa es Textual + backend C#.
-  Desde Fase 4, la experiencia visual principal para usuario final es la app
-  Windows nativa; Textual/Terminal.Gui quedan como fallback de desarrollo o
-  diagnostico.
-
-## Cambios Clave En 1.2
-
-- `npm run setup` abre el instalador unificado y arranca en verificacion.
-  `npm run setup:update` y compania siguen existiendo solo como atajos de CLI.
-- Los wrappers raiz `Instalar/Actualizar/Reinstalar/Desinstalar` dejan de ser
-  la ruta recomendada; la entrada interactiva queda unificada en
-  `Estudio.Setup.cmd`.
+- El setup anterior en `_estudio/setup` fue eliminado. No se usa como base ni
+  como referencia para la version 2.0.
+- El nuevo configurador vive en `_estudio/installer` y se empaqueta como `.exe`
+  WiX Burn para GitHub Releases.
+- La experiencia principal es WinUI 3 self-contained sobre .NET 10 LTS; el motor
+  real esta en librerias C# y las tareas admin viven en un worker elevado.
+- El instalador tiene modos de instalacion, reparacion, reinstalacion y
+  desinstalacion, con logs persistentes y diagnostico copiable.
+- WinGet instala herramientas base; MSYS2/pacman instala GCC, MinGW-w64 y Make.
 - La identidad del estudiante se resuelve como alias local vinculado a
   `gh auth`; Git local toma `github.user` y `user.email` desde la cuenta
   autenticada, mientras el alias se usa para `user.name`, rama y
@@ -94,13 +57,12 @@ El flujo principal es:
 | `_estudio/soporte/consola/conio.c` | Implementacion local de funciones de consola |
 | `_estudio/include/conio.h` | Cabecera usada por ejercicios C |
 | `_estudio/include/estudio_stdio_cp437.h` | Compatibilidad de `printf` con simbolos CP437 |
-| `_estudio/setup/Estudio.Setup.cmd` | Wrapper activo: Textual primero, backend C# como fallback |
-| `_estudio/setup/Estudio.Setup/src/Estudio.Setup.Windows/` | UI Windows nativa del instalador |
-| `_estudio/setup/textual/setup_textual_app.py` | UI principal Textual |
-| `_estudio/setup/Estudio.Setup/src/Estudio.Setup/` | Backend C# del instalador |
-| `_estudio/setup/instalar.ps1` | Orquestador legacy del setup |
-| `_estudio/setup/proyecto.ps1` | Validacion del repo, onboarding y Git local |
-| `_estudio/setup/vscode.ps1` | F9, extensiones y terminal |
+| `_estudio/installer/` | Fuente del instalador/configurador v2 |
+| `_estudio/installer/src/EstudioSocratico.Configurator.Engine/ConfiguratorEngine.cs` | Orquestador de instalacion, reparacion, reinstalacion y uninstall |
+| `_estudio/installer/src/EstudioSocratico.Configurator.Engine/DependencyInstallation.cs` | Deteccion, WinGet, fallback oficial, MSYS2/GCC/Make |
+| `_estudio/installer/src/EstudioSocratico.Configurator.Engine/ProductManagers.cs` | GitHub, Exercism, VS Code, workspace, Gist y telemetria |
+| `_estudio/installer/src/EstudioSocratico.Configurator.App/MainWindow.xaml` | UI WinUI 3 principal |
+| `_estudio/installer/src/EstudioSocratico.Configurator.Elevated/Program.cs` | Worker elevado para operaciones admin concretas |
 | `_estudio/soporte/exercism/manager.ps1` | Backend para catalogo, import, test y submit de ejercicios externos |
 | `_estudio/soporte/vscode/estudio-exercism/` | Extension local de VS Code |
 
@@ -129,68 +91,48 @@ Fallbacks si falta `.estudio_usuario`:
 3. `git config --local user.name`
 4. usuario de Windows
 
-## Setup 2.0
+## Instalador 2.0
 
-Entrada recomendada:
+Entrada para usuarios finales:
 
-```bat
-_estudio\setup\Estudio.Setup.cmd
+```text
+Estudio-Socratico-Setup-v2.0.0-x64.exe
 ```
 
-El setup:
+Fuente:
 
-- arranca en `verify` cuando se abre sin argumentos;
-- valida la raiz del proyecto;
-- muestra progreso/reintentos desde Textual;
-- muestra acciones explicitas para cambiar cuenta GitHub y aplicar alias nuevo;
-- usa `install`, `update`, `reinstall`, `repair`, `uninstall`, `verify` y
-  `package`;
-- valida el alias local y permite sobrescribirlo con `--alias`;
-- precarga alias desde `.estudio_usuario`, `ESTUDIO_USUARIO`, Git local o el
-  usuario de Windows cuando no hace falta volver a preguntarlo;
-- revalida GitHub CLI con `gh auth status` y permite forzar relogin con
-  `--change-github`;
-- resuelve el usuario y el correo de GitHub desde `gh auth` sin pedirlos a mano;
-- usa el alias como `user.name` local para que ese mismo nombre aparezca en los commits;
-- instala o valida herramientas base;
-- instala o valida Exercism CLI;
-- precarga el token de Exercism si ya existe en la configuracion global de la PC;
-- configura Git local;
-- escribe `.estudio_usuario`;
-- crea `usuario/errores.md` vacio si falta;
-- crea o cambia a la rama personal cuando es posible;
-- valida GCC/MSYS2;
-- instala `make` y `mingw32-make` en MSYS2 para tests de Exercism C;
-- compila `_estudio/soporte/runtime/_output.exe`;
-- compila `_estudio/soporte/runtime/conio_support.o`;
-- configura `F9` en VS Code.
-- empaca e instala la extension local de ejercicios.
+```text
+_estudio/installer/
+```
 
-Parametros utiles:
-
-| Parametro | Uso |
-|---|---|
-| `--tui` | Abre la interfaz visual |
-| `--events-json` | Emite eventos JSON para la UI Textual |
-| `--desired-state` | Fuerza el engine nuevo basado en nodos |
-| `--engine desired-state` | Seleccion explicita del motor nuevo |
-| `--alias <slug>` | Define alias local para este clon |
-| `--change-github` | Fuerza logout/login de GitHub CLI durante `update` |
-| `--only <step-id>` | Ejecuta solo un componente; puede repetirse |
-| `--state-root <ruta>` | Cambia carpeta de estado/log/reporte |
-
-Ejemplos:
+Comandos de mantenedor:
 
 ```powershell
-_estudio\setup\Estudio.Setup.cmd verify
-_estudio\setup\Estudio.Setup.cmd reinstall --tui
-_estudio\setup\Estudio.Setup.cmd uninstall --tui
-_estudio\setup\Estudio.Setup.cmd install --desired-state
-_estudio\setup\Estudio.Setup.cmd verify --engine desired-state
-_estudio\setup\Estudio.Setup.cmd repair --only msys2-toolchain
-_estudio\setup\Estudio.Setup.cmd update --change-github
-_estudio\setup\Estudio.Setup.cmd update --alias nuevo_alias
-_estudio\setup\Estudio.Setup.cmd package
+dotnet restore _estudio/installer/EstudioSocratico.Installer.sln
+npm run installer:test
+npm run installer:build
+```
+
+El instalador:
+
+- detecta Node.js, Python, Git, GitHub CLI, Exercism CLI, VS Code, MSYS2,
+  GCC/MinGW-w64 y Make;
+- instala dependencias faltantes con WinGet y paquetes MSYS2 con pacman;
+- valida cada herramienta con comandos reales;
+- autentica GitHub con `gh auth login --web` y configura Git con
+  `gh auth setup-git`;
+- crea o reutiliza el fork del usuario y configura `origin`/`upstream`;
+- escribe `.estudio_usuario`, `usuario/errores.md` y la rama personal;
+- configura Exercism CLI con token sin loguearlo;
+- instala extensiones recomendadas, copia la extension local al perfil dedicado
+  de VS Code y configura F9;
+- compila `_estudio/soporte/runtime/_output.exe` y `conio_support.o`;
+- guarda logs en `%LocalAppData%\EstudioSocratico\Logs` y redacta secretos.
+
+La decision tecnica y fuentes consultadas estan en:
+
+```text
+_estudio/installer/docs/arquitectura.md
 ```
 
 ## Build Normal
@@ -313,19 +255,14 @@ interna y archivos de solucion. No guarda tokens.
 
 ### Tokens
 
-Exercism usa la configuracion global del CLI en la PC del estudiante. En 2.0
-la ruta principal es pegar el token en el campo `Exercism Token` de la TUI; el
-backend ejecuta la configuracion global y luego valida el track C descargando
-`hello-world`.
+Exercism usa la configuracion global del CLI en la PC del estudiante:
 
-```text
-https://exercism.org/settings/api_cli
+```bat
+exercism configure --token TU_TOKEN
 ```
 
-El proyecto no guarda ese token en Git ni en `usuario/`. Si Exercism indica que
-la cuenta aun no esta unida al track C, el setup abre
-`https://exercism.org/tracks/c` y el usuario puede reintentar solo los pasos
-fallidos desde la TUI.
+El proyecto no guarda ese token en Git ni en `usuario/`. El setup solo valida
+si existe y muestra una instruccion si falta.
 
 Para traducciones automaticas se lee primero la clave compartida del repo en
 `_estudio/soporte/exercism/config.json`, luego `_estudio/soporte/exercism/config.local.json`,
@@ -340,10 +277,10 @@ Fuente:
 _estudio/soporte/vscode/estudio-exercism/
 ```
 
-Durante setup, `_estudio/setup/vscode.ps1` ejecuta:
+Durante instalacion, `_estudio/installer/src/main/core/vscode.js` ejecuta:
 
-1. `npm install` dentro de la extension;
-2. `npx vsce package --no-dependencies --allow-missing-repository`;
+1. `npm ci` dentro de la extension;
+2. `npx vsce package --no-dependencies --allow-missing-repository --out ...`;
 3. `code --install-extension _estudio/soporte/runtime/vscode/estudio-exercism.vsix --force`.
 
 La extension aporta comandos:
@@ -459,28 +396,31 @@ Modelo recomendado:
 
 | Rama | Rol |
 |---|---|
-| `main` | Framework estable y base limpia 2.0 |
+| `main` | Framework estable |
+| `pair` | Trabajo compartido |
+| `<slug>` | Trabajo personal |
 
 Para publicar una version del framework:
 
 1. prepara cambios en una rama limpia;
-2. verifica setup, build y docs;
+2. verifica `npm run check` y `npm run installer:build`;
 3. mergea o empuja a `main`;
-4. elimina ramas remotas/personales obsoletas si la release reinicia la base;
-5. crea y publica un tag semantico (`v2.0.0`, por ejemplo);
-6. crea la release en GitHub y adjunta el ZIP de setup cuando aplique.
+4. crea y publica un tag semantico (`v2.0.0`, por ejemplo);
+5. deja que GitHub Actions adjunte `Estudio-Socratico-Setup-v2.0.0-x64.exe`
+   y su SHA256 al release;
+6. actualiza `pair` y ramas personales que deban heredar el framework.
 
 ## Release 2.0
 
-La release 2.0 debe quedar limpia:
+La release 2.0 agrega el instalador/configurador visual:
 
-- rama base unica `main`;
-- sin logs historicos versionados ni estado personal del estudiante;
-- instalador Textual empaquetado con backend C# self-contained;
-- modos `install`, `update`, `reinstall`, `repair`, `uninstall`, `verify` y
-  `package` verificados;
-- README, AGENTS y skills apuntando a `usuario/`, `_estudio/` y rutas reales;
-- backup externo de ejercicios personales antes de borrar datos locales.
+- fuente en `_estudio/installer`;
+- build reproducible con .NET 10, WinUI 3, Windows App SDK self-contained y
+  WiX Burn;
+- artefactos generados en `_estudio/installer/artifacts/`, ignorados por Git;
+- modos instalar, reparar, reinstalar y desinstalar;
+- integracion completa de GitHub, Exercism, VS Code, MSYS2/GCC/Make y runtime
+  local.
 
 ## Release 1.2
 

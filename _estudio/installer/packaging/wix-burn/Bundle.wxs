@@ -1,0 +1,26 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
+  <Bundle
+      Name="Estudio Socratico Setup"
+      Manufacturer="Estudio Socratico"
+      Version="$(var.ProductVersion)"
+      UpgradeCode="{D0C76DB4-A496-4CEB-82C5-3B70C4764FA0}">
+    <BootstrapperApplication>
+      <bal:WixStandardBootstrapperApplication
+          Theme="hyperlinkLicense"
+          LicenseUrl=""
+          SuppressOptionsUI="yes"
+          ShowVersion="yes"
+          LaunchTarget="[ProgramFiles64Folder]Estudio Socratico Configurador\EstudioSocratico.Configurator.App.exe"
+          LaunchWorkingFolder="[ProgramFiles64Folder]Estudio Socratico Configurador\"
+          LaunchArguments="--first-run" />
+    </BootstrapperApplication>
+
+    <Chain>
+      <MsiPackage
+          Id="ConfiguratorMsi"
+          SourceFile="$(var.ConfiguratorMsi)"
+          Vital="yes" />
+    </Chain>
+  </Bundle>
+</Wix>

@@ -31,17 +31,22 @@ ayuda a descubrir qué está mal en tu código. El razonamiento siempre es tuyo.
 
 ## Versión 2.0.0
 
-La version 2.0 deja el proyecto listo como base limpia para empezar desde cero:
+La version 2.0 cambia la instalacion a un configurador visual para Windows:
 
-- **Instalador visual Textual** como entrada principal, con progreso, log,
-  botones, flechas, reintentos y cambio de cuenta GitHub.
-- **Backend self-contained en C#** para instalar, actualizar, reinstalar,
-  desinstalar, verificar y empaquetar sin depender de Python en la PC del
-  estudiante.
-- **Release limpio**: el framework vive en `main`; los logs, alias y memoria del
-  estudiante se generan localmente al usar el proyecto.
-- **Alejandro** sigue como catalogo curado desde Gists y **Exercism C** conserva
-  sus tests oficiales.
+- **Un instalador `.exe` descargable desde GitHub Releases** guia todo el flujo.
+- Detecta e instala Git, GitHub CLI, Node.js, Python, VS Code, Exercism CLI y
+  MSYS2/GCC/Make.
+- Autentica GitHub, crea o repara el fork del estudiante y prepara remotos
+  `origin`/`upstream`.
+- Configura Exercism desde una UI segura para el token.
+- Configura VS Code, F9, runtime de consola, `conio.h` y la extension local.
+- **Alejandro** queda como catalogo curado de 132 ejercicios que se importan
+  desde Gists al momento de usarlos.
+- **Exercism C** sigue funcionando como fuente oficial con sus tests y submit.
+- **W3Schools / w3resource** sigue retirado. Se planea
+  reintroducirlo desde cero en una version futura con curaduria semantica.
+- La extension no empaqueta ejercicios completos ni enunciados locales dentro
+  del VSIX.
 
 ---
 
@@ -75,102 +80,30 @@ Cuando aprendes C, los errores no siempre son fáciles de entender:
 
 ### Primera vez
 
-```
-1. Descarga o clona este repositorio
-2. Abre la carpeta del proyecto
-3. Haz doble clic en:
-```
+1. Ve a **GitHub Releases**.
+2. Descarga `Estudio-Socratico-Setup-v2.0.0-x64.exe`.
+3. Haz doble click.
+4. Sigue el flujo guiado: GitHub, Exercism, workspace y VS Code.
 
-```bat
-Estudio.Setup.cmd
-```
+El instalador te pide:
 
-Se abre el instalador visual de Estudio Socratico. Lo primero que hace es una
-verificacion automatica de lo que ya tienes y de lo que falta. Desde esa misma
-pantalla eliges si quieres instalar, actualizar, reinstalar, desinstalar o
-volver a verificar.
-
-Si ya habias usado el instalador antes, la TUI precarga lo que pueda resolver
-sin preguntarte otra vez:
-
-- **Tu alias local** — si `.estudio_usuario`, `ESTUDIO_USUARIO` o la
-  configuracion Git local ya lo definen, aparece escrito automaticamente.
-- **Iniciar sesión en GitHub** — para vincular tus commits.
-- **Token de Exercism** — si la PC ya lo tiene guardado, aparece precargado; si
-  no, puedes copiarlo desde `https://exercism.org/settings/api_cli` y pegarlo en
-  la TUI.
+- **Tu alias local** — un nombre corto como `axel` o `juan`, que identifica tus
+  archivos dentro del proyecto.
+- **Iniciar sesion en GitHub** — para vincular commits y preparar tu fork.
+- **Token de Exercism** — pegado en una caja segura; no se guarda en el repo.
 
 Al terminar quedan listos:
 - ✅ El atajo <kbd>F9</kbd> para compilar
 - ✅ Tu carpeta personal (`usuario/`)
 - ✅ El historial de intentos vacío y listo para empezar
 - ✅ El panel de ejercicios dentro de VS Code
+- ✅ Tu fork y remotos Git configurados
 
 <details>
-<summary><strong>🔄 Ya lo tengo instalado, solo quiero actualizar</strong></summary>
+<summary><strong>🔄 Ya lo tengo instalado, solo quiero reparar o reconfigurar</strong></summary>
 
-Abre:
-
-```bat
-Estudio.Setup.cmd
-```
-
-Deja que termine la verificacion inicial y luego usa `Actualizar` dentro del
-instalador.
-
-O desde la terminal:
-
-```bash
-npm run setup:update
-```
-
-Esto valida tu instalación, actualiza lo que haga falta y no cambia tus archivos
-personales.
-
-</details>
-
-<details>
-<summary><strong>♻️ Quiero reinstalar integraciones locales</strong></summary>
-
-Abre:
-
-```bat
-Estudio.Setup.cmd
-```
-
-Despues de la verificacion inicial, usa `Reinstalar` dentro del instalador.
-
-O desde la terminal:
-
-```bash
-npm run setup:reinstall
-```
-
-Esto reaplica configuracion local, extension, alias y componentes reparables sin
-borrar tus ejercicios.
-
-</details>
-
-<details>
-<summary><strong>🧹 Quiero desinstalar integraciones locales</strong></summary>
-
-Abre:
-
-```bat
-Estudio.Setup.cmd
-```
-
-Despues de la verificacion inicial, usa `Desinstalar` dentro del instalador.
-
-O desde la terminal:
-
-```bash
-npm run setup:uninstall
-```
-
-Esto quita la extension/configuracion local de Estudio, `.estudio_usuario`,
-config local Gemini y entradas PATH agregadas por el setup. No desinstala Git,
-VS Code, Node ni herramientas globales del sistema.
+Abre el instalador de nuevo y elige **Reparar**. Valida herramientas, PATH,
+GitHub, Exercism, VS Code, runtime local y workspace sin borrar tus ejercicios.
 
 </details>
 
@@ -181,18 +114,21 @@ VS Code, Node ni herramientas globales del sistema.
 npm run check
 ```
 
-Esto revisa que todo esté en orden sin instalar ni modificar nada.
+Esto ejecuta las pruebas automatizadas del configurador desde el repo fuente.
 
 </details>
 
 <details>
-<summary><strong>🛠️ Prefiero instalar Git/GCC/VS Code por mi cuenta</strong></summary>
+<summary><strong>🛠️ Quiero compilar el instalador desde el repo</strong></summary>
 
-```bat
-_estudio\setup\instalar.cmd -SinWinget
+```bash
+dotnet restore _estudio/installer/EstudioSocratico.Installer.sln
+npm run installer:test
+npm run installer:build
 ```
 
-Esto omite las instalaciones automáticas y solo configura el proyecto.
+El `.exe` se genera por GitHub Actions como artefacto de release. No debe
+subirse al repo.
 
 </details>
 
@@ -203,7 +139,7 @@ Esto omite las instalaciones automáticas y solo configura el proyecto.
 ### 1️⃣ Abre tu archivo `.c`
 
 Todos tus ejercicios van en la carpeta `Ejercicios/`. El proyecto trae un
-directorio limpio para que empieces desde cero. Puedes crear archivos como:
+ejemplo:
 
 ```
 Ejercicios/Blackjack.c
@@ -412,20 +348,16 @@ Desde el panel también puedes:
 <details>
 <summary><strong>⚙️ Configurar Exercism (solo una vez)</strong></summary>
 
-Exercism usa un token personal que se configura una sola vez en tu computadora.
-El instalador muestra este enlace:
+Exercism usa un token personal que se configura una sola vez en tu computadora:
 
-```text
-https://exercism.org/settings/api_cli
+```bat
+exercism configure --token TU_TOKEN_AQUI
 ```
 
-Copia tu token, pegalo en el campo `Exercism Token` de la TUI y usa
-`Fallidos` si la instalacion ya habia avanzado. El token **no se guarda** en el
-repositorio.
+El instalador te avisa si falta. El token **no se guarda** en el repositorio.
 
-Si Exercism todavia exige unir la cuenta al track, el instalador abre
-`https://exercism.org/tracks/c`; pulsa `Join the C Track` en la web y reintenta
-los fallidos.
+> [!TIP]
+> Puedes encontrar tu token en https://exercism.org/settings/api_cli
 
 </details>
 
@@ -483,24 +415,33 @@ Funciones disponibles:
 
 ```
 estudio-socratico/
-├── Estudio.Setup.cmd           ← Instalador principal; verifica primero y luego eliges modo
 ├── Ejercicios/                ← Tus archivos .c van aquí
+│   └── Blackjack.c            ← Ejemplo incluido
 ├── usuario/                   ← Logs, progreso y errores del estudiante
 │   ├── logs/
 │   └── errores.md
-└── _estudio/                  ← Motor interno, setup, docs, extensión y tooling
+├── _estudio/                  ← Motor interno, instalador, docs, extensión y tooling
+└── _estudio/installer/        ← Código fuente del configurador v2
 ```
 
 ---
 
-## Git
+## Ramas de Git
 
 > No necesitas saber nada de Git para usar esto. El instalador configura todo y
 > los commits se hacen solos cada vez que compilas.
 
-La version base del framework vive en `main`. Tu identidad local vive en
-`.estudio_usuario`, tus intentos en `usuario/logs/` y tu memoria de estudio en
-`usuario/errores.md`. Esos datos son locales del clon del estudiante.
+Si varios estudiantes usan el mismo repositorio en GitHub, el proyecto usa
+**ramas** para separar el trabajo de cada uno:
+
+| Rama | Para qué |
+|---|---|
+| `main` | Versión base del framework |
+| `axel`, `juan`, etc. | Trabajo personal de cada estudiante |
+| `pair` | Trabajo compartido (ej. sesiones Live Share) |
+
+El instalador crea tu rama personal automáticamente con el mismo nombre que tu
+alias.
 
 ---
 
@@ -509,11 +450,7 @@ La version base del framework vive en `main`. Tu identidad local vive en
 <details>
 <summary><strong>❌ <kbd>F9</kbd> no hace nada</strong></summary>
 
-Ejecuta el instalador de nuevo:
-
-```bat
-Estudio.Setup.cmd
-```
+Abre `Estudio-Socratico-Setup-v2.0.0-x64.exe` y elige **Reparar**.
 
 Luego cierra VS Code completamente y vuelve a abrirlo.
 

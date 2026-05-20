@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <ProductVersion>2.0.0</ProductVersion>
+    <CompanyName>Estudio Socratico</CompanyName>
+    <Authors>Estudio Socratico</Authors>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <RepositoryType>git</RepositoryType>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+    <AcceptEula>wix7</AcceptEula>
+  </PropertyGroup>
+</Project>

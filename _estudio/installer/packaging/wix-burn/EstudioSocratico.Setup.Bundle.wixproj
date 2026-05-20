@@ -1,0 +1,14 @@
+<Project Sdk="WixToolset.Sdk/7.0.0">
+  <PropertyGroup>
+    <OutputType>Bundle</OutputType>
+    <Platform>x64</Platform>
+    <ProductVersion Condition="'$(ProductVersion)' == ''">2.0.0</ProductVersion>
+    <ConfiguratorMsi Condition="'$(ConfiguratorMsi)' == ''">$(MSBuildThisFileDirectory)bin\x64\$(Configuration)\EstudioSocratico.Configurator.msi</ConfiguratorMsi>
+    <DefineConstants>ProductVersion=$(ProductVersion);ConfiguratorMsi=$(ConfiguratorMsi)</DefineConstants>
+    <OutputName>Estudio-Socratico-Setup-v$(ProductVersion)-x64</OutputName>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="WixToolset.BootstrapperApplications.wixext" Version="7.0.0" />
+    <Compile Remove="ConfiguratorPackage.wxs" />
+  </ItemGroup>
+</Project>
