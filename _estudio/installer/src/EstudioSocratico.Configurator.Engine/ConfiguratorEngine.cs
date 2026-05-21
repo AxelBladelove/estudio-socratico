@@ -390,7 +390,11 @@ public sealed class ConfiguratorEngine
 
         await progress.ReportAsync(new ProgressEvent { StepId = "workspace", Title = "Workspace", Message = "Configurando carpeta de estudio.", Percent = 78 }, cancellationToken)
             .ConfigureAwait(false);
-        workspace = await _workspaceManager.PrepareAsync(workspace, alias, cancellationToken).ConfigureAwait(false);
+        workspace = await _workspaceManager.PrepareAsync(
+            workspace,
+            alias,
+            cancellationToken,
+            await ResolveGitHubLoginAsync(cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
 
         if (!request.SkipExercism && !string.IsNullOrWhiteSpace(request.ExercismToken))
         {
@@ -498,7 +502,11 @@ public sealed class ConfiguratorEngine
             Percent = 68,
             Status = DependencyStatus.Installing
         }, cancellationToken).ConfigureAwait(false);
-        workspace = await _workspaceManager.PrepareAsync(workspace, alias, cancellationToken).ConfigureAwait(false);
+        workspace = await _workspaceManager.PrepareAsync(
+            workspace,
+            alias,
+            cancellationToken,
+            await ResolveGitHubLoginAsync(cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
 
         await progress.ReportAsync(new ProgressEvent
         {
@@ -682,6 +690,12 @@ public sealed class ConfiguratorEngine
         return LocalAliasNormalizer.Normalize(manifest.LocalAlias, Environment.UserName);
     }
 
+    private async Task<string?> ResolveGitHubLoginAsync(CancellationToken cancellationToken)
+    {
+        var manifest = await _manifestManager.LoadAsync(cancellationToken).ConfigureAwait(false);
+        return manifest.GitHub.UserName;
+    }
+
     private async Task<(UIStateSnapshot Snapshot, IReadOnlyList<DependencyState> Dependencies)> BuildCurrentStateAsync(
         string? workspacePath,
         string? localAlias,
@@ -703,7 +717,7 @@ public sealed class ConfiguratorEngine
         var workspaceContext = new WorkspaceContextInfo
         {
             BaseRepo = ProductInfo.BaseRepository,
-            WorkspaceRepo = string.IsNullOrWhiteSpace(githubLogin) ? null : $"{githubLogin}/{ProductInfo.RepositoryName}",
+            WorkspaceRepo = string.IsNullOrWhiteSpace(githubLogin) ? null : GitHubAccountManager.GetWorkspaceRepository(githubLogin, alias),
             LocalAlias = alias,
             GitHubLogin = githubLogin,
             WorkspacePath = workspace,

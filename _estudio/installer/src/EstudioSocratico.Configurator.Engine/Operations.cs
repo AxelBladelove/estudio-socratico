@@ -36,13 +36,15 @@ public sealed class RepairManager(
         }
 
         workspaceManager.RequireWorkspaceShape(workspacePath);
-        await workspaceManager.PrepareAsync(workspacePath, localAlias, cancellationToken).ConfigureAwait(false);
-        await vsCodeManager.PrepareAsync(workspacePath, cancellationToken).ConfigureAwait(false);
+        AccountState? account = null;
         if (!skipGitHub)
         {
-            await gitHubAccountManager.ConfigureRepositoryAsync(workspacePath, localAlias, cancellationToken)
+            account = await gitHubAccountManager.ConfigureRepositoryAsync(workspacePath, localAlias, cancellationToken)
                 .ConfigureAwait(false);
         }
+
+        await workspaceManager.PrepareAsync(workspacePath, localAlias, cancellationToken, account?.UserName).ConfigureAwait(false);
+        await vsCodeManager.PrepareAsync(workspacePath, cancellationToken).ConfigureAwait(false);
 
         await logManager.WriteAsync("info", "repair", "Reparacion completada.", cancellationToken).ConfigureAwait(false);
     }

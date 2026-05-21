@@ -13,10 +13,14 @@ public sealed class WorkspaceAndUninstallTests
         var paths = new AppPaths(repoRoot: workspace, localAppDataRoot: Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")));
         var manager = new WorkspaceManager(paths, new ManifestManager(paths), new LogManager(paths));
 
-        await manager.PrepareAsync(workspace, "Ana Maria", CancellationToken.None);
+        await manager.PrepareAsync(workspace, "Ana Maria", CancellationToken.None, "anamaria");
 
         Assert.True(File.Exists(Path.Combine(workspace, "usuario", "errores.md")));
         Assert.Equal("ana-maria", File.ReadAllText(Path.Combine(workspace, ".estudio_usuario")));
+        var identity = WorkspaceIdentityStore.Read(workspace);
+        Assert.Equal("ana-maria", identity?.Alias);
+        Assert.Equal("anamaria", identity?.GitHubLogin);
+        Assert.Equal("anamaria/estudio-socratico-ana-maria", identity?.WorkspaceRepo);
     }
 
     [Fact]
@@ -37,6 +41,12 @@ public sealed class WorkspaceAndUninstallTests
 
     [Fact]
     public void DefaultWorkspace_UsesUserProfileAndAlias()
+    {
+        Workspace_DefaultUsesAlias();
+    }
+
+    [Fact]
+    public void Workspace_DefaultUsesAlias()
     {
         var paths = new AppPaths(localAppDataRoot: Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")));
         var actual = paths.GetRecommendedWorkspacePath("Ana Maria");
@@ -75,6 +85,39 @@ public sealed class WorkspaceAndUninstallTests
 
         Assert.True(File.Exists(Path.Combine(workspace, "usuario", "config", "estudio-socratico.extension.local.json")));
         Assert.True(File.Exists(Path.Combine(workspace, "usuario", "config", "estudio-socratico.extension.example.json")));
+    }
+
+    [Fact]
+    public async Task UpdatePreservesAliasIdentity()
+    {
+        var workspace = CreateMinimalWorkspace();
+        var paths = new AppPaths(repoRoot: workspace, localAppDataRoot: Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")));
+        var manager = new WorkspaceManager(paths, new ManifestManager(paths), new LogManager(paths));
+        await manager.PrepareAsync(workspace, "erick", CancellationToken.None, "ericgabriel");
+
+        await manager.PrepareAsync(workspace, "erick", CancellationToken.None, "ericgabriel");
+
+        var identity = WorkspaceIdentityStore.Read(workspace);
+        Assert.Equal("erick", identity?.Alias);
+        Assert.Equal("ericgabriel", identity?.GitHubLogin);
+        Assert.Equal("ericgabriel/estudio-socratico-erick", identity?.WorkspaceRepo);
+    }
+
+    [Fact]
+    public async Task ReinstallPreservesAliasIdentity()
+    {
+        var workspace = CreateMinimalWorkspace();
+        var paths = new AppPaths(repoRoot: workspace, localAppDataRoot: Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")));
+        var manager = new WorkspaceManager(paths, new ManifestManager(paths), new LogManager(paths));
+        await manager.PrepareAsync(workspace, "erick", CancellationToken.None, "ericgabriel");
+        var localConfig = Path.Combine(workspace, "usuario", "config", "estudio-socratico.extension.local.json");
+        await File.WriteAllTextAsync(localConfig, "{\n  \"apiKey\": \"keep-me\"\n}\n");
+
+        await manager.PrepareAsync(workspace, "erick", CancellationToken.None, "ericgabriel");
+
+        Assert.Equal("erick", File.ReadAllText(Path.Combine(workspace, ".estudio_usuario")));
+        Assert.Contains("keep-me", await File.ReadAllTextAsync(localConfig));
+        Assert.Equal("ericgabriel", WorkspaceIdentityStore.Read(workspace)?.GitHubLogin);
     }
 
     [Fact]
