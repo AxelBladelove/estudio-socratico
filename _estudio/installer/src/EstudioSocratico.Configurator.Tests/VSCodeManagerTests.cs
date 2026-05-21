@@ -154,6 +154,9 @@ public sealed class VSCodeManagerTests
         Assert.True(state.ManagerScriptExists);
         Assert.False(Directory.Exists(stalePath));
         Assert.True(Directory.Exists(Path.Combine(root, ".vscode", "extensions", "estudio-socratico.estudio-exercism-1.0.0")));
+        Assert.Contains(runner.Specs, spec =>
+            spec.ArgumentString?.Contains("--install-extension", StringComparison.OrdinalIgnoreCase) == true &&
+            spec.ArgumentString.Contains(".vsix", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -208,6 +211,24 @@ public sealed class VSCodeManagerTests
         Assert.Contains("no aparece instalada", error.Message, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public async Task VSCodeExtension_Creates_InstallableVsix()
+    {
+        var root = NewTemp();
+        var workspace = CreateWorkspaceWithExtension(root);
+        var paths = new AppPaths(repoRoot: workspace, localAppDataRoot: Path.Combine(root, "local"));
+        var manager = new ExtensionManager(paths, new LogManager(paths), userProfileRoot: root);
+
+        var vsix = await manager.CreateVsixPackageAsync(workspace, CancellationToken.None);
+
+        Assert.True(File.Exists(vsix));
+        using var archive = System.IO.Compression.ZipFile.OpenRead(vsix);
+        Assert.NotNull(archive.GetEntry("extension.vsixmanifest"));
+        Assert.NotNull(archive.GetEntry("[Content_Types].xml"));
+        Assert.NotNull(archive.GetEntry("extension/package.json"));
+        Assert.NotNull(archive.GetEntry("extension/extension.js"));
+    }
+
     private static VSCodeManager CreateManager(string root, ICommandRunner runner, Func<VSCodePaths> locator)
     {
         var paths = new AppPaths(localAppDataRoot: Path.Combine(root, "local"));
@@ -220,10 +241,14 @@ public sealed class VSCodeManagerTests
         var workspace = Path.Combine(root, "workspace");
         var extension = Path.Combine(workspace, "_estudio", "soporte", "vscode", "estudio-exercism");
         Directory.CreateDirectory(extension);
+        Directory.CreateDirectory(Path.Combine(extension, "assets"));
         Directory.CreateDirectory(Path.Combine(workspace, "_estudio", "soporte", "exercism"));
         File.WriteAllText(Path.Combine(extension, "package.json"), """
 {"name":"estudio-exercism","publisher":"estudio-socratico","version":"1.0.0","contributes":{"viewsContainers":{"activitybar":[{"id":"estudioSocratico","title":"Estudio"}]},"views":{"estudioSocratico":[{"id":"estudioExercism.view","name":"Ejercicios"}]},"commands":[{"command":"estudioExercism.openPanel"},{"command":"estudioExercism.openApiKeyConfig"},{"command":"estudioExercism.revealApiKeyConfig"}]}}
 """);
+        File.WriteAllText(Path.Combine(extension, "extension.js"), "module.exports = {};");
+        File.WriteAllText(Path.Combine(extension, "LICENSE"), "MIT");
+        File.WriteAllBytes(Path.Combine(extension, "assets", "estudio.png"), [0x89, 0x50, 0x4e, 0x47]);
         File.WriteAllText(Path.Combine(workspace, "_estudio", "soporte", "exercism", "manager.ps1"), "");
         return workspace;
     }

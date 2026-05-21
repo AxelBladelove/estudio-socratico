@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.IO.Compression;
+using System.Security;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using EstudioSocratico.Configurator.Core;
@@ -605,6 +607,17 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
         bool ExercisePanelConfigured,
         bool ManagerScriptExists);
 
+    private static readonly IReadOnlyDictionary<string, string> VsixContentTypes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        [".js"] = "application/javascript",
+        [".json"] = "application/json",
+        [".png"] = "image/png",
+        [".svg"] = "image/svg+xml",
+        [".txt"] = "text/plain",
+        [".md"] = "text/markdown",
+        [".vsixmanifest"] = "text/xml"
+    };
+
     public string GetSourcePath(string workspacePath) =>
         Path.Combine(workspacePath, "_estudio", "soporte", "vscode", "estudio-exercism");
 
@@ -630,6 +643,52 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
             .Where(HasInstalledManifest)
             .OrderByDescending(path => path, StringComparer.OrdinalIgnoreCase)
             .FirstOrDefault();
+    }
+
+    public async Task<string> CreateVsixPackageAsync(string workspacePath, CancellationToken cancellationToken)
+    {
+        var descriptor = await DescribeAsync(workspacePath, cancellationToken).ConfigureAwait(false);
+        var packageRoot = Path.Combine(paths.LocalAppDataRoot, "Runtime", "vscode");
+        Directory.CreateDirectory(packageRoot);
+        var vsixPath = Path.Combine(packageRoot, $"{descriptor.Id}-{descriptor.Version}.vsix");
+        if (File.Exists(vsixPath))
+        {
+            File.Delete(vsixPath);
+        }
+
+        using var archive = ZipFile.Open(vsixPath, ZipArchiveMode.Create);
+        AddVsixEntry(archive, "extension.vsixmanifest", BuildVsixManifest(descriptor));
+        AddVsixEntry(archive, "[Content_Types].xml", BuildContentTypes(descriptor.SourcePath));
+
+        var packageJson = Path.Combine(descriptor.SourcePath, "package.json");
+        AddFileEntry(archive, packageJson, "extension/package.json");
+
+        foreach (var file in Directory.GetFiles(descriptor.SourcePath, "*", SearchOption.AllDirectories))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (ShouldSkipExtensionFile(descriptor.SourcePath, file))
+            {
+                continue;
+            }
+
+            var relative = Path.GetRelativePath(descriptor.SourcePath, file).Replace('\\', '/');
+            if (relative.Equals("package.json", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var entryName = relative.Equals("LICENSE", StringComparison.OrdinalIgnoreCase)
+                ? "extension/LICENSE.txt"
+                : $"extension/{relative}";
+            AddFileEntry(archive, file, entryName);
+        }
+
+        if (!File.Exists(vsixPath) || new FileInfo(vsixPath).Length == 0)
+        {
+            throw new InvalidOperationException("No se pudo generar el paquete VSIX de la extension local.");
+        }
+
+        return vsixPath;
     }
 
     public async Task InstallLocalExtensionAsync(string workspacePath, CancellationToken cancellationToken)
@@ -788,6 +847,11 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
         }
 
         var packageJsonPath = Path.Combine(source, "package.json");
+        if (!File.Exists(packageJsonPath))
+        {
+            throw new FileNotFoundException("No se encontro package.json de la extension local de VS Code.", packageJsonPath);
+        }
+
         var packageJson = JsonNode.Parse(await File.ReadAllTextAsync(packageJsonPath, cancellationToken).ConfigureAwait(false))!
             .AsObject();
         var name = packageJson["name"]?.GetValue<string>() ?? "estudio-exercism";
@@ -832,6 +896,88 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
     {
         return !string.IsNullOrWhiteSpace(extensionPath) &&
                File.Exists(Path.Combine(extensionPath, "package.json"));
+    }
+
+    private static bool ShouldSkipExtensionFile(string sourceRoot, string file)
+    {
+        var relative = Path.GetRelativePath(sourceRoot, file).Replace('\\', '/');
+        return relative.Equals(".vscodeignore", StringComparison.OrdinalIgnoreCase) ||
+               relative.Equals("package-lock.json", StringComparison.OrdinalIgnoreCase) ||
+               relative.EndsWith(".vsix", StringComparison.OrdinalIgnoreCase) ||
+               relative.Split('/').Any(part => part.Equals("node_modules", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static void AddFileEntry(ZipArchive archive, string file, string entryName)
+    {
+        var entry = archive.CreateEntry(entryName, CompressionLevel.Optimal);
+        using var input = File.OpenRead(file);
+        using var output = entry.Open();
+        input.CopyTo(output);
+    }
+
+    private static void AddVsixEntry(ZipArchive archive, string entryName, string content)
+    {
+        var entry = archive.CreateEntry(entryName, CompressionLevel.Optimal);
+        using var writer = new StreamWriter(entry.Open());
+        writer.Write(content);
+    }
+
+    private static string BuildVsixManifest(LocalExtensionDescriptor descriptor)
+    {
+        static string Xml(string value) => SecurityElement.Escape(value) ?? "";
+
+        return $$"""
+<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+  <Metadata>
+    <Identity Language="en-US" Id="{{Xml(descriptor.Name)}}" Version="{{Xml(descriptor.Version)}}" Publisher="{{Xml(descriptor.Publisher)}}" />
+    <DisplayName>Estudio Socratico - Exercism</DisplayName>
+    <Description xml:space="preserve">Panel de ejercicios para Exercism C y PDF Alejandro Liz dentro de Estudio Socratico.</Description>
+    <Tags></Tags>
+    <Categories>Education,Other</Categories>
+    <GalleryFlags>Public</GalleryFlags>
+    <Properties>
+      <Property Id="Microsoft.VisualStudio.Code.Engine" Value="^1.85.0" />
+      <Property Id="Microsoft.VisualStudio.Code.ExtensionKind" Value="workspace" />
+      <Property Id="Microsoft.VisualStudio.Code.ExecutesCode" Value="true" />
+      <Property Id="Microsoft.VisualStudio.Services.GitHubFlavoredMarkdown" Value="true" />
+      <Property Id="Microsoft.VisualStudio.Services.Content.Pricing" Value="Free" />
+    </Properties>
+    <License>extension/LICENSE.txt</License>
+    <Icon>extension/assets/estudio.png</Icon>
+  </Metadata>
+  <Installation>
+    <InstallationTarget Id="Microsoft.VisualStudio.Code"/>
+  </Installation>
+  <Dependencies/>
+  <Assets>
+    <Asset Type="Microsoft.VisualStudio.Code.Manifest" Path="extension/package.json" Addressable="true" />
+    <Asset Type="Microsoft.VisualStudio.Services.Content.License" Path="extension/LICENSE.txt" Addressable="true" />
+    <Asset Type="Microsoft.VisualStudio.Services.Icons.Default" Path="extension/assets/estudio.png" Addressable="true" />
+  </Assets>
+</PackageManifest>
+""";
+    }
+
+    private static string BuildContentTypes(string sourcePath)
+    {
+        var extensions = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories)
+            .Where(file => !ShouldSkipExtensionFile(sourcePath, file))
+            .Select(file => Path.GetExtension(file))
+            .Append(".vsixmanifest")
+            .Where(extension => !string.IsNullOrWhiteSpace(extension))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(extension => extension, StringComparer.OrdinalIgnoreCase);
+        var defaults = string.Join("", extensions.Select(extension =>
+        {
+            var normalized = extension.TrimStart('.');
+            var contentType = VsixContentTypes.TryGetValue(extension, out var known)
+                ? known
+                : "application/octet-stream";
+            return $"""<Default Extension="{SecurityElement.Escape(normalized)}" ContentType="{SecurityElement.Escape(contentType)}"/>""";
+        }));
+
+        return $$"""<?xml version="1.0" encoding="utf-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">{{defaults}}</Types>""";
     }
 
     private static void CopyDirectory(string source, string destination)
@@ -921,7 +1067,7 @@ public sealed class VSCodeManager(
             throw new InvalidOperationException("VS Code no pudo instalar la extension ms-vscode.cpptools.");
         }
 
-        await extensionManager.InstallLocalExtensionAsync(workspacePath, cancellationToken).ConfigureAwait(false);
+        await InstallLocalExtensionWithVSCodeAsync(paths.CodeCmd!, workspacePath, cancellationToken).ConfigureAwait(false);
         await ApplyWorkspaceSettingsAsync(workspacePath, cancellationToken).ConfigureAwait(false);
         await logManager.WriteAsync("info", "vscode", "VS Code preparado con C/C++, F9 y extension local.", cancellationToken)
             .ConfigureAwait(false);
@@ -935,7 +1081,7 @@ public sealed class VSCodeManager(
             throw new InvalidOperationException("VS Code esta instalado, pero code.cmd no se encontro para reinstalar la extension.");
         }
 
-        await extensionManager.InstallLocalExtensionAsync(workspacePath, cancellationToken).ConfigureAwait(false);
+        await InstallLocalExtensionWithVSCodeAsync(paths.CodeCmd!, workspacePath, cancellationToken).ConfigureAwait(false);
         await logManager.WriteAsync("info", "vscode-extension", "Extension local de VS Code reinstalada.", cancellationToken)
             .ConfigureAwait(false);
     }
@@ -981,6 +1127,52 @@ public sealed class VSCodeManager(
     }
 
     private VSCodePaths ResolveVSCode() => locateVSCode?.Invoke() ?? VSCodeLocator.Resolve();
+
+    private async Task InstallLocalExtensionWithVSCodeAsync(string codeCmd, string workspacePath, CancellationToken cancellationToken)
+    {
+        var extensionId = await extensionManager.GetExtensionIdAsync(workspacePath, cancellationToken).ConfigureAwait(false);
+        var vsixPath = await extensionManager.CreateVsixPackageAsync(workspacePath, cancellationToken).ConfigureAwait(false);
+        var install = await runner.RunAsync(VSCodeLocator.BuildCodeCmdCommand(
+            codeCmd,
+            ["--install-extension", vsixPath, "--force"],
+            workspacePath,
+            TimeSpan.FromMinutes(3)), cancellationToken).ConfigureAwait(false);
+
+        if (!install.Succeeded)
+        {
+            throw new InvalidOperationException($"VS Code no pudo instalar la extension local desde VSIX: {GetCommandError(install)}");
+        }
+
+        var listed = await runner.RunAsync(VSCodeLocator.BuildCodeCmdCommand(
+            codeCmd,
+            ["--list-extensions", "--show-versions"],
+            workspacePath,
+            TimeSpan.FromSeconds(45)), cancellationToken).ConfigureAwait(false);
+
+        if (!listed.Succeeded ||
+            !listed.StandardOutput.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Any(line => line.StartsWith(extensionId, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new InvalidOperationException($"VS Code ejecuto la instalacion, pero no reporta la extension {extensionId} instalada.");
+        }
+
+        var installedPath = extensionManager.FindInstalledExtensionPath(extensionId);
+        if (string.IsNullOrWhiteSpace(installedPath))
+        {
+            await extensionManager.InstallLocalExtensionAsync(workspacePath, cancellationToken).ConfigureAwait(false);
+        }
+
+        await logManager.WriteAsync("info", "vscode-extension", $"Extension local instalada por VS Code desde VSIX: {vsixPath}", cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    private static string GetCommandError(CommandResult result)
+    {
+        var combined = $"{result.StandardError}\n{result.StandardOutput}".Trim();
+        return string.IsNullOrWhiteSpace(combined)
+            ? $"codigo de salida {result.ExitCode}"
+            : combined;
+    }
 
     private async Task ApplyWorkspaceSettingsAsync(string workspacePath, CancellationToken cancellationToken)
     {
