@@ -627,6 +627,7 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
         }
 
         return Directory.EnumerateDirectories(extensionsRoot, $"{extensionId}-*", SearchOption.TopDirectoryOnly)
+            .Where(HasInstalledManifest)
             .OrderByDescending(path => path, StringComparer.OrdinalIgnoreCase)
             .FirstOrDefault();
     }
@@ -640,13 +641,45 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
 
         var installedRoot = Path.GetDirectoryName(destination)!;
         Directory.CreateDirectory(installedRoot);
-        foreach (var existing in Directory.EnumerateDirectories(installedRoot, $"{descriptor.Id}-*", SearchOption.TopDirectoryOnly))
+        var staging = Path.Combine(installedRoot, $"{descriptor.Id}-{descriptor.Version}.installing-{Guid.NewGuid():N}");
+        var backup = Path.Combine(installedRoot, $"{descriptor.Id}-{descriptor.Version}.backup-{Guid.NewGuid():N}");
+        CopyDirectory(descriptor.SourcePath, staging);
+        if (!HasInstalledManifest(staging))
+        {
+            throw new InvalidOperationException("La extension local de VS Code no genero package.json al copiarse al perfil.");
+        }
+
+        if (Directory.Exists(destination))
+        {
+            Directory.Move(destination, backup);
+        }
+
+        try
+        {
+            Directory.Move(staging, destination);
+        }
+        catch
+        {
+            if (Directory.Exists(backup) && !Directory.Exists(destination))
+            {
+                Directory.Move(backup, destination);
+            }
+
+            throw;
+        }
+
+        if (Directory.Exists(backup))
+        {
+            Directory.Delete(backup, recursive: true);
+        }
+
+        foreach (var existing in Directory.EnumerateDirectories(installedRoot, $"{descriptor.Id}-*", SearchOption.TopDirectoryOnly)
+                     .Where(path => !path.Equals(destination, StringComparison.OrdinalIgnoreCase)))
         {
             Directory.Delete(existing, recursive: true);
         }
 
-        CopyDirectory(descriptor.SourcePath, destination);
-        await logManager.WriteAsync("info", "vscode-extension", $"Extension local instalada en perfil VS Code: {descriptor.Id}", cancellationToken)
+        await logManager.WriteAsync("info", "vscode-extension", $"Extension local instalada en perfil VS Code: {descriptor.Id} -> {destination}", cancellationToken)
             .ConfigureAwait(false);
 
         var manifest = await new ManifestManager(paths).LoadAsync(cancellationToken).ConfigureAwait(false);
@@ -677,7 +710,9 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
         {
             var descriptor = await DescribeAsync(workspacePath, cancellationToken).ConfigureAwait(false);
             var installedPath = FindInstalledExtensionPath(descriptor.Id);
+            var installedManifestExists = HasInstalledManifest(installedPath);
             var ready = installedInVSCode &&
+                        installedManifestExists &&
                         descriptor.ActivityBarConfigured &&
                         descriptor.CommandsRegistered &&
                         descriptor.ExercisePanelConfigured &&
@@ -687,6 +722,10 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
             if (!installedInVSCode)
             {
                 issues.Add("VS Code no reporta la extension instalada.");
+            }
+            else if (!installedManifestExists)
+            {
+                issues.Add("La extension instalada no tiene package.json accesible; conviene reinstalarla.");
             }
 
             if (!descriptor.ActivityBarConfigured)
@@ -787,6 +826,12 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
     {
         var profileRoot = userProfileRoot ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         return Path.Combine(profileRoot, ".vscode", "extensions");
+    }
+
+    private static bool HasInstalledManifest(string? extensionPath)
+    {
+        return !string.IsNullOrWhiteSpace(extensionPath) &&
+               File.Exists(Path.Combine(extensionPath, "package.json"));
     }
 
     private static void CopyDirectory(string source, string destination)
@@ -921,7 +966,14 @@ public sealed class VSCodeManager(
     public async Task OpenExercisePanelAsync(string workspacePath, CancellationToken cancellationToken)
     {
         await OpenWorkspaceAsync(workspacePath, cancellationToken).ConfigureAwait(false);
-        await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+        var extensionId = await extensionManager.GetExtensionIdAsync(workspacePath, cancellationToken).ConfigureAwait(false);
+        var installedPath = extensionManager.FindInstalledExtensionPath(extensionId);
+        if (string.IsNullOrWhiteSpace(installedPath))
+        {
+            throw new InvalidOperationException("La extension local de VS Code no aparece instalada todavia. Reinstalala desde el configurador.");
+        }
+
+        await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken).ConfigureAwait(false);
         Process.Start(new ProcessStartInfo($"vscode://{ProductInfo.VSCodeExtensionId}/openPanel")
         {
             UseShellExecute = true

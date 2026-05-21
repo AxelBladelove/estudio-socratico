@@ -156,6 +156,58 @@ public sealed class VSCodeManagerTests
         Assert.True(Directory.Exists(Path.Combine(root, ".vscode", "extensions", "estudio-socratico.estudio-exercism-1.0.0")));
     }
 
+    [Fact]
+    public async Task VSCodeExtension_Diagnose_Fails_When_InstalledPackageJsonMissing()
+    {
+        var root = NewTemp();
+        var workspace = CreateWorkspaceWithExtension(root);
+        var codeExe = Path.Combine(root, "Code.exe");
+        var codeCmd = Path.Combine(root, "code.cmd");
+        File.WriteAllText(codeExe, "");
+        File.WriteAllText(codeCmd, "");
+        var brokenInstall = Path.Combine(root, ".vscode", "extensions", "estudio-socratico.estudio-exercism-1.0.0");
+        Directory.CreateDirectory(brokenInstall);
+        var paths = new AppPaths(repoRoot: workspace, localAppDataRoot: Path.Combine(root, "local"));
+        var logManager = new LogManager(paths);
+        var runner = new RecordingRunner(spec =>
+        {
+            if (spec.FileName.Equals("cmd.exe", StringComparison.OrdinalIgnoreCase) &&
+                (spec.ArgumentString?.Contains("--list-extensions", StringComparison.OrdinalIgnoreCase) == true))
+            {
+                return RecordingRunner.Result(spec, 0, "estudio-socratico.estudio-exercism@1.0.0");
+            }
+
+            return RecordingRunner.Result(spec, 0, "1.100.0");
+        });
+        var manager = new VSCodeManager(
+            runner,
+            new ExtensionManager(paths, logManager, userProfileRoot: root),
+            new ManifestManager(paths),
+            logManager,
+            () => new VSCodePaths(codeExe, codeCmd));
+
+        var state = await manager.DiagnoseExtensionAsync(workspace, CancellationToken.None);
+
+        Assert.Equal(ResourceStatus.Broken, state.Status);
+        Assert.True(state.InstalledInVSCode);
+        Assert.Contains("package.json", state.HumanDescription, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task OpenExercisePanel_Fails_When_LocalExtension_IsNotInstalled()
+    {
+        var root = NewTemp();
+        var workspace = CreateWorkspaceWithExtension(root);
+        var codeExe = Path.Combine(root, "Code.exe");
+        File.WriteAllText(codeExe, "");
+        var runner = new RecordingRunner(spec => RecordingRunner.Result(spec, 0, ""));
+        var manager = CreateManager(root, runner, () => new VSCodePaths(codeExe, null));
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => manager.OpenExercisePanelAsync(workspace, CancellationToken.None));
+
+        Assert.Contains("no aparece instalada", error.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static VSCodeManager CreateManager(string root, ICommandRunner runner, Func<VSCodePaths> locator)
     {
         var paths = new AppPaths(localAppDataRoot: Path.Combine(root, "local"));
