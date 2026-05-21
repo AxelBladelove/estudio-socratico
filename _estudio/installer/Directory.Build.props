@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <ProductVersion>2.0.1</ProductVersion>
+    <ProductVersion>2.0.3</ProductVersion>
     <CompanyName>Estudio Socratico</CompanyName>
     <Authors>Estudio Socratico</Authors>
     <Nullable>enable</Nullable>

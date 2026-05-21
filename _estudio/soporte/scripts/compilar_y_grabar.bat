@@ -54,8 +54,6 @@ if not defined INPUT_PATH (
 shift
 goto parse_args
 
-set "SCRIPT_DIR=%~dp0"
-for %%S in ("%SCRIPT_DIR%.") do set "SCRIPT_DIR=%%~fS\"
 :args_done
 if /i "%INSTALLER_SMOKE%"=="1" (
     set "NON_INTERACTIVE=1"
@@ -69,9 +67,6 @@ if not exist "%REPO_ROOT%\AGENTS.md" (
     pushd "%SCRIPT_DIR%..\..\.." >nul
     set "REPO_ROOT=%CD%"
     popd >nul
-)
-if exist "%REPO_ROOT%\_estudio\soporte\scripts\resolve_build_context.ps1" (
-    set "SCRIPT_DIR=%REPO_ROOT%\_estudio\soporte\scripts\"
 )
 
 if "%INPUT_PATH%"=="" (
@@ -336,7 +331,7 @@ if not defined GCC_EXE if exist "C:\msys64\clang64\bin\gcc.exe" set "GCC_EXE=C:\
 
 if not defined GCC_EXE (
     echo [ERROR] No se encontro gcc.exe en PATH ni en rutas comunes de MSYS2.
-    echo [TIP] Abre Estudio.Setup.cmd y usa Instalar o Reinstalar para dejar GCC listo, o agrega tu compilador al PATH de Windows.
+    echo [TIP] Instala GCC con _estudio\setup\instalar.cmd o agrega tu compilador al PATH de Windows.
     exit /b 1
 )
 

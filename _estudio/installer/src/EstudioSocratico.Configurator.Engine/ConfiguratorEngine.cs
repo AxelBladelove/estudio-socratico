@@ -55,7 +55,7 @@ public sealed class ConfiguratorEngine
         _vsCodeManager = new VSCodeManager(runner, extensionManager, _manifestManager, _logManager);
         _diagnosticsManager = new DiagnosticsManager(_detector, probe, _logManager);
         var security = new SecurityManager();
-        _uninstallManager = new UninstallManager(_paths, _manifestManager, _logManager, security);
+        _uninstallManager = new UninstallManager(_paths, _manifestManager, _logManager, security, runner);
         _repairManager = new RepairManager(_dependencyInstaller, _workspaceManager, _vsCodeManager, _gitHubAccountManager, _logManager);
         _reinstallManager = new ReinstallManager(_repairManager, _uninstallManager);
         _telemetryCompatibilityManager = new TelemetryCompatibilityManager(runner, _logManager);
@@ -67,6 +67,11 @@ public sealed class ConfiguratorEngine
     public ManifestManager Manifest => _manifestManager;
     public VSCodeManager VSCode => _vsCodeManager;
     public SetupPlanner Planner => _planner;
+
+    public Task<UninstallResult> PreviewUninstallAsync(
+        bool allowAggressiveCleanup = false,
+        CancellationToken cancellationToken = default) =>
+        _uninstallManager.PreviewAsync(allowAggressiveCleanup, cancellationToken);
 
     public async Task<IReadOnlyList<DependencyState>> ScanAsync(CancellationToken cancellationToken = default)
     {
@@ -112,6 +117,7 @@ public sealed class ConfiguratorEngine
         var errors = new List<InstallerError>();
         var states = new List<DependencyState>();
         var workspace = request.WorkspacePath;
+        UninstallResult? uninstallReport = null;
 
         await _logManager.StartRunAsync(cancellationToken).ConfigureAwait(false);
 
@@ -151,7 +157,11 @@ public sealed class ConfiguratorEngine
                         Status = DependencyStatus.Installing
                     }, cancellationToken)
                         .ConfigureAwait(false);
-                    var cleanup = await _uninstallManager.UninstallAsync(request.AllowAggressiveCleanup, cancellationToken).ConfigureAwait(false);
+                    var cleanup = await _uninstallManager.UninstallAsync(
+                        request.AllowAggressiveCleanup,
+                        request.UninstallDryRun,
+                        cancellationToken).ConfigureAwait(false);
+                    uninstallReport = cleanup;
                     await progress.ReportAsync(new ProgressEvent
                     {
                         StepId = "uninstall",
@@ -160,6 +170,10 @@ public sealed class ConfiguratorEngine
                         Percent = 100,
                         Status = DependencyStatus.Ready
                     }, cancellationToken).ConfigureAwait(false);
+                    break;
+
+                case SetupMode.Update:
+                    workspace = await UpdateAsync(request, progress, states, cancellationToken).ConfigureAwait(false);
                     break;
 
                 case SetupMode.Reinstall:
@@ -183,7 +197,7 @@ public sealed class ConfiguratorEngine
             await _logManager.WriteErrorAsync(error, cancellationToken).ConfigureAwait(false);
         }
 
-        if (request.Mode is SetupMode.Install or SetupMode.Repair or SetupMode.Reinstall)
+        if (request.Mode is SetupMode.Install or SetupMode.Update or SetupMode.Repair or SetupMode.Reinstall)
         {
             await PersistBuildFlowValidationAsync(workspace, errors.Count == 0, cancellationToken).ConfigureAwait(false);
         }
@@ -212,7 +226,8 @@ public sealed class ConfiguratorEngine
             WorkspacePath = workspace,
             LogPath = _logManager.InstallerLogPath,
             DiagnosticsPath = _logManager.DiagnosticsPath,
-            CurrentState = currentState
+            CurrentState = currentState,
+            UninstallReport = uninstallReport
         };
     }
 
@@ -242,14 +257,6 @@ public sealed class ConfiguratorEngine
     public async Task<AccountState> ConfigureExercismAsync(string token, string? workspacePath, CancellationToken cancellationToken = default)
     {
         var workspace = await ResolveKnownWorkspaceAsync(workspacePath, cancellationToken).ConfigureAwait(false);
-        if (!File.Exists(Path.Combine(workspace, "AGENTS.md")))
-        {
-            var stagingWorkspace = Path.Combine(_paths.LocalAppDataRoot, "Diagnostics", "preconfigured-exercism");
-            await _logManager.WriteAsync("info", "exercism", $"Workspace real aun no existe; usando staging local en {stagingWorkspace}.", cancellationToken)
-                .ConfigureAwait(false);
-            return await _exercismManager.ConfigureTokenAsync(token, stagingWorkspace, cancellationToken).ConfigureAwait(false);
-        }
-
         return await _exercismManager.ConfigureTokenAsync(token, workspace, cancellationToken).ConfigureAwait(false);
     }
 
@@ -458,6 +465,75 @@ public sealed class ConfiguratorEngine
         return workspace;
     }
 
+    private async Task<string> UpdateAsync(
+        SetupRequest request,
+        IProgressSink progress,
+        List<DependencyState> states,
+        CancellationToken cancellationToken)
+    {
+        var workspace = await ResolveWorkspaceAsync(request, cancellationToken).ConfigureAwait(false);
+        var requirements = DependencyDetector.Requirements.Where(x => x.Required).ToArray();
+        for (var i = 0; i < requirements.Length; i++)
+        {
+            var requirement = requirements[i];
+            await progress.ReportAsync(new ProgressEvent
+            {
+                StepId = $"update-{requirement.Id}",
+                Title = $"Actualizar {requirement.DisplayName}",
+                Message = "Instalando faltantes, actualizando obsoletos y reparando errores conocidos.",
+                Percent = 15 + (i * 45.0 / requirements.Length),
+                Dependency = requirement.Id,
+                Status = DependencyStatus.Installing
+            }, cancellationToken).ConfigureAwait(false);
+
+            states.Add(await _dependencyInstaller.EnsureAsync(requirement, cancellationToken).ConfigureAwait(false));
+        }
+
+        var alias = await ResolveAliasAsync(request, cancellationToken).ConfigureAwait(false);
+        await progress.ReportAsync(new ProgressEvent
+        {
+            StepId = "update-workspace",
+            Title = "Workspace",
+            Message = "Migrando configuracion sin tocar ejercicios, usuario, logs ni API keys.",
+            Percent = 68,
+            Status = DependencyStatus.Installing
+        }, cancellationToken).ConfigureAwait(false);
+        workspace = await _workspaceManager.PrepareAsync(workspace, alias, cancellationToken).ConfigureAwait(false);
+
+        await progress.ReportAsync(new ProgressEvent
+        {
+            StepId = "update-vscode",
+            Title = "VS Code",
+            Message = "Actualizando extension local y settings del workspace.",
+            Percent = 78,
+            Status = DependencyStatus.Installing
+        }, cancellationToken).ConfigureAwait(false);
+        await _vsCodeManager.PrepareAsync(workspace, cancellationToken).ConfigureAwait(false);
+
+        await RevalidateExercismAsync(request, workspace, progress, 86, "update-exercism", cancellationToken).ConfigureAwait(false);
+
+        await progress.ReportAsync(new ProgressEvent
+        {
+            StepId = "update-smoke",
+            Title = "Validacion F9",
+            Message = "Revalidando F9 despues de actualizar.",
+            Percent = 94,
+            Status = DependencyStatus.Installing
+        }, cancellationToken).ConfigureAwait(false);
+        _gistImporterManager.ValidateGistCatalogs(workspace);
+        await _telemetryCompatibilityManager.ValidateBuildFlowAsync(workspace, cancellationToken).ConfigureAwait(false);
+
+        await progress.ReportAsync(new ProgressEvent
+        {
+            StepId = "update-complete",
+            Title = "Actualizacion",
+            Message = "Actualizacion completada conservando el trabajo del estudiante.",
+            Percent = 100,
+            Status = DependencyStatus.Ready
+        }, cancellationToken).ConfigureAwait(false);
+        return workspace;
+    }
+
     private async Task<string> ReinstallAsync(
         SetupRequest request,
         IProgressSink progress,
@@ -473,7 +549,7 @@ public sealed class ConfiguratorEngine
             Status = DependencyStatus.Installing
         }, cancellationToken).ConfigureAwait(false);
 
-        await _uninstallManager.UninstallAsync(allowAggressiveCleanup: false, cancellationToken).ConfigureAwait(false);
+        await _uninstallManager.UninstallAsync(allowAggressiveCleanup: false, dryRun: false, cancellationToken).ConfigureAwait(false);
 
         await progress.ReportAsync(new ProgressEvent
         {
@@ -483,6 +559,26 @@ public sealed class ConfiguratorEngine
             Percent = 35,
             Status = DependencyStatus.Installing
         }, cancellationToken).ConfigureAwait(false);
+
+        var requirements = DependencyDetector.Requirements.Where(x => x.Required).ToArray();
+        var manifest = await _manifestManager.LoadAsync(cancellationToken).ConfigureAwait(false);
+        for (var i = 0; i < requirements.Length; i++)
+        {
+            var requirement = requirements[i];
+            var force = manifest.Dependencies.TryGetValue(requirement.Id, out var entry) && entry.InstalledByEstudio;
+            await progress.ReportAsync(new ProgressEvent
+            {
+                StepId = $"reinstall-{requirement.Id}",
+                Title = requirement.DisplayName,
+                Message = force
+                    ? "Reinstalando componente gestionado por el configurador."
+                    : "Reparando si falta, esta roto o esta desactualizado.",
+                Percent = 35 + (i * 34.0 / requirements.Length),
+                Dependency = requirement.Id,
+                Status = DependencyStatus.Installing
+            }, cancellationToken).ConfigureAwait(false);
+            await _dependencyInstaller.EnsureAsync(requirement, force, cancellationToken).ConfigureAwait(false);
+        }
 
         await _repairManager.RepairAsync(workspace, await ResolveAliasAsync(request, cancellationToken).ConfigureAwait(false), request.SkipGitHubLogin, cancellationToken)
             .ConfigureAwait(false);

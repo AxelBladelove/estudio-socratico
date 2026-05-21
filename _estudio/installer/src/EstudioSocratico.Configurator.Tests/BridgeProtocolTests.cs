@@ -106,6 +106,46 @@ public class BridgeProtocolTests
     }
 
     [Fact]
+    public void ApplyWorkflow_Accepts_Update_Mode()
+    {
+        const string json = """
+        {
+          "id": "req-update",
+          "type": "ApplyWorkflow",
+          "payload": {
+            "mode": "actualizar"
+          }
+        }
+        """;
+
+        var request = BridgeProtocol.ParseRequest(json);
+        var setupRequest = BridgePayload.ToSetupRequest(request);
+
+        Assert.Equal(SetupMode.Update, setupRequest.Mode);
+    }
+
+    [Fact]
+    public void Uninstall_Defaults_To_Real_Apply_Not_DryRun()
+    {
+        const string json = """
+        {
+          "id": "req-uninstall",
+          "type": "UninstallManaged",
+          "payload": {
+            "mode": "uninstall",
+            "dryRun": false
+          }
+        }
+        """;
+
+        var request = BridgeProtocol.ParseRequest(json);
+        var setupRequest = BridgePayload.ToSetupRequest(request, SetupMode.Uninstall);
+
+        Assert.Equal(SetupMode.Uninstall, setupRequest.Mode);
+        Assert.False(setupRequest.UninstallDryRun);
+    }
+
+    [Fact]
     public void ApplyWorkflow_ReceivesLocalAlias()
     {
         const string json = """

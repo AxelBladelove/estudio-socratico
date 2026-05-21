@@ -131,6 +131,11 @@ public sealed class WebViewBridge : IProgressSink
             case BridgeAction.ReinstallManaged:
                 return await RunWorkflowAsync(request, SetupMode.Reinstall).ConfigureAwait(false);
 
+            case BridgeAction.PreviewUninstall:
+                return await _engine.PreviewUninstallAsync(
+                    BridgePayload.GetBool(request, "allowAggressiveCleanup", defaultValue: false),
+                    CancellationToken.None).ConfigureAwait(false);
+
             case BridgeAction.UninstallManaged:
                 return await RunWorkflowAsync(request, SetupMode.Uninstall).ConfigureAwait(false);
 

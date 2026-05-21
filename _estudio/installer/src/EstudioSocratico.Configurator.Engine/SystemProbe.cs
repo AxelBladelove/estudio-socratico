@@ -1,4 +1,5 @@
 using System.Security.Principal;
+using System.Runtime.InteropServices;
 using EstudioSocratico.Configurator.Core;
 
 namespace EstudioSocratico.Configurator.Engine;
@@ -19,11 +20,25 @@ public sealed class SystemProbe(AppPaths paths)
 
     public Dictionary<string, string> SnapshotEnvironment()
     {
+        var osArch = RuntimeInformation.OSArchitecture.ToString();
+        var processArch = RuntimeInformation.ProcessArchitecture.ToString();
+        var isArm64 = RuntimeInformation.OSArchitecture == Architecture.Arm64;
+        var isEmulated = isArm64 && RuntimeInformation.ProcessArchitecture == Architecture.X64;
+        var vmHint = DetectVirtualizationHint();
         return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["os"] = Environment.OSVersion.VersionString,
             ["machineName"] = Environment.MachineName,
             ["user"] = Environment.UserName,
+            ["osArchitecture"] = osArch,
+            ["processArchitecture"] = processArch,
+            ["environmentKind"] = isArm64
+                ? isEmulated ? "Windows ARM64 en emulacion x64" : "Windows ARM64"
+                : RuntimeInformation.OSArchitecture == Architecture.X64 ? "Windows x64" : $"Windows {osArch}",
+            ["virtualizationHint"] = vmHint,
+            ["arm64EmulationWarning"] = isEmulated
+                ? "Proceso x64 sobre Windows ARM64; si una herramienta cae por emulacion, revisar instalador ARM64 nativo."
+                : "",
             ["is64BitOs"] = Environment.Is64BitOperatingSystem.ToString(),
             ["isElevated"] = IsRunningElevated().ToString(),
             ["localAppData"] = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -31,6 +46,24 @@ public sealed class SystemProbe(AppPaths paths)
             ["repoRoot"] = paths.RepoRoot ?? "",
             ["path"] = Environment.GetEnvironmentVariable("PATH") ?? ""
         };
+    }
+
+    private static string DetectVirtualizationHint()
+    {
+        var text = $"{Environment.MachineName} {RuntimeInformation.OSDescription}";
+        if (text.Contains("Parallels", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Parallels/VM";
+        }
+
+        var manufacturer = Environment.GetEnvironmentVariable("PROCESSOR_IDENTIFIER") ?? "";
+        if (manufacturer.Contains("Virtual", StringComparison.OrdinalIgnoreCase) ||
+            manufacturer.Contains("VMware", StringComparison.OrdinalIgnoreCase))
+        {
+            return "VM";
+        }
+
+        return "";
     }
 }
 

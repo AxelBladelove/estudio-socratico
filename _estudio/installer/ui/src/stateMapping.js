@@ -1,5 +1,6 @@
 export const WORKFLOW_TO_MODE = {
   setup: "Install",
+  update: "Update",
   repair: "Repair",
   reinstall: "Reinstall",
   accounts: "Diagnostics",

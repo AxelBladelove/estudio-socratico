@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Runtime.InteropServices;
 using EstudioSocratico.Configurator.Core;
 
 namespace EstudioSocratico.Configurator.Engine;
@@ -107,14 +108,18 @@ public sealed class OfficialInstallerFallback(LogManager logManager)
                 dependency,
                 "exercism",
                 "cli",
-                @"exercism-.*-windows-x86_64\.zip$",
+                RuntimeInformation.OSArchitecture == Architecture.Arm64
+                    ? @"exercism-.*-windows-arm64\.zip$"
+                    : @"exercism-.*-windows-x86_64\.zip$",
                 [],
                 requiresElevation: false,
                 cancellationToken).ConfigureAwait(false),
             DependencyId.VSCode => new OfficialInstallerSource
             {
                 Dependency = dependency,
-                Uri = new Uri("https://update.code.visualstudio.com/latest/win32-x64-user/stable"),
+                Uri = new Uri(RuntimeInformation.OSArchitecture == Architecture.Arm64
+                    ? "https://update.code.visualstudio.com/latest/win32-arm64-user/stable"
+                    : "https://update.code.visualstudio.com/latest/win32-x64-user/stable"),
                 SilentArguments = ["/VERYSILENT", "/MERGETASKS=!runcode,addcontextmenufiles,addcontextmenufolders,associatewithfiles,addtopath"],
                 RequiresElevation = false,
                 SourceName = "visualstudio.com"
@@ -149,7 +154,7 @@ public sealed class OfficialInstallerFallback(LogManager logManager)
         {
             Dependency = DependencyId.NodeJs,
             Version = version,
-            Uri = new Uri($"https://nodejs.org/dist/{version}/node-{version}-x64.msi"),
+            Uri = new Uri($"https://nodejs.org/dist/{version}/node-{version}-{(RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "arm64" : "x64")}.msi"),
             SilentArguments = ["/qn", "/norestart"],
             RequiresElevation = true,
             SourceName = "nodejs.org"
@@ -176,10 +181,12 @@ public sealed class OfficialInstallerFallback(LogManager logManager)
             ? new Uri(href)
             : new Uri(new Uri("https://www.python.org"), href);
         var page = await _http.GetStringAsync(releaseUri, cancellationToken).ConfigureAwait(false);
-        var assetMatch = Regex.Match(page, "href=\"(?<href>[^\"]*python-[^\"]*-amd64\\.exe)\"[^>]*>Windows installer \\(64-bit\\)", RegexOptions.IgnoreCase);
+        var pythonArch = RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "arm64" : "amd64";
+        var label = RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "ARM64" : "64-bit";
+        var assetMatch = Regex.Match(page, $"href=\"(?<href>[^\"]*python-[^\"]*-{pythonArch}\\.exe)\"[^>]*>Windows installer \\({label}\\)", RegexOptions.IgnoreCase);
         if (!assetMatch.Success)
         {
-            throw new InvalidOperationException("No se encontro el instalador oficial x64 de Python.");
+            throw new InvalidOperationException($"No se encontro el instalador oficial {label} de Python.");
         }
 
         var assetHref = assetMatch.Groups["href"].Value;

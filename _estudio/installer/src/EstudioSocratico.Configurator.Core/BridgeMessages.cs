@@ -30,6 +30,7 @@ public enum BridgeAction
     ExportDiagnostics,
     RunSmokeTest,
     GetCurrentState,
+    PreviewUninstall,
     ReinstallManaged,
     UninstallManaged
 }
@@ -237,6 +238,7 @@ public static class BridgePayload
             LocalAlias = GetString(request, "localAlias", "alias"),
             ExercismToken = GetString(request, "exercismToken", "token"),
             AllowAggressiveCleanup = GetBool(request, "allowAggressiveCleanup", defaultValue: false),
+            UninstallDryRun = GetBool(request, "dryRun", defaultValue: false),
             SkipGitHubLogin = GetBool(request, "skipGitHubLogin", defaultValue: false),
             SkipExercism = GetBool(request, "skipExercism", defaultValue: false)
         };
@@ -257,6 +259,7 @@ public static class BridgePayload
         return value.Trim().ToLowerInvariant() switch
         {
             "setup" or "install" => SetupMode.Install,
+            "update" or "actualizar" => SetupMode.Update,
             "repair" => SetupMode.Repair,
             "reinstall" => SetupMode.Reinstall,
             "uninstall" => SetupMode.Uninstall,

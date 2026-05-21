@@ -35,6 +35,7 @@ const SCREEN_ORDER = ["welcome", "workflow", "scan", "components", "accounts", "
 
 const WORKFLOWS = [
   { id: "setup", title: "Configurar por primera vez", subtitle: "Deja el entorno completo listo para estudiar C.", badge: "Recomendado", icon: "spark" },
+  { id: "update", title: "Actualizar instalación", subtitle: "Migra, actualiza extensión y repara faltantes sin tocar tu trabajo.", badge: "Nuevo", icon: "refresh" },
   { id: "repair", title: "Reparar instalación", subtitle: "Corrige herramientas, cuentas o la compilación con F9.", badge: "Seguro", icon: "repair" },
   { id: "reinstall", title: "Reinstalar entorno", subtitle: "Reconstruye herramientas sin borrar ejercicios ni logs.", badge: "Avanzado", icon: "refresh" },
   { id: "accounts", title: "Cuentas y ejercicios", subtitle: "Cambia GitHub o vuelve a conectar Exercism.", badge: "Rápido", icon: "account" },
@@ -49,6 +50,13 @@ const COMPONENTS_BY_WORKFLOW = {
     { id: "github", title: "GitHub", detail: "Cuenta, fork y remotos del workspace", type: "account" },
     { id: "exercism", title: "Exercism", detail: "CLI, token y track de C", type: "account" },
     { id: "workspace", title: "Workspace", detail: "Ejercicios, README, logs y prueba F9", type: "required" },
+  ],
+  update: [
+    { id: "manifest", title: "Leer instalación actual", detail: "Detectar versión, manifest y componentes gestionados", type: "required" },
+    { id: "tools", title: "Actualizar y reparar", detail: "Instalar faltantes, obsoletos o rotos", type: "required" },
+    { id: "editor", title: "Actualizar extensión", detail: "VS Code, panel Exercism y settings del workspace", type: "required" },
+    { id: "keep-data", title: "Conservar trabajo", detail: "Ejercicios, usuario, logs y API keys locales", type: "safety" },
+    { id: "verify", title: "Revalidar entorno", detail: "Workspace, cuentas, Exercism y F9", type: "required" },
   ],
   repair: [
     { id: "tools", title: "Reparar herramientas", detail: "Dependencias faltantes, rotas o desactualizadas", type: "required" },
@@ -107,18 +115,18 @@ const Icons = {
 
 function workflowIcon(id) {
   if (id === "repair") return Icons.Repair;
-  if (id === "reinstall") return Icons.Refresh;
+  if (id === "reinstall" || id === "update") return Icons.Refresh;
   if (id === "accounts") return Icons.Account;
   if (id === "uninstall") return Icons.Trash;
   return Icons.Spark;
 }
 
 function workflowNeedsGithub(workflow) {
-  return ["setup", "repair", "reinstall", "accounts"].includes(workflow);
+  return ["setup", "update", "repair", "reinstall", "accounts"].includes(workflow);
 }
 
 function workflowNeedsExercism(workflow) {
-  return ["setup", "repair", "reinstall", "accounts"].includes(workflow);
+  return ["setup", "update", "repair", "reinstall", "accounts"].includes(workflow);
 }
 
 function bridgeEventName(type) {
@@ -226,7 +234,7 @@ function ComponentsScreen({ selectedWorkflow, onNext }) {
   const components = COMPONENTS_BY_WORKFLOW[selectedWorkflow] || [];
   const workflow = WORKFLOWS.find(w => w.id === selectedWorkflow);
   return <SetupPanel wide>
-    <HeaderBlock eyebrow="Preparación" title={selectedWorkflow === "uninstall" ? "Esto se limpiará" : "Esto quedará preparado"} text={`${workflow?.title || "Flujo seleccionado"}. Estos pasos son parte del funcionamiento esperado de Estudio Socrático.`} />
+    <HeaderBlock eyebrow="Preparación" title={selectedWorkflow === "uninstall" ? "Desinstalar Estudio Socrático" : "Esto quedará preparado"} text={selectedWorkflow === "uninstall" ? "Se quitarán herramientas y configuración gestionadas por el instalador. Tu trabajo de estudiante se conservará." : `${workflow?.title || "Flujo seleccionado"}. Estos pasos son parte del funcionamiento esperado de Estudio Socrático.`} />
     <div className="components-list">{components.map(c => <ComponentRow key={c.id} component={c} />)}</div>
     <div className="center-actions"><Button onClick={onNext}>Continuar</Button></div>
   </SetupPanel>;
@@ -239,6 +247,31 @@ function ComponentRow({ component }) {
     <div className={`status-badge ${cls}`}><Icons.Check className="h-4 w-4" /></div>
     <div className="component-text"><p>{component.title}</p><span>{component.detail}</span></div>
     <span className={`status-badge ${cls}`}>{label}</span>
+  </div>;
+}
+
+function UninstallPreview({ report }) {
+  if (!report) return null;
+
+  const itemGroups = [
+    { title: "Esto se eliminaría", items: report.wouldRemovePaths || report.removedPaths || [], empty: "No hay rutas gestionadas listas para eliminar." },
+    { title: "Esto se conservará", items: report.keptPaths || [], empty: "No se detectaron rutas protegidas." },
+    { title: "Esto no se tocará porque no es seguro", items: report.skippedPaths || [], empty: "No hay rutas inseguras o ambiguas." },
+  ];
+
+  return <div className="uninstall-preview">
+    <div className="preview-head">
+      <span className="status-badge status-action">{report.dryRun ? "Dry-run" : "Aplicado"}</span>
+      <span>{report.message || "Reporte de limpieza generado."}</span>
+    </div>
+    <div className="preview-grid">
+      {itemGroups.map(group => <div className="preview-column" key={group.title}>
+        <h3>{group.title}</h3>
+        {group.items.length > 0
+          ? <ul>{group.items.slice(0, 8).map(item => <li key={`${group.title}-${item}`}>{item}</li>)}</ul>
+          : <p>{group.empty}</p>}
+      </div>)}
+    </div>
   </div>;
 }
 
@@ -436,12 +469,14 @@ function ExecuteScreen({
 }) {
   const resultIssues = finished ? finalIssues(selectedWorkflow, lastSummary, snapshot) : [];
   const resultDetails = finished ? finalReadiness(lastSummary, snapshot) : null;
+  const uninstallReport = selectedWorkflow === "uninstall" ? lastSummary?.uninstallReport || lastSummary : null;
   return <SetupPanel>
-    <HeaderBlock eyebrow={finished ? "Resultado" : "Aplicación"} title={finished ? finalTitle(selectedWorkflow, ready, lastSummary, snapshot) : selectedWorkflow === "uninstall" ? "Listo para limpiar" : "Listo para configurar"} text={finished ? finalText(selectedWorkflow, ready, lastSummary, snapshot) : selectedWorkflow === "uninstall" ? "Se conservará el trabajo del estudiante por defecto." : "El configurador instalará y reparará lo necesario según el flujo seleccionado."} />
+    <HeaderBlock eyebrow={finished ? "Resultado" : "Aplicación"} title={finished ? finalTitle(selectedWorkflow, ready, lastSummary, snapshot) : selectedWorkflow === "uninstall" ? "Desinstalar Estudio Socrático" : "Listo para configurar"} text={finished ? finalText(selectedWorkflow, ready, lastSummary, snapshot) : selectedWorkflow === "uninstall" ? "Se quitarán herramientas y configuración gestionadas por el instalador. Tu trabajo de estudiante se conservará salvo una opción peligrosa explícita futura." : "El configurador instalará y reparará lo necesario según el flujo seleccionado."} />
     <div className="progress-section">
       <div className="progress-meta"><span>{running ? currentStep : finished ? "Proceso terminado" : "Esperando confirmación"}</span><span>{progress}%</span></div>
       <div className="progress-track"><div className={`progress-fill ${running ? "progress-sweep" : ""}`} style={{ width: `${progress}%` }} /></div>
     </div>
+    {finished && selectedWorkflow === "uninstall" ? <UninstallPreview report={uninstallReport} /> : null}
     {finished && selectedWorkflow !== "uninstall" ? <div className="result-card">
       {ready && resultDetails
         ? <div className="result-summary">
@@ -452,7 +487,7 @@ function ExecuteScreen({
         : <ul className="result-list">{resultIssues.map(issue => <li key={issue}>{issue}</li>)}</ul>}
     </div> : null}
     <div className="execute-actions">
-      {!running && !finished ? <Button onClick={onStart}>{selectedWorkflow === "uninstall" ? "Iniciar limpieza" : "Aplicar configuración"}</Button> : null}
+      {!running && !finished ? <Button variant={selectedWorkflow === "uninstall" ? "danger" : "primary"} onClick={onStart}>{selectedWorkflow === "uninstall" ? "Desinstalar" : "Aplicar configuración"}</Button> : null}
       {running ? <Button disabled icon={false}><Icons.Loader className="h-4 w-4" /> Trabajando...</Button> : null}
       {running ? <Button variant="secondary" icon={false} onClick={onCancel}>Cancelar</Button> : null}
       {finished ? <Button onClick={onFinish}>{ready && selectedWorkflow !== "uninstall" ? "Abrir VS Code" : "Abrir logs"}</Button> : null}
@@ -761,6 +796,16 @@ export default function App() {
         setExercismToken("");
       }
 
+      if (workflow === "uninstall") {
+        const confirmed = window.confirm("Desinstalar Estudio Socrático quitará herramientas y configuración gestionadas por el instalador. Ejercicios, usuario, logs y API keys locales se conservarán. ¿Continuar?");
+        if (!confirmed) {
+          setRunning(false);
+          setCurrentStep("Cancelado");
+          addLog("Desinstalación cancelada por el usuario.");
+          return;
+        }
+      }
+
       const action =
         workflow === "reinstall" ? BackendAction.ReinstallManaged :
         workflow === "uninstall" ? BackendAction.UninstallManaged :
@@ -773,16 +818,24 @@ export default function App() {
         localAlias: localAlias.trim() || undefined,
         workspacePath: effectiveWorkspacePath,
         allowAggressiveCleanup: false,
+        dryRun: workflow === "uninstall" ? false : undefined,
       };
 
       const result = await requestBackend(action, payload);
-      setLastSummary(result);
+      const normalizedResult = workflow === "uninstall" && !result.uninstallReport
+        ? { succeeded: true, globalMessage: result.message, uninstallReport: result }
+        : result;
+      setLastSummary(normalizedResult);
       setFinished(true);
       setRunning(false);
       setProgress(100);
-      setCurrentStep(result.globalMessage || "Proceso terminado");
+      setCurrentStep(normalizedResult.globalMessage || "Proceso terminado");
       addLog(`Backend finalizó ${action}.`);
       await refreshState("Revisión final");
+      if (workflow !== "uninstall" && normalizedResult.succeeded) {
+        await requestBackend(BackendAction.OpenVSCode, { workspacePath: effectiveWorkspacePath });
+        addLog("VS Code abierto al finalizar.");
+      }
     } catch (error) {
       setRunning(false);
       setFinished(true);

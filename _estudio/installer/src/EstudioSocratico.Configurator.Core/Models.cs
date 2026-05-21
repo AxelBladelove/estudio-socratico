@@ -6,6 +6,7 @@ namespace EstudioSocratico.Configurator.Core;
 public enum SetupMode
 {
     Install,
+    Update,
     Repair,
     Reinstall,
     Uninstall,
@@ -171,8 +172,30 @@ public sealed record SetupRequest
     public string? ExercismToken { get; init; }
     public InstallScope Scope { get; init; } = InstallScope.User;
     public bool AllowAggressiveCleanup { get; init; }
+    public bool UninstallDryRun { get; init; } = true;
     public bool SkipGitHubLogin { get; init; }
     public bool SkipExercism { get; init; }
+}
+
+public sealed record UninstallReportItem
+{
+    public string Path { get; init; } = "";
+    public string Action { get; init; } = "";
+    public string Reason { get; init; } = "";
+    public bool Exists { get; init; }
+}
+
+public sealed record UninstallResult
+{
+    public bool DryRun { get; init; }
+    public bool ManifestFound { get; init; }
+    public IReadOnlyList<string> WouldRemovePaths { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> RemovedPaths { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> KeptPaths { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> SkippedPaths { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<UninstallReportItem> Items { get; init; } = Array.Empty<UninstallReportItem>();
+    public bool WorkspaceRemoved { get; init; }
+    public string Message { get; init; } = "";
 }
 
 public sealed record SetupSummary
@@ -188,6 +211,7 @@ public sealed record SetupSummary
     public string? DiagnosticsPath { get; init; }
     public SetupPlan? Plan { get; init; }
     public UIStateSnapshot? CurrentState { get; init; }
+    public UninstallResult? UninstallReport { get; init; }
 }
 
 public sealed record FinalReadinessCheck

@@ -18,6 +18,7 @@ switch (command)
         return 0;
 
     case "install":
+    case "update":
     case "repair":
     case "reinstall":
     case "uninstall":
@@ -25,6 +26,7 @@ switch (command)
         {
             Mode = command switch
             {
+                "update" => SetupMode.Update,
                 "repair" => SetupMode.Repair,
                 "reinstall" => SetupMode.Reinstall,
                 "uninstall" => SetupMode.Uninstall,
@@ -35,7 +37,8 @@ switch (command)
             ExercismToken = GetOption(args, "--exercism-token"),
             SkipExercism = args.Contains("--skip-exercism"),
             SkipGitHubLogin = args.Contains("--skip-github"),
-            AllowAggressiveCleanup = args.Contains("--aggressive")
+            AllowAggressiveCleanup = args.Contains("--aggressive"),
+            UninstallDryRun = command == "uninstall" && args.Contains("--dry-run")
         };
         var summary = await engine.RunAsync(request);
         Console.WriteLine(JsonSerializer.Serialize(summary, JsonDefaults.Options));
@@ -49,9 +52,12 @@ switch (command)
           scan
           diagnose
           install [--workspace path] [--alias slug] [--exercism-token token] [--skip-github] [--skip-exercism]
+          update [--workspace path] [--alias slug] [--exercism-token token] [--skip-github] [--skip-exercism]
           repair [--workspace path] [--alias slug] [--skip-github] [--skip-exercism]
           reinstall [--workspace path] [--alias slug] [--skip-github] [--skip-exercism]
-          uninstall [--aggressive]
+          uninstall [--aggressive] [--dry-run]
+
+        uninstall aplica la limpieza real de elementos gestionados. Usa --dry-run para solo previsualizar.
         """);
         return 0;
 }

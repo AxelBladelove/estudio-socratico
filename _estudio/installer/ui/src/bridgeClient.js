@@ -67,6 +67,7 @@ export const BackendAction = {
   OpenLogs: "OpenLogs",
   ExportDiagnostics: "ExportDiagnostics",
   RunSmokeTest: "RunSmokeTest",
+  PreviewUninstall: "PreviewUninstall",
   ReinstallManaged: "ReinstallManaged",
   UninstallManaged: "UninstallManaged",
 };

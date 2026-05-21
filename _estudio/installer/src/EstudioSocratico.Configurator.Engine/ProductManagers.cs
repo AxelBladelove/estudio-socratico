@@ -10,21 +10,6 @@ namespace EstudioSocratico.Configurator.Engine;
 public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager manifestManager, LogManager logManager)
 {
     private const string Host = "github.com";
-    private static readonly HashSet<string> BootstrapWorkspaceEntries = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ".estudio_usuario",
-        ".gitignore",
-        "usuario",
-        "logs"
-    };
-
-    private static readonly HashSet<string> BootstrapUserEntries = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "config",
-        "errores.md",
-        "exercism",
-        "logs"
-    };
 
     public async Task<AccountState> EnsureLoginAsync(bool switchAccount, CancellationToken cancellationToken)
     {
@@ -145,14 +130,19 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
         }
 
         await GitAsync(repoRoot, ["config", "--local", "github.user", githubUser], cancellationToken).ConfigureAwait(false);
+        await GitAsync(repoRoot, ["config", "--local", "estudio.baseRepo", baseRepo], cancellationToken).ConfigureAwait(false);
+        await GitAsync(repoRoot, ["config", "--local", "estudio.workspaceRepo", workspaceRepo], cancellationToken).ConfigureAwait(false);
+        await GitAsync(repoRoot, ["config", "--local", "estudio.localAlias", localAlias], cancellationToken).ConfigureAwait(false);
         await GitAsync(repoRoot, ["config", "--local", "user.name", localAlias], cancellationToken).ConfigureAwait(false);
         await GitAsync(repoRoot, ["config", "--local", "user.email", $"{githubUser}@users.noreply.github.com"], cancellationToken).ConfigureAwait(false);
-        await GitAsync(repoRoot, ["remote", "remove", "origin"], cancellationToken, allowFail: true).ConfigureAwait(false);
-        await GitAsync(repoRoot, ["remote", "add", "origin", $"https://github.com/{workspaceRepo}.git"], cancellationToken).ConfigureAwait(false);
-        await GitAsync(repoRoot, ["remote", "remove", "upstream"], cancellationToken, allowFail: true).ConfigureAwait(false);
+        await EnsureRemoteAsync(repoRoot, "origin", $"https://github.com/{workspaceRepo}.git", cancellationToken).ConfigureAwait(false);
         if (!ownsUpstream)
         {
-            await GitAsync(repoRoot, ["remote", "add", "upstream", $"https://github.com/{baseRepo}.git"], cancellationToken).ConfigureAwait(false);
+            await EnsureRemoteAsync(repoRoot, "upstream", $"https://github.com/{baseRepo}.git", cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            await GitAsync(repoRoot, ["remote", "remove", "upstream"], cancellationToken, allowFail: true).ConfigureAwait(false);
         }
 
         await logManager.WriteAsync("info", "github", $"Repositorio base {baseRepo}; workspace repo {workspaceRepo}.", cancellationToken)
@@ -177,33 +167,10 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
 
         if (Directory.Exists(targetPath) && Directory.EnumerateFileSystemEntries(targetPath).Any())
         {
-            if (LooksLikeBootstrapWorkspace(targetPath))
-            {
-                await logManager.WriteAsync("info", "workspace", $"Recuperando bootstrap parcial en {targetPath}.", cancellationToken)
-                    .ConfigureAwait(false);
-                await CompleteBootstrapWorkspaceAsync(targetPath, localAlias, skipGitHub, cancellationToken).ConfigureAwait(false);
-                if (!skipGitHub)
-                {
-                    await ConfigureRepositoryAsync(targetPath, localAlias, cancellationToken).ConfigureAwait(false);
-                }
-
-                return targetPath;
-            }
-
             throw new InvalidOperationException("La carpeta de workspace ya existe y no parece ser Estudio Socratico.");
         }
 
         Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
-        await CloneWorkspaceAsync(targetPath, localAlias, skipGitHub, cancellationToken).ConfigureAwait(false);
-        if (!skipGitHub)
-        {
-            await ConfigureRepositoryAsync(targetPath, localAlias, cancellationToken).ConfigureAwait(false);
-        }
-        return targetPath;
-    }
-
-    private async Task CloneWorkspaceAsync(string targetPath, string localAlias, bool skipGitHub, CancellationToken cancellationToken)
-    {
         if (!skipGitHub)
         {
             var account = await EnsureLoginAsync(switchAccount: false, cancellationToken).ConfigureAwait(false);
@@ -230,149 +197,15 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
                 : githubUser;
             await GitAsync(Directory.GetParent(targetPath)!.FullName, ["clone", $"https://github.com/{workspaceRepoOwner}/{ProductInfo.RepositoryName}.git", targetPath], cancellationToken)
                 .ConfigureAwait(false);
+            await ConfigureRepositoryAsync(targetPath, localAlias, cancellationToken).ConfigureAwait(false);
         }
         else
         {
             await GitAsync(Directory.GetParent(targetPath)!.FullName, ["clone", $"https://github.com/{ProductInfo.BaseRepository}.git", targetPath], cancellationToken)
                 .ConfigureAwait(false);
         }
-    }
 
-    private async Task CompleteBootstrapWorkspaceAsync(string targetPath, string localAlias, bool skipGitHub, CancellationToken cancellationToken)
-    {
-        var backupPath = targetPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + ".bootstrap-" + Guid.NewGuid().ToString("N");
-        Directory.Move(targetPath, backupPath);
-        try
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
-            await CloneWorkspaceAsync(targetPath, localAlias, skipGitHub, cancellationToken).ConfigureAwait(false);
-            MergeBootstrapWorkspace(backupPath, targetPath);
-        }
-        catch
-        {
-            try
-            {
-                if (Directory.Exists(targetPath))
-                {
-                    Directory.Delete(targetPath, recursive: true);
-                }
-            }
-            catch
-            {
-                // Best effort cleanup before restoring bootstrap workspace.
-            }
-
-            if (Directory.Exists(backupPath))
-            {
-                Directory.Move(backupPath, targetPath);
-            }
-
-            throw;
-        }
-
-        Directory.Delete(backupPath, recursive: true);
-    }
-
-    private static bool LooksLikeBootstrapWorkspace(string targetPath)
-    {
-        if (!Directory.Exists(targetPath))
-        {
-            return false;
-        }
-
-        if (File.Exists(Path.Combine(targetPath, "AGENTS.md")) ||
-            Directory.Exists(Path.Combine(targetPath, ".git")) ||
-            Directory.Exists(Path.Combine(targetPath, "_estudio")) ||
-            Directory.Exists(Path.Combine(targetPath, "Ejercicios")))
-        {
-            return false;
-        }
-
-        foreach (var entry in Directory.EnumerateFileSystemEntries(targetPath))
-        {
-            var name = Path.GetFileName(entry);
-            if (!BootstrapWorkspaceEntries.Contains(name))
-            {
-                return false;
-            }
-
-            if (string.Equals(name, "usuario", StringComparison.OrdinalIgnoreCase) && !LooksLikeBootstrapUserDirectory(entry))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private static bool LooksLikeBootstrapUserDirectory(string userPath)
-    {
-        foreach (var entry in Directory.EnumerateFileSystemEntries(userPath))
-        {
-            var name = Path.GetFileName(entry);
-            if (!BootstrapUserEntries.Contains(name))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private static void MergeBootstrapWorkspace(string source, string destination)
-    {
-        MergeDirectoryIfExists(Path.Combine(source, "usuario"), Path.Combine(destination, "usuario"));
-        MergeDirectoryIfExists(Path.Combine(source, "logs"), Path.Combine(destination, "logs"));
-
-        var aliasPath = Path.Combine(source, ".estudio_usuario");
-        if (File.Exists(aliasPath))
-        {
-            File.Copy(aliasPath, Path.Combine(destination, ".estudio_usuario"), overwrite: true);
-        }
-
-        MergeGitIgnoreIfExists(Path.Combine(source, ".gitignore"), Path.Combine(destination, ".gitignore"));
-    }
-
-    private static void MergeDirectoryIfExists(string source, string destination)
-    {
-        if (!Directory.Exists(source))
-        {
-            return;
-        }
-
-        Directory.CreateDirectory(destination);
-        foreach (var directory in Directory.GetDirectories(source, "*", SearchOption.AllDirectories))
-        {
-            Directory.CreateDirectory(directory.Replace(source, destination, StringComparison.OrdinalIgnoreCase));
-        }
-
-        foreach (var file in Directory.GetFiles(source, "*", SearchOption.AllDirectories))
-        {
-            var target = file.Replace(source, destination, StringComparison.OrdinalIgnoreCase);
-            Directory.CreateDirectory(Path.GetDirectoryName(target)!);
-            File.Copy(file, target, overwrite: true);
-        }
-    }
-
-    private static void MergeGitIgnoreIfExists(string sourcePath, string destinationPath)
-    {
-        if (!File.Exists(sourcePath))
-        {
-            return;
-        }
-
-        var lines = File.Exists(destinationPath)
-            ? File.ReadAllLines(destinationPath).ToList()
-            : [];
-        foreach (var line in File.ReadAllLines(sourcePath))
-        {
-            if (!lines.Any(existing => string.Equals(existing.Trim(), line.Trim(), StringComparison.OrdinalIgnoreCase)))
-            {
-                lines.Add(line);
-            }
-        }
-
-        File.WriteAllLines(destinationPath, lines);
+        return targetPath;
     }
 
     private Task<CommandResult> GitAsync(string repoRoot, IReadOnlyList<string> args, CancellationToken cancellationToken, bool allowFail = false)
@@ -385,6 +218,22 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
             Timeout = TimeSpan.FromMinutes(2),
             AllowNonZeroExitCode = allowFail
         }, cancellationToken);
+    }
+
+    private async Task EnsureRemoteAsync(string repoRoot, string name, string url, CancellationToken cancellationToken)
+    {
+        var current = await GitAsync(repoRoot, ["remote", "get-url", name], cancellationToken, allowFail: true)
+            .ConfigureAwait(false);
+        if (!current.Succeeded || string.IsNullOrWhiteSpace(current.StandardOutput))
+        {
+            await GitAsync(repoRoot, ["remote", "add", name, url], cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        if (!string.Equals(current.StandardOutput.Trim(), url, StringComparison.OrdinalIgnoreCase))
+        {
+            await GitAsync(repoRoot, ["remote", "set-url", name, url], cancellationToken).ConfigureAwait(false);
+        }
     }
 }
 
@@ -732,13 +581,15 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
             Directory.Delete(backup, recursive: true);
         }
 
-        foreach (var existing in Directory.EnumerateDirectories(installedRoot, $"{descriptor.Id}-*", SearchOption.TopDirectoryOnly)
-                     .Where(path => !path.Equals(destination, StringComparison.OrdinalIgnoreCase)))
+        foreach (var existing in Directory.EnumerateDirectories(installedRoot, $"{descriptor.Id}-*", SearchOption.TopDirectoryOnly))
         {
-            Directory.Delete(existing, recursive: true);
+            if (!existing.Equals(destination, StringComparison.OrdinalIgnoreCase))
+            {
+                Directory.Delete(existing, recursive: true);
+            }
         }
 
-        await logManager.WriteAsync("info", "vscode-extension", $"Extension local instalada en perfil VS Code: {descriptor.Id} -> {destination}", cancellationToken)
+        await logManager.WriteAsync("info", "vscode-extension", $"Extension local instalada en perfil VS Code: {descriptor.Id}", cancellationToken)
             .ConfigureAwait(false);
 
         var manifest = await new ManifestManager(paths).LoadAsync(cancellationToken).ConfigureAwait(false);
@@ -770,8 +621,11 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
             var descriptor = await DescribeAsync(workspacePath, cancellationToken).ConfigureAwait(false);
             var installedPath = FindInstalledExtensionPath(descriptor.Id);
             var installedManifestExists = HasInstalledManifest(installedPath);
+            var installedVersionMatches = installedPath is not null &&
+                                          Path.GetFileName(installedPath).EndsWith("-" + descriptor.Version, StringComparison.OrdinalIgnoreCase);
             var ready = installedInVSCode &&
                         installedManifestExists &&
+                        installedVersionMatches &&
                         descriptor.ActivityBarConfigured &&
                         descriptor.CommandsRegistered &&
                         descriptor.ExercisePanelConfigured &&
@@ -785,6 +639,10 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
             else if (!installedManifestExists)
             {
                 issues.Add("La extension instalada no tiene package.json accesible; conviene reinstalarla.");
+            }
+            else if (!installedVersionMatches)
+            {
+                issues.Add($"La extension instalada no coincide con la version local {descriptor.Version}.");
             }
 
             if (!descriptor.ActivityBarConfigured)
@@ -918,7 +776,8 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
     private static void AddVsixEntry(ZipArchive archive, string entryName, string content)
     {
         var entry = archive.CreateEntry(entryName, CompressionLevel.Optimal);
-        using var writer = new StreamWriter(entry.Open());
+        using var output = entry.Open();
+        using var writer = new StreamWriter(output);
         writer.Write(content);
     }
 
@@ -952,8 +811,6 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
   <Dependencies/>
   <Assets>
     <Asset Type="Microsoft.VisualStudio.Code.Manifest" Path="extension/package.json" Addressable="true" />
-    <Asset Type="Microsoft.VisualStudio.Services.Content.License" Path="extension/LICENSE.txt" Addressable="true" />
-    <Asset Type="Microsoft.VisualStudio.Services.Icons.Default" Path="extension/assets/estudio.png" Addressable="true" />
   </Assets>
 </PackageManifest>
 """;
@@ -962,12 +819,13 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
     private static string BuildContentTypes(string sourcePath)
     {
         var extensions = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories)
-            .Where(file => !ShouldSkipExtensionFile(sourcePath, file))
-            .Select(file => Path.GetExtension(file))
-            .Append(".vsixmanifest")
+            .Select(Path.GetExtension)
             .Where(extension => !string.IsNullOrWhiteSpace(extension))
+            .Select(extension => extension!)
+            .Append(".vsixmanifest")
             .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(extension => extension, StringComparer.OrdinalIgnoreCase);
+            .Order(StringComparer.OrdinalIgnoreCase);
+
         var defaults = string.Join("", extensions.Select(extension =>
         {
             var normalized = extension.TrimStart('.');
@@ -1023,7 +881,7 @@ public sealed class VSCodeManager(
             var listed = await runner.RunAsync(VSCodeLocator.BuildCodeCmdCommand(
                 paths.CodeCmd!,
                 ["--list-extensions", "--show-versions"],
-                string.IsNullOrWhiteSpace(workspacePath) ? Environment.CurrentDirectory : workspacePath,
+                string.IsNullOrWhiteSpace(workspacePath) || !Directory.Exists(workspacePath) ? Environment.CurrentDirectory : workspacePath,
                 TimeSpan.FromSeconds(45)), cancellationToken).ConfigureAwait(false);
 
             installedInVSCode = listed.Succeeded &&
@@ -1089,16 +947,29 @@ public sealed class VSCodeManager(
     public async Task OpenWorkspaceAsync(string workspacePath, CancellationToken cancellationToken)
     {
         var paths = ResolveVSCode();
-        if (!paths.HasCodeExe)
+        if (!paths.HasCodeExe && !paths.HasCodeCmd)
         {
             throw new InvalidOperationException("VS Code no esta instalado o Code.exe no se encontro en una ruta soportada.");
+        }
+
+        if (paths.HasCodeCmd)
+        {
+            var codeCmd = await runner.RunAsync(VSCodeLocator.BuildCodeCmdCommand(
+                paths.CodeCmd!,
+                ["--reuse-window", workspacePath],
+                Directory.Exists(workspacePath) ? workspacePath : Environment.CurrentDirectory,
+                TimeSpan.FromSeconds(30)), cancellationToken).ConfigureAwait(false);
+            if (codeCmd.Succeeded)
+            {
+                return;
+            }
         }
 
         var result = await runner.RunAsync(new CommandSpec
         {
             FileName = paths.CodeExe!,
             Arguments = [workspacePath],
-            WorkingDirectory = workspacePath,
+            WorkingDirectory = Directory.Exists(workspacePath) ? workspacePath : Environment.CurrentDirectory,
             Timeout = TimeSpan.FromSeconds(20),
             AllowNonZeroExitCode = true
         }, cancellationToken).ConfigureAwait(false);
@@ -1119,7 +990,7 @@ public sealed class VSCodeManager(
             throw new InvalidOperationException("La extension local de VS Code no aparece instalada todavia. Reinstalala desde el configurador.");
         }
 
-        await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken).ConfigureAwait(false);
+        await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
         Process.Start(new ProcessStartInfo($"vscode://{ProductInfo.VSCodeExtensionId}/openPanel")
         {
             UseShellExecute = true
@@ -1162,16 +1033,14 @@ public sealed class VSCodeManager(
             await extensionManager.InstallLocalExtensionAsync(workspacePath, cancellationToken).ConfigureAwait(false);
         }
 
-        await logManager.WriteAsync("info", "vscode-extension", $"Extension local instalada por VS Code desde VSIX: {vsixPath}", cancellationToken)
+        await logManager.WriteAsync("info", "vscode-extension", $"Extension local instalada desde VSIX: {extensionId}", cancellationToken)
             .ConfigureAwait(false);
     }
 
     private static string GetCommandError(CommandResult result)
     {
         var combined = $"{result.StandardError}\n{result.StandardOutput}".Trim();
-        return string.IsNullOrWhiteSpace(combined)
-            ? $"codigo de salida {result.ExitCode}"
-            : combined;
+        return string.IsNullOrWhiteSpace(combined) ? $"exit {result.ExitCode}" : combined;
     }
 
     private async Task ApplyWorkspaceSettingsAsync(string workspacePath, CancellationToken cancellationToken)

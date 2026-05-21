@@ -172,6 +172,147 @@ public sealed class WorkspaceAndUninstallTests
         Assert.Empty(result.RemovedPaths);
     }
 
+    [Fact]
+    public async Task Uninstall_DryRun_DoesNotDeleteFiles()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "estudio-uninstall-" + Guid.NewGuid().ToString("N"));
+        var managedFile = Path.Combine(root, "Tools", "bin", "exercism.exe");
+        Directory.CreateDirectory(Path.GetDirectoryName(managedFile)!);
+        await File.WriteAllTextAsync(managedFile, "managed");
+
+        var paths = new AppPaths(localAppDataRoot: root);
+        var manifestManager = new ManifestManager(paths);
+        await manifestManager.SaveAsync(new InstallerManifest { SafeToRemove = { managedFile } });
+        var uninstall = new UninstallManager(paths, manifestManager, new LogManager(paths), new SecurityManager());
+
+        var result = await uninstall.PreviewAsync(allowAggressiveCleanup: false, CancellationToken.None);
+
+        Assert.True(result.DryRun);
+        Assert.True(File.Exists(managedFile));
+        Assert.Contains(managedFile, result.WouldRemovePaths);
+        Assert.Empty(result.RemovedPaths);
+    }
+
+    [Fact]
+    public async Task Uninstall_KeepsStudentData()
+    {
+        var workspace = CreateMinimalWorkspace();
+        var exercise = Path.Combine(workspace, "Ejercicios", "main.c");
+        var userLog = Path.Combine(workspace, "usuario", "logs", "main", "bloque1.log");
+        Directory.CreateDirectory(Path.GetDirectoryName(exercise)!);
+        Directory.CreateDirectory(Path.GetDirectoryName(userLog)!);
+        await File.WriteAllTextAsync(exercise, "int main(void){return 0;}");
+        await File.WriteAllTextAsync(userLog, "log");
+
+        var root = Path.Combine(Path.GetTempPath(), "estudio-uninstall-" + Guid.NewGuid().ToString("N"));
+        var paths = new AppPaths(repoRoot: workspace, localAppDataRoot: root);
+        var manifestManager = new ManifestManager(paths);
+        await manifestManager.SaveAsync(new InstallerManifest
+        {
+            WorkspacePath = workspace,
+            SafeToRemove = { exercise, Path.Combine(workspace, "usuario") }
+        });
+        var uninstall = new UninstallManager(paths, manifestManager, new LogManager(paths), new SecurityManager());
+
+        var result = await uninstall.PreviewAsync(allowAggressiveCleanup: false, CancellationToken.None);
+
+        Assert.True(File.Exists(exercise));
+        Assert.True(File.Exists(userLog));
+        Assert.Contains(result.KeptPaths, path => path.EndsWith("Ejercicios", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.KeptPaths, path => path.EndsWith("usuario", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(exercise, result.WouldRemovePaths);
+    }
+
+    [Fact]
+    public async Task Uninstall_KeepsApiKeyConfig()
+    {
+        var workspace = CreateMinimalWorkspace();
+        var apiKeyPath = Path.Combine(workspace, "usuario", "config", "estudio-socratico.extension.local.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(apiKeyPath)!);
+        await File.WriteAllTextAsync(apiKeyPath, """{"apiKey":"keep-me"}""");
+
+        var root = Path.Combine(Path.GetTempPath(), "estudio-uninstall-" + Guid.NewGuid().ToString("N"));
+        var paths = new AppPaths(repoRoot: workspace, localAppDataRoot: root);
+        var manifestManager = new ManifestManager(paths);
+        await manifestManager.SaveAsync(new InstallerManifest
+        {
+            WorkspacePath = workspace,
+            SafeToRemove = { apiKeyPath }
+        });
+        var uninstall = new UninstallManager(paths, manifestManager, new LogManager(paths), new SecurityManager());
+
+        var result = await uninstall.PreviewAsync(allowAggressiveCleanup: false, CancellationToken.None);
+
+        Assert.True(File.Exists(apiKeyPath));
+        Assert.Contains(apiKeyPath, result.KeptPaths);
+        Assert.DoesNotContain(apiKeyPath, result.WouldRemovePaths);
+    }
+
+    [Fact]
+    public async Task Uninstall_SkipsUnsafePaths()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "estudio-uninstall-" + Guid.NewGuid().ToString("N"));
+        var outside = Path.Combine(Path.GetTempPath(), "outside-" + Guid.NewGuid().ToString("N"), "tool.exe");
+        Directory.CreateDirectory(Path.GetDirectoryName(outside)!);
+        await File.WriteAllTextAsync(outside, "not-managed");
+
+        var paths = new AppPaths(localAppDataRoot: root);
+        var manifestManager = new ManifestManager(paths);
+        await manifestManager.SaveAsync(new InstallerManifest { SafeToRemove = { outside } });
+        var uninstall = new UninstallManager(paths, manifestManager, new LogManager(paths), new SecurityManager());
+
+        var result = await uninstall.PreviewAsync(allowAggressiveCleanup: false, CancellationToken.None);
+
+        Assert.True(File.Exists(outside));
+        Assert.Contains(outside, result.SkippedPaths);
+        Assert.Contains(result.Items, item => item.Path == outside && item.Action == "skipped");
+    }
+
+    [Fact]
+    public async Task Uninstall_RequiresManifestForManagedTools()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "estudio-uninstall-" + Guid.NewGuid().ToString("N"));
+        var managedFile = Path.Combine(root, "Tools", "bin", "exercism.exe");
+        Directory.CreateDirectory(Path.GetDirectoryName(managedFile)!);
+        await File.WriteAllTextAsync(managedFile, "managed");
+
+        var paths = new AppPaths(localAppDataRoot: root);
+        var uninstall = new UninstallManager(paths, new ManifestManager(paths), new LogManager(paths), new SecurityManager());
+
+        var result = await uninstall.PreviewAsync(allowAggressiveCleanup: false, CancellationToken.None);
+
+        Assert.False(result.ManifestFound);
+        Assert.True(File.Exists(managedFile));
+        Assert.Empty(result.WouldRemovePaths);
+        Assert.Contains(root, result.SkippedPaths);
+    }
+
+    [Fact]
+    public async Task Uninstall_ReportListsRemovedAndKeptItems()
+    {
+        var workspace = CreateMinimalWorkspace();
+        var root = Path.Combine(Path.GetTempPath(), "estudio-uninstall-" + Guid.NewGuid().ToString("N"));
+        var managedDir = Path.Combine(root, "Tools", "exercism");
+        Directory.CreateDirectory(managedDir);
+        await File.WriteAllTextAsync(Path.Combine(managedDir, "exercism.exe"), "managed");
+
+        var paths = new AppPaths(repoRoot: workspace, localAppDataRoot: root);
+        var manifestManager = new ManifestManager(paths);
+        await manifestManager.SaveAsync(new InstallerManifest
+        {
+            WorkspacePath = workspace,
+            SafeToRemove = { managedDir }
+        });
+        var uninstall = new UninstallManager(paths, manifestManager, new LogManager(paths), new SecurityManager());
+
+        var result = await uninstall.PreviewAsync(allowAggressiveCleanup: false, CancellationToken.None);
+
+        Assert.Contains(managedDir, result.WouldRemovePaths);
+        Assert.Contains(workspace, result.KeptPaths);
+        Assert.Contains(result.Items, item => item.Action == "wouldRemove" && item.Path == managedDir);
+        Assert.Contains(result.Items, item => item.Action == "kept" && item.Path == workspace);
+    }
+
     private static string CreateMinimalWorkspace()
     {
         var root = Path.Combine(Path.GetTempPath(), "estudio-workspace-" + Guid.NewGuid().ToString("N"));

@@ -834,7 +834,7 @@ ${body}
 <script>
   const vscode = acquireVsCodeApi();
   const state = {
-    provider: localStorage.getItem('estudio.provider') || 'all',
+    provider: localStorage.getItem('estudio.provider') || 'exercism',
     status: localStorage.getItem('estudio.status') || 'all',
     theme: localStorage.getItem('estudio.theme') || 'light',
     logic: localStorage.getItem('estudio.logic') || 'or'

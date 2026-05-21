@@ -47,6 +47,24 @@ public sealed class WingetBroker(ICommandRunner runner, DependencyDetector detec
             AllowNonZeroExitCode = true
         }, cancellationToken).ConfigureAwait(false);
     }
+
+    public async Task<CommandResult> UninstallPackageAsync(string packageId, CancellationToken cancellationToken)
+    {
+        return await runner.RunAsync(new CommandSpec
+        {
+            FileName = "winget",
+            Arguments =
+            [
+                "uninstall",
+                "--id", packageId,
+                "--exact",
+                "--source", "winget",
+                "--silent"
+            ],
+            Timeout = TimeSpan.FromMinutes(40),
+            AllowNonZeroExitCode = true
+        }, cancellationToken).ConfigureAwait(false);
+    }
 }
 
 public sealed class DependencyInstaller(
@@ -62,10 +80,16 @@ public sealed class DependencyInstaller(
     LogManager logManager,
     SystemProbe systemProbe)
 {
-    public async Task<DependencyState> EnsureAsync(DependencyRequirement requirement, CancellationToken cancellationToken)
+    public Task<DependencyState> EnsureAsync(DependencyRequirement requirement, CancellationToken cancellationToken) =>
+        EnsureAsync(requirement, forceReinstall: false, cancellationToken);
+
+    public async Task<DependencyState> EnsureAsync(
+        DependencyRequirement requirement,
+        bool forceReinstall,
+        CancellationToken cancellationToken)
     {
         var before = await detector.DetectAsync(requirement, cancellationToken).ConfigureAwait(false);
-        if (before.Status == DependencyStatus.Ready)
+        if (!forceReinstall && before.Status == DependencyStatus.Ready)
         {
             return before;
         }

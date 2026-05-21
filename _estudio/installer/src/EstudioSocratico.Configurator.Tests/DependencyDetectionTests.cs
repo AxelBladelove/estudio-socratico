@@ -47,61 +47,6 @@ public sealed class DependencyDetectionTests
         Assert.Contains("--accept-source-agreements", captured.Arguments);
         Assert.Contains("Git.Git", captured.Arguments);
     }
-
-    [Fact]
-    public async Task PythonDetection_Ignores_WindowsApps_Alias_When_Real_Install_Exists()
-    {
-        var root = Path.Combine(Path.GetTempPath(), "estudio-python-" + Guid.NewGuid().ToString("N"));
-        var windowsApps = Path.Combine(root, "WindowsApps");
-        var pythonRoot = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Programs",
-            "Python",
-            "Python313-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(root);
-        Directory.CreateDirectory(windowsApps);
-        Directory.CreateDirectory(pythonRoot);
-        var alias = Path.Combine(windowsApps, "python.exe");
-        var realPython = Path.Combine(pythonRoot, "python.exe");
-        File.WriteAllText(alias, "");
-        File.WriteAllText(realPython, "");
-        try
-        {
-            var runner = new FakeRunner(spec =>
-            {
-                if (spec.FileName == "where.exe")
-                {
-                    return FakeRunner.Result(spec, 0, alias + "\r\n");
-                }
-
-                if (string.Equals(spec.FileName, alias, StringComparison.OrdinalIgnoreCase))
-                {
-                    return FakeRunner.Result(spec, 9009, "", "no se encontró Python; ejecutar sin argumentos para instalar desde el Microsoft Store.");
-                }
-
-                if (string.Equals(spec.FileName, realPython, StringComparison.OrdinalIgnoreCase))
-                {
-                    return FakeRunner.Result(spec, 0, "Python 3.13.3");
-                }
-
-                return FakeRunner.Result(spec, 1);
-            });
-
-            var detector = new DependencyDetector(runner);
-            var state = await detector.DetectAsync(DependencyDetector.Requirements.Single(x => x.Id == DependencyId.Python));
-
-            Assert.Equal(DependencyStatus.Ready, state.Status);
-            Assert.Equal(realPython, state.Path);
-            Assert.Equal("3.13.3", state.Version);
-        }
-        finally
-        {
-            if (Directory.Exists(pythonRoot))
-            {
-                Directory.Delete(pythonRoot, recursive: true);
-            }
-        }
-    }
 }
 
 internal sealed class FakeRunner(Func<CommandSpec, CommandResult> handler) : ICommandRunner

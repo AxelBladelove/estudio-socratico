@@ -2,7 +2,7 @@
   "name": "estudio-exercism",
   "displayName": "Estudio Socratico - Exercism",
   "description": "Panel de ejercicios para Exercism C y PDF Alejandro Liz dentro de Estudio Socratico.",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "publisher": "estudio-socratico",
   "license": "MIT",
   "icon": "assets/estudio.png",

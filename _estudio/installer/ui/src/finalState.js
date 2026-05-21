@@ -35,7 +35,7 @@ export function finalIssues(workflow, summary, snapshot) {
 }
 
 export function finalTitle(workflow, ready, summary, snapshot) {
-  if (workflow === "uninstall") return ready ? "Limpieza completada" : "Limpieza incompleta";
+  if (workflow === "uninstall") return ready ? "Desinstalación completada" : "Desinstalación incompleta";
   if (ready) return "Todo está listo para estudiar C";
   if (summary && !summary.succeeded) return "No pudimos completar la configuración";
   const globalState = finalStateSource(summary, snapshot)?.globalState;
@@ -47,7 +47,7 @@ export function finalTitle(workflow, ready, summary, snapshot) {
 }
 
 export function finalText(workflow, ready, summary, snapshot) {
-  if (workflow === "uninstall" && ready) return "Se quitaron los elementos gestionados y se conservó el trabajo del estudiante.";
+  if (workflow === "uninstall" && ready) return "Se quitaron los elementos gestionados que eran seguros de atribuir al instalador. El trabajo del estudiante se conservó.";
   if (ready) return finalStateSource(summary, snapshot)?.globalMessage || summary?.globalMessage || "VS Code, workspace, toolchain, GitHub, Exercism y F9 fueron validados.";
   if (summary && !summary.succeeded && Array.isArray(summary.errors) && summary.errors.length > 0) {
     return messageFromError(summary.errors[0]);
