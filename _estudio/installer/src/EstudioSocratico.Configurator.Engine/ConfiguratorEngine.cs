@@ -242,6 +242,14 @@ public sealed class ConfiguratorEngine
     public async Task<AccountState> ConfigureExercismAsync(string token, string? workspacePath, CancellationToken cancellationToken = default)
     {
         var workspace = await ResolveKnownWorkspaceAsync(workspacePath, cancellationToken).ConfigureAwait(false);
+        if (!File.Exists(Path.Combine(workspace, "AGENTS.md")))
+        {
+            var stagingWorkspace = Path.Combine(_paths.LocalAppDataRoot, "Diagnostics", "preconfigured-exercism");
+            await _logManager.WriteAsync("info", "exercism", $"Workspace real aun no existe; usando staging local en {stagingWorkspace}.", cancellationToken)
+                .ConfigureAwait(false);
+            return await _exercismManager.ConfigureTokenAsync(token, stagingWorkspace, cancellationToken).ConfigureAwait(false);
+        }
+
         return await _exercismManager.ConfigureTokenAsync(token, workspace, cancellationToken).ConfigureAwait(false);
     }
 

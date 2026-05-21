@@ -281,6 +281,65 @@ public sealed class WorkflowBackendTests
     }
 
     [Fact]
+    public async Task ConfigureExercism_DoesNotCreate_TargetWorkspace_Before_Repo_Exists()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "estudio-exercism-preconfig-" + Guid.NewGuid().ToString("N"));
+        var workspace = Path.Combine(root, "Estudio-Socratico-erick");
+        var paths = new AppPaths(repoRoot: root, localAppDataRoot: Path.Combine(root, "LocalAppData"));
+        var runner = new RecordingRunner(spec =>
+        {
+            if (spec.Arguments.Contains("version"))
+                return RecordingRunner.Result(spec, 0, "3.0.0");
+            if (spec.Arguments.Count == 1 && spec.Arguments[0] == "workspace")
+                return RecordingRunner.Result(spec, 0, Path.Combine(paths.LocalAppDataRoot, "Diagnostics", "preconfigured-exercism", "usuario", "exercism"));
+            if (spec.Arguments.Contains("configure") || spec.Arguments.Contains("download"))
+                return RecordingRunner.Result(spec, 0);
+            return RecordingRunner.Result(spec, 0, "ok");
+        });
+        var engine = new ConfiguratorEngine(paths, runner);
+
+        await engine.ConfigureExercismAsync("abcdefghijklmnopqrstuvwxyz123456", workspace);
+
+        Assert.False(Directory.Exists(workspace));
+        var configure = Assert.Single(runner.Specs, spec => spec.Arguments.Contains("--token"));
+        Assert.Contains(Path.Combine(paths.LocalAppDataRoot, "Diagnostics", "preconfigured-exercism", "usuario", "exercism"), configure.Arguments);
+    }
+
+    [Fact]
+    public async Task BootstrapWorkspace_Is_Adopted_Without_Losing_User_Data()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "estudio-bootstrap-" + Guid.NewGuid().ToString("N"));
+        var target = Path.Combine(root, "Estudio-Socratico-erick");
+        Directory.CreateDirectory(Path.Combine(target, "usuario", "exercism"));
+        Directory.CreateDirectory(Path.Combine(target, "usuario", "config"));
+        await File.WriteAllTextAsync(Path.Combine(target, "usuario", "config", "estudio-socratico.extension.local.json"), "{ }");
+        await File.WriteAllTextAsync(Path.Combine(target, ".estudio_usuario"), "erick");
+        await File.WriteAllTextAsync(Path.Combine(target, ".gitignore"), "usuario/config/estudio-socratico.extension.local.json\n");
+
+        var paths = new AppPaths(repoRoot: root, localAppDataRoot: Path.Combine(root, "LocalAppData"));
+        var manifest = new ManifestManager(paths);
+        var runner = new RecordingRunner(spec =>
+        {
+            if (spec.FileName == "git" && spec.Arguments.Count >= 3 && spec.Arguments[0] == "clone")
+            {
+                var cloneTarget = spec.Arguments[^1];
+                WriteMinimalClonedWorkspace(cloneTarget);
+                return RecordingRunner.Result(spec, 0, "cloned");
+            }
+
+            return RecordingRunner.Result(spec, 0, "ok");
+        });
+        var manager = new GitHubAccountManager(runner, manifest, new LogManager(paths));
+
+        var actual = await manager.EnsureWorkspaceRepositoryAsync(target, "erick", skipGitHub: true, CancellationToken.None);
+
+        Assert.Equal(target, actual);
+        Assert.True(File.Exists(Path.Combine(target, "AGENTS.md")));
+        Assert.True(File.Exists(Path.Combine(target, "usuario", "config", "estudio-socratico.extension.local.json")));
+        Assert.Equal("erick", await File.ReadAllTextAsync(Path.Combine(target, ".estudio_usuario")));
+    }
+
+    [Fact]
     public async Task SmokeTest_Uses_F9_Build_Flow_Without_Automatic_Commits()
     {
         var workspace = CreateSmokeWorkspace();
@@ -409,6 +468,20 @@ public sealed class WorkflowBackendTests
         File.WriteAllText(Path.Combine(root, "AGENTS.md"), "# test");
         File.WriteAllText(Path.Combine(root, "_estudio", "soporte", "scripts", "build.cmd"), "@echo off");
         return root;
+    }
+
+    private static void WriteMinimalClonedWorkspace(string root)
+    {
+        Directory.CreateDirectory(Path.Combine(root, "_estudio", "soporte", "scripts"));
+        Directory.CreateDirectory(Path.Combine(root, "_estudio", "include"));
+        Directory.CreateDirectory(Path.Combine(root, "_estudio", "soporte", "exercism"));
+        Directory.CreateDirectory(Path.Combine(root, ".git"));
+        File.WriteAllText(Path.Combine(root, "AGENTS.md"), "# cloned");
+        File.WriteAllText(Path.Combine(root, ".gitignore"), "bin/\n");
+        File.WriteAllText(Path.Combine(root, "_estudio", "soporte", "scripts", "build.cmd"), "");
+        File.WriteAllText(Path.Combine(root, "_estudio", "soporte", "scripts", "compilar_y_grabar.bat"), "");
+        File.WriteAllText(Path.Combine(root, "_estudio", "include", "conio.h"), "");
+        File.WriteAllText(Path.Combine(root, "_estudio", "soporte", "exercism", "manager.ps1"), "");
     }
 
     private static string CreateRealScriptWorkspace()

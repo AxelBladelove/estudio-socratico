@@ -8,6 +8,21 @@ namespace EstudioSocratico.Configurator.Engine;
 public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager manifestManager, LogManager logManager)
 {
     private const string Host = "github.com";
+    private static readonly HashSet<string> BootstrapWorkspaceEntries = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".estudio_usuario",
+        ".gitignore",
+        "usuario",
+        "logs"
+    };
+
+    private static readonly HashSet<string> BootstrapUserEntries = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "config",
+        "errores.md",
+        "exercism",
+        "logs"
+    };
 
     public async Task<AccountState> EnsureLoginAsync(bool switchAccount, CancellationToken cancellationToken)
     {
@@ -160,10 +175,33 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
 
         if (Directory.Exists(targetPath) && Directory.EnumerateFileSystemEntries(targetPath).Any())
         {
+            if (LooksLikeBootstrapWorkspace(targetPath))
+            {
+                await logManager.WriteAsync("info", "workspace", $"Recuperando bootstrap parcial en {targetPath}.", cancellationToken)
+                    .ConfigureAwait(false);
+                await CompleteBootstrapWorkspaceAsync(targetPath, localAlias, skipGitHub, cancellationToken).ConfigureAwait(false);
+                if (!skipGitHub)
+                {
+                    await ConfigureRepositoryAsync(targetPath, localAlias, cancellationToken).ConfigureAwait(false);
+                }
+
+                return targetPath;
+            }
+
             throw new InvalidOperationException("La carpeta de workspace ya existe y no parece ser Estudio Socratico.");
         }
 
         Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+        await CloneWorkspaceAsync(targetPath, localAlias, skipGitHub, cancellationToken).ConfigureAwait(false);
+        if (!skipGitHub)
+        {
+            await ConfigureRepositoryAsync(targetPath, localAlias, cancellationToken).ConfigureAwait(false);
+        }
+        return targetPath;
+    }
+
+    private async Task CloneWorkspaceAsync(string targetPath, string localAlias, bool skipGitHub, CancellationToken cancellationToken)
+    {
         if (!skipGitHub)
         {
             var account = await EnsureLoginAsync(switchAccount: false, cancellationToken).ConfigureAwait(false);
@@ -190,15 +228,149 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
                 : githubUser;
             await GitAsync(Directory.GetParent(targetPath)!.FullName, ["clone", $"https://github.com/{workspaceRepoOwner}/{ProductInfo.RepositoryName}.git", targetPath], cancellationToken)
                 .ConfigureAwait(false);
-            await ConfigureRepositoryAsync(targetPath, localAlias, cancellationToken).ConfigureAwait(false);
         }
         else
         {
             await GitAsync(Directory.GetParent(targetPath)!.FullName, ["clone", $"https://github.com/{ProductInfo.BaseRepository}.git", targetPath], cancellationToken)
                 .ConfigureAwait(false);
         }
+    }
 
-        return targetPath;
+    private async Task CompleteBootstrapWorkspaceAsync(string targetPath, string localAlias, bool skipGitHub, CancellationToken cancellationToken)
+    {
+        var backupPath = targetPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + ".bootstrap-" + Guid.NewGuid().ToString("N");
+        Directory.Move(targetPath, backupPath);
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+            await CloneWorkspaceAsync(targetPath, localAlias, skipGitHub, cancellationToken).ConfigureAwait(false);
+            MergeBootstrapWorkspace(backupPath, targetPath);
+        }
+        catch
+        {
+            try
+            {
+                if (Directory.Exists(targetPath))
+                {
+                    Directory.Delete(targetPath, recursive: true);
+                }
+            }
+            catch
+            {
+                // Best effort cleanup before restoring bootstrap workspace.
+            }
+
+            if (Directory.Exists(backupPath))
+            {
+                Directory.Move(backupPath, targetPath);
+            }
+
+            throw;
+        }
+
+        Directory.Delete(backupPath, recursive: true);
+    }
+
+    private static bool LooksLikeBootstrapWorkspace(string targetPath)
+    {
+        if (!Directory.Exists(targetPath))
+        {
+            return false;
+        }
+
+        if (File.Exists(Path.Combine(targetPath, "AGENTS.md")) ||
+            Directory.Exists(Path.Combine(targetPath, ".git")) ||
+            Directory.Exists(Path.Combine(targetPath, "_estudio")) ||
+            Directory.Exists(Path.Combine(targetPath, "Ejercicios")))
+        {
+            return false;
+        }
+
+        foreach (var entry in Directory.EnumerateFileSystemEntries(targetPath))
+        {
+            var name = Path.GetFileName(entry);
+            if (!BootstrapWorkspaceEntries.Contains(name))
+            {
+                return false;
+            }
+
+            if (string.Equals(name, "usuario", StringComparison.OrdinalIgnoreCase) && !LooksLikeBootstrapUserDirectory(entry))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool LooksLikeBootstrapUserDirectory(string userPath)
+    {
+        foreach (var entry in Directory.EnumerateFileSystemEntries(userPath))
+        {
+            var name = Path.GetFileName(entry);
+            if (!BootstrapUserEntries.Contains(name))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static void MergeBootstrapWorkspace(string source, string destination)
+    {
+        MergeDirectoryIfExists(Path.Combine(source, "usuario"), Path.Combine(destination, "usuario"));
+        MergeDirectoryIfExists(Path.Combine(source, "logs"), Path.Combine(destination, "logs"));
+
+        var aliasPath = Path.Combine(source, ".estudio_usuario");
+        if (File.Exists(aliasPath))
+        {
+            File.Copy(aliasPath, Path.Combine(destination, ".estudio_usuario"), overwrite: true);
+        }
+
+        MergeGitIgnoreIfExists(Path.Combine(source, ".gitignore"), Path.Combine(destination, ".gitignore"));
+    }
+
+    private static void MergeDirectoryIfExists(string source, string destination)
+    {
+        if (!Directory.Exists(source))
+        {
+            return;
+        }
+
+        Directory.CreateDirectory(destination);
+        foreach (var directory in Directory.GetDirectories(source, "*", SearchOption.AllDirectories))
+        {
+            Directory.CreateDirectory(directory.Replace(source, destination, StringComparison.OrdinalIgnoreCase));
+        }
+
+        foreach (var file in Directory.GetFiles(source, "*", SearchOption.AllDirectories))
+        {
+            var target = file.Replace(source, destination, StringComparison.OrdinalIgnoreCase);
+            Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+            File.Copy(file, target, overwrite: true);
+        }
+    }
+
+    private static void MergeGitIgnoreIfExists(string sourcePath, string destinationPath)
+    {
+        if (!File.Exists(sourcePath))
+        {
+            return;
+        }
+
+        var lines = File.Exists(destinationPath)
+            ? File.ReadAllLines(destinationPath).ToList()
+            : [];
+        foreach (var line in File.ReadAllLines(sourcePath))
+        {
+            if (!lines.Any(existing => string.Equals(existing.Trim(), line.Trim(), StringComparison.OrdinalIgnoreCase)))
+            {
+                lines.Add(line);
+            }
+        }
+
+        File.WriteAllLines(destinationPath, lines);
     }
 
     private Task<CommandResult> GitAsync(string repoRoot, IReadOnlyList<string> args, CancellationToken cancellationToken, bool allowFail = false)
