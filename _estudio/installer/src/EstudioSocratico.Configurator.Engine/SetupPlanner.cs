@@ -176,7 +176,9 @@ public sealed class SetupPlanner
     public IReadOnlyList<ResourceState> ToResourceStates(
         IReadOnlyList<DependencyState> dependencies,
         AccountState? github,
-        AccountState? exercism)
+        AccountState? exercism,
+        bool workspaceValid = false,
+        string? workspacePath = null)
     {
         var resources = new List<ResourceState>();
 
@@ -205,8 +207,8 @@ public sealed class SetupPlanner
         // Add auth resources
         resources.Add(new ResourceState
         {
-            Id = "github-auth",
-            DisplayName = "Cuenta GitHub",
+            Id = "github",
+            DisplayName = "GitHub",
             Status = github?.Configured == true ? ResourceStatus.Ready : ResourceStatus.NeedsAuth,
             Category = "auth",
             IsCritical = true,
@@ -217,8 +219,8 @@ public sealed class SetupPlanner
 
         resources.Add(new ResourceState
         {
-            Id = "exercism-auth",
-            DisplayName = "Cuenta Exercism",
+            Id = "exercism-token",
+            DisplayName = "Token Exercism",
             Status = exercism?.Configured == true ? ResourceStatus.Ready : ResourceStatus.NeedsAuth,
             Category = "auth",
             IsCritical = true,
@@ -227,12 +229,27 @@ public sealed class SetupPlanner
             ActionId = exercism?.Configured == true ? null : "auth-exercism"
         });
 
+        resources.Add(new ResourceState
+        {
+            Id = "workspace",
+            DisplayName = "Workspace",
+            Status = workspaceValid ? ResourceStatus.Ready : ResourceStatus.NeedsUserAction,
+            Category = "workspace",
+            IsCritical = true,
+            Path = workspacePath,
+            HumanStatus = workspaceValid ? "Listo" : "Requiere cuenta",
+            HumanDescription = workspaceValid ? workspacePath : "El workspace todavía no está preparado.",
+            ActionLabel = workspaceValid ? null : "Preparar",
+            ActionId = workspaceValid ? null : "setup-workspace"
+        });
+
         return resources;
     }
 
     private static string GetCategory(DependencyId id) => id switch
     {
-        DependencyId.Winget or DependencyId.NodeJs or DependencyId.Python => "optional",
+        DependencyId.Winget => "optional",
+        DependencyId.NodeJs or DependencyId.Python => "base",
         DependencyId.Git or DependencyId.GitHubCli or DependencyId.ExercismCli => "tools",
         DependencyId.VSCode => "editor",
         DependencyId.Msys2 or DependencyId.Gcc or DependencyId.Make => "compiler",

@@ -35,7 +35,9 @@ public sealed class LogManager(AppPaths paths) : IProgressSink
 
     public async Task WriteCommandAsync(CommandSpec spec, CommandResult? result, CancellationToken cancellationToken = default)
     {
-        var arguments = string.Join(" ", SecretRedactor.RedactArguments(spec.Arguments));
+        var arguments = !string.IsNullOrWhiteSpace(spec.ArgumentString)
+            ? SecretRedactor.Redact(spec.ArgumentString)
+            : string.Join(" ", SecretRedactor.RedactArguments(spec.Arguments));
         var message = result is null
             ? $"$ {spec.FileName} {arguments}"
             : $"$ {spec.FileName} {arguments} -> exit {result.ExitCode} in {result.Duration.TotalMilliseconds:n0}ms";

@@ -33,7 +33,7 @@ switch (command)
             WorkspacePath = GetOption(args, "--workspace"),
             LocalAlias = GetOption(args, "--alias"),
             ExercismToken = GetOption(args, "--exercism-token"),
-            SkipExercism = string.IsNullOrWhiteSpace(GetOption(args, "--exercism-token")),
+            SkipExercism = args.Contains("--skip-exercism"),
             SkipGitHubLogin = args.Contains("--skip-github"),
             AllowAggressiveCleanup = args.Contains("--aggressive")
         };
@@ -48,9 +48,9 @@ switch (command)
         Commands:
           scan
           diagnose
-          install [--workspace path] [--alias slug] [--exercism-token token] [--skip-github]
-          repair [--workspace path] [--alias slug] [--skip-github]
-          reinstall [--workspace path] [--alias slug] [--skip-github]
+          install [--workspace path] [--alias slug] [--exercism-token token] [--skip-github] [--skip-exercism]
+          repair [--workspace path] [--alias slug] [--skip-github] [--skip-exercism]
+          reinstall [--workspace path] [--alias slug] [--skip-github] [--skip-exercism]
           uninstall [--aggressive]
         """);
         return 0;

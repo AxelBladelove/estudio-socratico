@@ -11,18 +11,27 @@ public enum BridgeAction
     DiagnoseEnvironment,
     CreateSetupPlan,
     ApplyPlan,
+    ApplyWorkflow,
     CancelPlan,
     RepairComponent,
     ConfigureGithub,
     ChangeGithubAccount,
     ConfigureExercism,
     OpenExercismTokenPage,
+    OpenExercismCTrack,
     ConfigureWorkspace,
     OpenVSCode,
+    OpenExercisePanel,
+    ReinstallVSCodeExtension,
+    OpenExtensionApiKeyConfig,
+    RevealExtensionApiKeyConfig,
+    RevealInExplorer,
     OpenLogs,
     ExportDiagnostics,
     RunSmokeTest,
-    GetCurrentState
+    GetCurrentState,
+    ReinstallManaged,
+    UninstallManaged
 }
 
 /// <summary>
@@ -94,8 +103,14 @@ public sealed record UIStateSnapshot
     public AccountState? GitHub { get; init; }
     public AccountState? Exercism { get; init; }
     public string? WorkspacePath { get; init; }
+    public string? RecommendedWorkspacePath { get; init; }
+    public string? LocalAlias { get; init; }
     public bool WorkspaceValid { get; init; }
     public bool BuildFlowValid { get; init; }
+    public WorkspaceContextInfo WorkspaceContext { get; init; } = new();
+    public VSCodeExtensionState VSCodeExtension { get; init; } = new();
+    public ExtensionApiKeyConfigState ExtensionApiKeyConfig { get; init; } = new();
+    public FinalReadinessCheck FinalReadiness { get; init; } = new();
     public string ConfiguratorVersion { get; init; } = ProductInfo.Version;
 }
 
@@ -208,5 +223,106 @@ public static class BridgeProtocol
             JsonValueKind.Null => null,
             _ => property.ToString()
         };
+    }
+}
+
+public static class BridgePayload
+{
+    public static SetupRequest ToSetupRequest(BridgeRequest request, SetupMode defaultMode = SetupMode.Install)
+    {
+        return new SetupRequest
+        {
+            Mode = GetSetupMode(request, defaultMode),
+            WorkspacePath = GetString(request, "workspacePath", "workspace"),
+            LocalAlias = GetString(request, "localAlias", "alias"),
+            ExercismToken = GetString(request, "exercismToken", "token"),
+            AllowAggressiveCleanup = GetBool(request, "allowAggressiveCleanup", defaultValue: false),
+            SkipGitHubLogin = GetBool(request, "skipGitHubLogin", defaultValue: false),
+            SkipExercism = GetBool(request, "skipExercism", defaultValue: false)
+        };
+    }
+
+    public static SetupMode GetSetupMode(BridgeRequest request, SetupMode defaultMode = SetupMode.Install)
+    {
+        return ParseSetupMode(GetString(request, "mode", "workflow"), defaultMode);
+    }
+
+    public static SetupMode ParseSetupMode(string? value, SetupMode defaultMode = SetupMode.Install)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return defaultMode;
+        }
+
+        return value.Trim().ToLowerInvariant() switch
+        {
+            "setup" or "install" => SetupMode.Install,
+            "repair" => SetupMode.Repair,
+            "reinstall" => SetupMode.Reinstall,
+            "uninstall" => SetupMode.Uninstall,
+            "diagnostics" or "diagnose" or "accounts" => SetupMode.Diagnostics,
+            _ when Enum.TryParse<SetupMode>(value, ignoreCase: true, out var parsed) => parsed,
+            _ => defaultMode
+        };
+    }
+
+    public static string? GetString(BridgeRequest request, params string[] keys)
+    {
+        foreach (var key in keys)
+        {
+            if (!request.Payload.TryGetValue(key, out var value) || value is null)
+            {
+                continue;
+            }
+
+            if (value is JsonElement element)
+            {
+                var elementValue = element.ValueKind switch
+                {
+                    JsonValueKind.String => element.GetString(),
+                    JsonValueKind.Number or JsonValueKind.True or JsonValueKind.False => element.ToString(),
+                    JsonValueKind.Null or JsonValueKind.Undefined => null,
+                    _ => element.GetRawText()
+                };
+
+                if (!string.IsNullOrWhiteSpace(elementValue))
+                {
+                    return elementValue;
+                }
+
+                continue;
+            }
+
+            var text = value.ToString();
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                return text;
+            }
+        }
+
+        return null;
+    }
+
+    public static bool GetBool(BridgeRequest request, string key, bool defaultValue)
+    {
+        if (!request.Payload.TryGetValue(key, out var value) || value is null)
+        {
+            return defaultValue;
+        }
+
+        if (value is JsonElement element)
+        {
+            return element.ValueKind switch
+            {
+                JsonValueKind.True => true,
+                JsonValueKind.False => false,
+                JsonValueKind.String when bool.TryParse(element.GetString(), out var parsedElement) => parsedElement,
+                _ => defaultValue
+            };
+        }
+
+        return value is bool boolValue
+            ? boolValue
+            : bool.TryParse(value.ToString(), out var parsedValue) ? parsedValue : defaultValue;
     }
 }

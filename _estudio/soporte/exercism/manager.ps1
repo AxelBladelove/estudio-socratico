@@ -1159,7 +1159,7 @@ function Import-ExercismExercise {
 
     $cli = Get-ExercismCli
     if (-not $cli) {
-        throw "No se encontro Exercism CLI. Ejecuta _estudio\setup\instalar.cmd o instala Exercism.CLI con winget."
+        throw "No se encontro Exercism CLI. Ejecuta Estudio Socratico Configurador en modo Reparar o instala Exercism.CLI con winget."
     }
 
     $catalog = Get-ExercismCatalog

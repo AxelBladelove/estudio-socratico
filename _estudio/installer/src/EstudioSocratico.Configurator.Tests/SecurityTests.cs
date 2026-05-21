@@ -1,4 +1,5 @@
 using EstudioSocratico.Configurator.Core;
+using EstudioSocratico.Configurator.Engine;
 using Xunit;
 
 namespace EstudioSocratico.Configurator.Tests;
@@ -21,5 +22,19 @@ public sealed class SecurityTests
         var root = Path.Combine(Path.GetTempPath(), "estudio-root");
         var outside = Path.Combine(Path.GetTempPath(), "outside");
         Assert.False(PathSafety.IsInside(root, outside));
+    }
+
+    [Fact]
+    public async Task ExtensionConfig_RedactsApiKeyFromLogs()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "estudio-security-" + Guid.NewGuid().ToString("N"));
+        var paths = new AppPaths(localAppDataRoot: root);
+        var logManager = new LogManager(paths);
+
+        await logManager.WriteAsync("info", "extension-config", """{"apiKey":"super-secret-value"}""");
+
+        var text = await File.ReadAllTextAsync(logManager.InstallerLogPath);
+        Assert.DoesNotContain("super-secret-value", text);
+        Assert.Contains("[REDACTED]", text);
     }
 }

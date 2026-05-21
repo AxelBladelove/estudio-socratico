@@ -2,7 +2,10 @@ using EstudioSocratico.Configurator.Core;
 
 namespace EstudioSocratico.Configurator.Engine;
 
-public sealed class DependencyDetector(ICommandRunner runner)
+public sealed class DependencyDetector(
+    ICommandRunner runner,
+    Func<VSCodePaths>? locateVSCode = null,
+    string? managedToolsDirectory = null)
 {
     public static IReadOnlyList<DependencyRequirement> Requirements { get; } =
     [
@@ -37,7 +40,8 @@ public sealed class DependencyDetector(ICommandRunner runner)
             DependencyId.Gcc => await DetectCommandAsync(requirement, ["--version"], ProductInfo.DefaultMsys2UcrtBin, cancellationToken).ConfigureAwait(false),
             DependencyId.Make => await DetectCommandAsync(requirement, ["--version"], ProductInfo.DefaultMsys2UcrtBin, cancellationToken).ConfigureAwait(false),
             DependencyId.Winget => await DetectCommandAsync(requirement, ["--info"], null, cancellationToken).ConfigureAwait(false),
-            DependencyId.VSCode => await DetectCommandAsync(requirement, ["--version"], null, cancellationToken).ConfigureAwait(false),
+            DependencyId.VSCode => await DetectVSCodeAsync(requirement, cancellationToken).ConfigureAwait(false),
+            DependencyId.ExercismCli => await DetectCommandAsync(requirement, ["help"], managedToolsDirectory, cancellationToken).ConfigureAwait(false),
             _ => await DetectCommandAsync(requirement, ["--version"], null, cancellationToken).ConfigureAwait(false)
         };
     }
@@ -125,6 +129,81 @@ public sealed class DependencyDetector(ICommandRunner runner)
             Path = commandPath,
             Version = version,
             Source = "command",
+            Recommendation = status == DependencyStatus.Outdated
+                ? $"Actualizar {requirement.DisplayName} a {requirement.MinimumVersion} o superior."
+                : null
+        };
+    }
+
+    private async Task<DependencyState> DetectVSCodeAsync(DependencyRequirement requirement, CancellationToken cancellationToken)
+    {
+        var paths = locateVSCode?.Invoke() ?? VSCodeLocator.Resolve();
+        if (!paths.HasCodeExe)
+        {
+            return new DependencyState
+            {
+                Id = requirement.Id,
+                DisplayName = requirement.DisplayName,
+                Status = DependencyStatus.Missing,
+                Recommendation = "Instalar o reparar Visual Studio Code."
+            };
+        }
+
+        if (!paths.HasCodeCmd)
+        {
+            return new DependencyState
+            {
+                Id = requirement.Id,
+                DisplayName = requirement.DisplayName,
+                Status = DependencyStatus.Broken,
+                Path = paths.CodeExe,
+                Error = new InstallerError
+                {
+                    Code = InstallerErrorCode.VSCODE_NOT_FOUND,
+                    Title = "VS Code CLI no encontrado",
+                    Description = "Code.exe existe, pero code.cmd no esta disponible.",
+                    ProbableCause = "La instalacion de VS Code quedo incompleta o el directorio bin no se instalo.",
+                    RecommendedAction = "Ejecuta Reparar para reinstalar VS Code."
+                }
+            };
+        }
+
+        var result = await runner.RunAsync(VSCodeLocator.BuildCodeCmdCommand(
+            paths.CodeCmd!,
+            ["--version"],
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            TimeSpan.FromSeconds(30)), cancellationToken).ConfigureAwait(false);
+
+        if (!result.Succeeded)
+        {
+            return new DependencyState
+            {
+                Id = requirement.Id,
+                DisplayName = requirement.DisplayName,
+                Status = DependencyStatus.Broken,
+                Path = paths.CodeExe,
+                Error = new InstallerError
+                {
+                    Code = InstallerErrorCode.VSCODE_NOT_FOUND,
+                    Title = "VS Code CLI no responde",
+                    Description = result.StandardError,
+                    ProbableCause = "Code.exe existe, pero code.cmd no pudo ejecutarse correctamente.",
+                    RecommendedAction = "Cierra VS Code y ejecuta Reparar."
+                }
+            };
+        }
+
+        var version = VersionParsing.FirstVersionLikeValue(
+            result.StandardOutput.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries).FirstOrDefault());
+        var status = IsOutdated(version, requirement.MinimumVersion) ? DependencyStatus.Outdated : DependencyStatus.Ready;
+        return new DependencyState
+        {
+            Id = requirement.Id,
+            DisplayName = requirement.DisplayName,
+            Status = status,
+            Path = paths.CodeExe,
+            Version = version,
+            Source = "filesystem",
             Recommendation = status == DependencyStatus.Outdated
                 ? $"Actualizar {requirement.DisplayName} a {requirement.MinimumVersion} o superior."
                 : null

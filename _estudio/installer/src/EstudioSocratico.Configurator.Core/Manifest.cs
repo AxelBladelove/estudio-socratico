@@ -13,6 +13,9 @@ public sealed record InstallerManifest
     public Dictionary<DependencyId, DependencyManifestEntry> Dependencies { get; init; } = [];
     public List<PathChange> PathChanges { get; init; } = [];
     public string? WorkspacePath { get; init; }
+    public string? LocalAlias { get; init; }
+    public bool BuildFlowValidated { get; init; }
+    public DateTimeOffset? BuildFlowValidatedAtUtc { get; init; }
     public List<string> VSCodeSettingsApplied { get; init; } = [];
     public List<string> VSCodeExtensionsInstalled { get; init; } = [];
     public AccountState GitHub { get; init; } = new();

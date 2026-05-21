@@ -6,15 +6,39 @@ const path = require("path");
 
 let currentPanel;
 let currentProvider;
+const DEFAULT_EXTENSION_CONFIG = {
+  apiKey: "",
+  provider: "gemini",
+  features: {
+    translateIntroductions: true,
+    importExercism: true,
+    importAlejandroGists: true,
+  },
+};
 
 function activate(context) {
   currentProvider = new ExerciseViewProvider(context);
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider("estudioExercism.view", currentProvider),
     vscode.commands.registerCommand("estudioExercism.openPanel", () => openPanel(context)),
+    vscode.commands.registerCommand("estudioExercism.openApiKeyConfig", () => openApiKeyConfig(getWorkspaceRoot())),
+    vscode.commands.registerCommand("estudioExercism.revealApiKeyConfig", () => revealApiKeyConfig(getWorkspaceRoot())),
     vscode.commands.registerCommand("estudioExercism.testCurrent", () => runForCurrentFile("test-window")),
     vscode.commands.registerCommand("estudioExercism.submitCurrent", () => runForCurrentFile("submit")),
     vscode.commands.registerCommand("estudioExercism.validateCurrent", () => runForCurrentFile("validate-window")),
+    vscode.window.registerUriHandler({
+      handleUri: async (uri) => {
+        const route = String(uri.path || "").toLowerCase();
+        if (route.endsWith("/openpanel")) {
+          await openPanel(context);
+          return;
+        }
+
+        if (route.endsWith("/openapikeyconfig")) {
+          await openApiKeyConfig(getWorkspaceRoot());
+        }
+      },
+    }),
   );
 }
 
@@ -30,6 +54,74 @@ function getWorkspaceRoot() {
 
 function getManagerPath(root) {
   return path.join(root, "_estudio", "soporte", "exercism", "manager.ps1");
+}
+
+function getConfigDirectory(root) {
+  return path.join(root, "usuario", "config");
+}
+
+function getLocalConfigPath(root) {
+  return path.join(getConfigDirectory(root), "estudio-socratico.extension.local.json");
+}
+
+function getExampleConfigPath(root) {
+  return path.join(getConfigDirectory(root), "estudio-socratico.extension.example.json");
+}
+
+function getDefaultExtensionConfigText() {
+  return `${JSON.stringify(DEFAULT_EXTENSION_CONFIG, null, 2)}\n`;
+}
+
+function ensureExtensionConfigFiles(root) {
+  const configDir = getConfigDirectory(root);
+  const localConfigPath = getLocalConfigPath(root);
+  const exampleConfigPath = getExampleConfigPath(root);
+  fs.mkdirSync(configDir, { recursive: true });
+  if (!fs.existsSync(exampleConfigPath)) {
+    fs.writeFileSync(exampleConfigPath, getDefaultExtensionConfigText(), "utf8");
+  }
+  if (!fs.existsSync(localConfigPath)) {
+    fs.writeFileSync(localConfigPath, getDefaultExtensionConfigText(), "utf8");
+  }
+  return { localConfigPath, exampleConfigPath };
+}
+
+function readExtensionConfig(root) {
+  const { localConfigPath, exampleConfigPath } = ensureExtensionConfigFiles(root);
+  try {
+    const config = JSON.parse(fs.readFileSync(localConfigPath, "utf8"));
+    return {
+      ...DEFAULT_EXTENSION_CONFIG,
+      ...config,
+      features: {
+        ...DEFAULT_EXTENSION_CONFIG.features,
+        ...(config.features || {}),
+      },
+      paths: {
+        localConfigPath,
+        exampleConfigPath,
+      },
+    };
+  } catch {
+    return {
+      ...DEFAULT_EXTENSION_CONFIG,
+      paths: {
+        localConfigPath,
+        exampleConfigPath,
+      },
+    };
+  }
+}
+
+async function openApiKeyConfig(root) {
+  const { localConfigPath } = ensureExtensionConfigFiles(root);
+  const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(localConfigPath));
+  await vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
+}
+
+async function revealApiKeyConfig(root) {
+  const { localConfigPath } = ensureExtensionConfigFiles(root);
+  await vscode.commands.executeCommand("revealFileInOS", vscode.Uri.file(localConfigPath));
 }
 
 function runManager(root, args, options = {}) {
@@ -146,7 +238,7 @@ async function refreshWebview(root, webview) {
   webview.html = renderLoadingHtml();
   try {
     const catalog = await runManagerJson(root, ["-Action", "catalog"]);
-    webview.html = renderCatalogHtml(catalog);
+    webview.html = renderCatalogHtml(catalog, readExtensionConfig(root));
   } catch (error) {
     webview.html = renderErrorHtml(error.message);
   }
@@ -171,6 +263,16 @@ async function handleWebviewMessage(root, message, sourceWebview) {
       terminal.show();
       terminal.sendText("exercism configure --token TU_TOKEN_AQUI");
       vscode.window.showInformationMessage("Cambia TU_TOKEN_AQUI por tu token de Exercism y ejecuta el comando.");
+      return;
+    }
+
+    if (message.command === "openApiKeyConfig") {
+      await openApiKeyConfig(root);
+      return;
+    }
+
+    if (message.command === "revealApiKeyConfig") {
+      await revealApiKeyConfig(root);
       return;
     }
 
@@ -346,12 +448,15 @@ function renderErrorHtml(message) {
     <main class="shell">
       <h1>Estudio Socratico</h1>
       <section class="notice error">${escapeHtml(message)}</section>
-      <button data-command="refresh">Reintentar</button>
+      <div class="actions">
+        <button data-command="refresh">Reintentar</button>
+        <button data-command="openApiKeyConfig">Abrir configuración de API Key</button>
+      </div>
     </main>
   `);
 }
 
-function renderCatalogHtml(catalog) {
+function renderCatalogHtml(catalog, extensionConfig) {
   const exercises = normalizeExercises(catalog.exercises || []);
   const topics = [...new Set(exercises.flatMap((exercise) => exercise.topics || []))].sort((a, b) => a.localeCompare(b));
   const providers = [
@@ -362,6 +467,10 @@ function renderCatalogHtml(catalog) {
   const tokenNotice = catalog.exercismCli && catalog.exercismCli.tokenConfigured
     ? ""
     : `<section class="notice">Exercism CLI no tiene token configurado. Configuralo para ver progreso real y enviar soluciones.</section>`;
+  const hasApiKey = Boolean(String(extensionConfig?.apiKey || "").trim());
+  const apiKeyNotice = hasApiKey
+    ? `<section class="notice success">API Key local detectada para ${escapeHtml(extensionConfig.provider || "gemini")}.</section>`
+    : `<section class="notice">No hay API Key local todavia. La extension seguira funcionando parcialmente sin ella.</section>`;
   const cards = exercises.map(renderExerciseCard).join("");
   const topicButtons = topics.map((topic) => `
     <button class="topicToggle" data-topic="${escapeHtml(topic)}" data-topic-state="off" aria-pressed="false">
@@ -379,9 +488,11 @@ function renderCatalogHtml(catalog) {
         <div class="actions">
           <button data-command="refresh">Actualizar</button>
           <button data-command="configureToken">Configurar token</button>
+          <button data-command="openApiKeyConfig">Abrir configuración de API Key</button>
         </div>
       </header>
       ${tokenNotice}
+      ${apiKeyNotice}
       <section class="statusFilters" aria-label="Filtrar por estado">
         <button class="statusFilter active" data-status="all"><span>Todos</span><strong data-count="all">0</strong></button>
         <button class="statusFilter" data-status="completed"><span>Completados</span><strong data-count="completed">0</strong></button>

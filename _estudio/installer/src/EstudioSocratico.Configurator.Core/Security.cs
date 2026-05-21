@@ -15,6 +15,9 @@ public static partial class SecretRedactor
 
         var text = value;
         text = GitHubTokenRegex().Replace(text, Redacted);
+        text = ExercismTokenArgumentRegex().Replace(text, m => $"{m.Groups[1].Value}{Redacted}");
+        text = TokenLineRegex().Replace(text, m => $"{m.Groups[1].Value}{Redacted}");
+        text = SensitiveUuidRegex().Replace(text, Redacted);
         text = ExercismTokenRegex().Replace(text, m => $"{m.Groups[1].Value}{Redacted}");
         text = GenericTokenAssignmentRegex().Replace(text, m => $"{m.Groups[1].Value}{Redacted}");
         text = AuthorizationHeaderRegex().Replace(text, m => $"{m.Groups[1].Value}{Redacted}");
@@ -55,7 +58,16 @@ public static partial class SecretRedactor
     [GeneratedRegex(@"(?i)(exercism\s+configure\s+--token(?:=|\s+))[^\s]+", RegexOptions.Compiled)]
     private static partial Regex ExercismTokenRegex();
 
-    [GeneratedRegex(@"(?i)(token|password|secret|apikey|api_key|authorization)\s*[:=]\s*[""']?[^""'\s,;]+", RegexOptions.Compiled)]
+    [GeneratedRegex(@"(?i)(--token(?:=|\s+))[^\s]+", RegexOptions.Compiled)]
+    private static partial Regex ExercismTokenArgumentRegex();
+
+    [GeneratedRegex(@"(?im)^(\s*.*token\b.*?)(?:[:=]\s*)?[^:\r\n]*$", RegexOptions.Compiled)]
+    private static partial Regex TokenLineRegex();
+
+    [GeneratedRegex(@"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b", RegexOptions.Compiled)]
+    private static partial Regex SensitiveUuidRegex();
+
+    [GeneratedRegex(@"(?i)([""']?(?:token|password|secret|apikey|api_key|authorization)[""']?\s*[:=]\s*[""']?)[^""'\s,;]+", RegexOptions.Compiled)]
     private static partial Regex GenericTokenAssignmentRegex();
 
     [GeneratedRegex(@"(?i)(authorization:\s*(?:bearer|token)\s+)[^\r\n]+", RegexOptions.Compiled)]

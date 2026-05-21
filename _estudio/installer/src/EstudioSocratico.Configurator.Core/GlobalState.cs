@@ -67,6 +67,8 @@ public static class GlobalStateCalculator
     /// </summary>
     private static readonly HashSet<DependencyId> CriticalDependencies =
     [
+        DependencyId.NodeJs,
+        DependencyId.Python,
         DependencyId.Git,
         DependencyId.GitHubCli,
         DependencyId.ExercismCli,
@@ -81,9 +83,7 @@ public static class GlobalStateCalculator
     /// </summary>
     private static readonly HashSet<DependencyId> OptionalDependencies =
     [
-        DependencyId.Winget,
-        DependencyId.NodeJs,
-        DependencyId.Python
+        DependencyId.Winget
     ];
 
     public static GlobalState Calculate(
@@ -181,12 +181,77 @@ public static class GlobalStateCalculator
         _ => "Estado desconocido."
     };
 
+    public static FinalReadinessCheck CreateFinalReadinessCheck(
+        IReadOnlyList<DependencyState> dependencies,
+        AccountState? github = null,
+        AccountState? exercism = null,
+        bool workspaceValid = false,
+        bool buildFlowValid = false,
+        string? alias = null,
+        string? workspacePath = null,
+        string? smokeTestStatus = null)
+    {
+        var globalState = Calculate(dependencies, github, exercism, workspaceValid, buildFlowValid);
+        var missingRequirements = dependencies
+            .Where(dep => CriticalDependencies.Contains(dep.Id) && dep.Status == DependencyStatus.Missing)
+            .Select(dep => dep.DisplayName)
+            .ToList();
+        var failedRequirements = dependencies
+            .Where(dep => CriticalDependencies.Contains(dep.Id) &&
+                          dep.Status is DependencyStatus.Broken or DependencyStatus.Outdated or DependencyStatus.Failed)
+            .Select(dep => dep.DisplayName)
+            .ToList();
+        var authRequirements = new List<string>();
+
+        if (github is null || !github.Configured)
+        {
+            authRequirements.Add("GitHub");
+        }
+
+        if (exercism is null || !exercism.Configured)
+        {
+            authRequirements.Add("Exercism");
+        }
+
+        if (!workspaceValid)
+        {
+            missingRequirements.Add("Workspace");
+        }
+
+        var pendingRequirements = new List<string>();
+        pendingRequirements.AddRange(missingRequirements);
+        pendingRequirements.AddRange(failedRequirements);
+        pendingRequirements.AddRange(authRequirements);
+        if (!buildFlowValid)
+        {
+            pendingRequirements.Add("Smoke test F9");
+        }
+
+        return new FinalReadinessCheck
+        {
+            GlobalState = globalState,
+            GlobalMessage = GetHumanMessage(globalState),
+            MissingRequirements = missingRequirements,
+            FailedRequirements = failedRequirements,
+            AuthRequirements = authRequirements,
+            PendingRequirements = pendingRequirements,
+            SmokeTestStatus = string.IsNullOrWhiteSpace(smokeTestStatus)
+                ? buildFlowValid ? "passed" : "pending"
+                : smokeTestStatus,
+            Alias = alias,
+            GitHubLogin = github?.UserName,
+            WorkspacePath = workspacePath
+        };
+    }
+
     public static ResourceStatus ToResourceStatus(DependencyStatus status) => status switch
     {
         DependencyStatus.Ready => ResourceStatus.Ready,
         DependencyStatus.Missing => ResourceStatus.Missing,
         DependencyStatus.Broken => ResourceStatus.Broken,
         DependencyStatus.Outdated => ResourceStatus.Outdated,
+        DependencyStatus.NeedsAuth => ResourceStatus.NeedsAuth,
+        DependencyStatus.NeedsUserAction => ResourceStatus.NeedsUserAction,
         DependencyStatus.Installing => ResourceStatus.Installing,
         DependencyStatus.Repaired => ResourceStatus.Ready,
         DependencyStatus.Skipped => ResourceStatus.Skipped,
@@ -197,15 +262,15 @@ public static class GlobalStateCalculator
     public static string GetHumanStatus(ResourceStatus status) => status switch
     {
         ResourceStatus.Ready => "Listo",
-        ResourceStatus.Missing => "Pendiente",
-        ResourceStatus.Broken => "Requiere reparación",
-        ResourceStatus.Outdated => "Necesita actualización",
-        ResourceStatus.NeedsAuth => "Necesita iniciar sesión",
-        ResourceStatus.NeedsUserAction => "Requiere acción",
+        ResourceStatus.Missing => "Por instalar",
+        ResourceStatus.Broken => "Por reparar",
+        ResourceStatus.Outdated => "Por reparar",
+        ResourceStatus.NeedsAuth => "Requiere cuenta",
+        ResourceStatus.NeedsUserAction => "Requiere accion",
         ResourceStatus.Optional => "Opcional",
         ResourceStatus.Skipped => "Omitido",
-        ResourceStatus.Installing => "Instalando...",
-        ResourceStatus.Repairing => "Reparando...",
+        ResourceStatus.Installing => "En proceso",
+        ResourceStatus.Repairing => "En proceso",
         ResourceStatus.Failed => "Error",
         _ => "Desconocido"
     };

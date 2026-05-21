@@ -12,15 +12,58 @@
 :: ============================================================
 
 setlocal enabledelayedexpansion
+set "SCRIPT_DIR=%~dp0"
 
 set "RUN_INLINE=%ESTUDIO_INLINE_RUN%"
+set "INSTALLER_SMOKE=%ESTUDIO_INSTALLER_SMOKE%"
+set "NON_INTERACTIVE=%ESTUDIO_NONINTERACTIVE%"
+set "SKIP_PAUSE=%ESTUDIO_SKIP_PAUSE%"
+set "INPUT_PATH="
+
+:parse_args
+if "%~1"=="" goto args_done
 if /i "%~1"=="--inline" (
     set "RUN_INLINE=1"
     shift
+    goto parse_args
 )
+if /i "%~1"=="--installer-smoke" (
+    set "INSTALLER_SMOKE=1"
+    set "ESTUDIO_INSTALLER_SMOKE=1"
+    set "NON_INTERACTIVE=1"
+    set "ESTUDIO_NONINTERACTIVE=1"
+    set "SKIP_PAUSE=1"
+    set "ESTUDIO_SKIP_PAUSE=1"
+    set "ESTUDIO_SKIP_COMMIT=1"
+    set "RUN_INLINE=1"
+    shift
+    goto parse_args
+)
+if /i "%~1"=="--non-interactive" (
+    set "NON_INTERACTIVE=1"
+    set "ESTUDIO_NONINTERACTIVE=1"
+    set "SKIP_PAUSE=1"
+    set "ESTUDIO_SKIP_PAUSE=1"
+    set "RUN_INLINE=1"
+    shift
+    goto parse_args
+)
+if not defined INPUT_PATH (
+    set "INPUT_PATH=%~1"
+)
+shift
+goto parse_args
 
 set "SCRIPT_DIR=%~dp0"
 for %%S in ("%SCRIPT_DIR%.") do set "SCRIPT_DIR=%%~fS\"
+:args_done
+if /i "%INSTALLER_SMOKE%"=="1" (
+    set "NON_INTERACTIVE=1"
+    set "SKIP_PAUSE=1"
+    set "ESTUDIO_SKIP_COMMIT=1"
+    set "RUN_INLINE=1"
+)
+if /i "%NON_INTERACTIVE%"=="1" set "RUN_INLINE=1"
 set "REPO_ROOT=%CD%"
 if not exist "%REPO_ROOT%\AGENTS.md" (
     pushd "%SCRIPT_DIR%..\..\.." >nul
@@ -31,7 +74,6 @@ if exist "%REPO_ROOT%\_estudio\soporte\scripts\resolve_build_context.ps1" (
     set "SCRIPT_DIR=%REPO_ROOT%\_estudio\soporte\scripts\"
 )
 
-set "INPUT_PATH=%~1"
 if "%INPUT_PATH%"=="" (
     for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "$root=Join-Path $env:REPO_ROOT 'Ejercicios'; if(Test-Path -LiteralPath $root){$file=Get-ChildItem -LiteralPath $root -Filter '*.c' | Sort-Object LastWriteTime -Descending | Select-Object -First 1; if($file){$file.FullName}}"`) do set "INPUT_PATH=%%I"
 )
@@ -346,10 +388,18 @@ if %EXIT_CODE%==0 (
         echo [OK] Compilacion exitosa -^> Ejecutando %NOMBRE_BASE%.exe en esta terminal...
         echo.
         pushd "%REPO_ROOT%"
-        "%OUTPUT_LAUNCHER_EXE%" --run "%ARCHIVO_EXE%"
+        if "%NON_INTERACTIVE%"=="1" (
+            "%OUTPUT_LAUNCHER_EXE%" --run "%ARCHIVO_EXE%" --non-interactive
+        ) else (
+            "%OUTPUT_LAUNCHER_EXE%" --run "%ARCHIVO_EXE%"
+        )
         set "RUN_EXIT_CODE=!errorlevel!"
         popd
-        if not "!RUN_EXIT_CODE!"=="0" echo [RUN] El programa devolvio codigo !RUN_EXIT_CODE!.
+        if not "!RUN_EXIT_CODE!"=="0" (
+            echo [RUN] El programa devolvio codigo !RUN_EXIT_CODE!.
+            set "EXIT_CODE=!RUN_EXIT_CODE!"
+            set "COMMIT_MSG=intento_%USUARIO_SLUG%_%TIMESTAMP%_%DURACION_EJERCICIO%_exit!RUN_EXIT_CODE!"
+        )
     ) else (
         set "RUNNER_PS1=%RUNTIME_DIR%\run_%TIMESTAMP%.ps1"
         > "%RUN_LOCK_FILE%" echo STARTING
@@ -396,10 +446,14 @@ if %EXIT_CODE%==0 (
 :: ============================================================
 :: BLOQUE 5: Git commit automatico (el corazon de la telemetria)
 :: ============================================================
-if "%DEFER_COMMIT%"=="1" (
-    echo [LOG] Commit automatico diferido hasta que cierre la ventana externa.
+if "%ESTUDIO_SKIP_COMMIT%"=="1" (
+    echo [LOG] Commit automatico omitido por ESTUDIO_SKIP_COMMIT=1.
 ) else (
-    call "%FINALIZE_SCRIPT%" "%REPO_ROOT%" "%ARCHIVO_C%" "%LOG%" "%ERRORES_FILE%" "%GIT_COMMIT_NAME%" "%GIT_COMMIT_EMAIL%" "%COMMIT_MSG%" ""
+    if "%DEFER_COMMIT%"=="1" (
+        echo [LOG] Commit automatico diferido hasta que cierre la ventana externa.
+    ) else (
+        call "%FINALIZE_SCRIPT%" "%REPO_ROOT%" "%ARCHIVO_C%" "%LOG%" "%ERRORES_FILE%" "%GIT_COMMIT_NAME%" "%GIT_COMMIT_EMAIL%" "%COMMIT_MSG%" ""
+    )
 )
 
 echo.

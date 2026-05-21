@@ -6,6 +6,7 @@ public sealed class AppPaths
 {
     public AppPaths(string? repoRoot = null, string? localAppDataRoot = null)
     {
+        UserProfileRoot = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         LocalAppDataRoot = localAppDataRoot ?? Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             ProductInfo.AppDataFolderName);
@@ -14,12 +15,10 @@ public sealed class AppPaths
         ToolsRoot = Path.Combine(LocalAppDataRoot, "Tools");
         ManifestPath = Path.Combine(LocalAppDataRoot, ProductInfo.ManifestFileName);
         RepoRoot = repoRoot ?? TryResolveRepoRoot(Environment.CurrentDirectory);
-        DefaultWorkspacePath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            "EstudioSocratico",
-            ProductInfo.DefaultWorkspaceFolderName);
+        DefaultWorkspacePath = GetRecommendedWorkspacePath(Environment.UserName);
     }
 
+    public string UserProfileRoot { get; }
     public string LocalAppDataRoot { get; }
     public string LogsRoot { get; }
     public string DownloadCache { get; }
@@ -27,6 +26,12 @@ public sealed class AppPaths
     public string ManifestPath { get; }
     public string? RepoRoot { get; }
     public string DefaultWorkspacePath { get; }
+
+    public string GetRecommendedWorkspacePath(string? localAlias)
+    {
+        var alias = LocalAliasNormalizer.Normalize(localAlias, Environment.UserName);
+        return Path.Combine(UserProfileRoot, $"{ProductInfo.DefaultWorkspaceFolderPrefix}-{alias}");
+    }
 
     public void EnsureBaseDirectories()
     {

@@ -220,6 +220,16 @@ static void wait_for_key(void)
     }
 }
 
+static int env_flag_enabled(const char *name)
+{
+    const char *value = getenv(name);
+    if (value == NULL) {
+        return 0;
+    }
+
+    return strcmp(value, "1") == 0 || _stricmp(value, "true") == 0 || _stricmp(value, "yes") == 0;
+}
+
 static double elapsed_seconds(LARGE_INTEGER start, LARGE_INTEGER end, LARGE_INTEGER frequency)
 {
     if (frequency.QuadPart == 0) {
@@ -311,6 +321,7 @@ int main(int argc, char **argv)
     char command_line[ESTUDIO_MAX_PATH * 2];
     const char *log_path = NULL;
     int first_program_arg = 1;
+    int non_interactive = 0;
     STARTUPINFOA startup_info;
     PROCESS_INFORMATION process_info;
     LARGE_INTEGER start_time;
@@ -333,9 +344,28 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (first_program_arg + 1 < argc && strcmp(argv[first_program_arg], "--log") == 0) {
-        log_path = argv[first_program_arg + 1];
-        first_program_arg += 2;
+    if (env_flag_enabled("ESTUDIO_NONINTERACTIVE") ||
+        env_flag_enabled("ESTUDIO_SKIP_PAUSE") ||
+        env_flag_enabled("ESTUDIO_INSTALLER_SMOKE")) {
+        non_interactive = 1;
+    }
+
+    while (first_program_arg < argc) {
+        if (strcmp(argv[first_program_arg], "--log") == 0 && first_program_arg + 1 < argc) {
+            log_path = argv[first_program_arg + 1];
+            first_program_arg += 2;
+            continue;
+        }
+
+        if (strcmp(argv[first_program_arg], "--non-interactive") == 0 ||
+            strcmp(argv[first_program_arg], "--skip-pause") == 0 ||
+            strcmp(argv[first_program_arg], "--installer-smoke") == 0) {
+            non_interactive = 1;
+            first_program_arg++;
+            continue;
+        }
+
+        break;
     }
 
     if (GetFileAttributesA(target_exe) == INVALID_FILE_ATTRIBUTES) {
@@ -370,10 +400,12 @@ int main(int argc, char **argv)
     }
     printf("Process returned %lu (0x%lX)   execution time : %.3f s\n",
            exit_code, exit_code, elapsed_seconds(start_time, end_time, frequency));
-    printf("Press any key to continue.");
 
     dump_console_to_log(log_path);
-    wait_for_key();
+    if (!non_interactive) {
+        printf("Press any key to continue.");
+        wait_for_key();
+    }
 
     return (int)exit_code;
 }

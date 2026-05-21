@@ -1,3 +1,4 @@
+using System.Text.Json;
 using EstudioSocratico.Configurator.Core;
 
 namespace EstudioSocratico.Configurator.Engine;
@@ -27,7 +28,7 @@ public sealed class ConfiguratorEngine
         _logManager = new LogManager(_paths);
         _manifestManager = new ManifestManager(_paths);
         var runner = commandRunner ?? new ProcessCommandRunner(_logManager);
-        _detector = new DependencyDetector(runner);
+        _detector = new DependencyDetector(runner, managedToolsDirectory: Path.Combine(_paths.ToolsRoot, "bin"));
         var probe = new SystemProbe(_paths);
         var pathManager = new PathManager(_paths, _logManager);
         var winget = new WingetBroker(runner, _detector, _logManager);
@@ -57,7 +58,7 @@ public sealed class ConfiguratorEngine
         _uninstallManager = new UninstallManager(_paths, _manifestManager, _logManager, security);
         _repairManager = new RepairManager(_dependencyInstaller, _workspaceManager, _vsCodeManager, _gitHubAccountManager, _logManager);
         _reinstallManager = new ReinstallManager(_repairManager, _uninstallManager);
-        _telemetryCompatibilityManager = new TelemetryCompatibilityManager(runner, _paths, _logManager);
+        _telemetryCompatibilityManager = new TelemetryCompatibilityManager(runner, _logManager);
         _gistImporterManager = new GistImporterManager();
         _planner = new SetupPlanner();
     }
@@ -77,32 +78,14 @@ public sealed class ConfiguratorEngine
     /// Full diagnosis: dependencies + auth + workspace + build flow.
     /// Returns a UIStateSnapshot for the React UI.
     /// </summary>
-    public async Task<UIStateSnapshot> DiagnoseAsync(string? workspacePath = null, CancellationToken cancellationToken = default)
+    public async Task<UIStateSnapshot> DiagnoseAsync(
+        string? workspacePath = null,
+        string? localAlias = null,
+        CancellationToken cancellationToken = default)
     {
         await _logManager.StartRunAsync(cancellationToken).ConfigureAwait(false);
-        var manifest = await _manifestManager.LoadAsync(cancellationToken).ConfigureAwait(false);
-        var github = manifest.GitHub;
-        var exercism = manifest.Exercism;
-        var workspace = workspacePath ?? manifest.WorkspacePath ?? _paths.RepoRoot ?? _paths.DefaultWorkspacePath;
-        var diagnostics = await _diagnosticsManager.RunAsync(workspace, cancellationToken).ConfigureAwait(false);
-        var dependencies = diagnostics.Dependencies;
-        var workspaceValid = Directory.Exists(workspace) && Directory.Exists(Path.Combine(workspace, ".git"));
-        var buildFlowValid = false; // Will be verified during apply
-
-        var globalState = GlobalStateCalculator.Calculate(dependencies, github, exercism, workspaceValid, buildFlowValid);
-        var resources = _planner.ToResourceStates(dependencies, github, exercism);
-
-        return new UIStateSnapshot
-        {
-            GlobalState = globalState,
-            GlobalMessage = GlobalStateCalculator.GetHumanMessage(globalState),
-            Resources = resources,
-            GitHub = github,
-            Exercism = exercism,
-            WorkspacePath = workspace,
-            WorkspaceValid = workspaceValid,
-            BuildFlowValid = buildFlowValid
-        };
+        var (snapshot, _) = await BuildCurrentStateAsync(workspacePath, localAlias, cancellationToken).ConfigureAwait(false);
+        return snapshot;
     }
 
     /// <summary>
@@ -112,10 +95,12 @@ public sealed class ConfiguratorEngine
     {
         var dependencies = await _detector.DetectAllAsync(cancellationToken).ConfigureAwait(false);
         var manifest = await _manifestManager.LoadAsync(cancellationToken).ConfigureAwait(false);
-        var workspace = manifest.WorkspacePath ?? _paths.RepoRoot ?? _paths.DefaultWorkspacePath;
+        var alias = LocalAliasNormalizer.Normalize(manifest.LocalAlias, Environment.UserName);
+        var workspace = manifest.WorkspacePath ?? _paths.GetRecommendedWorkspacePath(alias);
         var workspaceValid = Directory.Exists(workspace) && Directory.Exists(Path.Combine(workspace, ".git"));
+        var buildFlowValid = manifest.BuildFlowValidated && workspaceValid;
 
-        return _planner.CreatePlan(dependencies, manifest.GitHub, manifest.Exercism, workspaceValid, false);
+        return _planner.CreatePlan(dependencies, manifest.GitHub, manifest.Exercism, workspaceValid, buildFlowValid);
     }
 
     public async Task<SetupSummary> RunAsync(
@@ -135,28 +120,54 @@ public sealed class ConfiguratorEngine
             switch (request.Mode)
             {
                 case SetupMode.Diagnostics:
-                    await progress.ReportAsync(new ProgressEvent { StepId = "diagnostics", Title = "Diagnostico", Message = "Analizando entorno.", Percent = 10 }, cancellationToken)
+                    await progress.ReportAsync(new ProgressEvent
+                    {
+                        StepId = "diagnostics",
+                        Title = "Diagnostico",
+                        Message = "Analizando entorno.",
+                        Percent = 10,
+                        Status = DependencyStatus.Installing
+                    }, cancellationToken)
                         .ConfigureAwait(false);
                     var report = await _diagnosticsManager.RunAsync(workspace, cancellationToken).ConfigureAwait(false);
                     states.AddRange(report.Dependencies);
+                    await progress.ReportAsync(new ProgressEvent
+                    {
+                        StepId = "diagnostics",
+                        Title = "Diagnostico",
+                        Message = "Diagnostico completado.",
+                        Percent = 100,
+                        Status = DependencyStatus.Ready
+                    }, cancellationToken).ConfigureAwait(false);
                     break;
 
                 case SetupMode.Uninstall:
-                    await progress.ReportAsync(new ProgressEvent { StepId = "uninstall", Title = "Desinstalacion", Message = "Leyendo manifest.", Percent = 10 }, cancellationToken)
+                    await progress.ReportAsync(new ProgressEvent
+                    {
+                        StepId = "uninstall",
+                        Title = "Desinstalacion",
+                        Message = "Leyendo manifest y rutas gestionadas.",
+                        Percent = 10,
+                        Status = DependencyStatus.Installing
+                    }, cancellationToken)
                         .ConfigureAwait(false);
-                    await _uninstallManager.UninstallAsync(request.AllowAggressiveCleanup, cancellationToken).ConfigureAwait(false);
+                    var cleanup = await _uninstallManager.UninstallAsync(request.AllowAggressiveCleanup, cancellationToken).ConfigureAwait(false);
+                    await progress.ReportAsync(new ProgressEvent
+                    {
+                        StepId = "uninstall",
+                        Title = "Desinstalacion",
+                        Message = cleanup.Message,
+                        Percent = 100,
+                        Status = DependencyStatus.Ready
+                    }, cancellationToken).ConfigureAwait(false);
                     break;
 
                 case SetupMode.Reinstall:
-                    workspace = await ResolveWorkspaceAsync(request, cancellationToken).ConfigureAwait(false);
-                    await _reinstallManager.ReinstallAsync(workspace, ResolveAlias(request), request.SkipGitHubLogin, cancellationToken)
-                        .ConfigureAwait(false);
+                    workspace = await ReinstallAsync(request, progress, cancellationToken).ConfigureAwait(false);
                     break;
 
                 case SetupMode.Repair:
-                    workspace = await ResolveWorkspaceAsync(request, cancellationToken).ConfigureAwait(false);
-                    await _repairManager.RepairAsync(workspace, ResolveAlias(request), request.SkipGitHubLogin, cancellationToken)
-                        .ConfigureAwait(false);
+                    workspace = await RepairAsync(request, progress, cancellationToken).ConfigureAwait(false);
                     break;
 
                 case SetupMode.Install:
@@ -172,41 +183,163 @@ public sealed class ConfiguratorEngine
             await _logManager.WriteErrorAsync(error, cancellationToken).ConfigureAwait(false);
         }
 
-        var diagnostics = await _diagnosticsManager.RunAsync(workspace, cancellationToken).ConfigureAwait(false);
-        if (states.Count == 0)
+        if (request.Mode is SetupMode.Install or SetupMode.Repair or SetupMode.Reinstall)
         {
-            states.AddRange(diagnostics.Dependencies);
+            await PersistBuildFlowValidationAsync(workspace, errors.Count == 0, cancellationToken).ConfigureAwait(false);
         }
 
-        // Compute honest global state
-        var manifest = await _manifestManager.LoadAsync(cancellationToken).ConfigureAwait(false);
-        var workspaceValid = !string.IsNullOrEmpty(workspace) && Directory.Exists(workspace) && Directory.Exists(Path.Combine(workspace, ".git"));
-        var globalState = errors.Count > 0
-            ? GlobalState.Failed
-            : GlobalStateCalculator.Calculate(states, manifest.GitHub, manifest.Exercism, workspaceValid, workspaceValid);
+        var (currentState, finalDependencies) = await BuildCurrentStateAsync(workspace, null, cancellationToken).ConfigureAwait(false);
+        await LogFinalReadinessCheckAsync(currentState, cancellationToken).ConfigureAwait(false);
+        var globalState = errors.Count > 0 ? GlobalState.Failed : currentState.GlobalState;
+        var globalMessage = errors.Count > 0
+            ? errors[0].Description
+            : currentState.GlobalMessage;
+
+        var succeeded = request.Mode switch
+        {
+            SetupMode.Diagnostics or SetupMode.Uninstall => errors.Count == 0,
+            _ => errors.Count == 0 && currentState.GlobalState == GlobalState.ReadyToStudy
+        };
 
         return new SetupSummary
         {
             Mode = request.Mode,
-            Succeeded = errors.Count == 0 && globalState == GlobalState.ReadyToStudy,
+            Succeeded = succeeded,
             GlobalState = globalState,
-            GlobalMessage = GlobalStateCalculator.GetHumanMessage(globalState),
-            Dependencies = states,
+            GlobalMessage = globalMessage,
+            Dependencies = finalDependencies,
             Errors = errors,
             WorkspacePath = workspace,
             LogPath = _logManager.InstallerLogPath,
-            DiagnosticsPath = _logManager.DiagnosticsPath
+            DiagnosticsPath = _logManager.DiagnosticsPath,
+            CurrentState = currentState
         };
     }
 
     public Task<AccountState> SwitchGitHubAccountAsync(CancellationToken cancellationToken = default)
     {
-        return _gitHubAccountManager.EnsureLoginAsync(switchAccount: true, cancellationToken);
+        return ConfigureGitHubAsync(switchAccount: true, cancellationToken: cancellationToken);
     }
 
-    public Task<AccountState> ConfigureExercismAsync(string token, string workspacePath, CancellationToken cancellationToken = default)
+    public async Task<AccountState> ConfigureGitHubAsync(
+        bool switchAccount = false,
+        string? workspacePath = null,
+        CancellationToken cancellationToken = default)
     {
-        return _exercismManager.ConfigureTokenAsync(token, workspacePath, cancellationToken);
+        var account = await _gitHubAccountManager.EnsureLoginAsync(switchAccount, cancellationToken).ConfigureAwait(false);
+        var workspace = await ResolveKnownWorkspaceAsync(workspacePath, cancellationToken).ConfigureAwait(false);
+        if (File.Exists(Path.Combine(workspace, "AGENTS.md")))
+        {
+            var manifest = await _manifestManager.LoadAsync(cancellationToken).ConfigureAwait(false);
+            var alias = LocalAliasNormalizer.Normalize(manifest.LocalAlias, Environment.UserName);
+            await _gitHubAccountManager.ConfigureRepositoryAsync(workspace, alias, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        return account;
+    }
+
+    public async Task<AccountState> ConfigureExercismAsync(string token, string? workspacePath, CancellationToken cancellationToken = default)
+    {
+        var workspace = await ResolveKnownWorkspaceAsync(workspacePath, cancellationToken).ConfigureAwait(false);
+        return await _exercismManager.ConfigureTokenAsync(token, workspace, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<string> GetKnownWorkspacePathAsync(string? workspacePath = null, CancellationToken cancellationToken = default)
+    {
+        return await ResolveKnownWorkspaceAsync(workspacePath, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task ReinstallVSCodeExtensionAsync(string? workspacePath = null, CancellationToken cancellationToken = default)
+    {
+        var workspace = await ResolveKnownWorkspaceAsync(workspacePath, cancellationToken).ConfigureAwait(false);
+        await _vsCodeManager.RepairLocalExtensionAsync(workspace, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task OpenExercisePanelAsync(string? workspacePath = null, CancellationToken cancellationToken = default)
+    {
+        var workspace = await ResolveKnownWorkspaceAsync(workspacePath, cancellationToken).ConfigureAwait(false);
+        await _vsCodeManager.OpenExercisePanelAsync(workspace, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<ExtensionApiKeyConfigState> EnsureExtensionApiKeyConfigAsync(string? workspacePath = null, CancellationToken cancellationToken = default)
+    {
+        var workspace = await ResolveKnownWorkspaceAsync(workspacePath, cancellationToken).ConfigureAwait(false);
+        return await _workspaceManager.EnsureExtensionApiKeyConfigAsync(workspace, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<ExtensionApiKeyConfigState> GetExtensionApiKeyConfigAsync(string? workspacePath = null, CancellationToken cancellationToken = default)
+    {
+        var workspace = await ResolveKnownWorkspaceAsync(workspacePath, cancellationToken).ConfigureAwait(false);
+        return _workspaceManager.DescribeExtensionApiKeyConfig(workspace);
+    }
+
+    public async Task<SetupSummary> RunSmokeTestAsync(
+        string? workspacePath = null,
+        IProgressSink? progressSink = null,
+        CancellationToken cancellationToken = default)
+    {
+        var progress = new CompositeProgressSink([_logManager, progressSink ?? NullProgressSink.Instance]);
+        var errors = new List<InstallerError>();
+        var workspace = await ResolveKnownWorkspaceAsync(workspacePath, cancellationToken).ConfigureAwait(false);
+
+        await _logManager.StartRunAsync(cancellationToken).ConfigureAwait(false);
+        await progress.ReportAsync(new ProgressEvent
+        {
+            StepId = "smoke-test",
+            Title = "Validacion F9",
+            Message = "Ejecutando build.cmd sin commits automaticos.",
+            Percent = 20,
+            Status = DependencyStatus.Installing
+        }, cancellationToken).ConfigureAwait(false);
+
+        try
+        {
+            await _telemetryCompatibilityManager.ValidateBuildFlowAsync(workspace, cancellationToken).ConfigureAwait(false);
+            await progress.ReportAsync(new ProgressEvent
+            {
+                StepId = "smoke-test",
+                Title = "Validacion F9",
+                Message = "Smoke test completado sin commits automaticos.",
+                Percent = 100,
+                Status = DependencyStatus.Ready
+            }, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            var error = NormalizeError(ex);
+            errors.Add(error);
+            await _logManager.WriteErrorAsync(error, cancellationToken).ConfigureAwait(false);
+            await progress.ReportAsync(new ProgressEvent
+            {
+                StepId = "smoke-test",
+                Title = "Validacion F9",
+                Message = error.Description,
+                Percent = 100,
+                Status = DependencyStatus.Failed
+            }, cancellationToken).ConfigureAwait(false);
+        }
+
+        await PersistBuildFlowValidationAsync(workspace, errors.Count == 0, cancellationToken).ConfigureAwait(false);
+        var (currentState, finalDependencies) = await BuildCurrentStateAsync(workspace, null, cancellationToken).ConfigureAwait(false);
+        await LogFinalReadinessCheckAsync(currentState, cancellationToken).ConfigureAwait(false);
+        var globalState = errors.Count > 0 ? GlobalState.Failed : currentState.GlobalState;
+
+        return new SetupSummary
+        {
+            Mode = SetupMode.Diagnostics,
+            Succeeded = errors.Count == 0,
+            GlobalState = globalState,
+            GlobalMessage = errors.Count == 0
+                ? "Smoke test F9 completado sin commits automaticos."
+                : errors[0].Description,
+            Dependencies = finalDependencies,
+            Errors = errors,
+            WorkspacePath = workspace,
+            LogPath = _logManager.InstallerLogPath,
+            DiagnosticsPath = _logManager.DiagnosticsPath,
+            CurrentState = currentState
+        };
     }
 
     private async Task<string> InstallAsync(
@@ -233,8 +366,8 @@ public sealed class ConfiguratorEngine
             states.Add(state);
         }
 
-        var alias = ResolveAlias(request);
-        var target = request.WorkspacePath ?? _paths.RepoRoot ?? _paths.DefaultWorkspacePath;
+        var alias = await ResolveAliasAsync(request, cancellationToken).ConfigureAwait(false);
+        var target = request.WorkspacePath ?? _paths.GetRecommendedWorkspacePath(alias);
         await progress.ReportAsync(new ProgressEvent { StepId = "github", Title = "GitHub", Message = "Preparando fork y workspace.", Percent = 70 }, cancellationToken)
             .ConfigureAwait(false);
         var workspace = await _gitHubAccountManager.EnsureWorkspaceRepositoryAsync(target, alias, request.SkipGitHubLogin, cancellationToken)
@@ -249,6 +382,17 @@ public sealed class ConfiguratorEngine
             await progress.ReportAsync(new ProgressEvent { StepId = "exercism", Title = "Exercism", Message = "Configurando token de forma segura.", Percent = 84 }, cancellationToken)
                 .ConfigureAwait(false);
             await _exercismManager.ConfigureTokenAsync(request.ExercismToken, workspace, cancellationToken).ConfigureAwait(false);
+        }
+        else if (!request.SkipExercism)
+        {
+            await progress.ReportAsync(new ProgressEvent
+            {
+                StepId = "exercism",
+                Title = "Exercism",
+                Message = "Falta token de Exercism para completar el flujo.",
+                Percent = 84,
+                Status = DependencyStatus.NeedsUserAction
+            }, cancellationToken).ConfigureAwait(false);
         }
 
         await progress.ReportAsync(new ProgressEvent { StepId = "vscode", Title = "VS Code", Message = "Aplicando perfil del workspace.", Percent = 90 }, cancellationToken)
@@ -265,22 +409,259 @@ public sealed class ConfiguratorEngine
         return workspace;
     }
 
+    private async Task<string> RepairAsync(
+        SetupRequest request,
+        IProgressSink progress,
+        CancellationToken cancellationToken)
+    {
+        var workspace = await ResolveWorkspaceAsync(request, cancellationToken).ConfigureAwait(false);
+        await progress.ReportAsync(new ProgressEvent
+        {
+            StepId = "repair",
+            Title = "Reparacion",
+            Message = "Reinstalando o reparando herramientas requeridas.",
+            Percent = 20,
+            Status = DependencyStatus.Installing
+        }, cancellationToken).ConfigureAwait(false);
+
+        await _repairManager.RepairAsync(workspace, await ResolveAliasAsync(request, cancellationToken).ConfigureAwait(false), request.SkipGitHubLogin, cancellationToken)
+            .ConfigureAwait(false);
+
+        await RevalidateExercismAsync(request, workspace, progress, 76, "exercism", cancellationToken).ConfigureAwait(false);
+
+        await progress.ReportAsync(new ProgressEvent
+        {
+            StepId = "smoke-test",
+            Title = "Validacion F9",
+            Message = "Ejecutando smoke test sin commits automaticos.",
+            Percent = 90,
+            Status = DependencyStatus.Installing
+        }, cancellationToken).ConfigureAwait(false);
+        await _telemetryCompatibilityManager.ValidateBuildFlowAsync(workspace, cancellationToken).ConfigureAwait(false);
+
+        await progress.ReportAsync(new ProgressEvent
+        {
+            StepId = "repair",
+            Title = "Reparacion",
+            Message = "Reparacion completada.",
+            Percent = 100,
+            Status = DependencyStatus.Ready
+        }, cancellationToken).ConfigureAwait(false);
+        return workspace;
+    }
+
+    private async Task<string> ReinstallAsync(
+        SetupRequest request,
+        IProgressSink progress,
+        CancellationToken cancellationToken)
+    {
+        var workspace = await ResolveWorkspaceAsync(request, cancellationToken).ConfigureAwait(false);
+        await progress.ReportAsync(new ProgressEvent
+        {
+            StepId = "reinstall-manifest",
+            Title = "Reinstalacion",
+            Message = "Leyendo manifest y conservando datos del estudiante.",
+            Percent = 10,
+            Status = DependencyStatus.Installing
+        }, cancellationToken).ConfigureAwait(false);
+
+        await _uninstallManager.UninstallAsync(allowAggressiveCleanup: false, cancellationToken).ConfigureAwait(false);
+
+        await progress.ReportAsync(new ProgressEvent
+        {
+            StepId = "reinstall-tools",
+            Title = "Reinstalacion",
+            Message = "Reparando herramientas gestionadas, PATH y workspace.",
+            Percent = 35,
+            Status = DependencyStatus.Installing
+        }, cancellationToken).ConfigureAwait(false);
+
+        await _repairManager.RepairAsync(workspace, await ResolveAliasAsync(request, cancellationToken).ConfigureAwait(false), request.SkipGitHubLogin, cancellationToken)
+            .ConfigureAwait(false);
+
+        await RevalidateExercismAsync(request, workspace, progress, 78, "reinstall-exercism", cancellationToken).ConfigureAwait(false);
+
+        await progress.ReportAsync(new ProgressEvent
+        {
+            StepId = "reinstall-smoke",
+            Title = "Validacion F9",
+            Message = "Ejecutando smoke test final sin commits automaticos.",
+            Percent = 92,
+            Status = DependencyStatus.Installing
+        }, cancellationToken).ConfigureAwait(false);
+        await _telemetryCompatibilityManager.ValidateBuildFlowAsync(workspace, cancellationToken).ConfigureAwait(false);
+
+        await progress.ReportAsync(new ProgressEvent
+        {
+            StepId = "reinstall",
+            Title = "Reinstalacion",
+            Message = "Reinstalacion completada conservando ejercicios, logs y usuario.",
+            Percent = 100,
+            Status = DependencyStatus.Ready
+        }, cancellationToken).ConfigureAwait(false);
+        return workspace;
+    }
+
+    private async Task RevalidateExercismAsync(
+        SetupRequest request,
+        string workspace,
+        IProgressSink progress,
+        double percent,
+        string stepId,
+        CancellationToken cancellationToken)
+    {
+        if (request.SkipExercism)
+        {
+            return;
+        }
+
+        await progress.ReportAsync(new ProgressEvent
+        {
+            StepId = stepId,
+            Title = "Exercism",
+            Message = "Revalidando CLI y token de Exercism.",
+            Percent = percent,
+            Status = DependencyStatus.Installing
+        }, cancellationToken).ConfigureAwait(false);
+
+        if (!string.IsNullOrWhiteSpace(request.ExercismToken))
+        {
+            await _exercismManager.ConfigureTokenAsync(request.ExercismToken, workspace, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        var manifest = await _manifestManager.LoadAsync(cancellationToken).ConfigureAwait(false);
+        if (manifest.Exercism.Configured)
+        {
+            await _exercismManager.ValidateTokenAsync(cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        await progress.ReportAsync(new ProgressEvent
+        {
+            StepId = stepId,
+            Title = "Exercism",
+            Message = "Falta token de Exercism para completar el flujo.",
+            Percent = percent,
+            Status = DependencyStatus.NeedsUserAction
+        }, cancellationToken).ConfigureAwait(false);
+    }
+
     private async Task<string> ResolveWorkspaceAsync(SetupRequest request, CancellationToken cancellationToken)
     {
-        var alias = ResolveAlias(request);
-        var target = request.WorkspacePath ?? _paths.RepoRoot ?? _paths.DefaultWorkspacePath;
+        var alias = await ResolveAliasAsync(request, cancellationToken).ConfigureAwait(false);
+        var target = request.WorkspacePath ?? _paths.GetRecommendedWorkspacePath(alias);
         return await _gitHubAccountManager.EnsureWorkspaceRepositoryAsync(target, alias, request.SkipGitHubLogin, cancellationToken)
             .ConfigureAwait(false);
     }
 
-    private static string ResolveAlias(SetupRequest request)
+    private async Task<string> ResolveKnownWorkspaceAsync(string? workspacePath, CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(workspacePath))
+        {
+            return workspacePath;
+        }
+
+        var manifest = await _manifestManager.LoadAsync(cancellationToken).ConfigureAwait(false);
+        var alias = LocalAliasNormalizer.Normalize(manifest.LocalAlias, Environment.UserName);
+        return manifest.WorkspacePath ?? _paths.GetRecommendedWorkspacePath(alias);
+    }
+
+    private async Task<string> ResolveAliasAsync(SetupRequest request, CancellationToken cancellationToken)
     {
         if (!string.IsNullOrWhiteSpace(request.LocalAlias))
         {
-            return request.LocalAlias.Trim();
+            return LocalAliasNormalizer.Normalize(request.LocalAlias);
         }
 
-        return Environment.UserName;
+        var manifest = await _manifestManager.LoadAsync(cancellationToken).ConfigureAwait(false);
+        return LocalAliasNormalizer.Normalize(manifest.LocalAlias, Environment.UserName);
+    }
+
+    private async Task<(UIStateSnapshot Snapshot, IReadOnlyList<DependencyState> Dependencies)> BuildCurrentStateAsync(
+        string? workspacePath,
+        string? localAlias,
+        CancellationToken cancellationToken)
+    {
+        var manifest = await _manifestManager.LoadAsync(cancellationToken).ConfigureAwait(false);
+        var alias = LocalAliasNormalizer.Normalize(localAlias, manifest.LocalAlias ?? Environment.UserName);
+        var recommendedWorkspacePath = _paths.GetRecommendedWorkspacePath(alias);
+        var workspace = workspacePath ?? manifest.WorkspacePath ?? recommendedWorkspacePath;
+        var diagnostics = await _diagnosticsManager.RunAsync(workspace, cancellationToken).ConfigureAwait(false);
+        var workspaceValid = !string.IsNullOrWhiteSpace(workspace) &&
+                             Directory.Exists(workspace) &&
+                             Directory.Exists(Path.Combine(workspace, ".git"));
+        var buildFlowValid = manifest.BuildFlowValidated && workspaceValid;
+        var smokeTestStatus = manifest.BuildFlowValidated
+            ? "passed"
+            : manifest.BuildFlowValidatedAtUtc is not null ? "failed" : "pending";
+        var githubLogin = manifest.GitHub.UserName;
+        var workspaceContext = new WorkspaceContextInfo
+        {
+            BaseRepo = ProductInfo.BaseRepository,
+            WorkspaceRepo = string.IsNullOrWhiteSpace(githubLogin) ? null : $"{githubLogin}/{ProductInfo.RepositoryName}",
+            LocalAlias = alias,
+            GitHubLogin = githubLogin,
+            WorkspacePath = workspace,
+            RecommendedWorkspacePath = recommendedWorkspacePath
+        };
+        var vsCodeExtension = await _vsCodeManager.DiagnoseExtensionAsync(workspace, cancellationToken).ConfigureAwait(false);
+        var extensionApiKeyConfig = _workspaceManager.DescribeExtensionApiKeyConfig(workspace);
+        var finalReadiness = GlobalStateCalculator.CreateFinalReadinessCheck(
+            diagnostics.Dependencies,
+            manifest.GitHub,
+            manifest.Exercism,
+            workspaceValid,
+            buildFlowValid,
+            alias,
+            workspace,
+            smokeTestStatus);
+        var resources = _planner.ToResourceStates(diagnostics.Dependencies, manifest.GitHub, manifest.Exercism, workspaceValid, workspace);
+
+        return (new UIStateSnapshot
+        {
+            GlobalState = finalReadiness.GlobalState,
+            GlobalMessage = finalReadiness.GlobalMessage,
+            Resources = resources,
+            GitHub = manifest.GitHub,
+            Exercism = manifest.Exercism,
+            WorkspacePath = workspace,
+            RecommendedWorkspacePath = recommendedWorkspacePath,
+            LocalAlias = alias,
+            WorkspaceValid = workspaceValid,
+            BuildFlowValid = buildFlowValid,
+            WorkspaceContext = workspaceContext,
+            VSCodeExtension = vsCodeExtension,
+            ExtensionApiKeyConfig = extensionApiKeyConfig,
+            FinalReadiness = finalReadiness
+        }, diagnostics.Dependencies);
+    }
+
+    private async Task PersistBuildFlowValidationAsync(string? workspacePath, bool buildFlowValid, CancellationToken cancellationToken)
+    {
+        var manifest = await _manifestManager.LoadAsync(cancellationToken).ConfigureAwait(false);
+        await _manifestManager.SaveAsync(manifest with
+        {
+            WorkspacePath = workspacePath ?? manifest.WorkspacePath,
+            BuildFlowValidated = buildFlowValid,
+            BuildFlowValidatedAtUtc = DateTimeOffset.UtcNow
+        }, cancellationToken).ConfigureAwait(false);
+    }
+
+    private Task LogFinalReadinessCheckAsync(UIStateSnapshot snapshot, CancellationToken cancellationToken)
+    {
+        var payload = JsonSerializer.Serialize(new
+        {
+            globalState = snapshot.GlobalState.ToString(),
+            missingRequirements = snapshot.FinalReadiness.MissingRequirements,
+            failedRequirements = snapshot.FinalReadiness.FailedRequirements,
+            authRequirements = snapshot.FinalReadiness.AuthRequirements,
+            smokeTestStatus = snapshot.FinalReadiness.SmokeTestStatus,
+            alias = snapshot.FinalReadiness.Alias,
+            githubLogin = snapshot.FinalReadiness.GitHubLogin,
+            workspacePath = snapshot.FinalReadiness.WorkspacePath
+        }, JsonDefaults.Options);
+        return _logManager.WriteAsync("info", "final-readiness-check", payload, cancellationToken);
     }
 
     private static InstallerError NormalizeError(Exception ex)
@@ -291,7 +672,10 @@ public sealed class ConfiguratorEngine
             return InstallerError.FromException(ex, InstallerErrorCode.WINGET_INSTALL_FAILED);
         }
 
-        if (message.Contains("Exercism", StringComparison.OrdinalIgnoreCase) && message.Contains("token", StringComparison.OrdinalIgnoreCase))
+        if (message.Contains("Exercism", StringComparison.OrdinalIgnoreCase) &&
+            (message.Contains("no autorizado", StringComparison.OrdinalIgnoreCase) ||
+             message.Contains("rechazado", StringComparison.OrdinalIgnoreCase) ||
+             message.Contains("unauthorized", StringComparison.OrdinalIgnoreCase)))
         {
             return InstallerError.FromException(ex, InstallerErrorCode.EXERCISM_TOKEN_INVALID);
         }

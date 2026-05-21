@@ -9,6 +9,13 @@
   "engines": {
     "vscode": "^1.85.0"
   },
+  "activationEvents": [
+    "onView:estudioExercism.view",
+    "onCommand:estudioExercism.openPanel",
+    "onCommand:estudioExercism.openApiKeyConfig",
+    "onCommand:estudioExercism.revealApiKeyConfig",
+    "onUri"
+  ],
   "categories": [
     "Education",
     "Other"
@@ -50,6 +57,14 @@
       {
         "command": "estudioExercism.validateCurrent",
         "title": "Estudio Socratico: Validar Ejercicio Actual"
+      },
+      {
+        "command": "estudioExercism.openApiKeyConfig",
+        "title": "Estudio Socratico: Abrir Configuración de API Key"
+      },
+      {
+        "command": "estudioExercism.revealApiKeyConfig",
+        "title": "Estudio Socratico: Revelar Configuración de API Key en Explorador"
       }
     ],
     "menus": {

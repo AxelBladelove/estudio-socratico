@@ -75,6 +75,8 @@ _estudio/soporte/runtime/vscode/
 # Configuracion local de APIs auxiliares (nunca guardar tokens)
 .estudio_exercism.local.json
 _estudio/soporte/exercism/config.local.json
+usuario/config/estudio-socratico.extension.local.json
+usuario/config/estudio-socratico.extension.example.json
 .estudio-drive/
 **/.estudio-tests/
 **/.estudio-drive/
@@ -105,3 +107,4 @@ _estudio/soporte/vscode/estudio-exercism/generated/
 *.private-manifest.json
 *gist-state*.json
 catalog.private.json
+estudio-socratico-ui-dropin.zip

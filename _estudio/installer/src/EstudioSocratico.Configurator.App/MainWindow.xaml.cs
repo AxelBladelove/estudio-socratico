@@ -156,7 +156,7 @@ public sealed partial class MainWindow : Window
     <h1>UI no encontrada</h1>
     <p>No se encontró la interfaz React en:</p>
     <p><code>{expectedPath.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;")}</code></p>
-    <p>Ejecuta <code>scripts\build-ui.bat</code> en <code>_estudio/installer</code> para reconstruir y copiar la UI.</p>
+    <p>Ejecuta <code>scripts\build-ui.bat</code> en <code>_estudio/installer/</code> para reconstruir y copiar la UI.</p>
   </div>
 </body>
 </html>";

@@ -9,7 +9,11 @@ public static class ProductInfo
     public const string AppDataFolderName = "EstudioSocratico";
     public const string ManifestFileName = "installer-manifest.json";
     public const string LogsFolderName = "Logs";
+    public const string BaseRepository = "AxelBladelove/estudio-socratico";
+    public const string BaseRepositoryOwner = "AxelBladelove";
     public const string RepositoryName = "estudio-socratico";
+    public const string VSCodeExtensionId = "estudio-socratico.estudio-exercism";
+    public const string DefaultWorkspaceFolderPrefix = "Estudio-Socratico";
     public const string DefaultWorkspaceFolderName = "estudio-socratico";
     public const string DefaultMsys2Root = @"C:\msys64";
     public const string DefaultMsys2UcrtBin = @"C:\msys64\ucrt64\bin";

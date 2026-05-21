@@ -29,9 +29,16 @@ public sealed class ProcessCommandRunner(LogManager? logManager = null) : IComma
             CreateNoWindow = true
         };
 
-        foreach (var arg in spec.Arguments)
+        if (!string.IsNullOrWhiteSpace(spec.ArgumentString))
         {
-            startInfo.ArgumentList.Add(arg);
+            startInfo.Arguments = spec.ArgumentString;
+        }
+        else
+        {
+            foreach (var arg in spec.Arguments)
+            {
+                startInfo.ArgumentList.Add(arg);
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(spec.WorkingDirectory))

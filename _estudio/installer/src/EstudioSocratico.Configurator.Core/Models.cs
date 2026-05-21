@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using System.Text;
 
 namespace EstudioSocratico.Configurator.Core;
 
@@ -105,6 +106,7 @@ public sealed record CommandSpec
 {
     public required string FileName { get; init; }
     public IReadOnlyList<string> Arguments { get; init; } = Array.Empty<string>();
+    public string? ArgumentString { get; init; }
     public string? WorkingDirectory { get; init; }
     public IReadOnlyDictionary<string, string?> Environment { get; init; } =
         new Dictionary<string, string?>();
@@ -185,6 +187,110 @@ public sealed record SetupSummary
     public string? LogPath { get; init; }
     public string? DiagnosticsPath { get; init; }
     public SetupPlan? Plan { get; init; }
+    public UIStateSnapshot? CurrentState { get; init; }
+}
+
+public sealed record FinalReadinessCheck
+{
+    public GlobalState GlobalState { get; init; } = GlobalState.Analyzing;
+    public string GlobalMessage { get; init; } = "";
+    public IReadOnlyList<string> MissingRequirements { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> FailedRequirements { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> AuthRequirements { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> PendingRequirements { get; init; } = Array.Empty<string>();
+    public string SmokeTestStatus { get; init; } = "unknown";
+    public string? Alias { get; init; }
+    public string? GitHubLogin { get; init; }
+    public string? WorkspacePath { get; init; }
+}
+
+public sealed record WorkspaceContextInfo
+{
+    public string BaseRepo { get; init; } = ProductInfo.BaseRepository;
+    public string? WorkspaceRepo { get; init; }
+    public string? LocalAlias { get; init; }
+    public string? GitHubLogin { get; init; }
+    public string? WorkspacePath { get; init; }
+    public string? RecommendedWorkspacePath { get; init; }
+}
+
+public sealed record VSCodeExtensionState
+{
+    public string ExtensionId { get; init; } = ProductInfo.VSCodeExtensionId;
+    public ResourceStatus Status { get; init; } = ResourceStatus.NeedsUserAction;
+    public string HumanStatus { get; init; } = "Requiere accion";
+    public string? HumanDescription { get; init; }
+    public string? SourcePath { get; init; }
+    public string? InstalledPath { get; init; }
+    public bool SourceExists { get; init; }
+    public bool InstalledInVSCode { get; init; }
+    public bool ActivityBarConfigured { get; init; }
+    public bool CommandsRegistered { get; init; }
+    public bool ExercisePanelAvailable { get; init; }
+    public bool ManagerScriptExists { get; init; }
+}
+
+public sealed record ExtensionApiKeyConfigState
+{
+    public ResourceStatus Status { get; init; } = ResourceStatus.NeedsUserAction;
+    public string HumanStatus { get; init; } = "Requiere accion";
+    public string? HumanDescription { get; init; }
+    public string? LocalConfigPath { get; init; }
+    public string? ExampleConfigPath { get; init; }
+    public bool LocalConfigExists { get; init; }
+    public bool ExampleConfigExists { get; init; }
+}
+
+public static class LocalAliasNormalizer
+{
+    public static string Normalize(string? value, string? fallback = null)
+    {
+        var normalized = Slugify(value);
+        if (!string.IsNullOrWhiteSpace(normalized))
+        {
+            return normalized;
+        }
+
+        normalized = Slugify(fallback);
+        if (!string.IsNullOrWhiteSpace(normalized))
+        {
+            return normalized;
+        }
+
+        return Slugify(Environment.UserName);
+    }
+
+    private static string Slugify(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var builder = new StringBuilder(value.Length);
+        var previousDash = false;
+        foreach (var ch in value.Trim().ToLowerInvariant())
+        {
+            var next = char.IsLetterOrDigit(ch) ? ch : '-';
+            if (next == '-')
+            {
+                if (previousDash)
+                {
+                    continue;
+                }
+
+                previousDash = true;
+            }
+            else
+            {
+                previousDash = false;
+            }
+
+            builder.Append(next);
+        }
+
+        return builder.ToString().Trim('-');
+    }
 }
 
 public sealed record OfficialInstallerSource

@@ -1,73 +1,45 @@
-# React + TypeScript + Vite
+# Estudio Socrático Configurador UI Drop-in
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+UI React/Vite para integrar dentro de `_estudio/installer/src/EstudioSocratico.Configurator.App/wwwroot`.
 
-Currently, two official plugins are available:
+## Qué trae
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Tema oscuro estilo Windows 11 / ChatGPT frontend.
+- Flujo:
+  1. Inicio
+  2. Elegir flujo
+  3. Revisión con herramientas individuales
+  4. Preparación
+  5. Cuentas
+  6. Instalación/Limpieza
+- Pantalla de revisión con iconos/estados por herramienta.
+- Integración inicial con WebView2 bridge en `src/bridgeClient.js`.
+- Acciones previstas:
+  - `DiagnoseEnvironment`
+  - `ConfigureGithub`
+  - `ChangeGithubAccount`
+  - `ConfigureExercism`
+  - `OpenExercismTokenPage`
+  - `OpenExercismCTrack` *(debe añadirse al backend)*
+  - `ApplyPlan`
+  - `ReinstallManaged` *(debe añadirse al backend)*
+  - `UninstallManaged` *(debe añadirse al backend)*
 
-## React Compiler
+## Uso esperado en el repo
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Coloca esta carpeta dentro de:
 
-## Expanding the ESLint configuration
+`_estudio/installer/ui`
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Luego adapta el script `scripts/build-ui.bat` para ejecutar:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bat
+cd /d _estudio\installer\ui
+npm install
+npm run build
+xcopy /E /I /Y dist ..\src\EstudioSocratico.Configurator.App\wwwroot
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Importante
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Esta UI trae mock visual para desarrollo, pero el objetivo es conectarla al backend real y reemplazar estados mock con snapshots/eventos del bridge.

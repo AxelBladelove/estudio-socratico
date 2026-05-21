@@ -103,7 +103,9 @@ public sealed class WebViewBridge : IProgressSink
                 await _engine.Logs.WriteAsync("info", "bridge", $"Inicio de diagnostico ({request.Id}).")
                     .ConfigureAwait(false);
                 await EmitEventAsync(new BridgeEvent { Type = BridgeEventType.DiagnosticStarted }).ConfigureAwait(false);
-                var snapshot = await _engine.DiagnoseAsync().ConfigureAwait(false);
+                var snapshot = await _engine.DiagnoseAsync(
+                    BridgePayload.GetString(request, "workspacePath", "workspace"),
+                    BridgePayload.GetString(request, "localAlias", "alias")).ConfigureAwait(false);
                 await EmitEventAsync(new BridgeEvent
                 {
                     Type = BridgeEventType.DiagnosticCompleted,
@@ -123,45 +125,52 @@ public sealed class WebViewBridge : IProgressSink
                 return plan;
 
             case BridgeAction.ApplyPlan:
-                _planCts?.Cancel();
-                _planCts = new CancellationTokenSource();
-                var setupRequest = new SetupRequest { Mode = SetupMode.Install };
-                var summary = await _engine.RunAsync(setupRequest, this, _planCts.Token).ConfigureAwait(false);
-                await EmitEventAsync(new BridgeEvent
-                {
-                    Type = BridgeEventType.VerificationCompleted,
-                    Payload = summary
-                }).ConfigureAwait(false);
-                return summary;
+            case BridgeAction.ApplyWorkflow:
+                return await RunWorkflowAsync(request, BridgePayload.GetSetupMode(request, SetupMode.Install)).ConfigureAwait(false);
+
+            case BridgeAction.ReinstallManaged:
+                return await RunWorkflowAsync(request, SetupMode.Reinstall).ConfigureAwait(false);
+
+            case BridgeAction.UninstallManaged:
+                return await RunWorkflowAsync(request, SetupMode.Uninstall).ConfigureAwait(false);
 
             case BridgeAction.CancelPlan:
                 _planCts?.Cancel();
                 return new { cancelled = true };
 
             case BridgeAction.RepairComponent:
-                var repairRequest = new SetupRequest { Mode = SetupMode.Repair };
-                return await _engine.RunAsync(repairRequest, this).ConfigureAwait(false);
+                return await RunWorkflowAsync(request, SetupMode.Repair).ConfigureAwait(false);
 
             case BridgeAction.ConfigureGithub:
-                return await _engine.SwitchGitHubAccountAsync().ConfigureAwait(false);
+                return await _engine.ConfigureGitHubAsync(
+                    switchAccount: false,
+                    workspacePath: BridgePayload.GetString(request, "workspacePath", "workspace")).ConfigureAwait(false);
 
             case BridgeAction.ChangeGithubAccount:
-                return await _engine.SwitchGitHubAccountAsync().ConfigureAwait(false);
+                return await _engine.ConfigureGitHubAsync(
+                    switchAccount: true,
+                    workspacePath: BridgePayload.GetString(request, "workspacePath", "workspace")).ConfigureAwait(false);
 
             case BridgeAction.ConfigureExercism:
-                var token = GetPayloadString(request, "token");
-                var workspace = GetPayloadString(request, "workspace");
+                var token = BridgePayload.GetString(request, "token", "exercismToken");
+                var workspace = BridgePayload.GetString(request, "workspacePath", "workspace");
                 if (string.IsNullOrWhiteSpace(token))
                     throw new ArgumentException("Se requiere un token de Exercism.");
-                return await _engine.ConfigureExercismAsync(token, workspace ?? "").ConfigureAwait(false);
+                return await _engine.ConfigureExercismAsync(token, workspace).ConfigureAwait(false);
 
             case BridgeAction.OpenExercismTokenPage:
-                Process.Start(new ProcessStartInfo("https://exercism.org/settings/api_cli")
+                Process.Start(new ProcessStartInfo(ExercismManager.TokenUrl)
                     { UseShellExecute = true });
-                return new { opened = true };
+                return new { opened = true, url = ExercismManager.TokenUrl };
+
+            case BridgeAction.OpenExercismCTrack:
+                Process.Start(new ProcessStartInfo(ExercismManager.CTrackUrl)
+                    { UseShellExecute = true });
+                return new { opened = true, url = ExercismManager.CTrackUrl };
 
             case BridgeAction.OpenVSCode:
-                var vsWorkspace = GetPayloadString(request, "workspace") ?? "";
+                var vsWorkspace = BridgePayload.GetString(request, "workspacePath", "workspace");
+                vsWorkspace = await _engine.GetKnownWorkspacePathAsync(vsWorkspace).ConfigureAwait(false);
                 if (string.IsNullOrWhiteSpace(vsWorkspace))
                 {
                     throw new InvalidOperationException("No hay un workspace configurado todavia para abrir en VS Code.");
@@ -169,6 +178,58 @@ public sealed class WebViewBridge : IProgressSink
 
                 await _engine.VSCode.OpenWorkspaceAsync(vsWorkspace, CancellationToken.None).ConfigureAwait(false);
                 return new { opened = true, path = vsWorkspace };
+
+            case BridgeAction.OpenExercisePanel:
+                await _engine.OpenExercisePanelAsync(
+                    BridgePayload.GetString(request, "workspacePath", "workspace"),
+                    CancellationToken.None).ConfigureAwait(false);
+                return new { opened = true };
+
+            case BridgeAction.ReinstallVSCodeExtension:
+                await _engine.ReinstallVSCodeExtensionAsync(
+                    BridgePayload.GetString(request, "workspacePath", "workspace"),
+                    CancellationToken.None).ConfigureAwait(false);
+                return new { repaired = true };
+
+            case BridgeAction.OpenExtensionApiKeyConfig:
+                var extensionConfig = await _engine.EnsureExtensionApiKeyConfigAsync(
+                    BridgePayload.GetString(request, "workspacePath", "workspace"),
+                    CancellationToken.None).ConfigureAwait(false);
+                if (string.IsNullOrWhiteSpace(extensionConfig.LocalConfigPath))
+                {
+                    throw new InvalidOperationException("No se pudo resolver la configuracion local de API Key.");
+                }
+
+                Process.Start(new ProcessStartInfo(extensionConfig.LocalConfigPath) { UseShellExecute = true });
+                return new { opened = true, path = extensionConfig.LocalConfigPath };
+
+            case BridgeAction.RevealExtensionApiKeyConfig:
+                var revealConfig = await _engine.GetExtensionApiKeyConfigAsync(
+                    BridgePayload.GetString(request, "workspacePath", "workspace"),
+                    CancellationToken.None).ConfigureAwait(false);
+                if (string.IsNullOrWhiteSpace(revealConfig.LocalConfigPath))
+                {
+                    throw new InvalidOperationException("No se pudo resolver la configuracion local de API Key.");
+                }
+
+                Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{revealConfig.LocalConfigPath}\"")
+                {
+                    UseShellExecute = true
+                });
+                return new { opened = true, path = revealConfig.LocalConfigPath };
+
+            case BridgeAction.RevealInExplorer:
+                var revealPath = BridgePayload.GetString(request, "path");
+                if (string.IsNullOrWhiteSpace(revealPath))
+                {
+                    throw new InvalidOperationException("No se recibio una ruta para revelar en el Explorador.");
+                }
+
+                Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{revealPath}\"")
+                {
+                    UseShellExecute = true
+                });
+                return new { opened = true, path = revealPath };
 
             case BridgeAction.OpenLogs:
                 var logPath = _engine.Logs.InstallerLogPath;
@@ -179,7 +240,7 @@ public sealed class WebViewBridge : IProgressSink
                 return new { opened = true, path = targetPath };
 
             case BridgeAction.ExportDiagnostics:
-                var diagSnapshot = await _engine.DiagnoseAsync().ConfigureAwait(false);
+                var diagSnapshot = await _engine.DiagnoseAsync(BridgePayload.GetString(request, "workspacePath", "workspace")).ConfigureAwait(false);
                 var diagPath = _engine.Logs.DiagnosticsPath;
                 return new
                 {
@@ -189,12 +250,88 @@ public sealed class WebViewBridge : IProgressSink
                 };
 
             case BridgeAction.RunSmokeTest:
-                var smokeResult = await _engine.RunAsync(
-                    new SetupRequest { Mode = SetupMode.Diagnostics }, this).ConfigureAwait(false);
-                return smokeResult;
+                _planCts?.Cancel();
+                _planCts = new CancellationTokenSource();
+                await EmitEventAsync(new BridgeEvent { Type = BridgeEventType.VerificationStarted }).ConfigureAwait(false);
+                var smokeSummary = await _engine.RunSmokeTestAsync(
+                    BridgePayload.GetString(request, "workspacePath", "workspace"),
+                    this,
+                    _planCts.Token).ConfigureAwait(false);
+                await EmitEventAsync(new BridgeEvent
+                {
+                    Type = BridgeEventType.VerificationCompleted,
+                    Payload = smokeSummary
+                }).ConfigureAwait(false);
+                await EmitEventAsync(new BridgeEvent
+                {
+                    Type = BridgeEventType.GlobalStateChanged,
+                    Payload = smokeSummary
+                }).ConfigureAwait(false);
+                return smokeSummary;
 
             default:
                 throw new InvalidOperationException($"Accion no permitida: {request.Action}");
+        }
+    }
+
+    private async Task<SetupSummary> RunWorkflowAsync(BridgeRequest request, SetupMode mode)
+    {
+        _planCts?.Cancel();
+        _planCts = new CancellationTokenSource();
+
+        var setupRequest = BridgePayload.ToSetupRequest(request, mode) with { Mode = mode };
+        await EmitEventAsync(new BridgeEvent { Type = BridgeEventType.VerificationStarted }).ConfigureAwait(false);
+        using var heartbeatCts = CancellationTokenSource.CreateLinkedTokenSource(_planCts.Token);
+        var heartbeat = EmitHeartbeatAsync(heartbeatCts.Token);
+        SetupSummary summary;
+        try
+        {
+            summary = await _engine.RunAsync(setupRequest, this, _planCts.Token).ConfigureAwait(false);
+        }
+        finally
+        {
+            await heartbeatCts.CancelAsync().ConfigureAwait(false);
+            await heartbeat.ConfigureAwait(false);
+        }
+
+        await EmitEventAsync(new BridgeEvent
+        {
+            Type = BridgeEventType.VerificationCompleted,
+            Payload = summary
+        }).ConfigureAwait(false);
+        await EmitEventAsync(new BridgeEvent
+        {
+            Type = BridgeEventType.GlobalStateChanged,
+            Payload = summary
+        }).ConfigureAwait(false);
+        return summary;
+    }
+
+    private async Task EmitHeartbeatAsync(CancellationToken cancellationToken)
+    {
+        var started = DateTimeOffset.UtcNow;
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(20), cancellationToken).ConfigureAwait(false);
+                var elapsed = DateTimeOffset.UtcNow - started;
+                await EmitEventAsync(new BridgeEvent
+                {
+                    Type = BridgeEventType.StepProgress,
+                    Payload = new ProgressEvent
+                    {
+                        StepId = "heartbeat",
+                        Title = "Trabajo en curso",
+                        Message = $"Operacion activa. Tiempo transcurrido: {elapsed:mm\\:ss}.",
+                        Status = DependencyStatus.Installing
+                    }
+                }).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
         }
     }
 
@@ -209,6 +346,7 @@ public sealed class WebViewBridge : IProgressSink
             DependencyStatus.Failed => BridgeEventType.StepFailed,
             DependencyStatus.Skipped => BridgeEventType.StepSkipped,
             DependencyStatus.Installing => BridgeEventType.StepStarted,
+            DependencyStatus.NeedsAuth or DependencyStatus.NeedsUserAction => BridgeEventType.StepNeedsUserInput,
             _ => BridgeEventType.StepProgress
         };
 
@@ -247,15 +385,6 @@ public sealed class WebViewBridge : IProgressSink
             await _webView.ExecuteScriptAsync(
                 $"window.__bridgeEvent && window.__bridgeEvent({escaped})");
         }).ConfigureAwait(false);
-    }
-
-    private static string? GetPayloadString(BridgeRequest request, string key)
-    {
-        if (request.Payload.TryGetValue(key, out var value) && value is JsonElement element)
-        {
-            return element.GetString();
-        }
-        return value?.ToString();
     }
 
     private Task InvokeOnUiThreadAsync(Func<Task> action)

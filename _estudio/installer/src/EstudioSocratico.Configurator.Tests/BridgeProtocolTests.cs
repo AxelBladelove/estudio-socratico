@@ -61,4 +61,81 @@ public class BridgeProtocolTests
         Assert.Equal("openLogs.result", response.Type);
         Assert.NotNull(response.Payload);
     }
+
+    [Fact]
+    public void ApplyWorkflow_Payload_Carries_SetupMode()
+    {
+        const string json = """
+        {
+          "id": "req-4",
+          "type": "ApplyWorkflow",
+          "payload": {
+            "mode": "Reinstall",
+            "workspacePath": "C:\\Estudio\\repo",
+            "allowAggressiveCleanup": false
+          }
+        }
+        """;
+
+        var request = BridgeProtocol.ParseRequest(json);
+        var setupRequest = BridgePayload.ToSetupRequest(request);
+
+        Assert.Equal(BridgeAction.ApplyWorkflow, request.Action);
+        Assert.Equal(SetupMode.Reinstall, setupRequest.Mode);
+        Assert.Equal(@"C:\Estudio\repo", setupRequest.WorkspacePath);
+        Assert.False(setupRequest.AllowAggressiveCleanup);
+    }
+
+    [Fact]
+    public void ApplyWorkflow_Accepts_Setup_As_Install_Mode()
+    {
+        const string json = """
+        {
+          "id": "req-5",
+          "type": "ApplyWorkflow",
+          "payload": {
+            "mode": "setup"
+          }
+        }
+        """;
+
+        var request = BridgeProtocol.ParseRequest(json);
+        var setupRequest = BridgePayload.ToSetupRequest(request);
+
+        Assert.Equal(SetupMode.Install, setupRequest.Mode);
+    }
+
+    [Fact]
+    public void ApplyWorkflow_ReceivesLocalAlias()
+    {
+        const string json = """
+        {
+          "id": "req-5b",
+          "type": "ApplyWorkflow",
+          "payload": {
+            "mode": "repair",
+            "localAlias": "axel"
+          }
+        }
+        """;
+
+        var request = BridgeProtocol.ParseRequest(json);
+        var setupRequest = BridgePayload.ToSetupRequest(request);
+
+        Assert.Equal("axel", setupRequest.LocalAlias);
+    }
+
+    [Fact]
+    public void ParseRequest_Rejects_Unknown_Action()
+    {
+        const string json = """
+        {
+          "id": "req-6",
+          "type": "DeleteEverything",
+          "payload": {}
+        }
+        """;
+
+        Assert.Throws<InvalidOperationException>(() => BridgeProtocol.ParseRequest(json));
+    }
 }

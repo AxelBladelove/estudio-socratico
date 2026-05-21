@@ -57,16 +57,33 @@ public sealed class ReinstallManager(RepairManager repairManager, UninstallManag
     }
 }
 
+public sealed record UninstallResult
+{
+    public bool ManifestFound { get; init; }
+    public IReadOnlyList<string> RemovedPaths { get; init; } = [];
+    public IReadOnlyList<string> SkippedPaths { get; init; } = [];
+    public bool WorkspaceRemoved { get; init; }
+    public string Message { get; init; } = "";
+}
+
 public sealed class UninstallManager(AppPaths paths, ManifestManager manifestManager, LogManager logManager, SecurityManager securityManager)
 {
-    public async Task UninstallAsync(bool allowAggressiveCleanup, CancellationToken cancellationToken)
+    public async Task<UninstallResult> UninstallAsync(bool allowAggressiveCleanup, CancellationToken cancellationToken)
     {
         if (!File.Exists(paths.ManifestPath))
         {
-            throw new InvalidOperationException("No existe manifest de instalacion; no se puede limpiar con seguridad.");
+            const string message = "No existe manifest de instalacion; se uso modo seguro y no se elimino nada.";
+            await logManager.WriteAsync("warn", "uninstall", message, cancellationToken).ConfigureAwait(false);
+            return new UninstallResult
+            {
+                ManifestFound = false,
+                Message = message
+            };
         }
 
         var manifest = await manifestManager.LoadAsync(cancellationToken).ConfigureAwait(false);
+        var removed = new List<string>();
+        var skipped = new List<string>();
         foreach (var safePath in manifest.SafeToRemove.Distinct(StringComparer.OrdinalIgnoreCase))
         {
             if (string.IsNullOrWhiteSpace(safePath) || !Directory.Exists(safePath) && !File.Exists(safePath))
@@ -79,6 +96,7 @@ public sealed class UninstallManager(AppPaths paths, ManifestManager manifestMan
             {
                 await logManager.WriteAsync("warn", "uninstall", $"Saltando ruta fuera de LocalAppData gestionado: {safePath}", cancellationToken)
                     .ConfigureAwait(false);
+                skipped.Add(safePath);
                 continue;
             }
 
@@ -90,18 +108,29 @@ public sealed class UninstallManager(AppPaths paths, ManifestManager manifestMan
             {
                 File.Delete(safePath);
             }
+            removed.Add(safePath);
         }
 
+        var workspaceRemoved = false;
         if (allowAggressiveCleanup && manifest.WorkspacePath is { Length: > 0 } workspace)
         {
             securityManager.RequireSafeDeleteRoot(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "EstudioSocratico"), workspace);
             if (Directory.Exists(workspace))
             {
                 Directory.Delete(workspace, recursive: true);
+                workspaceRemoved = true;
             }
         }
 
         await logManager.WriteAsync("info", "uninstall", "Desinstalacion segura completada segun manifest.", cancellationToken)
             .ConfigureAwait(false);
+        return new UninstallResult
+        {
+            ManifestFound = true,
+            RemovedPaths = removed,
+            SkippedPaths = skipped,
+            WorkspaceRemoved = workspaceRemoved,
+            Message = "Desinstalacion segura completada segun manifest."
+        };
     }
 }

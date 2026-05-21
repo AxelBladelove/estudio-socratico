@@ -81,8 +81,8 @@ public class GlobalStateTests
     public void OnlyOptionalMissing_Returns_PartiallyReady()
     {
         var deps = AllReady();
-        // NodeJs is optional
-        deps[8] = deps[8] with { Status = DependencyStatus.Missing };
+        // WinGet is optional support; Node.js and Python are required by the configurator workflow.
+        deps[7] = deps[7] with { Status = DependencyStatus.Missing };
 
         var result = GlobalStateCalculator.Calculate(
             deps, AuthOk(), AuthOk(), workspaceValid: true, buildFlowValid: true);
@@ -171,5 +171,46 @@ public class GlobalStateTests
     {
         var msg = GlobalStateCalculator.GetHumanMessage(GlobalState.NeedsSetup);
         Assert.DoesNotContain("listo", msg, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void FinalState_AllToolsReady_ReturnsReadyToStudy()
+    {
+        var result = GlobalStateCalculator.CreateFinalReadinessCheck(
+            AllReady(), AuthOk(), AuthOk(), workspaceValid: true, buildFlowValid: true, alias: "axel", workspacePath: @"C:\Estudio");
+
+        Assert.Equal(GlobalState.ReadyToStudy, result.GlobalState);
+        Assert.Equal("passed", result.SmokeTestStatus);
+        Assert.Empty(result.PendingRequirements);
+    }
+
+    [Fact]
+    public void FinalState_TokenReady_DoesNotReturnNeedsAuthentication()
+    {
+        var result = GlobalStateCalculator.CreateFinalReadinessCheck(
+            AllReady(),
+            github: AuthOk(),
+            exercism: new AccountState { Configured = true, UserName = "token-ready" },
+            workspaceValid: true,
+            buildFlowValid: true);
+
+        Assert.NotEqual(GlobalState.NeedsAuthentication, result.GlobalState);
+    }
+
+    [Theory]
+    [InlineData(DependencyStatus.Ready, "Listo")]
+    [InlineData(DependencyStatus.Missing, "Por instalar")]
+    [InlineData(DependencyStatus.Broken, "Por reparar")]
+    [InlineData(DependencyStatus.Outdated, "Por reparar")]
+    [InlineData(DependencyStatus.NeedsAuth, "Requiere cuenta")]
+    [InlineData(DependencyStatus.NeedsUserAction, "Requiere accion")]
+    [InlineData(DependencyStatus.Failed, "Error")]
+    [InlineData(DependencyStatus.Installing, "En proceso")]
+    public void Dependency_Status_Maps_To_Ui_Label(DependencyStatus dependencyStatus, string expected)
+    {
+        var resourceStatus = GlobalStateCalculator.ToResourceStatus(dependencyStatus);
+        var label = GlobalStateCalculator.GetHumanStatus(resourceStatus);
+
+        Assert.Equal(expected, label);
     }
 }
