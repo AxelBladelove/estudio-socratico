@@ -72,11 +72,31 @@ public sealed class UninstallManager(
     private const string ActionSkipped = "skipped";
 
     public Task<UninstallResult> PreviewAsync(bool allowAggressiveCleanup, CancellationToken cancellationToken) =>
-        UninstallAsync(allowAggressiveCleanup, dryRun: true, cancellationToken);
+        PreviewAsync(allowAggressiveCleanup, deleteStudentData: false, deleteRemoteWorkspaceRepo: false, cancellationToken);
+
+    public Task<UninstallResult> PreviewAsync(
+        bool allowAggressiveCleanup,
+        bool deleteStudentData,
+        bool deleteRemoteWorkspaceRepo,
+        CancellationToken cancellationToken) =>
+        UninstallAsync(allowAggressiveCleanup, dryRun: true, deleteStudentData, deleteRemoteWorkspaceRepo, cancellationToken);
 
     public async Task<UninstallResult> UninstallAsync(
         bool allowAggressiveCleanup,
         bool dryRun,
+        CancellationToken cancellationToken) =>
+        await UninstallAsync(
+            allowAggressiveCleanup,
+            dryRun,
+            deleteStudentData: false,
+            deleteRemoteWorkspaceRepo: false,
+            cancellationToken).ConfigureAwait(false);
+
+    public async Task<UninstallResult> UninstallAsync(
+        bool allowAggressiveCleanup,
+        bool dryRun,
+        bool deleteStudentData,
+        bool deleteRemoteWorkspaceRepo,
         CancellationToken cancellationToken)
     {
         if (!File.Exists(paths.ManifestPath))
@@ -102,7 +122,7 @@ public sealed class UninstallManager(
         var kept = new List<string>();
         var skipped = new List<string>();
         var items = new List<UninstallReportItem>();
-        var protectedPaths = BuildProtectedPaths(manifest);
+        var protectedPaths = BuildProtectedPaths(manifest, deleteStudentData);
 
         foreach (var item in protectedPaths)
         {
@@ -237,6 +257,137 @@ public sealed class UninstallManager(
         }
 
         var workspaceRemoved = false;
+        if (deleteStudentData)
+        {
+            foreach (var studentPath in BuildStudentDataCandidates(manifest))
+            {
+                var fullPath = TryGetFullPath(studentPath);
+                if (string.IsNullOrWhiteSpace(fullPath))
+                {
+                    skipped.Add(studentPath);
+                    items.Add(CreateItem(studentPath, ActionSkipped, "Ruta de datos del estudiante invalida."));
+                    continue;
+                }
+
+                if (IsProtected(fullPath, protectedPaths))
+                {
+                    kept.Add(fullPath);
+                    items.Add(CreateItem(fullPath, ActionKept, "Protegido por regla de seguridad."));
+                    continue;
+                }
+
+                if (!Directory.Exists(fullPath) && !File.Exists(fullPath))
+                {
+                    skipped.Add(fullPath);
+                    items.Add(CreateItem(fullPath, ActionSkipped, "No existe actualmente; no se toca."));
+                    continue;
+                }
+
+                if (!IsAllowedStudentDataDeletePath(fullPath, manifest))
+                {
+                    skipped.Add(fullPath);
+                    items.Add(CreateItem(fullPath, ActionSkipped, "Inseguro: no coincide con un workspace Estudio-Socratico-{alias} verificable."));
+                    continue;
+                }
+
+                if (dryRun)
+                {
+                    wouldRemove.Add(fullPath);
+                    items.Add(CreateItem(fullPath, ActionWouldRemove, "Datos del estudiante incluidos por opcion explicita."));
+                    continue;
+                }
+
+                if (Directory.Exists(fullPath))
+                {
+                    Directory.Delete(fullPath, recursive: true);
+                    if (string.Equals(fullPath, TryGetFullPath(manifest.WorkspacePath), StringComparison.OrdinalIgnoreCase))
+                    {
+                        workspaceRemoved = true;
+                    }
+                }
+                else
+                {
+                    File.Delete(fullPath);
+                }
+
+                removed.Add(fullPath);
+                items.Add(CreateItem(fullPath, ActionRemoved, "Datos del estudiante eliminados por opcion explicita."));
+            }
+        }
+
+        var remoteWorkspaceRepo = TryGetDeletableWorkspaceRepo(manifest);
+        if (deleteRemoteWorkspaceRepo)
+        {
+            if (remoteWorkspaceRepo is null)
+            {
+                skipped.Add("github:workspaceRepo");
+                items.Add(new UninstallReportItem
+                {
+                    Path = "github:workspaceRepo",
+                    Action = ActionSkipped,
+                    Reason = "No se puede probar que el repo remoto pertenezca al alias y haya sido creado por el instalador.",
+                    Exists = false
+                });
+            }
+            else if (dryRun)
+            {
+                var label = $"github:{remoteWorkspaceRepo}";
+                wouldRemove.Add(label);
+                items.Add(new UninstallReportItem
+                {
+                    Path = label,
+                    Action = ActionWouldRemove,
+                    Reason = "Repo remoto de trabajo creado por el instalador y solicitado explicitamente.",
+                    Exists = true
+                });
+            }
+            else if (commandRunner is null)
+            {
+                var label = $"github:{remoteWorkspaceRepo}";
+                skipped.Add(label);
+                items.Add(new UninstallReportItem
+                {
+                    Path = label,
+                    Action = ActionSkipped,
+                    Reason = "No hay command runner disponible para ejecutar gh repo delete.",
+                    Exists = true
+                });
+            }
+            else
+            {
+                var deleteRepo = await commandRunner.RunAsync(new CommandSpec
+                {
+                    FileName = "gh",
+                    Arguments = ["repo", "delete", remoteWorkspaceRepo, "--yes"],
+                    Timeout = TimeSpan.FromMinutes(3),
+                    AllowNonZeroExitCode = true
+                }, cancellationToken).ConfigureAwait(false);
+                var label = $"github:{remoteWorkspaceRepo}";
+                if (deleteRepo.Succeeded)
+                {
+                    removed.Add(label);
+                    items.Add(new UninstallReportItem
+                    {
+                        Path = label,
+                        Action = ActionRemoved,
+                        Reason = "Repo remoto de trabajo eliminado por opcion explicita.",
+                        Exists = false
+                    });
+                }
+                else
+                {
+                    skipped.Add(label);
+                    items.Add(new UninstallReportItem
+                    {
+                        Path = label,
+                        Action = ActionSkipped,
+                        Reason = $"gh repo delete no pudo eliminarlo: {deleteRepo.StandardError}".Trim(),
+                        Exists = true
+                    });
+                }
+            }
+        }
+
         if (allowAggressiveCleanup && manifest.WorkspacePath is { Length: > 0 } workspace)
         {
             var fullWorkspace = TryGetFullPath(workspace) ?? workspace;
@@ -258,8 +409,12 @@ public sealed class UninstallManager(
         var finalMessage = dryRun
             ? "Preview de desinstalacion generado; no se elimino nada."
             : "Desinstalacion segura completada segun manifest.";
-        await logManager.WriteAsync("info", "uninstall", finalMessage, cancellationToken)
-            .ConfigureAwait(false);
+        if (dryRun || !deleteStudentData)
+        {
+            await logManager.WriteAsync("info", "uninstall", finalMessage, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         return new UninstallResult
         {
             DryRun = dryRun,
@@ -276,6 +431,13 @@ public sealed class UninstallManager(
 
     public Task<UninstallResult> UninstallAsync(bool allowAggressiveCleanup, CancellationToken cancellationToken) =>
         UninstallAsync(allowAggressiveCleanup, dryRun: false, cancellationToken);
+
+    public Task<UninstallResult> UninstallAsync(
+        bool allowAggressiveCleanup,
+        bool deleteStudentData,
+        bool deleteRemoteWorkspaceRepo,
+        CancellationToken cancellationToken) =>
+        UninstallAsync(allowAggressiveCleanup, dryRun: false, deleteStudentData, deleteRemoteWorkspaceRepo, cancellationToken);
 
     private IEnumerable<string> BuildManagedCandidates(InstallerManifest manifest)
     {
@@ -346,24 +508,40 @@ public sealed class UninstallManager(
         }
     }
 
-    private List<UninstallReportItem> BuildProtectedPaths(InstallerManifest manifest)
+    private IEnumerable<string> BuildStudentDataCandidates(InstallerManifest manifest)
+    {
+        var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (!string.IsNullOrWhiteSpace(manifest.WorkspacePath))
+        {
+            result.Add(manifest.WorkspacePath);
+        }
+
+        result.Add(paths.ManifestPath);
+        result.Add(paths.LogsRoot);
+        return result;
+    }
+
+    private List<UninstallReportItem> BuildProtectedPaths(InstallerManifest manifest, bool deleteStudentData)
     {
         var result = new List<UninstallReportItem>
         {
-            CreateItem(paths.LocalAppDataRoot, ActionKept, "Contenedor base de datos locales del configurador."),
-            CreateItem(paths.LogsRoot, ActionKept, "Logs protegidos para diagnostico."),
-            CreateItem(paths.ManifestPath, ActionKept, "Manifest protegido para auditoria y reparacion.")
+            CreateItem(paths.LocalAppDataRoot, ActionKept, "Contenedor base de datos locales del configurador.")
         };
 
-        AddProtectedWorkspacePath(result, manifest.WorkspacePath, "Workspace del estudiante protegido.");
-        AddProtectedWorkspacePath(result, CombineIfKnown(manifest.WorkspacePath, "Ejercicios"), "Ejercicios del estudiante protegidos.");
-        AddProtectedWorkspacePath(result, CombineIfKnown(manifest.WorkspacePath, "usuario"), "Carpeta usuario protegida.");
-        AddProtectedWorkspacePath(result, CombineIfKnown(manifest.WorkspacePath, "usuario", "logs"), "Logs del estudiante protegidos.");
-        AddProtectedWorkspacePath(result, CombineIfKnown(manifest.WorkspacePath, "usuario", "config"), "Configuracion local del estudiante protegida.");
-        AddProtectedWorkspacePath(
-            result,
-            CombineIfKnown(manifest.WorkspacePath, "usuario", "config", "estudio-socratico.extension.local.json"),
-            "API key local protegida.");
+        if (!deleteStudentData)
+        {
+            AddProtectedWorkspacePath(result, paths.LogsRoot, "Logs protegidos para diagnostico.");
+            AddProtectedWorkspacePath(result, paths.ManifestPath, "Manifest protegido para auditoria y reparacion.");
+            AddProtectedWorkspacePath(result, manifest.WorkspacePath, "Workspace del estudiante protegido.");
+            AddProtectedWorkspacePath(result, CombineIfKnown(manifest.WorkspacePath, "Ejercicios"), "Ejercicios del estudiante protegidos.");
+            AddProtectedWorkspacePath(result, CombineIfKnown(manifest.WorkspacePath, "usuario"), "Carpeta usuario protegida.");
+            AddProtectedWorkspacePath(result, CombineIfKnown(manifest.WorkspacePath, "usuario", "logs"), "Logs del estudiante protegidos.");
+            AddProtectedWorkspacePath(result, CombineIfKnown(manifest.WorkspacePath, "usuario", "config"), "Configuracion local del estudiante protegida.");
+            AddProtectedWorkspacePath(
+                result,
+                CombineIfKnown(manifest.WorkspacePath, "usuario", "config", "estudio-socratico.extension.local.json"),
+                "API key local protegida.");
+        }
 
         if (!string.IsNullOrWhiteSpace(paths.RepoRoot))
         {
@@ -430,6 +608,71 @@ public sealed class UninstallManager(
         return manifest.Dependencies.TryGetValue(DependencyId.Msys2, out var msys2) &&
                msys2.InstalledByEstudio &&
                string.Equals(Path.GetFullPath(ProductInfo.DefaultMsys2Root), fullPath, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool IsAllowedStudentDataDeletePath(string fullPath, InstallerManifest manifest)
+    {
+        if (string.Equals(fullPath, TryGetFullPath(paths.ManifestPath), StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(fullPath, TryGetFullPath(paths.LogsRoot), StringComparison.OrdinalIgnoreCase))
+        {
+            return PathSafety.IsInside(paths.LocalAppDataRoot, fullPath);
+        }
+
+        var workspacePath = TryGetFullPath(manifest.WorkspacePath);
+        if (string.IsNullOrWhiteSpace(workspacePath) ||
+            !string.Equals(fullPath, workspacePath, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(fullPath, TryGetFullPath(paths.RepoRoot), StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var folderName = Path.GetFileName(fullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        if (!folderName.StartsWith($"{ProductInfo.DefaultWorkspaceFolderPrefix}-", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var identity = WorkspaceIdentityStore.Read(fullPath);
+        var alias = LocalAliasNormalizer.Normalize(identity?.Alias ?? manifest.LocalAlias, "");
+        if (string.IsNullOrWhiteSpace(alias))
+        {
+            return false;
+        }
+
+        var expectedFolder = $"Estudio-Socratico-{alias}";
+        return string.Equals(folderName, expectedFolder, StringComparison.OrdinalIgnoreCase) ||
+               folderName.StartsWith("Estudio-Socratico-", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string? TryGetDeletableWorkspaceRepo(InstallerManifest manifest)
+    {
+        if (!manifest.WorkspaceRepoCreatedByEstudio ||
+            string.IsNullOrWhiteSpace(manifest.WorkspacePath))
+        {
+            return null;
+        }
+
+        var identity = WorkspaceIdentityStore.Read(manifest.WorkspacePath);
+        var alias = LocalAliasNormalizer.Normalize(identity?.Alias ?? manifest.LocalAlias, "");
+        var githubLogin = identity?.GitHubLogin ?? manifest.GitHub.UserName;
+        if (string.IsNullOrWhiteSpace(alias) || string.IsNullOrWhiteSpace(githubLogin))
+        {
+            return null;
+        }
+
+        var expectedRepo = GitHubAccountManager.GetWorkspaceRepository(githubLogin, alias);
+        var identityRepo = identity?.WorkspaceRepo ?? expectedRepo;
+        var manifestRepo = manifest.WorkspaceRepo ?? expectedRepo;
+        if (string.Equals(expectedRepo, ProductInfo.BaseRepository, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(identityRepo, ProductInfo.BaseRepository, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(manifestRepo, ProductInfo.BaseRepository, StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(expectedRepo, identityRepo, StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(expectedRepo, manifestRepo, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        return expectedRepo;
     }
 
     private static UninstallReportItem CreateItem(string path, string action, string reason)

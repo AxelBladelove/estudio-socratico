@@ -20,6 +20,9 @@ public sealed record InstallerManifest
     public List<string> VSCodeExtensionsInstalled { get; init; } = [];
     public AccountState GitHub { get; init; } = new();
     public AccountState Exercism { get; init; } = new();
+    public string? BaseRepo { get; init; }
+    public string? WorkspaceRepo { get; init; }
+    public bool WorkspaceRepoCreatedByEstudio { get; init; }
     public List<string> Logs { get; init; } = [];
     public List<ElevatedActionRecord> ElevatedActions { get; init; } = [];
     public List<string> SafeToRemove { get; init; } = [];

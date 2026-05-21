@@ -37,4 +37,21 @@ public sealed class SecurityTests
         Assert.DoesNotContain("super-secret-value", text);
         Assert.Contains("[REDACTED]", text);
     }
+
+    [Fact]
+    public async Task SecretRedaction_NoTokensInLogs()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "estudio-security-" + Guid.NewGuid().ToString("N"));
+        var paths = new AppPaths(localAppDataRoot: root);
+        var logManager = new LogManager(paths);
+        const string githubToken = "ghp_abcdefghijklmnopqrstuvwxyz1234567890";
+        const string exercismToken = "abcdefghijklmnopqrstuvwxyz1234567890TOKEN";
+
+        await logManager.WriteAsync("info", "secret-test", $"gh auth token {githubToken}; exercism configure --token {exercismToken}");
+
+        var text = await File.ReadAllTextAsync(logManager.InstallerLogPath);
+        Assert.DoesNotContain(githubToken, text);
+        Assert.DoesNotContain(exercismToken, text);
+        Assert.Contains("[REDACTED]", text);
+    }
 }

@@ -239,6 +239,9 @@ public static class BridgePayload
             ExercismToken = GetString(request, "exercismToken", "token"),
             AllowAggressiveCleanup = GetBool(request, "allowAggressiveCleanup", defaultValue: false),
             UninstallDryRun = GetBool(request, "dryRun", defaultValue: false),
+            CleanReinstall = GetBool(request, "cleanReinstall", defaultValue: false),
+            DeleteStudentData = GetBool(request, "deleteStudentData", defaultValue: false),
+            DeleteRemoteWorkspaceRepo = GetBool(request, "deleteRemoteWorkspaceRepo", defaultValue: false),
             SkipGitHubLogin = GetBool(request, "skipGitHubLogin", defaultValue: false),
             SkipExercism = GetBool(request, "skipExercism", defaultValue: false)
         };

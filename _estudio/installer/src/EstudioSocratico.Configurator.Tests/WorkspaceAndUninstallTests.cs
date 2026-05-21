@@ -356,6 +356,186 @@ public sealed class WorkspaceAndUninstallTests
         Assert.Contains(result.Items, item => item.Action == "kept" && item.Path == workspace);
     }
 
+    [Fact]
+    public async Task Reinstall_Default_KeepsIdentityAndLogs()
+    {
+        var workspace = await CreateStudentWorkspaceAsync("testfork", "AxelBladelove");
+        var logPath = Path.Combine(workspace, "usuario", "logs", "main", "bloque1.log");
+        Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
+        await File.WriteAllTextAsync(logPath, "keep");
+        var paths = new AppPaths(repoRoot: CreateMinimalWorkspace(), localAppDataRoot: Path.Combine(Path.GetTempPath(), "estudio-uninstall-" + Guid.NewGuid().ToString("N")));
+        var manifestManager = new ManifestManager(paths);
+        await manifestManager.SaveAsync(new InstallerManifest
+        {
+            WorkspacePath = workspace,
+            LocalAlias = "testfork",
+            GitHub = new AccountState { Configured = true, UserName = "AxelBladelove" },
+            WorkspaceRepo = "AxelBladelove/estudio-socratico-testfork",
+            WorkspaceRepoCreatedByEstudio = true
+        });
+        var uninstall = new UninstallManager(paths, manifestManager, new LogManager(paths), new SecurityManager());
+
+        var result = await uninstall.UninstallAsync(allowAggressiveCleanup: false, dryRun: true, CancellationToken.None);
+
+        Assert.False(result.WorkspaceRemoved);
+        Assert.Contains(workspace, result.KeptPaths);
+        Assert.True(File.Exists(Path.Combine(workspace, ".usuario")));
+        Assert.True(File.Exists(logPath));
+    }
+
+    [Fact]
+    public async Task Reinstall_Clean_RemovesIdentityLogsAndWorkspace()
+    {
+        var workspace = await CreateStudentWorkspaceAsync("testfork", "AxelBladelove");
+        var paths = new AppPaths(repoRoot: CreateMinimalWorkspace(), localAppDataRoot: Path.Combine(Path.GetTempPath(), "estudio-uninstall-" + Guid.NewGuid().ToString("N")));
+        var manifestManager = new ManifestManager(paths);
+        await manifestManager.SaveAsync(new InstallerManifest
+        {
+            WorkspacePath = workspace,
+            LocalAlias = "testfork",
+            GitHub = new AccountState { Configured = true, UserName = "AxelBladelove" }
+        });
+        var uninstall = new UninstallManager(paths, manifestManager, new LogManager(paths), new SecurityManager());
+
+        var result = await uninstall.UninstallAsync(false, dryRun: false, deleteStudentData: true, deleteRemoteWorkspaceRepo: false, CancellationToken.None);
+
+        Assert.True(result.WorkspaceRemoved);
+        Assert.False(Directory.Exists(workspace));
+        Assert.Contains(result.RemovedPaths, path => path.EndsWith("Estudio-Socratico-testfork", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task Reinstall_Clean_RecreatesWorkspaceRepo()
+    {
+        var workspace = await CreateStudentWorkspaceAsync("testfork", "AxelBladelove");
+        var paths = new AppPaths(repoRoot: CreateMinimalWorkspace(), localAppDataRoot: Path.Combine(Path.GetTempPath(), "estudio-uninstall-" + Guid.NewGuid().ToString("N")));
+        var runner = new RecordingRunner();
+        var manifestManager = new ManifestManager(paths);
+        await manifestManager.SaveAsync(new InstallerManifest
+        {
+            WorkspacePath = workspace,
+            LocalAlias = "testfork",
+            GitHub = new AccountState { Configured = true, UserName = "AxelBladelove" },
+            WorkspaceRepo = "AxelBladelove/estudio-socratico-testfork",
+            WorkspaceRepoCreatedByEstudio = true
+        });
+        var uninstall = new UninstallManager(paths, manifestManager, new LogManager(paths), new SecurityManager(), runner);
+
+        var result = await uninstall.UninstallAsync(false, dryRun: true, deleteStudentData: true, deleteRemoteWorkspaceRepo: true, CancellationToken.None);
+
+        Assert.Contains("github:AxelBladelove/estudio-socratico-testfork", result.WouldRemovePaths);
+        Assert.Empty(runner.Commands);
+    }
+
+    [Fact]
+    public async Task Uninstall_Default_KeepsStudentData()
+    {
+        await Uninstall_KeepsStudentData();
+    }
+
+    [Fact]
+    public async Task Uninstall_DeleteStudentData_RemovesWorkspaceAndConfig()
+    {
+        var workspace = await CreateStudentWorkspaceAsync("testfork", "AxelBladelove");
+        var paths = new AppPaths(repoRoot: CreateMinimalWorkspace(), localAppDataRoot: Path.Combine(Path.GetTempPath(), "estudio-uninstall-" + Guid.NewGuid().ToString("N")));
+        var manifestManager = new ManifestManager(paths);
+        await manifestManager.SaveAsync(new InstallerManifest
+        {
+            WorkspacePath = workspace,
+            LocalAlias = "testfork",
+            GitHub = new AccountState { Configured = true, UserName = "AxelBladelove" }
+        });
+        Assert.True(File.Exists(paths.ManifestPath));
+        var uninstall = new UninstallManager(paths, manifestManager, new LogManager(paths), new SecurityManager());
+
+        var result = await uninstall.UninstallAsync(false, dryRun: false, deleteStudentData: true, deleteRemoteWorkspaceRepo: false, CancellationToken.None);
+
+        Assert.True(result.WorkspaceRemoved);
+        Assert.False(Directory.Exists(workspace));
+        Assert.False(File.Exists(paths.ManifestPath));
+        Assert.False(Directory.Exists(paths.LogsRoot));
+    }
+
+    [Fact]
+    public async Task Uninstall_DeleteRemoteRepo_OnlyDeletesWorkspaceRepo()
+    {
+        var workspace = await CreateStudentWorkspaceAsync("testfork", "AxelBladelove");
+        var paths = new AppPaths(repoRoot: CreateMinimalWorkspace(), localAppDataRoot: Path.Combine(Path.GetTempPath(), "estudio-uninstall-" + Guid.NewGuid().ToString("N")));
+        var runner = new RecordingRunner();
+        var manifestManager = new ManifestManager(paths);
+        await manifestManager.SaveAsync(new InstallerManifest
+        {
+            WorkspacePath = workspace,
+            LocalAlias = "testfork",
+            GitHub = new AccountState { Configured = true, UserName = "AxelBladelove" },
+            WorkspaceRepo = "AxelBladelove/estudio-socratico-testfork",
+            WorkspaceRepoCreatedByEstudio = true
+        });
+        var uninstall = new UninstallManager(paths, manifestManager, new LogManager(paths), new SecurityManager(), runner);
+
+        var result = await uninstall.UninstallAsync(false, dryRun: false, deleteStudentData: false, deleteRemoteWorkspaceRepo: true, CancellationToken.None);
+
+        Assert.Contains("github:AxelBladelove/estudio-socratico-testfork", result.RemovedPaths);
+        Assert.Contains(runner.Commands, spec => spec.FileName == "gh" && spec.Arguments.SequenceEqual(["repo", "delete", "AxelBladelove/estudio-socratico-testfork", "--yes"]));
+        Assert.DoesNotContain(runner.Commands, spec => spec.Arguments.Contains(ProductInfo.BaseRepository));
+    }
+
+    [Fact]
+    public async Task Uninstall_NeverDeletesBaseRepo()
+    {
+        var workspace = await CreateStudentWorkspaceAsync("testfork", "AxelBladelove");
+        var paths = new AppPaths(repoRoot: CreateMinimalWorkspace(), localAppDataRoot: Path.Combine(Path.GetTempPath(), "estudio-uninstall-" + Guid.NewGuid().ToString("N")));
+        var runner = new RecordingRunner();
+        var manifestManager = new ManifestManager(paths);
+        await manifestManager.SaveAsync(new InstallerManifest
+        {
+            WorkspacePath = workspace,
+            LocalAlias = "testfork",
+            GitHub = new AccountState { Configured = true, UserName = "AxelBladelove" },
+            WorkspaceRepo = ProductInfo.BaseRepository,
+            WorkspaceRepoCreatedByEstudio = true
+        });
+        var uninstall = new UninstallManager(paths, manifestManager, new LogManager(paths), new SecurityManager(), runner);
+
+        var result = await uninstall.UninstallAsync(false, dryRun: false, deleteStudentData: false, deleteRemoteWorkspaceRepo: true, CancellationToken.None);
+
+        Assert.Empty(runner.Commands);
+        Assert.DoesNotContain(result.RemovedPaths, path => path.Contains(ProductInfo.BaseRepository, StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.Items, item => item.Action == "skipped" && item.Path == "github:workspaceRepo");
+    }
+
+    private static async Task<string> CreateStudentWorkspaceAsync(string alias, string githubLogin)
+    {
+        var root = Path.Combine(
+            Path.GetTempPath(),
+            "estudio-student-" + Guid.NewGuid().ToString("N"),
+            $"{ProductInfo.DefaultWorkspaceFolderPrefix}-{LocalAliasNormalizer.Normalize(alias)}");
+        Directory.CreateDirectory(Path.Combine(root, "usuario", "config"));
+        Directory.CreateDirectory(Path.Combine(root, "usuario", "logs"));
+        Directory.CreateDirectory(Path.Combine(root, "Ejercicios"));
+        File.WriteAllText(Path.Combine(root, "AGENTS.md"), "# test");
+        File.WriteAllText(Path.Combine(root, "usuario", "config", "estudio-socratico.extension.local.json"), """{"apiKey":"keep"}""");
+        await WorkspaceIdentityStore.WriteAsync(root, alias, githubLogin, CancellationToken.None);
+        return root;
+    }
+
+    private sealed class RecordingRunner : ICommandRunner
+    {
+        public List<CommandSpec> Commands { get; } = [];
+
+        public Task<CommandResult> RunAsync(CommandSpec spec, CancellationToken cancellationToken = default)
+        {
+            Commands.Add(spec);
+            return Task.FromResult(new CommandResult
+            {
+                Spec = spec,
+                ExitCode = 0,
+                StandardOutput = "",
+                StandardError = ""
+            });
+        }
+    }
+
     private static string CreateMinimalWorkspace()
     {
         var root = Path.Combine(Path.GetTempPath(), "estudio-workspace-" + Guid.NewGuid().ToString("N"));

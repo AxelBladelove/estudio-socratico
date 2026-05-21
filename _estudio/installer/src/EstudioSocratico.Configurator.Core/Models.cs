@@ -173,6 +173,9 @@ public sealed record SetupRequest
     public InstallScope Scope { get; init; } = InstallScope.User;
     public bool AllowAggressiveCleanup { get; init; }
     public bool UninstallDryRun { get; init; } = true;
+    public bool CleanReinstall { get; init; }
+    public bool DeleteStudentData { get; init; }
+    public bool DeleteRemoteWorkspaceRepo { get; init; }
     public bool SkipGitHubLogin { get; init; }
     public bool SkipExercism { get; init; }
 }

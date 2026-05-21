@@ -194,6 +194,13 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
         await EnsureRemoteAsync(repoRoot, "origin", $"https://github.com/{workspaceRepo}.git", cancellationToken).ConfigureAwait(false);
         await EnsureRemoteAsync(repoRoot, "upstream", $"https://github.com/{baseRepo}.git", cancellationToken).ConfigureAwait(false);
         await WorkspaceIdentityStore.WriteAsync(repoRoot, normalizedAlias, githubUser, cancellationToken).ConfigureAwait(false);
+        var manifest = await manifestManager.LoadAsync(cancellationToken).ConfigureAwait(false);
+        await manifestManager.SaveAsync(manifest with
+        {
+            BaseRepo = baseRepo,
+            WorkspaceRepo = workspaceRepo,
+            LocalAlias = normalizedAlias
+        }, cancellationToken).ConfigureAwait(false);
 
         await logManager.WriteAsync("info", "github", $"Repositorio base {baseRepo}; workspace repo {workspaceRepo}.", cancellationToken)
             .ConfigureAwait(false);
@@ -241,6 +248,14 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
             if (!workspaceRepoExists)
             {
                 await GitAsync(targetPath, ["push", "-u", "origin", "main"], cancellationToken).ConfigureAwait(false);
+                var manifest = await manifestManager.LoadAsync(cancellationToken).ConfigureAwait(false);
+                await manifestManager.SaveAsync(manifest with
+                {
+                    BaseRepo = baseRepo,
+                    WorkspaceRepo = workspaceRepo,
+                    WorkspaceRepoCreatedByEstudio = true,
+                    LocalAlias = normalizedAlias
+                }, cancellationToken).ConfigureAwait(false);
             }
         }
         else
