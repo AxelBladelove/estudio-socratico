@@ -1091,7 +1091,15 @@ public sealed class VSCodeManager(
 
         if (!install.Succeeded)
         {
-            throw new InvalidOperationException($"VS Code no pudo instalar la extension local desde VSIX: {GetCommandError(install)}");
+            var installError = GetCommandError(install);
+            if (!installError.Contains("restart VS Code", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException($"VS Code no pudo instalar la extension local desde VSIX: {installError}");
+            }
+
+            await extensionManager.InstallLocalExtensionAsync(workspacePath, cancellationToken).ConfigureAwait(false);
+            await logManager.WriteAsync("warn", "vscode-extension", "VS Code pidio reinicio antes de reinstalar la extension; se restauro la copia local del perfil y se validara con --list-extensions.", cancellationToken)
+                .ConfigureAwait(false);
         }
 
         var listed = await runner.RunAsync(VSCodeLocator.BuildCodeCmdCommand(
