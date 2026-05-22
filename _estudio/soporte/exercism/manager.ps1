@@ -399,6 +399,7 @@ function Get-ProjectGeminiConfig {
     }
 
     $paths = @(
+        (Join-Path $script:ResolvedRepoRoot "usuario\config\estudio-socratico.extension.local.json"),
         (Join-Path $script:ResolvedRepoRoot "_estudio\soporte\exercism\config.local.json"),
         (Join-Path $script:ResolvedRepoRoot "_estudio\soporte\exercism\config.json"),
         (Join-Path $script:ResolvedRepoRoot ".estudio_exercism.local.json")
@@ -736,7 +737,7 @@ function Invoke-GeminiTranslation {
 
 > Traduccion automatica pendiente.
 
-Configura la variable de entorno `GEMINI_API_KEY` y vuelve a importar este ejercicio para generar las instrucciones en espanol.
+Configura la API Key local de la extension o la variable de entorno `GEMINI_API_KEY` y vuelve a importar este ejercicio para generar las instrucciones en espanol.
 
 Mientras tanto, usa los tests del ejercicio como guia de comportamiento esperado.
 "@

@@ -1,5 +1,6 @@
 const vscode = require("vscode");
 const cp = require("child_process");
+const crypto = require("crypto");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
@@ -239,7 +240,9 @@ async function refreshWebview(root, webview) {
   webview.html = renderLoadingHtml();
   try {
     const catalog = await runManagerJson(root, ["-Action", "catalog"]);
-    webview.html = renderCatalogHtml(catalog, readExtensionConfig(root));
+    const extensionConfig = readExtensionConfig(root);
+    const apiKeyNotice = consumeApiKeyNotice(root, extensionConfig);
+    webview.html = renderCatalogHtml(catalog, extensionConfig, apiKeyNotice);
   } catch (error) {
     webview.html = renderErrorHtml(error.message);
   }
@@ -458,7 +461,44 @@ function renderErrorHtml(message) {
   `);
 }
 
-function renderCatalogHtml(catalog, extensionConfig) {
+function getApiKeyNoticeStorageKey(root) {
+  const workspaceHash = crypto.createHash("sha1").update(String(root || "")).digest("hex");
+  return `estudioExercism.apiKeyNotice.${workspaceHash}`;
+}
+
+function getApiKeyFingerprint(extensionConfig) {
+  const apiKey = String(extensionConfig?.apiKey || "").trim();
+  if (!apiKey) return "";
+  const payload = JSON.stringify({
+    provider: String(extensionConfig?.provider || "gemini"),
+    model: String(extensionConfig?.model || ""),
+    apiKey,
+  });
+  return crypto.createHash("sha256").update(payload).digest("hex");
+}
+
+function consumeApiKeyNotice(root, extensionConfig) {
+  const hasApiKey = Boolean(String(extensionConfig?.apiKey || "").trim());
+  if (!hasApiKey) {
+    return `<section class="notice">No hay API Key local todavia. La extension seguira funcionando parcialmente sin ella.</section>`;
+  }
+
+  if (!currentProvider?.context) {
+    return "";
+  }
+
+  const storageKey = getApiKeyNoticeStorageKey(root);
+  const fingerprint = getApiKeyFingerprint(extensionConfig);
+  const seenFingerprint = currentProvider.context.workspaceState.get(storageKey, "");
+  if (fingerprint && fingerprint !== seenFingerprint) {
+    void currentProvider.context.workspaceState.update(storageKey, fingerprint);
+    return `<section class="notice success">API Key local detectada para ${escapeHtml(extensionConfig.provider || "gemini")}.</section>`;
+  }
+
+  return "";
+}
+
+function renderCatalogHtml(catalog, extensionConfig, apiKeyNotice) {
   const exercises = normalizeExercises(catalog.exercises || []);
   const topics = [...new Set(exercises.flatMap((exercise) => exercise.topics || []))].sort((a, b) => a.localeCompare(b));
   const providers = [
@@ -469,10 +509,6 @@ function renderCatalogHtml(catalog, extensionConfig) {
   const tokenNotice = catalog.exercismCli && catalog.exercismCli.tokenConfigured
     ? ""
     : `<section class="notice">Exercism CLI no tiene token configurado. Configuralo para ver progreso real y enviar soluciones.</section>`;
-  const hasApiKey = Boolean(String(extensionConfig?.apiKey || "").trim());
-  const apiKeyNotice = hasApiKey
-    ? `<section class="notice success">API Key local detectada para ${escapeHtml(extensionConfig.provider || "gemini")}.</section>`
-    : `<section class="notice">No hay API Key local todavia. La extension seguira funcionando parcialmente sin ella.</section>`;
   const cards = exercises.map(renderExerciseCard).join("");
   const topicButtons = topics.map((topic) => `
     <button class="topicToggle" data-topic="${escapeHtml(topic)}" data-topic-state="off" aria-pressed="false">
