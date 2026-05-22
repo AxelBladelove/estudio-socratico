@@ -1207,6 +1207,13 @@ public sealed class WorkspaceManager(AppPaths paths, ManifestManager manifestMan
         {
             workspacePath = paths.GetRecommendedWorkspacePath(normalizedAlias);
         }
+        else
+        {
+            var expanded = Environment.ExpandEnvironmentVariables(workspacePath);
+            workspacePath = Path.IsPathRooted(expanded)
+                ? Path.GetFullPath(expanded)
+                : Path.GetFullPath(Path.Combine(paths.UserProfileRoot, expanded));
+        }
 
         Directory.CreateDirectory(workspacePath);
         RequireWorkspaceShape(workspacePath);

@@ -22,13 +22,21 @@ public sealed class ConfiguratorEngine
     private readonly GistImporterManager _gistImporterManager;
     private readonly SetupPlanner _planner;
 
-    public ConfiguratorEngine(AppPaths? paths = null, ICommandRunner? commandRunner = null, Func<string, bool>? fileExists = null)
+    public ConfiguratorEngine(
+        AppPaths? paths = null,
+        ICommandRunner? commandRunner = null,
+        Func<string, bool>? fileExists = null,
+        Func<VSCodePaths>? locateVSCode = null)
     {
         _paths = paths ?? new AppPaths();
         _logManager = new LogManager(_paths);
         _manifestManager = new ManifestManager(_paths);
         var runner = commandRunner ?? new ProcessCommandRunner(_logManager);
-        _detector = new DependencyDetector(runner, managedToolsDirectory: Path.Combine(_paths.ToolsRoot, "bin"), fileExists: fileExists);
+        _detector = new DependencyDetector(
+            runner,
+            locateVSCode,
+            Path.Combine(_paths.ToolsRoot, "bin"),
+            fileExists);
         var probe = new SystemProbe(_paths);
         var pathManager = new PathManager(_paths, _logManager);
         var winget = new WingetBroker(runner, _detector, _logManager);
@@ -39,6 +47,7 @@ public sealed class ConfiguratorEngine
         _dependencyInstaller = new DependencyInstaller(
             _paths,
             _detector,
+            runner,
             winget,
             fallback,
             download,
@@ -108,7 +117,7 @@ public sealed class ConfiguratorEngine
         var dependencies = await _detector.DetectAllAsync(cancellationToken).ConfigureAwait(false);
         var manifest = await _manifestManager.LoadAsync(cancellationToken).ConfigureAwait(false);
         var alias = LocalAliasNormalizer.Normalize(manifest.LocalAlias, Environment.UserName);
-        var workspace = manifest.WorkspacePath ?? _paths.GetRecommendedWorkspacePath(alias);
+        var workspace = NormalizeWorkspacePath(manifest.WorkspacePath, alias);
         var workspaceValid = Directory.Exists(workspace) && Directory.Exists(Path.Combine(workspace, ".git"));
         var buildFlowValid = manifest.BuildFlowValidated && workspaceValid;
 
@@ -123,7 +132,9 @@ public sealed class ConfiguratorEngine
         var progress = new CompositeProgressSink([_logManager, progressSink ?? NullProgressSink.Instance]);
         var errors = new List<InstallerError>();
         var states = new List<DependencyState>();
-        var workspace = request.WorkspacePath;
+        var alias = await ResolveAliasAsync(request, cancellationToken).ConfigureAwait(false);
+        var workspace = NormalizeWorkspacePath(request.WorkspacePath, alias);
+        request = request with { WorkspacePath = workspace };
         UninstallResult? uninstallReport = null;
 
         await _logManager.StartRunAsync(cancellationToken).ConfigureAwait(false);
@@ -208,10 +219,14 @@ public sealed class ConfiguratorEngine
 
         if (request.Mode is SetupMode.Install or SetupMode.Update or SetupMode.Repair or SetupMode.Reinstall)
         {
-            await PersistBuildFlowValidationAsync(workspace, errors.Count == 0, cancellationToken).ConfigureAwait(false);
+            await PersistBuildFlowValidationAsync(
+                workspace,
+                errors.Count == 0 && !IsToolsPreparationOnly(request),
+                request.LocalAlias,
+                cancellationToken).ConfigureAwait(false);
         }
 
-        var (currentState, finalDependencies) = await BuildCurrentStateAsync(workspace, null, cancellationToken).ConfigureAwait(false);
+        var (currentState, finalDependencies) = await BuildCurrentStateAsync(workspace, request.LocalAlias, cancellationToken).ConfigureAwait(false);
         await LogFinalReadinessCheckAsync(currentState, cancellationToken).ConfigureAwait(false);
         var globalState = errors.Count > 0 ? GlobalState.Failed : currentState.GlobalState;
         var globalMessage = errors.Count > 0
@@ -379,7 +394,7 @@ public sealed class ConfiguratorEngine
             }, cancellationToken).ConfigureAwait(false);
         }
 
-        await PersistBuildFlowValidationAsync(workspace, errors.Count == 0, cancellationToken).ConfigureAwait(false);
+        await PersistBuildFlowValidationAsync(workspace, errors.Count == 0, null, cancellationToken).ConfigureAwait(false);
         var (currentState, finalDependencies) = await BuildCurrentStateAsync(workspace, null, cancellationToken).ConfigureAwait(false);
         await LogFinalReadinessCheckAsync(currentState, cancellationToken).ConfigureAwait(false);
         var globalState = errors.Count > 0 ? GlobalState.Failed : currentState.GlobalState;
@@ -426,7 +441,20 @@ public sealed class ConfiguratorEngine
         }
 
         var alias = await ResolveAliasAsync(request, cancellationToken).ConfigureAwait(false);
-        var target = request.WorkspacePath ?? _paths.GetRecommendedWorkspacePath(alias);
+        var target = NormalizeWorkspacePath(request.WorkspacePath, alias);
+        if (IsToolsPreparationOnly(request))
+        {
+            await progress.ReportAsync(new ProgressEvent
+            {
+                StepId = "tools-ready",
+                Title = "Herramientas necesarias",
+                Message = "Herramientas instaladas o reparadas. Continua con cuentas para completar el setup.",
+                Percent = 100,
+                Status = DependencyStatus.Ready
+            }, cancellationToken).ConfigureAwait(false);
+            return target;
+        }
+
         await progress.ReportAsync(new ProgressEvent { StepId = "github", Title = "GitHub", Message = "Preparando fork y workspace.", Percent = 70 }, cancellationToken)
             .ConfigureAwait(false);
         var workspace = await _gitHubAccountManager.EnsureWorkspaceRepositoryAsync(target, alias, request.SkipGitHubLogin, cancellationToken)
@@ -754,21 +782,16 @@ public sealed class ConfiguratorEngine
     private async Task<string> ResolveWorkspaceAsync(SetupRequest request, CancellationToken cancellationToken)
     {
         var alias = await ResolveAliasAsync(request, cancellationToken).ConfigureAwait(false);
-        var target = request.WorkspacePath ?? _paths.GetRecommendedWorkspacePath(alias);
+        var target = NormalizeWorkspacePath(request.WorkspacePath, alias);
         return await _gitHubAccountManager.EnsureWorkspaceRepositoryAsync(target, alias, request.SkipGitHubLogin, cancellationToken)
             .ConfigureAwait(false);
     }
 
     private async Task<string> ResolveKnownWorkspaceAsync(string? workspacePath, CancellationToken cancellationToken)
     {
-        if (!string.IsNullOrWhiteSpace(workspacePath))
-        {
-            return workspacePath;
-        }
-
         var manifest = await _manifestManager.LoadAsync(cancellationToken).ConfigureAwait(false);
         var alias = LocalAliasNormalizer.Normalize(manifest.LocalAlias, Environment.UserName);
-        return manifest.WorkspacePath ?? _paths.GetRecommendedWorkspacePath(alias);
+        return NormalizeWorkspacePath(workspacePath ?? manifest.WorkspacePath, alias);
     }
 
     private async Task<string> ResolveAliasAsync(SetupRequest request, CancellationToken cancellationToken)
@@ -796,7 +819,7 @@ public sealed class ConfiguratorEngine
         var manifest = await _manifestManager.LoadAsync(cancellationToken).ConfigureAwait(false);
         var alias = LocalAliasNormalizer.Normalize(localAlias, manifest.LocalAlias ?? Environment.UserName);
         var recommendedWorkspacePath = _paths.GetRecommendedWorkspacePath(alias);
-        var workspace = workspacePath ?? manifest.WorkspacePath ?? recommendedWorkspacePath;
+        var workspace = NormalizeWorkspacePath(workspacePath ?? manifest.WorkspacePath, alias);
         var diagnostics = await _diagnosticsManager.RunAsync(workspace, cancellationToken).ConfigureAwait(false);
         var workspaceValid = !string.IsNullOrWhiteSpace(workspace) &&
                              Directory.Exists(workspace) &&
@@ -847,12 +870,19 @@ public sealed class ConfiguratorEngine
         }, diagnostics.Dependencies);
     }
 
-    private async Task PersistBuildFlowValidationAsync(string? workspacePath, bool buildFlowValid, CancellationToken cancellationToken)
+    private async Task PersistBuildFlowValidationAsync(
+        string? workspacePath,
+        bool buildFlowValid,
+        string? localAlias,
+        CancellationToken cancellationToken)
     {
         var manifest = await _manifestManager.LoadAsync(cancellationToken).ConfigureAwait(false);
         await _manifestManager.SaveAsync(manifest with
         {
             WorkspacePath = workspacePath ?? manifest.WorkspacePath,
+            LocalAlias = string.IsNullOrWhiteSpace(localAlias)
+                ? manifest.LocalAlias
+                : LocalAliasNormalizer.Normalize(localAlias, manifest.LocalAlias ?? Environment.UserName),
             BuildFlowValidated = buildFlowValid,
             BuildFlowValidatedAtUtc = DateTimeOffset.UtcNow
         }, cancellationToken).ConfigureAwait(false);
@@ -873,6 +903,25 @@ public sealed class ConfiguratorEngine
         }, JsonDefaults.Options);
         return _logManager.WriteAsync("info", "final-readiness-check", payload, cancellationToken);
     }
+
+    private string NormalizeWorkspacePath(string? workspacePath, string alias)
+    {
+        if (string.IsNullOrWhiteSpace(workspacePath))
+        {
+            return _paths.GetRecommendedWorkspacePath(alias);
+        }
+        var expanded = Environment.ExpandEnvironmentVariables(workspacePath);
+        if (!Path.IsPathRooted(expanded))
+        {
+            return Path.GetFullPath(Path.Combine(_paths.UserProfileRoot, expanded));
+        }
+        return Path.GetFullPath(expanded);
+    }
+
+    private static bool IsToolsPreparationOnly(SetupRequest request) =>
+        request.Mode == SetupMode.Install &&
+        request.SkipGitHubLogin &&
+        request.SkipExercism;
 
     private static InstallerError NormalizeError(Exception ex)
     {

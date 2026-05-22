@@ -47,6 +47,42 @@ public sealed class DependencyDetectionTests
         Assert.Contains("--accept-source-agreements", captured.Arguments);
         Assert.Contains("Git.Git", captured.Arguments);
     }
+
+    [Fact]
+    public async Task FreshSetup_PythonStoreAlias_IsTreatedAsBroken()
+    {
+        var aliasPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Microsoft",
+            "WindowsApps",
+            "python.exe");
+        var runner = new FakeRunner(spec =>
+        {
+            if (spec.FileName == "where.exe" && spec.Arguments.SequenceEqual(["python"]))
+            {
+                return FakeRunner.Result(spec, 0, aliasPath + Environment.NewLine);
+            }
+
+            if (string.Equals(spec.FileName, aliasPath, StringComparison.OrdinalIgnoreCase))
+            {
+                return FakeRunner.Result(
+                    spec,
+                    9009,
+                    error: "Python was not found; run without arguments to install from the Microsoft Store, or disable this shortcut from Settings > Apps > Advanced app settings > App execution aliases.");
+            }
+
+            return FakeRunner.Result(spec, 1);
+        });
+        var detector = new DependencyDetector(
+            runner,
+            fileExists: path => string.Equals(path, aliasPath, StringComparison.OrdinalIgnoreCase));
+
+        var state = await detector.DetectAsync(DependencyDetector.Requirements.Single(x => x.Id == DependencyId.Python));
+
+        Assert.Equal(DependencyStatus.Broken, state.Status);
+        Assert.Equal(aliasPath, state.Path);
+        Assert.Contains("Microsoft Store", state.Recommendation);
+    }
 }
 
 internal sealed class FakeRunner(Func<CommandSpec, CommandResult> handler) : ICommandRunner
