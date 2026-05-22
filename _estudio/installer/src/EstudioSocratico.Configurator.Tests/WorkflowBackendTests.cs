@@ -402,6 +402,47 @@ public sealed class WorkflowBackendTests
     }
 
     [Fact]
+    public async Task Existing_NonEstudio_Workspace_Is_Moved_Aside_Before_Clone()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "estudio-github-" + Guid.NewGuid().ToString("N"));
+        var workspace = Path.Combine(root, "Estudio-Socratico-jpbal");
+        Directory.CreateDirectory(workspace);
+        await File.WriteAllTextAsync(Path.Combine(workspace, "nota.txt"), "ocupado");
+        var paths = new AppPaths(repoRoot: root, localAppDataRoot: Path.Combine(root, "local"));
+        var runner = new RecordingRunner(spec =>
+        {
+            if (spec.Arguments.SequenceEqual(["api", "user", "--jq", ".login"]))
+            {
+                return RecordingRunner.Result(spec, 0, "JuanPablo2610\n");
+            }
+
+            if (spec.Arguments.Count >= 3 && spec.Arguments[0] == "clone")
+            {
+                Directory.CreateDirectory(workspace);
+                Directory.CreateDirectory(Path.Combine(workspace, ".git"));
+                File.WriteAllText(Path.Combine(workspace, "AGENTS.md"), "# test");
+                return RecordingRunner.Result(spec, 0, "ok");
+            }
+
+            if (spec.Arguments.SequenceEqual(["remote", "get-url", "origin"]) ||
+                spec.Arguments.SequenceEqual(["remote", "get-url", "upstream"]) ||
+                spec.Arguments.SequenceEqual(["auth", "status", "--hostname", "github.com"]))
+            {
+                return RecordingRunner.Result(spec, 0, "ok");
+            }
+
+            return RecordingRunner.Result(spec, 0, "ok");
+        });
+        var manager = new GitHubAccountManager(runner, new ManifestManager(paths), new LogManager(paths));
+
+        _ = await manager.EnsureWorkspaceRepositoryAsync(workspace, "jpbal", skipGitHub: false, CancellationToken.None);
+
+        var backup = Assert.Single(Directory.GetDirectories(root, "Estudio-Socratico-jpbal.backup-*"));
+        Assert.True(File.Exists(Path.Combine(backup, "nota.txt")));
+        Assert.Contains(runner.Specs, spec => spec.Arguments.Count >= 2 && spec.Arguments[0] == "clone");
+    }
+
+    [Fact]
     public async Task SmokeTest_Uses_F9_Build_Flow_Without_Automatic_Commits()
     {
         var workspace = CreateSmokeWorkspace();

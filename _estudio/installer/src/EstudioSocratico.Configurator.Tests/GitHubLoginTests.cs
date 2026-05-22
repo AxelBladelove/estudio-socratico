@@ -285,6 +285,10 @@ public sealed class GitHubLoginTests : IDisposable
         _ = await engine.ConfigureGitHubAsync(switchAccount: false, workspacePath: _tempDir, installGh: true);
 
         Assert.NotNull(runner.LastAuthLoginSpec);
+        Assert.True(Path.IsPathRooted(runner.LastAuthLoginSpec!.FileName));
+        Assert.Equal("gh.exe", Path.GetFileName(runner.LastAuthLoginSpec.FileName));
+        Assert.Contains("--clipboard", runner.LastAuthLoginSpec.Arguments);
+        Assert.Contains("--skip-ssh-key", runner.LastAuthLoginSpec.Arguments);
         Assert.False(runner.LastAuthLoginSpec!.RedirectStandardOutput);
         Assert.False(runner.LastAuthLoginSpec.RedirectStandardError);
         Assert.False(runner.LastAuthLoginSpec.CreateNoWindow);

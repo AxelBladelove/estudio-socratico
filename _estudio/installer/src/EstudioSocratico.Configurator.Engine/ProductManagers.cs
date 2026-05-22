@@ -100,11 +100,12 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
 
     public async Task<AccountState> EnsureLoginAsync(bool switchAccount, CancellationToken cancellationToken)
     {
+        var ghPath = await ResolveGitHubCliAsync(cancellationToken).ConfigureAwait(false);
         if (switchAccount)
         {
             await runner.RunAsync(new CommandSpec
             {
-                FileName = "gh",
+                FileName = ghPath,
                 Arguments = ["auth", "logout", "--hostname", Host, "--yes"],
                 AllowNonZeroExitCode = true,
                 Timeout = TimeSpan.FromMinutes(2)
@@ -113,7 +114,7 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
 
         var status = await runner.RunAsync(new CommandSpec
         {
-            FileName = "gh",
+            FileName = ghPath,
             Arguments = ["auth", "status", "--hostname", Host],
             AllowNonZeroExitCode = true,
             Timeout = TimeSpan.FromSeconds(30)
@@ -123,8 +124,8 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
         {
             var login = await runner.RunAsync(new CommandSpec
             {
-                FileName = "gh",
-                Arguments = ["auth", "login", "--hostname", Host, "--web", "--git-protocol", "https"],
+                FileName = ghPath,
+                Arguments = ["auth", "login", "--hostname", Host, "--web", "--clipboard", "--git-protocol", "https", "--skip-ssh-key"],
                 RedirectStandardOutput = false,
                 RedirectStandardError = false,
                 CreateNoWindow = false,
@@ -140,7 +141,7 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
 
         await runner.RunAsync(new CommandSpec
         {
-            FileName = "gh",
+            FileName = ghPath,
             Arguments = ["auth", "setup-git", "--hostname", Host],
             Timeout = TimeSpan.FromMinutes(2),
             AllowNonZeroExitCode = true
@@ -148,7 +149,7 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
 
         var user = await runner.RunAsync(new CommandSpec
         {
-            FileName = "gh",
+            FileName = ghPath,
             Arguments = ["api", "user", "--jq", ".login"],
             Timeout = TimeSpan.FromSeconds(30),
             AllowNonZeroExitCode = true
@@ -217,7 +218,7 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
         CancellationToken cancellationToken)
     {
         var normalizedAlias = LocalAliasNormalizer.Normalize(localAlias);
-        if (File.Exists(Path.Combine(targetPath, "AGENTS.md")))
+        if (File.Exists(Path.Combine(targetPath, "AGENTS.md")) || Directory.Exists(Path.Combine(targetPath, ".git")))
         {
             if (!skipGitHub)
             {
@@ -229,7 +230,13 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
 
         if (Directory.Exists(targetPath) && Directory.EnumerateFileSystemEntries(targetPath).Any())
         {
-            throw new InvalidOperationException("La carpeta de workspace ya existe y no parece ser Estudio Socratico.");
+            var backupPath = BuildWorkspaceBackupPath(targetPath);
+            Directory.Move(targetPath, backupPath);
+            await logManager.WriteAsync(
+                "warning",
+                "workspace",
+                $"La carpeta de workspace existente no parecia valida y fue movida a '{backupPath}'.",
+                cancellationToken).ConfigureAwait(false);
         }
 
         Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
@@ -275,9 +282,10 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
         string workspaceRepo,
         CancellationToken cancellationToken)
     {
+        var ghPath = await ResolveGitHubCliAsync(cancellationToken).ConfigureAwait(false);
         var repoView = await runner.RunAsync(new CommandSpec
         {
-            FileName = "gh",
+            FileName = ghPath,
             Arguments = ["repo", "view", workspaceRepo, "--json", "nameWithOwner", "--jq", ".nameWithOwner"],
             WorkingDirectory = workingDirectory,
             Timeout = TimeSpan.FromSeconds(45),
@@ -291,7 +299,7 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
 
         var create = await runner.RunAsync(new CommandSpec
         {
-            FileName = "gh",
+            FileName = ghPath,
             Arguments = ["repo", "create", workspaceRepo, "--public", "--clone=false", "--description", "Workspace personal de Estudio Socratico"],
             WorkingDirectory = workingDirectory,
             Timeout = TimeSpan.FromMinutes(4),
@@ -304,6 +312,34 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
         }
 
         return false;
+    }
+
+    private static string BuildWorkspaceBackupPath(string targetPath)
+    {
+        var parent = Directory.GetParent(targetPath)?.FullName
+            ?? throw new InvalidOperationException("No se pudo determinar la carpeta padre del workspace.");
+        var name = Path.GetFileName(targetPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        var backupBaseName = $"{name}.backup-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}";
+        var backupPath = Path.Combine(parent, backupBaseName);
+        var suffix = 1;
+        while (Directory.Exists(backupPath) || File.Exists(backupPath))
+        {
+            backupPath = Path.Combine(parent, $"{backupBaseName}-{suffix++}");
+        }
+
+        return backupPath;
+    }
+
+    private async Task<string> ResolveGitHubCliAsync(CancellationToken cancellationToken)
+    {
+        var detector = new DependencyDetector(runner);
+        var ghPath = await detector.ResolveCommandPathAsync("gh", null, cancellationToken).ConfigureAwait(false);
+        if (!string.IsNullOrWhiteSpace(ghPath))
+        {
+            return ghPath;
+        }
+
+        throw new InvalidOperationException("Primero necesitamos instalar GitHub CLI.");
     }
 
     private Task<CommandResult> GitAsync(string repoRoot, IReadOnlyList<string> args, CancellationToken cancellationToken, bool allowFail = false)
