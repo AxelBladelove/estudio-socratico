@@ -113,6 +113,9 @@ public sealed record CommandSpec
         new Dictionary<string, string?>();
     public bool AllowNonZeroExitCode { get; init; }
     public bool RedactOutput { get; init; } = true;
+    public bool RedirectStandardOutput { get; init; } = true;
+    public bool RedirectStandardError { get; init; } = true;
+    public bool CreateNoWindow { get; init; } = true;
     public TimeSpan Timeout { get; init; } = TimeSpan.FromMinutes(5);
 }
 

@@ -24,9 +24,9 @@ public sealed class ProcessCommandRunner(LogManager? logManager = null) : IComma
         {
             FileName = spec.FileName,
             UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true
+            RedirectStandardOutput = spec.RedirectStandardOutput,
+            RedirectStandardError = spec.RedirectStandardError,
+            CreateNoWindow = spec.CreateNoWindow
         };
 
         if (!string.IsNullOrWhiteSpace(spec.ArgumentString))
@@ -65,26 +65,40 @@ public sealed class ProcessCommandRunner(LogManager? logManager = null) : IComma
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeoutCts.CancelAfter(spec.Timeout);
 
-        process.OutputDataReceived += (_, e) =>
+        if (spec.RedirectStandardOutput)
         {
-            if (e.Data is not null)
+            process.OutputDataReceived += (_, e) =>
             {
-                stdout.AppendLine(e.Data);
-            }
-        };
-        process.ErrorDataReceived += (_, e) =>
+                if (e.Data is not null)
+                {
+                    stdout.AppendLine(e.Data);
+                }
+            };
+        }
+
+        if (spec.RedirectStandardError)
         {
-            if (e.Data is not null)
+            process.ErrorDataReceived += (_, e) =>
             {
-                stderr.AppendLine(e.Data);
-            }
-        };
+                if (e.Data is not null)
+                {
+                    stderr.AppendLine(e.Data);
+                }
+            };
+        }
 
         try
         {
             process.Start();
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
+            if (spec.RedirectStandardOutput)
+            {
+                process.BeginOutputReadLine();
+            }
+
+            if (spec.RedirectStandardError)
+            {
+                process.BeginErrorReadLine();
+            }
             await process.WaitForExitAsync(timeoutCts.Token).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)

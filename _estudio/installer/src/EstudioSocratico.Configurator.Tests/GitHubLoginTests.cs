@@ -57,6 +57,7 @@ public sealed class GitHubLoginTests : IDisposable
         public bool AuthLoginCalled { get; private set; }
         public bool InstallGhCalled { get; private set; }
         public bool IsLoggedIn { get; set; }
+        public CommandSpec? LastAuthLoginSpec { get; private set; }
 
         public TestCommandRunner(string ghExe, string wingetExe, string gitExe, bool initialGhInstalled)
         {
@@ -175,6 +176,7 @@ public sealed class GitHubLoginTests : IDisposable
                 if (spec.Arguments.Contains("login"))
                 {
                     AuthLoginCalled = true;
+                    LastAuthLoginSpec = spec;
                     IsLoggedIn = true;
                     return Task.FromResult(new CommandResult { Spec = spec, ExitCode = 0 });
                 }
@@ -272,6 +274,20 @@ public sealed class GitHubLoginTests : IDisposable
         Assert.True(runner.InstallGhCalled);
         Assert.True(runner.AuthLoginCalled);
         Assert.Equal("test-user", result.UserName);
+    }
+
+    [Fact]
+    public async Task GithubLogin_UsesInteractiveConsoleForWebAuth()
+    {
+        var runner = new TestCommandRunner(_ghExe, _wingetExe, _gitExe, initialGhInstalled: false);
+        var engine = CreateEngine(runner);
+
+        _ = await engine.ConfigureGitHubAsync(switchAccount: false, workspacePath: _tempDir, installGh: true);
+
+        Assert.NotNull(runner.LastAuthLoginSpec);
+        Assert.False(runner.LastAuthLoginSpec!.RedirectStandardOutput);
+        Assert.False(runner.LastAuthLoginSpec.RedirectStandardError);
+        Assert.False(runner.LastAuthLoginSpec.CreateNoWindow);
     }
 
     [Fact]

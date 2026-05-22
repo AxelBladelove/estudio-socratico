@@ -125,6 +125,9 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
             {
                 FileName = "gh",
                 Arguments = ["auth", "login", "--hostname", Host, "--web", "--git-protocol", "https"],
+                RedirectStandardOutput = false,
+                RedirectStandardError = false,
+                CreateNoWindow = false,
                 Timeout = TimeSpan.FromMinutes(10),
                 AllowNonZeroExitCode = true
             }, cancellationToken).ConfigureAwait(false);
