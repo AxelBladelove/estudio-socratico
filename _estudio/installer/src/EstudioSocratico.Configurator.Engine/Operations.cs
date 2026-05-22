@@ -245,11 +245,11 @@ public sealed class UninstallManager(
 
             if (Directory.Exists(fullPath))
             {
-                Directory.Delete(fullPath, recursive: true);
+                await DeletePathAsync(fullPath, cancellationToken).ConfigureAwait(false);
             }
             else
             {
-                File.Delete(fullPath);
+                await DeletePathAsync(fullPath, cancellationToken).ConfigureAwait(false);
             }
 
             removed.Add(fullPath);
@@ -299,7 +299,7 @@ public sealed class UninstallManager(
 
                 if (Directory.Exists(fullPath))
                 {
-                    Directory.Delete(fullPath, recursive: true);
+                    await DeletePathAsync(fullPath, cancellationToken).ConfigureAwait(false);
                     if (string.Equals(fullPath, TryGetFullPath(manifest.WorkspacePath), StringComparison.OrdinalIgnoreCase))
                     {
                         workspaceRemoved = true;
@@ -307,7 +307,7 @@ public sealed class UninstallManager(
                 }
                 else
                 {
-                    File.Delete(fullPath);
+                    await DeletePathAsync(fullPath, cancellationToken).ConfigureAwait(false);
                 }
 
                 removed.Add(fullPath);
@@ -673,6 +673,57 @@ public sealed class UninstallManager(
         }
 
         return expectedRepo;
+    }
+
+    private static async Task DeletePathAsync(string fullPath, CancellationToken cancellationToken)
+    {
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            try
+            {
+                ResetAttributes(fullPath);
+                if (Directory.Exists(fullPath))
+                {
+                    Directory.Delete(fullPath, recursive: true);
+                }
+                else if (File.Exists(fullPath))
+                {
+                    File.Delete(fullPath);
+                }
+
+                return;
+            }
+            catch (Exception ex) when (attempt < 4 && ex is IOException or UnauthorizedAccessException)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(250 * (attempt + 1)), cancellationToken).ConfigureAwait(false);
+            }
+        }
+    }
+
+    private static void ResetAttributes(string fullPath)
+    {
+        if (File.Exists(fullPath))
+        {
+            File.SetAttributes(fullPath, FileAttributes.Normal);
+            return;
+        }
+
+        if (!Directory.Exists(fullPath))
+        {
+            return;
+        }
+
+        foreach (var file in Directory.EnumerateFiles(fullPath, "*", SearchOption.AllDirectories))
+        {
+            File.SetAttributes(file, FileAttributes.Normal);
+        }
+
+        foreach (var directory in Directory.EnumerateDirectories(fullPath, "*", SearchOption.AllDirectories))
+        {
+            File.SetAttributes(directory, FileAttributes.Normal);
+        }
+
+        File.SetAttributes(fullPath, FileAttributes.Normal);
     }
 
     private static UninstallReportItem CreateItem(string path, string action, string reason)
