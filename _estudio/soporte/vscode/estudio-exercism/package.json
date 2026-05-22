@@ -83,6 +83,7 @@
     }
   },
   "scripts": {
+    "compile": "node --check extension.js",
     "package": "vsce package --no-dependencies --allow-missing-repository"
   },
   "devDependencies": {

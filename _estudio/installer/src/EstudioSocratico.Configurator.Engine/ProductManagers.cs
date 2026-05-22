@@ -1184,8 +1184,9 @@ public sealed class WorkspaceManager(AppPaths paths, ManifestManager manifestMan
     public static string DefaultExtensionConfigJson { get; } =
 """
 {
-  "apiKey": "",
   "provider": "gemini",
+  "apiKey": "",
+  "model": "gemini-2.5-flash",
   "features": {
     "translateIntroductions": true,
     "importExercism": true,

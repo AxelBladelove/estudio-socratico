@@ -1,0 +1,10 @@
+{
+  "provider": "gemini",
+  "apiKey": "",
+  "model": "gemini-2.5-flash",
+  "features": {
+    "translateIntroductions": true,
+    "importExercism": true,
+    "importAlejandroGists": true
+  }
+}

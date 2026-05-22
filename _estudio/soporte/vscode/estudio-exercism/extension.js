@@ -7,8 +7,9 @@ const path = require("path");
 let currentPanel;
 let currentProvider;
 const DEFAULT_EXTENSION_CONFIG = {
-  apiKey: "",
   provider: "gemini",
+  apiKey: "",
+  model: "gemini-2.5-flash",
   features: {
     translateIntroductions: true,
     importExercism: true,
@@ -451,6 +452,7 @@ function renderErrorHtml(message) {
       <div class="actions">
         <button data-command="refresh">Reintentar</button>
         <button data-command="openApiKeyConfig">Abrir configuración de API Key</button>
+        <button data-command="revealApiKeyConfig">Revelar configuración</button>
       </div>
     </main>
   `);
@@ -489,6 +491,7 @@ function renderCatalogHtml(catalog, extensionConfig) {
           <button data-command="refresh">Actualizar</button>
           <button data-command="configureToken">Configurar token</button>
           <button data-command="openApiKeyConfig">Abrir configuración de API Key</button>
+          <button data-command="revealApiKeyConfig">Revelar configuración</button>
         </div>
       </header>
       ${tokenNotice}
