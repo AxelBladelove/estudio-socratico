@@ -211,11 +211,34 @@ public sealed class GitHubLoginTests : IDisposable
         }
     }
 
+    private ConfiguratorEngine CreateEngine(TestCommandRunner runner)
+    {
+        return new ConfiguratorEngine(_paths, runner, path =>
+        {
+            if (path.Contains("GitHub CLI", StringComparison.OrdinalIgnoreCase))
+            {
+                return runner.GhInstalled;
+            }
+            if (path.Contains("Git", StringComparison.OrdinalIgnoreCase) || 
+                path.Contains("nodejs", StringComparison.OrdinalIgnoreCase) || 
+                path.Contains("WindowsApps", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+            if (path.StartsWith(_tempDir, StringComparison.OrdinalIgnoreCase))
+            {
+                if (path == _ghExe) return runner.GhInstalled;
+                return File.Exists(path);
+            }
+            return File.Exists(path);
+        });
+    }
+
     [Fact]
     public async Task GithubLogin_WhenGhMissing_InstallsGhFirst()
     {
         var runner = new TestCommandRunner(_ghExe, _wingetExe, _gitExe, initialGhInstalled: false);
-        var engine = new ConfiguratorEngine(_paths, runner);
+        var engine = CreateEngine(runner);
 
         var result = await engine.ConfigureGitHubAsync(switchAccount: false, workspacePath: _tempDir, installGh: true);
 
@@ -228,7 +251,7 @@ public sealed class GitHubLoginTests : IDisposable
     public async Task GithubLogin_WhenGhMissing_DoesNotCallAuthLogin()
     {
         var runner = new TestCommandRunner(_ghExe, _wingetExe, _gitExe, initialGhInstalled: false);
-        var engine = new ConfiguratorEngine(_paths, runner);
+        var engine = CreateEngine(runner);
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             engine.ConfigureGitHubAsync(switchAccount: false, workspacePath: _tempDir, installGh: false));
@@ -242,7 +265,7 @@ public sealed class GitHubLoginTests : IDisposable
     public async Task GithubLogin_AfterGhInstall_CallsAuthLogin()
     {
         var runner = new TestCommandRunner(_ghExe, _wingetExe, _gitExe, initialGhInstalled: false);
-        var engine = new ConfiguratorEngine(_paths, runner);
+        var engine = CreateEngine(runner);
 
         var result = await engine.ConfigureGitHubAsync(switchAccount: false, workspacePath: _tempDir, installGh: true);
 
@@ -255,7 +278,7 @@ public sealed class GitHubLoginTests : IDisposable
     public async Task FreshInstall_GhMissing_CanContinueAfterInstall()
     {
         var runner = new TestCommandRunner(_ghExe, _wingetExe, _gitExe, initialGhInstalled: true);
-        var engine = new ConfiguratorEngine(_paths, runner);
+        var engine = CreateEngine(runner);
 
         var result = await engine.ConfigureGitHubAsync(switchAccount: false, workspacePath: _tempDir, installGh: false);
 

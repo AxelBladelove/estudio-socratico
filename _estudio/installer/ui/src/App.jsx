@@ -313,9 +313,10 @@ function AccountsScreen({
   const extensionConfig = snapshot?.extensionApiKeyConfig || {};
   const extensionStatus = extensionState.status || "needsUserAction";
   const apiKeyStatus = extensionConfig.status || "needsUserAction";
+  const githubSatisfied = githubReady || !ghInstalled;
   const canContinue = selectedWorkflow === "uninstall" ||
     workspaceReady &&
-    (!needsGithub || githubReady) &&
+    (!needsGithub || githubSatisfied) &&
     (!needsExercism || exercismReady || exercismToken.trim().length > 0);
 
   return <SetupPanel>
@@ -771,16 +772,27 @@ export default function App() {
   const configureGithub = async (change = false, installGh = false) => {
     setBusyAction("github");
     try {
-      const action = change ? BackendAction.ChangeGithubAccount : BackendAction.ConfigureGithub;
-      const account = await requestBackend(action, {
-        workspacePath: effectiveWorkspacePath,
-        installGh: installGh,
-      });
-      setSnapshot(prev => prev ? { ...prev, gitHub: account } : prev);
-      addLog(change ? "Cuenta GitHub cambiada." : "Cuenta GitHub configurada.");
-      await refreshState("Revisión GitHub");
+      if (installGh && !change) {
+        await requestBackend(BackendAction.ConfigureGithub, {
+          workspacePath: effectiveWorkspacePath,
+          installGh: true,
+          installOnly: true,
+        });
+        addLog("GitHub CLI instalado. Ahora puedes iniciar sesión.");
+        await refreshState("Revisión GitHub CLI");
+      } else {
+        const action = change ? BackendAction.ChangeGithubAccount : BackendAction.ConfigureGithub;
+        const account = await requestBackend(action, {
+          workspacePath: effectiveWorkspacePath,
+          installGh: false,
+        });
+        setSnapshot(prev => prev ? { ...prev, gitHub: account } : prev);
+        addLog(change ? "Cuenta GitHub cambiada." : "Cuenta GitHub configurada.");
+        await refreshState("Revisión GitHub");
+      }
     } catch (error) {
       addLog(`GitHub: ${messageFromError(error)}`);
+      await refreshState("Revisión GitHub");
     } finally {
       setBusyAction(null);
     }

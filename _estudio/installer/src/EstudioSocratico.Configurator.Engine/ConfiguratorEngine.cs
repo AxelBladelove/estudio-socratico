@@ -22,13 +22,13 @@ public sealed class ConfiguratorEngine
     private readonly GistImporterManager _gistImporterManager;
     private readonly SetupPlanner _planner;
 
-    public ConfiguratorEngine(AppPaths? paths = null, ICommandRunner? commandRunner = null)
+    public ConfiguratorEngine(AppPaths? paths = null, ICommandRunner? commandRunner = null, Func<string, bool>? fileExists = null)
     {
         _paths = paths ?? new AppPaths();
         _logManager = new LogManager(_paths);
         _manifestManager = new ManifestManager(_paths);
         var runner = commandRunner ?? new ProcessCommandRunner(_logManager);
-        _detector = new DependencyDetector(runner, managedToolsDirectory: Path.Combine(_paths.ToolsRoot, "bin"));
+        _detector = new DependencyDetector(runner, managedToolsDirectory: Path.Combine(_paths.ToolsRoot, "bin"), fileExists: fileExists);
         var probe = new SystemProbe(_paths);
         var pathManager = new PathManager(_paths, _logManager);
         var winget = new WingetBroker(runner, _detector, _logManager);
@@ -243,6 +243,24 @@ public sealed class ConfiguratorEngine
     public Task<AccountState> SwitchGitHubAccountAsync(bool installGh = false, CancellationToken cancellationToken = default)
     {
         return ConfigureGitHubAsync(switchAccount: true, workspacePath: null, installGh: installGh, cancellationToken: cancellationToken);
+    }
+
+    public async Task InstallGitHubCliAsync(CancellationToken cancellationToken = default)
+    {
+        var requirement = DependencyDetector.Requirements.Single(x => x.Id == DependencyId.GitHubCli);
+        var ghState = await _detector.DetectAsync(requirement, cancellationToken).ConfigureAwait(false);
+        if (ghState.Status == DependencyStatus.Ready)
+        {
+            return;
+        }
+
+        ghState = await _dependencyInstaller.EnsureAsync(requirement, cancellationToken).ConfigureAwait(false);
+        if (ghState.Status != DependencyStatus.Ready)
+        {
+            throw new InvalidOperationException(
+                "La instalación de GitHub CLI terminó, pero no se pudo validar el ejecutable. " +
+                "Intenta Reparar o reinicia el configurador.");
+        }
     }
 
     public async Task<AccountState> ConfigureGitHubAsync(

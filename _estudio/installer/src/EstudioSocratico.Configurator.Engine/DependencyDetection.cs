@@ -5,8 +5,10 @@ namespace EstudioSocratico.Configurator.Engine;
 public sealed class DependencyDetector(
     ICommandRunner runner,
     Func<VSCodePaths>? locateVSCode = null,
-    string? managedToolsDirectory = null)
+    string? managedToolsDirectory = null,
+    Func<string, bool>? fileExists = null)
 {
+    private readonly Func<string, bool> _fileExists = fileExists ?? File.Exists;
     public static IReadOnlyList<DependencyRequirement> Requirements { get; } =
     [
         new(DependencyId.Winget, "WinGet", "winget", null, "1.8", Required: false),
@@ -50,7 +52,7 @@ public sealed class DependencyDetector(
     {
         var bash = Path.Combine(ProductInfo.DefaultMsys2Root, "usr", "bin", "bash.exe");
         var pacman = Path.Combine(ProductInfo.DefaultMsys2Root, "usr", "bin", "pacman.exe");
-        if (File.Exists(bash) && File.Exists(pacman))
+        if (_fileExists(bash) && _fileExists(pacman))
         {
             return new DependencyState
             {
@@ -215,10 +217,21 @@ public sealed class DependencyDetector(
         if (!string.IsNullOrWhiteSpace(preferredDirectory))
         {
             var exe = Path.Combine(preferredDirectory, command.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? command : command + ".exe");
-            if (File.Exists(exe))
+            if (_fileExists(exe))
             {
                 return exe;
             }
+        }
+
+        if (OperatingSystem.IsWindows())
+        {
+            var commonPath = FindInCommonWindowsPaths(command);
+            if (commonPath != null)
+            {
+                return commonPath;
+            }
+
+            TryRefreshProcessPath();
         }
 
         var where = await runner.RunAsync(new CommandSpec
@@ -236,7 +249,77 @@ public sealed class DependencyDetector(
 
         return where.StandardOutput
             .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .FirstOrDefault(File.Exists);
+            .FirstOrDefault(_fileExists);
+    }
+
+    private string? FindInCommonWindowsPaths(string command)
+    {
+        var cmdName = command.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? command : command + ".exe";
+        var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+        var programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
+        var pathsToCheck = new List<string>();
+
+        if (string.Equals(command, "gh", StringComparison.OrdinalIgnoreCase))
+        {
+            pathsToCheck.Add(Path.Combine(programFiles, "GitHub CLI", cmdName));
+            pathsToCheck.Add(Path.Combine(programFilesX86, "GitHub CLI", cmdName));
+            pathsToCheck.Add(Path.Combine(localAppData, "Programs", "GitHub CLI", cmdName));
+        }
+        else if (string.Equals(command, "git", StringComparison.OrdinalIgnoreCase))
+        {
+            pathsToCheck.Add(Path.Combine(programFiles, "Git", "cmd", cmdName));
+            pathsToCheck.Add(Path.Combine(programFiles, "Git", "bin", cmdName));
+            pathsToCheck.Add(Path.Combine(programFilesX86, "Git", "cmd", cmdName));
+            pathsToCheck.Add(Path.Combine(localAppData, "Programs", "Git", "cmd", cmdName));
+        }
+        else if (string.Equals(command, "node", StringComparison.OrdinalIgnoreCase))
+        {
+            pathsToCheck.Add(Path.Combine(programFiles, "nodejs", cmdName));
+            pathsToCheck.Add(Path.Combine(programFilesX86, "nodejs", cmdName));
+            pathsToCheck.Add(Path.Combine(localAppData, "Programs", "nodejs", cmdName));
+        }
+        else if (string.Equals(command, "winget", StringComparison.OrdinalIgnoreCase))
+        {
+            pathsToCheck.Add(Path.Combine(localAppData, "Microsoft", "WindowsApps", cmdName));
+        }
+
+        foreach (var path in pathsToCheck)
+        {
+            if (_fileExists(path))
+            {
+                return path;
+            }
+        }
+
+        return null;
+    }
+
+    private static void TryRefreshProcessPath()
+    {
+        try
+        {
+            var machinePath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Machine) ?? "";
+            var userPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.User) ?? "";
+            var currentPath = Environment.GetEnvironmentVariable("PATH") ?? "";
+
+            var allPaths = new List<string>();
+            allPaths.AddRange(currentPath.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+            allPaths.AddRange(machinePath.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+            allPaths.AddRange(userPath.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+
+            var merged = string.Join(
+                Path.PathSeparator,
+                allPaths.Distinct(StringComparer.OrdinalIgnoreCase).Where(Directory.Exists)
+            );
+
+            Environment.SetEnvironmentVariable("PATH", merged);
+        }
+        catch
+        {
+            // Ignore env refresh failures
+        }
     }
 
     private static bool IsOutdated(string? actual, string? minimum)

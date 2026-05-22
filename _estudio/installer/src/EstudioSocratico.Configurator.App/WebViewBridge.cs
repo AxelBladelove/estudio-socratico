@@ -147,6 +147,12 @@ public sealed class WebViewBridge : IProgressSink
                 return await RunWorkflowAsync(request, SetupMode.Repair).ConfigureAwait(false);
 
             case BridgeAction.ConfigureGithub:
+                var installOnly = BridgePayload.GetBool(request, "installOnly", defaultValue: false);
+                if (installOnly)
+                {
+                    await _engine.InstallGitHubCliAsync().ConfigureAwait(false);
+                    return new { installed = true };
+                }
                 return await _engine.ConfigureGitHubAsync(
                     switchAccount: false,
                     workspacePath: BridgePayload.GetString(request, "workspacePath", "workspace"),
