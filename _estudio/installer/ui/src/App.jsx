@@ -301,6 +301,7 @@ function AccountsScreen({
   onRevealApiKeyConfig,
   onNext,
   busyAction,
+  ghInstalled,
 }) {
   const needsGithub = workflowNeedsGithub(selectedWorkflow);
   const needsExercism = workflowNeedsExercism(selectedWorkflow);
@@ -374,7 +375,7 @@ function AccountsScreen({
         <p className="account-note">{workspaceCustomized ? "Carpeta elegida manualmente. Cambiar alias ya no la reemplaza." : "Mientras no cambies la carpeta manualmente, el alias recalcula esta ruta."}</p>
       </div>
 
-      {needsGithub ? <AccountBox ready={githubReady} userName={github?.userName} onConfigure={onConfigureGithub} onChange={onChangeGithub} busy={busyAction === "github"} /> : null}
+      {needsGithub ? <AccountBox ready={githubReady} userName={github?.userName} onConfigure={() => onConfigureGithub(!ghInstalled)} onChange={() => onChangeGithub(!ghInstalled)} busy={busyAction === "github"} ghInstalled={ghInstalled} /> : null}
       {needsExercism ? <ExercismBox ready={exercismReady} token={exercismToken} setToken={setExercismToken} onConfigure={onConfigureExercism} busy={busyAction === "exercism"} /> : null}
 
       <div className="account-box">
@@ -411,13 +412,48 @@ function AccountsScreen({
   </SetupPanel>;
 }
 
-function AccountBox({ ready, userName, onConfigure, onChange, busy }) {
+function AccountBox({ ready, userName, onConfigure, onChange, busy, ghInstalled }) {
+  const showInstallButton = !ghInstalled;
+
   return <div className="account-box">
     <div className="account-row">
-      <div className="account-title"><ToolLogo icon="github" /><div><p>GitHub</p><span>{ready ? `Conectado como ${userName || "cuenta activa"}` : "Prepara tu fork y remotos del workspace."}</span></div></div>
-      {ready
-        ? <div className="account-buttons"><span className="status-badge status-ready">Conectado</span><Button variant="secondary" onClick={onChange} disabled={busy} icon={false}>{busy ? <Icons.Loader className="h-4 w-4" /> : null} Cambiar cuenta</Button></div>
-        : <div className="account-buttons"><Button variant="secondary" onClick={onConfigure} disabled={busy} icon={false}>{busy ? <Icons.Loader className="h-4 w-4" /> : null} Iniciar sesión</Button><Button variant="secondary" onClick={onChange} disabled={busy} icon={false}>Cambiar cuenta</Button></div>}
+      <div className="account-title">
+        <ToolLogo icon="github" />
+        <div>
+          <p>GitHub</p>
+          <span>
+            {showInstallButton
+              ? "GitHub CLI: Por instalar. Primero necesitamos instalar GitHub CLI para iniciar sesión."
+              : (ready ? `Conectado como ${userName || "cuenta activa"}` : "Prepara tu fork y remotos del workspace.")
+            }
+          </span>
+        </div>
+      </div>
+      {showInstallButton ? (
+        <div className="account-buttons">
+          <Button variant="secondary" onClick={onConfigure} disabled={busy} icon={false}>
+            {busy ? <Icons.Loader className="h-4 w-4" /> : null} Instalar GitHub CLI
+          </Button>
+        </div>
+      ) : (
+        ready ? (
+          <div className="account-buttons">
+            <span className="status-badge status-ready">Conectado</span>
+            <Button variant="secondary" onClick={onChange} disabled={busy} icon={false}>
+              {busy ? <Icons.Loader className="h-4 w-4" /> : null} Cambiar cuenta
+            </Button>
+          </div>
+        ) : (
+          <div className="account-buttons">
+            <Button variant="secondary" onClick={onConfigure} disabled={busy} icon={false}>
+              {busy ? <Icons.Loader className="h-4 w-4" /> : null} Iniciar sesión con GitHub
+            </Button>
+            <Button variant="secondary" onClick={onChange} disabled={busy} icon={false}>
+              Cambiar cuenta
+            </Button>
+          </div>
+        )
+      )}
     </div>
   </div>;
 }
@@ -556,6 +592,9 @@ export default function App() {
   const stage = screenLabel(screen, workflow);
   const canGoBack = screen !== "welcome" && !running;
   const tools = useMemo(() => toolsFromSnapshot(snapshot), [snapshot]);
+  const isGhInstalled = useMemo(() => {
+    return tools.find(t => t.id === "githubcli")?.status === "ready";
+  }, [tools]);
   const ready = summaryIsReady(workflow, lastSummary, snapshot);
   const workspaceReferencePath = snapshot?.recommendedWorkspacePath || snapshot?.workspaceContext?.recommendedWorkspacePath || snapshot?.workspacePath || "";
   const recommendedPath = recommendedWorkspacePath(workspaceReferencePath, localAlias || snapshot?.localAlias || "");
@@ -729,11 +768,14 @@ export default function App() {
     else setScreen(previous);
   };
 
-  const configureGithub = async (change = false) => {
+  const configureGithub = async (change = false, installGh = false) => {
     setBusyAction("github");
     try {
       const action = change ? BackendAction.ChangeGithubAccount : BackendAction.ConfigureGithub;
-      const account = await requestBackend(action, { workspacePath: effectiveWorkspacePath });
+      const account = await requestBackend(action, {
+        workspacePath: effectiveWorkspacePath,
+        installGh: installGh,
+      });
       setSnapshot(prev => prev ? { ...prev, gitHub: account } : prev);
       addLog(change ? "Cuenta GitHub cambiada." : "Cuenta GitHub configurada.");
       await refreshState("Revisión GitHub");
@@ -917,8 +959,8 @@ export default function App() {
         () => requestBackend(BackendAction.RevealInExplorer, { path: effectiveWorkspacePath }),
         "Workspace revelado en el Explorador.",
       )}
-      onConfigureGithub={() => configureGithub(false)}
-      onChangeGithub={() => configureGithub(true)}
+      onConfigureGithub={(installGh) => configureGithub(false, installGh)}
+      onChangeGithub={(installGh) => configureGithub(true, installGh)}
       onConfigureExercism={configureExercism}
       onReinstallVSCodeExtension={() => runWorkspaceAction(
         "vscode-extension",
@@ -949,6 +991,7 @@ export default function App() {
       )}
       onNext={() => setScreen("execute")}
       busyAction={busyAction}
+      ghInstalled={isGhInstalled}
     /> : null}
     {screen === "execute" ? <ExecuteScreen selectedWorkflow={workflow} progress={progress} currentStep={currentStep} running={running} finished={finished} ready={ready} onStart={startExecution} onCancel={cancelWorkflow} onFinish={finishAction} onExportDiagnostics={exportDiagnostics} lastSummary={lastSummary} snapshot={snapshot} cleanReinstall={cleanReinstall} setCleanReinstall={setCleanReinstall} deleteStudentData={deleteStudentData} setDeleteStudentData={setDeleteStudentData} deleteRemoteWorkspaceRepo={deleteRemoteWorkspaceRepo} setDeleteRemoteWorkspaceRepo={setDeleteRemoteWorkspaceRepo} /> : null}
   </AppShell>;
