@@ -33,6 +33,7 @@ _estudio/soporte/runtime/
 _estudio/logs/
 
 # Artefactos genericos de build/packaging
+**/node_modules/
 **/bin/
 **/obj/
 **/artifacts/
