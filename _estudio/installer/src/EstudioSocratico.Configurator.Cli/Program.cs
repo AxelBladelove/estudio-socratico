@@ -38,7 +38,10 @@ switch (command)
             SkipExercism = args.Contains("--skip-exercism"),
             SkipGitHubLogin = args.Contains("--skip-github"),
             AllowAggressiveCleanup = args.Contains("--aggressive"),
-            UninstallDryRun = command == "uninstall" && args.Contains("--dry-run")
+            UninstallDryRun = command == "uninstall" && args.Contains("--dry-run"),
+            CleanReinstall = command == "reinstall" && (args.Contains("--clean") || args.Contains("--clean-reinstall")),
+            DeleteStudentData = args.Contains("--delete-student-data"),
+            DeleteRemoteWorkspaceRepo = args.Contains("--delete-remote-workspace-repo")
         };
         var summary = await engine.RunAsync(request);
         Console.WriteLine(JsonSerializer.Serialize(summary, JsonDefaults.Options));
@@ -54,10 +57,11 @@ switch (command)
           install [--workspace path] [--alias slug] [--exercism-token token] [--skip-github] [--skip-exercism]
           update [--workspace path] [--alias slug] [--exercism-token token] [--skip-github] [--skip-exercism]
           repair [--workspace path] [--alias slug] [--skip-github] [--skip-exercism]
-          reinstall [--workspace path] [--alias slug] [--skip-github] [--skip-exercism]
-          uninstall [--aggressive] [--dry-run]
+          reinstall [--workspace path] [--alias slug] [--clean-reinstall] [--delete-remote-workspace-repo] [--skip-github] [--skip-exercism]
+          uninstall [--aggressive] [--dry-run] [--delete-student-data] [--delete-remote-workspace-repo]
 
         uninstall aplica la limpieza real de elementos gestionados. Usa --dry-run para solo previsualizar.
+        --delete-student-data y --delete-remote-workspace-repo son destructivos y solo actuan sobre el workspace repo del alias.
         """);
         return 0;
 }

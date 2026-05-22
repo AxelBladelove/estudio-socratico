@@ -7,9 +7,96 @@ using EstudioSocratico.Configurator.Core;
 
 namespace EstudioSocratico.Configurator.Engine;
 
+public sealed record WorkspaceIdentity
+{
+    public string Alias { get; init; } = "";
+    public string? GitHubLogin { get; init; }
+    public string BaseRepo { get; init; } = ProductInfo.BaseRepository;
+    public string? WorkspaceRepo { get; init; }
+    public DateTimeOffset UpdatedAtUtc { get; init; } = DateTimeOffset.UtcNow;
+}
+
+public static class WorkspaceIdentityStore
+{
+    public const string IdentityFileName = ".usuario";
+    public const string LegacyAliasFileName = ".estudio_usuario";
+    public const string AccountMismatchMessage = "Este workspace pertenece a otra cuenta. Cambia de cuenta o crea un nuevo workspace.";
+
+    public static WorkspaceIdentity? Read(string workspacePath)
+    {
+        var identityPath = Path.Combine(workspacePath, IdentityFileName);
+        if (File.Exists(identityPath))
+        {
+            try
+            {
+                return JsonSerializer.Deserialize<WorkspaceIdentity>(File.ReadAllText(identityPath), JsonDefaults.Options);
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
+        }
+
+        var legacyPath = Path.Combine(workspacePath, LegacyAliasFileName);
+        return File.Exists(legacyPath)
+            ? new WorkspaceIdentity { Alias = LocalAliasNormalizer.Normalize(File.ReadAllText(legacyPath)) }
+            : null;
+    }
+
+    public static void EnsureCompatible(string workspacePath, string localAlias, string? githubLogin)
+    {
+        var existing = Read(workspacePath);
+        if (existing?.GitHubLogin is null || string.IsNullOrWhiteSpace(githubLogin))
+        {
+            return;
+        }
+
+        if (!string.Equals(existing.GitHubLogin, githubLogin, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(AccountMismatchMessage);
+        }
+    }
+
+    public static async Task WriteAsync(
+        string workspacePath,
+        string localAlias,
+        string? githubLogin,
+        CancellationToken cancellationToken)
+    {
+        var normalizedAlias = LocalAliasNormalizer.Normalize(localAlias);
+        var existing = Read(workspacePath);
+        var resolvedLogin = string.IsNullOrWhiteSpace(githubLogin) ? existing?.GitHubLogin : githubLogin;
+        var identity = new WorkspaceIdentity
+        {
+            Alias = normalizedAlias,
+            GitHubLogin = resolvedLogin,
+            BaseRepo = ProductInfo.BaseRepository,
+            WorkspaceRepo = string.IsNullOrWhiteSpace(resolvedLogin)
+                ? existing?.WorkspaceRepo
+                : GitHubAccountManager.GetWorkspaceRepository(resolvedLogin, normalizedAlias),
+            UpdatedAtUtc = DateTimeOffset.UtcNow
+        };
+
+        await File.WriteAllTextAsync(
+            Path.Combine(workspacePath, LegacyAliasFileName),
+            normalizedAlias,
+            cancellationToken).ConfigureAwait(false);
+        await File.WriteAllTextAsync(
+            Path.Combine(workspacePath, IdentityFileName),
+            JsonSerializer.Serialize(identity, JsonDefaults.Options),
+            cancellationToken).ConfigureAwait(false);
+    }
+}
+
 public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager manifestManager, LogManager logManager)
 {
     private const string Host = "github.com";
+
+    public static string GetWorkspaceRepositoryName(string localAlias) =>
+        $"{ProductInfo.RepositoryName}-{LocalAliasNormalizer.Normalize(localAlias)}";
+
+    public static string GetWorkspaceRepository(string githubLogin, string localAlias) =>
+        $"{githubLogin}/{GetWorkspaceRepositoryName(localAlias)}";
 
     public async Task<AccountState> EnsureLoginAsync(bool switchAccount, CancellationToken cancellationToken)
     {
@@ -86,67 +173,38 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
         return state;
     }
 
-    public async Task ConfigureRepositoryAsync(string repoRoot, string localAlias, CancellationToken cancellationToken)
+    public async Task<AccountState> ConfigureRepositoryAsync(string repoRoot, string localAlias, CancellationToken cancellationToken)
     {
         var account = await EnsureLoginAsync(switchAccount: false, cancellationToken).ConfigureAwait(false);
         var githubUser = account.UserName ?? localAlias;
-        var ownsUpstream = string.Equals(githubUser, ProductInfo.BaseRepositoryOwner, StringComparison.OrdinalIgnoreCase);
-        var originOwner = ownsUpstream ? ProductInfo.BaseRepositoryOwner : githubUser;
+        var normalizedAlias = LocalAliasNormalizer.Normalize(localAlias);
         var baseRepo = ProductInfo.BaseRepository;
-        var workspaceRepo = $"{originOwner}/{ProductInfo.RepositoryName}";
+        var workspaceRepo = GetWorkspaceRepository(githubUser, normalizedAlias);
+        WorkspaceIdentityStore.EnsureCompatible(repoRoot, normalizedAlias, githubUser);
 
-        if (!ownsUpstream)
-        {
-            var forkView = await runner.RunAsync(new CommandSpec
-            {
-                FileName = "gh",
-                Arguments = ["repo", "view", $"{githubUser}/{ProductInfo.RepositoryName}", "--json", "nameWithOwner", "--jq", ".nameWithOwner"],
-                WorkingDirectory = repoRoot,
-                Timeout = TimeSpan.FromSeconds(45),
-                AllowNonZeroExitCode = true
-            }, cancellationToken).ConfigureAwait(false);
-
-            if (!forkView.Succeeded)
-            {
-                var fork = await runner.RunAsync(new CommandSpec
-                {
-                    FileName = "gh",
-                    Arguments = ["repo", "fork", baseRepo, "--clone=false"],
-                    WorkingDirectory = repoRoot,
-                    Timeout = TimeSpan.FromMinutes(4),
-                    AllowNonZeroExitCode = true
-                }, cancellationToken).ConfigureAwait(false);
-
-                if (!fork.Succeeded)
-                {
-                    throw new InvalidOperationException("No se pudo crear o validar el fork de GitHub.");
-                }
-            }
-        }
-        else
-        {
-            await logManager.WriteAsync("info", "github", $"La cuenta activa {githubUser} es dueña del repo original; no se crea fork.", cancellationToken)
-                .ConfigureAwait(false);
-        }
+        await EnsureWorkspaceRepoExistsAsync(repoRoot, workspaceRepo, cancellationToken).ConfigureAwait(false);
 
         await GitAsync(repoRoot, ["config", "--local", "github.user", githubUser], cancellationToken).ConfigureAwait(false);
         await GitAsync(repoRoot, ["config", "--local", "estudio.baseRepo", baseRepo], cancellationToken).ConfigureAwait(false);
         await GitAsync(repoRoot, ["config", "--local", "estudio.workspaceRepo", workspaceRepo], cancellationToken).ConfigureAwait(false);
-        await GitAsync(repoRoot, ["config", "--local", "estudio.localAlias", localAlias], cancellationToken).ConfigureAwait(false);
-        await GitAsync(repoRoot, ["config", "--local", "user.name", localAlias], cancellationToken).ConfigureAwait(false);
+        await GitAsync(repoRoot, ["config", "--local", "estudio.localAlias", normalizedAlias], cancellationToken).ConfigureAwait(false);
+        await GitAsync(repoRoot, ["config", "--local", "estudio.githubLogin", githubUser], cancellationToken).ConfigureAwait(false);
+        await GitAsync(repoRoot, ["config", "--local", "user.name", normalizedAlias], cancellationToken).ConfigureAwait(false);
         await GitAsync(repoRoot, ["config", "--local", "user.email", $"{githubUser}@users.noreply.github.com"], cancellationToken).ConfigureAwait(false);
         await EnsureRemoteAsync(repoRoot, "origin", $"https://github.com/{workspaceRepo}.git", cancellationToken).ConfigureAwait(false);
-        if (!ownsUpstream)
+        await EnsureRemoteAsync(repoRoot, "upstream", $"https://github.com/{baseRepo}.git", cancellationToken).ConfigureAwait(false);
+        await WorkspaceIdentityStore.WriteAsync(repoRoot, normalizedAlias, githubUser, cancellationToken).ConfigureAwait(false);
+        var manifest = await manifestManager.LoadAsync(cancellationToken).ConfigureAwait(false);
+        await manifestManager.SaveAsync(manifest with
         {
-            await EnsureRemoteAsync(repoRoot, "upstream", $"https://github.com/{baseRepo}.git", cancellationToken).ConfigureAwait(false);
-        }
-        else
-        {
-            await GitAsync(repoRoot, ["remote", "remove", "upstream"], cancellationToken, allowFail: true).ConfigureAwait(false);
-        }
+            BaseRepo = baseRepo,
+            WorkspaceRepo = workspaceRepo,
+            LocalAlias = normalizedAlias
+        }, cancellationToken).ConfigureAwait(false);
 
         await logManager.WriteAsync("info", "github", $"Repositorio base {baseRepo}; workspace repo {workspaceRepo}.", cancellationToken)
             .ConfigureAwait(false);
+        return account;
     }
 
     public async Task<string> EnsureWorkspaceRepositoryAsync(
@@ -155,11 +213,12 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
         bool skipGitHub,
         CancellationToken cancellationToken)
     {
+        var normalizedAlias = LocalAliasNormalizer.Normalize(localAlias);
         if (File.Exists(Path.Combine(targetPath, "AGENTS.md")))
         {
             if (!skipGitHub)
             {
-                await ConfigureRepositoryAsync(targetPath, localAlias, cancellationToken).ConfigureAwait(false);
+                await ConfigureRepositoryAsync(targetPath, normalizedAlias, cancellationToken).ConfigureAwait(false);
             }
 
             return targetPath;
@@ -174,30 +233,30 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
         if (!skipGitHub)
         {
             var account = await EnsureLoginAsync(switchAccount: false, cancellationToken).ConfigureAwait(false);
-            var githubUser = account.UserName ?? localAlias;
+            var githubUser = account.UserName ?? normalizedAlias;
             var baseRepo = ProductInfo.BaseRepository;
-            if (!string.Equals(githubUser, ProductInfo.BaseRepositoryOwner, StringComparison.OrdinalIgnoreCase))
-            {
-                var fork = await runner.RunAsync(new CommandSpec
-                {
-                    FileName = "gh",
-                    Arguments = ["repo", "fork", baseRepo, "--clone=false"],
-                    Timeout = TimeSpan.FromMinutes(4),
-                    AllowNonZeroExitCode = true
-                }, cancellationToken).ConfigureAwait(false);
+            var workspaceRepo = GetWorkspaceRepository(githubUser, normalizedAlias);
+            var workspaceRepoExists = await EnsureWorkspaceRepoExistsAsync(
+                Directory.GetParent(targetPath)!.FullName,
+                workspaceRepo,
+                cancellationToken).ConfigureAwait(false);
+            var cloneRepo = workspaceRepoExists ? workspaceRepo : baseRepo;
 
-                if (!fork.Succeeded)
-                {
-                    throw new InvalidOperationException("No se pudo crear el fork de GitHub para clonar el workspace.");
-                }
-            }
-
-            var workspaceRepoOwner = string.Equals(githubUser, ProductInfo.BaseRepositoryOwner, StringComparison.OrdinalIgnoreCase)
-                ? ProductInfo.BaseRepositoryOwner
-                : githubUser;
-            await GitAsync(Directory.GetParent(targetPath)!.FullName, ["clone", $"https://github.com/{workspaceRepoOwner}/{ProductInfo.RepositoryName}.git", targetPath], cancellationToken)
+            await GitAsync(Directory.GetParent(targetPath)!.FullName, ["clone", $"https://github.com/{cloneRepo}.git", targetPath], cancellationToken)
                 .ConfigureAwait(false);
-            await ConfigureRepositoryAsync(targetPath, localAlias, cancellationToken).ConfigureAwait(false);
+            await ConfigureRepositoryAsync(targetPath, normalizedAlias, cancellationToken).ConfigureAwait(false);
+            if (!workspaceRepoExists)
+            {
+                await GitAsync(targetPath, ["push", "-u", "origin", "main"], cancellationToken).ConfigureAwait(false);
+                var manifest = await manifestManager.LoadAsync(cancellationToken).ConfigureAwait(false);
+                await manifestManager.SaveAsync(manifest with
+                {
+                    BaseRepo = baseRepo,
+                    WorkspaceRepo = workspaceRepo,
+                    WorkspaceRepoCreatedByEstudio = true,
+                    LocalAlias = normalizedAlias
+                }, cancellationToken).ConfigureAwait(false);
+            }
         }
         else
         {
@@ -206,6 +265,42 @@ public sealed class GitHubAccountManager(ICommandRunner runner, ManifestManager 
         }
 
         return targetPath;
+    }
+
+    private async Task<bool> EnsureWorkspaceRepoExistsAsync(
+        string workingDirectory,
+        string workspaceRepo,
+        CancellationToken cancellationToken)
+    {
+        var repoView = await runner.RunAsync(new CommandSpec
+        {
+            FileName = "gh",
+            Arguments = ["repo", "view", workspaceRepo, "--json", "nameWithOwner", "--jq", ".nameWithOwner"],
+            WorkingDirectory = workingDirectory,
+            Timeout = TimeSpan.FromSeconds(45),
+            AllowNonZeroExitCode = true
+        }, cancellationToken).ConfigureAwait(false);
+
+        if (repoView.Succeeded)
+        {
+            return true;
+        }
+
+        var create = await runner.RunAsync(new CommandSpec
+        {
+            FileName = "gh",
+            Arguments = ["repo", "create", workspaceRepo, "--public", "--clone=false", "--description", "Workspace personal de Estudio Socratico"],
+            WorkingDirectory = workingDirectory,
+            Timeout = TimeSpan.FromMinutes(4),
+            AllowNonZeroExitCode = true
+        }, cancellationToken).ConfigureAwait(false);
+
+        if (!create.Succeeded)
+        {
+            throw new InvalidOperationException($"No se pudo crear o validar el repo de trabajo {workspaceRepo}.");
+        }
+
+        return false;
     }
 
     private Task<CommandResult> GitAsync(string repoRoot, IReadOnlyList<string> args, CancellationToken cancellationToken, bool allowFail = false)
@@ -1011,7 +1106,15 @@ public sealed class VSCodeManager(
 
         if (!install.Succeeded)
         {
-            throw new InvalidOperationException($"VS Code no pudo instalar la extension local desde VSIX: {GetCommandError(install)}");
+            var installError = GetCommandError(install);
+            if (!installError.Contains("restart VS Code", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException($"VS Code no pudo instalar la extension local desde VSIX: {installError}");
+            }
+
+            await extensionManager.InstallLocalExtensionAsync(workspacePath, cancellationToken).ConfigureAwait(false);
+            await logManager.WriteAsync("warn", "vscode-extension", "VS Code pidio reinicio antes de reinstalar la extension; se restauro la copia local del perfil y se validara con --list-extensions.", cancellationToken)
+                .ConfigureAwait(false);
         }
 
         var listed = await runner.RunAsync(VSCodeLocator.BuildCodeCmdCommand(
@@ -1081,8 +1184,9 @@ public sealed class WorkspaceManager(AppPaths paths, ManifestManager manifestMan
     public static string DefaultExtensionConfigJson { get; } =
 """
 {
-  "apiKey": "",
   "provider": "gemini",
+  "apiKey": "",
+  "model": "gemini-2.5-flash",
   "features": {
     "translateIntroductions": true,
     "importExercism": true,
@@ -1091,7 +1195,11 @@ public sealed class WorkspaceManager(AppPaths paths, ManifestManager manifestMan
 }
 """;
 
-    public async Task<string> PrepareAsync(string? requestedPath, string localAlias, CancellationToken cancellationToken)
+    public async Task<string> PrepareAsync(
+        string? requestedPath,
+        string localAlias,
+        CancellationToken cancellationToken,
+        string? githubLogin = null)
     {
         var normalizedAlias = LocalAliasNormalizer.Normalize(localAlias);
         var workspacePath = requestedPath;
@@ -1102,8 +1210,8 @@ public sealed class WorkspaceManager(AppPaths paths, ManifestManager manifestMan
 
         Directory.CreateDirectory(workspacePath);
         RequireWorkspaceShape(workspacePath);
-
-        await File.WriteAllTextAsync(Path.Combine(workspacePath, ".estudio_usuario"), normalizedAlias, cancellationToken)
+        WorkspaceIdentityStore.EnsureCompatible(workspacePath, normalizedAlias, githubLogin);
+        await WorkspaceIdentityStore.WriteAsync(workspacePath, normalizedAlias, githubLogin, cancellationToken)
             .ConfigureAwait(false);
         var userDir = Path.Combine(workspacePath, "usuario");
         Directory.CreateDirectory(userDir);

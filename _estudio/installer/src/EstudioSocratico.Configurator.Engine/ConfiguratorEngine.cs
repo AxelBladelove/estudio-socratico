@@ -73,6 +73,13 @@ public sealed class ConfiguratorEngine
         CancellationToken cancellationToken = default) =>
         _uninstallManager.PreviewAsync(allowAggressiveCleanup, cancellationToken);
 
+    public Task<UninstallResult> PreviewUninstallAsync(
+        bool allowAggressiveCleanup,
+        bool deleteStudentData,
+        bool deleteRemoteWorkspaceRepo,
+        CancellationToken cancellationToken = default) =>
+        _uninstallManager.PreviewAsync(allowAggressiveCleanup, deleteStudentData, deleteRemoteWorkspaceRepo, cancellationToken);
+
     public async Task<IReadOnlyList<DependencyState>> ScanAsync(CancellationToken cancellationToken = default)
     {
         await _logManager.StartRunAsync(cancellationToken).ConfigureAwait(false);
@@ -160,6 +167,8 @@ public sealed class ConfiguratorEngine
                     var cleanup = await _uninstallManager.UninstallAsync(
                         request.AllowAggressiveCleanup,
                         request.UninstallDryRun,
+                        request.DeleteStudentData,
+                        request.DeleteRemoteWorkspaceRepo,
                         cancellationToken).ConfigureAwait(false);
                     uninstallReport = cleanup;
                     await progress.ReportAsync(new ProgressEvent
@@ -390,7 +399,11 @@ public sealed class ConfiguratorEngine
 
         await progress.ReportAsync(new ProgressEvent { StepId = "workspace", Title = "Workspace", Message = "Configurando carpeta de estudio.", Percent = 78 }, cancellationToken)
             .ConfigureAwait(false);
-        workspace = await _workspaceManager.PrepareAsync(workspace, alias, cancellationToken).ConfigureAwait(false);
+        workspace = await _workspaceManager.PrepareAsync(
+            workspace,
+            alias,
+            cancellationToken,
+            await ResolveGitHubLoginAsync(cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
 
         if (!request.SkipExercism && !string.IsNullOrWhiteSpace(request.ExercismToken))
         {
@@ -498,7 +511,11 @@ public sealed class ConfiguratorEngine
             Percent = 68,
             Status = DependencyStatus.Installing
         }, cancellationToken).ConfigureAwait(false);
-        workspace = await _workspaceManager.PrepareAsync(workspace, alias, cancellationToken).ConfigureAwait(false);
+        workspace = await _workspaceManager.PrepareAsync(
+            workspace,
+            alias,
+            cancellationToken,
+            await ResolveGitHubLoginAsync(cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
 
         await progress.ReportAsync(new ProgressEvent
         {
@@ -539,6 +556,11 @@ public sealed class ConfiguratorEngine
         IProgressSink progress,
         CancellationToken cancellationToken)
     {
+        if (request.CleanReinstall)
+        {
+            return await CleanReinstallAsync(request, progress, cancellationToken).ConfigureAwait(false);
+        }
+
         var workspace = await ResolveWorkspaceAsync(request, cancellationToken).ConfigureAwait(false);
         await progress.ReportAsync(new ProgressEvent
         {
@@ -604,6 +626,49 @@ public sealed class ConfiguratorEngine
             Status = DependencyStatus.Ready
         }, cancellationToken).ConfigureAwait(false);
         return workspace;
+    }
+
+    private async Task<string> CleanReinstallAsync(
+        SetupRequest request,
+        IProgressSink progress,
+        CancellationToken cancellationToken)
+    {
+        var alias = await ResolveAliasAsync(request, cancellationToken).ConfigureAwait(false);
+        var targetWorkspace = request.WorkspacePath ?? _paths.GetRecommendedWorkspacePath(alias);
+        await progress.ReportAsync(new ProgressEvent
+        {
+            StepId = "clean-reinstall",
+            Title = "Reinstalacion limpia",
+            Message = "Borrando identidad, logs y workspace solo por opcion explicita.",
+            Percent = 8,
+            Status = DependencyStatus.Installing
+        }, cancellationToken).ConfigureAwait(false);
+
+        await _uninstallManager.UninstallAsync(
+            allowAggressiveCleanup: false,
+            dryRun: false,
+            deleteStudentData: true,
+            deleteRemoteWorkspaceRepo: request.DeleteRemoteWorkspaceRepo,
+            cancellationToken).ConfigureAwait(false);
+
+        await progress.ReportAsync(new ProgressEvent
+        {
+            StepId = "clean-reinstall-rebuild",
+            Title = "Reinstalacion limpia",
+            Message = "Reconstruyendo instalacion desde cero para el alias.",
+            Percent = 18,
+            Status = DependencyStatus.Installing
+        }, cancellationToken).ConfigureAwait(false);
+
+        var cleanRequest = request with
+        {
+            Mode = SetupMode.Install,
+            WorkspacePath = targetWorkspace,
+            CleanReinstall = false,
+            DeleteStudentData = false
+        };
+        var states = new List<DependencyState>();
+        return await InstallAsync(cleanRequest, progress, states, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task RevalidateExercismAsync(
@@ -682,6 +747,12 @@ public sealed class ConfiguratorEngine
         return LocalAliasNormalizer.Normalize(manifest.LocalAlias, Environment.UserName);
     }
 
+    private async Task<string?> ResolveGitHubLoginAsync(CancellationToken cancellationToken)
+    {
+        var manifest = await _manifestManager.LoadAsync(cancellationToken).ConfigureAwait(false);
+        return manifest.GitHub.UserName;
+    }
+
     private async Task<(UIStateSnapshot Snapshot, IReadOnlyList<DependencyState> Dependencies)> BuildCurrentStateAsync(
         string? workspacePath,
         string? localAlias,
@@ -703,7 +774,7 @@ public sealed class ConfiguratorEngine
         var workspaceContext = new WorkspaceContextInfo
         {
             BaseRepo = ProductInfo.BaseRepository,
-            WorkspaceRepo = string.IsNullOrWhiteSpace(githubLogin) ? null : $"{githubLogin}/{ProductInfo.RepositoryName}",
+            WorkspaceRepo = string.IsNullOrWhiteSpace(githubLogin) ? null : GitHubAccountManager.GetWorkspaceRepository(githubLogin, alias),
             LocalAlias = alias,
             GitHubLogin = githubLogin,
             WorkspacePath = workspace,

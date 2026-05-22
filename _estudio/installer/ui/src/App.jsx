@@ -32,6 +32,7 @@ import exercismIcon from "./assets/tools/exercism.svg";
 import workspaceIcon from "./assets/tools/workspace.svg";
 
 const SCREEN_ORDER = ["welcome", "workflow", "scan", "components", "accounts", "execute"];
+const BASE_REPO = "AxelBladelove/estudio-socratico";
 
 const WORKFLOWS = [
   { id: "setup", title: "Configurar por primera vez", subtitle: "Deja el entorno completo listo para estudiar C.", badge: "Recomendado", icon: "spark" },
@@ -466,12 +467,32 @@ function ExecuteScreen({
   onExportDiagnostics,
   lastSummary,
   snapshot,
+  cleanReinstall,
+  setCleanReinstall,
+  deleteStudentData,
+  setDeleteStudentData,
+  deleteRemoteWorkspaceRepo,
+  setDeleteRemoteWorkspaceRepo,
 }) {
   const resultIssues = finished ? finalIssues(selectedWorkflow, lastSummary, snapshot) : [];
   const resultDetails = finished ? finalReadiness(lastSummary, snapshot) : null;
   const uninstallReport = selectedWorkflow === "uninstall" ? lastSummary?.uninstallReport || lastSummary : null;
+  const destructiveMode = selectedWorkflow === "reinstall" ? cleanReinstall : selectedWorkflow === "uninstall" ? deleteStudentData : false;
+  const workspaceRepo = snapshot?.workspaceContext?.workspaceRepo || snapshot?.workspaceRepo || "";
   return <SetupPanel>
-    <HeaderBlock eyebrow={finished ? "Resultado" : "Aplicación"} title={finished ? finalTitle(selectedWorkflow, ready, lastSummary, snapshot) : selectedWorkflow === "uninstall" ? "Desinstalar Estudio Socrático" : "Listo para configurar"} text={finished ? finalText(selectedWorkflow, ready, lastSummary, snapshot) : selectedWorkflow === "uninstall" ? "Se quitarán herramientas y configuración gestionadas por el instalador. Tu trabajo de estudiante se conservará salvo una opción peligrosa explícita futura." : "El configurador instalará y reparará lo necesario según el flujo seleccionado."} />
+    <HeaderBlock eyebrow={finished ? "Resultado" : "Aplicación"} title={finished ? finalTitle(selectedWorkflow, ready, lastSummary, snapshot) : selectedWorkflow === "uninstall" ? "Desinstalar Estudio Socrático" : "Listo para configurar"} text={finished ? finalText(selectedWorkflow, ready, lastSummary, snapshot) : selectedWorkflow === "uninstall" ? "Se quitarán herramientas y configuración gestionadas por el instalador. Tu trabajo de estudiante se conservará salvo que actives la opción destructiva." : "El configurador instalará y reparará lo necesario según el flujo seleccionado."} />
+    {!running && !finished && selectedWorkflow === "reinstall" ? <div className="danger-options">
+      <label className="check-row"><input type="checkbox" checked={cleanReinstall} onChange={event => setCleanReinstall(event.target.checked)} /> <span>Reinstalación limpia</span></label>
+      <p>Borra identidad local, logs, errores, configuración GitHub/Exercism y repo de trabajo local para empezar como usuario nuevo.</p>
+    </div> : null}
+    {!running && !finished && selectedWorkflow === "uninstall" ? <div className="danger-options">
+      <label className="check-row"><input type="checkbox" checked={deleteStudentData} onChange={event => setDeleteStudentData(event.target.checked)} /> <span>Eliminar también mis datos de Estudio Socrático</span></label>
+      <p>También borra workspace, logs, identidad local, API keys locales y manifest para dejar esta cuenta limpia.</p>
+    </div> : null}
+    {!running && !finished && destructiveMode ? <div className="danger-options">
+      <label className="check-row"><input type="checkbox" checked={deleteRemoteWorkspaceRepo} onChange={event => setDeleteRemoteWorkspaceRepo(event.target.checked)} /> <span>Eliminar repo remoto de trabajo</span></label>
+      <p>Se eliminará el repo remoto: {workspaceRepo || "repo de trabajo del alias actual"}. Nunca se elimina {BASE_REPO}.</p>
+    </div> : null}
     <div className="progress-section">
       <div className="progress-meta"><span>{running ? currentStep : finished ? "Proceso terminado" : "Esperando confirmación"}</span><span>{progress}%</span></div>
       <div className="progress-track"><div className={`progress-fill ${running ? "progress-sweep" : ""}`} style={{ width: `${progress}%` }} /></div>
@@ -527,6 +548,9 @@ export default function App() {
   const [currentStep, setCurrentStep] = useState("Esperando confirmación");
   const [loadingState, setLoadingState] = useState(false);
   const [busyAction, setBusyAction] = useState(null);
+  const [cleanReinstall, setCleanReinstall] = useState(false);
+  const [deleteStudentData, setDeleteStudentData] = useState(false);
+  const [deleteRemoteWorkspaceRepo, setDeleteRemoteWorkspaceRepo] = useState(false);
 
   const backendAvailable = isBridgeAvailable();
   const stage = screenLabel(screen, workflow);
@@ -647,6 +671,9 @@ export default function App() {
     setWorkflow(nextWorkflow);
     setFinished(false);
     setRunning(false);
+    setCleanReinstall(false);
+    setDeleteStudentData(false);
+    setDeleteRemoteWorkspaceRepo(false);
     setProgress(0);
     setLastSummary(null);
     setCurrentStep("Esperando confirmación");
@@ -797,7 +824,9 @@ export default function App() {
       }
 
       if (workflow === "uninstall") {
-        const confirmed = window.confirm("Desinstalar Estudio Socrático quitará herramientas y configuración gestionadas por el instalador. Ejercicios, usuario, logs y API keys locales se conservarán. ¿Continuar?");
+        const confirmed = window.confirm(deleteStudentData
+          ? "Desinstalar Estudio Socrático y eliminar datos locales del estudiante. Esta acción borra workspace, logs, identidad local y API keys locales. ¿Continuar?"
+          : "Desinstalar Estudio Socrático quitará herramientas y configuración gestionadas por el instalador. Ejercicios, usuario, logs y API keys locales se conservarán. ¿Continuar?");
         if (!confirmed) {
           setRunning(false);
           setCurrentStep("Cancelado");
@@ -819,6 +848,9 @@ export default function App() {
         workspacePath: effectiveWorkspacePath,
         allowAggressiveCleanup: false,
         dryRun: workflow === "uninstall" ? false : undefined,
+        cleanReinstall: workflow === "reinstall" ? cleanReinstall : false,
+        deleteStudentData: workflow === "uninstall" ? deleteStudentData : workflow === "reinstall" ? cleanReinstall : false,
+        deleteRemoteWorkspaceRepo: (workflow === "uninstall" && deleteStudentData && deleteRemoteWorkspaceRepo) || (workflow === "reinstall" && cleanReinstall && deleteRemoteWorkspaceRepo),
       };
 
       const result = await requestBackend(action, payload);
@@ -918,6 +950,6 @@ export default function App() {
       onNext={() => setScreen("execute")}
       busyAction={busyAction}
     /> : null}
-    {screen === "execute" ? <ExecuteScreen selectedWorkflow={workflow} progress={progress} currentStep={currentStep} running={running} finished={finished} ready={ready} onStart={startExecution} onCancel={cancelWorkflow} onFinish={finishAction} onExportDiagnostics={exportDiagnostics} lastSummary={lastSummary} snapshot={snapshot} /> : null}
+    {screen === "execute" ? <ExecuteScreen selectedWorkflow={workflow} progress={progress} currentStep={currentStep} running={running} finished={finished} ready={ready} onStart={startExecution} onCancel={cancelWorkflow} onFinish={finishAction} onExportDiagnostics={exportDiagnostics} lastSummary={lastSummary} snapshot={snapshot} cleanReinstall={cleanReinstall} setCleanReinstall={setCleanReinstall} deleteStudentData={deleteStudentData} setDeleteStudentData={setDeleteStudentData} deleteRemoteWorkspaceRepo={deleteRemoteWorkspaceRepo} setDeleteRemoteWorkspaceRepo={setDeleteRemoteWorkspaceRepo} /> : null}
   </AppShell>;
 }

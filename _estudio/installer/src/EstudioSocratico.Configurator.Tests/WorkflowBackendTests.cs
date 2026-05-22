@@ -273,10 +273,11 @@ public sealed class WorkflowBackendTests
     }
 
     [Fact]
-    public async Task GitHub_Does_Not_Fork_When_Active_User_Owns_Upstream()
+    public async Task OwnerOfBaseRepo_StillGetsSeparateWorkspaceRepo()
     {
         var root = Path.Combine(Path.GetTempPath(), "estudio-github-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
+        File.WriteAllText(Path.Combine(root, "AGENTS.md"), "# test");
         var manifest = new ManifestManager(new AppPaths(repoRoot: root, localAppDataRoot: Path.Combine(root, "local")));
         var runner = new RecordingRunner(spec =>
         {
@@ -292,14 +293,18 @@ public sealed class WorkflowBackendTests
         await manager.ConfigureRepositoryAsync(root, "alejandro", CancellationToken.None);
 
         Assert.DoesNotContain(runner.Specs, spec => spec.Arguments.Take(2).SequenceEqual(["repo", "fork"]));
-        Assert.DoesNotContain(runner.Specs, spec => spec.Arguments.Contains("--remote=false"));
+        Assert.Contains(runner.Specs, spec => spec.Arguments.SequenceEqual(["remote", "add", "origin", "https://github.com/AxelBladelove/estudio-socratico-alejandro.git"]) ||
+                                              spec.Arguments.SequenceEqual(["remote", "set-url", "origin", "https://github.com/AxelBladelove/estudio-socratico-alejandro.git"]));
+        Assert.Contains(runner.Specs, spec => spec.Arguments.SequenceEqual(["remote", "add", "upstream", "https://github.com/AxelBladelove/estudio-socratico.git"]) ||
+                                              spec.Arguments.SequenceEqual(["remote", "set-url", "upstream", "https://github.com/AxelBladelove/estudio-socratico.git"]));
     }
 
     [Fact]
-    public async Task GitHub_Repairs_Broken_Remotes_Without_Losing_LocalAlias()
+    public async Task Remotes_OriginAndUpstreamAreCorrect()
     {
         var root = Path.Combine(Path.GetTempPath(), "estudio-github-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
+        File.WriteAllText(Path.Combine(root, "AGENTS.md"), "# test");
         var paths = new AppPaths(repoRoot: root, localAppDataRoot: Path.Combine(root, "local"));
         var runner = new RecordingRunner(spec =>
         {
@@ -324,10 +329,76 @@ public sealed class WorkflowBackendTests
 
         await manager.ConfigureRepositoryAsync(root, "alias-local", CancellationToken.None);
 
-        Assert.Contains(runner.Specs, spec => spec.Arguments.SequenceEqual(["remote", "set-url", "origin", "https://github.com/ericgabriel/estudio-socratico.git"]));
+        Assert.Contains(runner.Specs, spec => spec.Arguments.SequenceEqual(["remote", "set-url", "origin", "https://github.com/ericgabriel/estudio-socratico-alias-local.git"]));
         Assert.Contains(runner.Specs, spec => spec.Arguments.SequenceEqual(["remote", "add", "upstream", "https://github.com/AxelBladelove/estudio-socratico.git"]));
         Assert.Contains(runner.Specs, spec => spec.Arguments.SequenceEqual(["config", "--local", "user.name", "alias-local"]));
-        Assert.Contains(runner.Specs, spec => spec.Arguments.SequenceEqual(["config", "--local", "estudio.workspaceRepo", "ericgabriel/estudio-socratico"]));
+        Assert.Contains(runner.Specs, spec => spec.Arguments.SequenceEqual(["config", "--local", "estudio.workspaceRepo", "ericgabriel/estudio-socratico-alias-local"]));
+    }
+
+    [Fact]
+    public async Task Alias_DiffersFromGithubLogin()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "estudio-github-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        File.WriteAllText(Path.Combine(root, "AGENTS.md"), "# test");
+        var paths = new AppPaths(repoRoot: root, localAppDataRoot: Path.Combine(root, "local"));
+        var runner = new RecordingRunner(spec =>
+        {
+            if (spec.Arguments.SequenceEqual(["api", "user", "--jq", ".login"]))
+            {
+                return RecordingRunner.Result(spec, 0, "ericgabriel\n");
+            }
+
+            if (spec.Arguments.SequenceEqual(["remote", "get-url", "origin"]) ||
+                spec.Arguments.SequenceEqual(["remote", "get-url", "upstream"]))
+            {
+                return RecordingRunner.Result(spec, 1);
+            }
+
+            return RecordingRunner.Result(spec, 0, "ok");
+        });
+        var manager = new GitHubAccountManager(runner, new ManifestManager(paths), new LogManager(paths));
+
+        await manager.ConfigureRepositoryAsync(root, "Erick Gabriel", CancellationToken.None);
+
+        Assert.Contains(runner.Specs, spec => spec.Arguments.SequenceEqual(["config", "--local", "user.name", "erick-gabriel"]));
+        Assert.Contains(runner.Specs, spec => spec.Arguments.SequenceEqual(["remote", "add", "origin", "https://github.com/ericgabriel/estudio-socratico-erick-gabriel.git"]));
+        var identity = WorkspaceIdentityStore.Read(root);
+        Assert.Equal("erick-gabriel", identity?.Alias);
+        Assert.Equal("ericgabriel", identity?.GitHubLogin);
+    }
+
+    [Fact]
+    public void WorkspaceRepo_UsesAlias()
+    {
+        Assert.Equal(
+            "ericgabriel/estudio-socratico-erick-gabriel",
+            GitHubAccountManager.GetWorkspaceRepository("ericgabriel", "Erick Gabriel"));
+    }
+
+    [Fact]
+    public async Task ChangingGithubAccountDoesNotReuseWrongUsuario()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "estudio-github-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        File.WriteAllText(Path.Combine(root, "AGENTS.md"), "# test");
+        await WorkspaceIdentityStore.WriteAsync(root, "alias-local", "old-login", CancellationToken.None);
+        var paths = new AppPaths(repoRoot: root, localAppDataRoot: Path.Combine(root, "local"));
+        var runner = new RecordingRunner(spec =>
+        {
+            if (spec.Arguments.SequenceEqual(["api", "user", "--jq", ".login"]))
+            {
+                return RecordingRunner.Result(spec, 0, "new-login\n");
+            }
+
+            return RecordingRunner.Result(spec, 0, "ok");
+        });
+        var manager = new GitHubAccountManager(runner, new ManifestManager(paths), new LogManager(paths));
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            manager.ConfigureRepositoryAsync(root, "alias-local", CancellationToken.None));
+
+        Assert.Equal(WorkspaceIdentityStore.AccountMismatchMessage, ex.Message);
     }
 
     [Fact]

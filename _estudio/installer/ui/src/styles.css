@@ -435,6 +435,10 @@ button:disabled { opacity: .50; cursor: not-allowed; }
 .account-actions { margin-top: 32px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .account-actions p { color: #8e8e8e; font-size: 12px; margin: 0; }
 .account-note { margin: 12px 0 0; color: #8e8e8e; font-size: 12px; line-height: 1.5; }
+.danger-options { margin: 12px 0; padding: 12px; border: 1px solid rgba(248,113,113,.28); border-radius: 8px; background: rgba(127,29,29,.10); color: #f3f4f6; }
+.danger-options p { margin: 8px 0 0; color: #b9b9b9; font-size: 12px; line-height: 1.5; }
+.check-row { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+.check-row input { width: 16px; height: 16px; accent-color: #ef4444; }
 .account-paths { display: grid; gap: 4px; margin-top: 12px; color: #8e8e8e; font-size: 12px; overflow-wrap: anywhere; }
 .input-row { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
 .token-input {
