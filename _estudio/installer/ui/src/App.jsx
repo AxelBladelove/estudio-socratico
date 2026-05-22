@@ -130,6 +130,24 @@ function workflowNeedsExercism(workflow) {
   return ["setup", "update", "repair", "reinstall", "accounts"].includes(workflow);
 }
 
+function toolById(tools, id) {
+  return tools.find(tool => tool.id === id) || null;
+}
+
+function toolIsReady(tools, id) {
+  return toolById(tools, id)?.status === "ready";
+}
+
+function isPythonStoreAlias(tool) {
+  const text = [
+    tool?.detail,
+    tool?.raw?.path,
+    tool?.raw?.error?.title,
+    tool?.raw?.error?.description,
+  ].filter(Boolean).join(" ");
+  return /microsoft store|windowsapps/i.test(text);
+}
+
 function bridgeEventName(type) {
   return String(type || "").toLowerCase();
 }
@@ -302,7 +320,37 @@ function AccountsScreen({
   onNext,
   busyAction,
   ghInstalled,
+  missingCriticalMessages,
+  onInstallToolsOnly,
 }) {
+  if (selectedWorkflow !== "uninstall" && missingCriticalMessages && missingCriticalMessages.length > 0) {
+    const workflowLabel = selectedWorkflow === "repair"
+      ? "Reparación"
+      : selectedWorkflow === "accounts"
+        ? "Cuentas y ejercicios"
+        : "Configuración por primera vez";
+    return <SetupPanel>
+      <HeaderBlock 
+        eyebrow={workflowLabel}
+        title="Herramientas necesarias faltantes" 
+        text="Antes de continuar con cuentas, workspace o smoke test, primero debemos instalar y reparar las herramientas críticas del sistema." 
+      />
+      <div className="account-stack" style={{ marginTop: "20px" }}>
+        <div className="account-box" style={{ borderColor: "rgba(239, 68, 68, 0.2)", background: "rgba(239, 68, 68, 0.02)" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px", padding: "4px" }}>
+            <p style={{ fontWeight: "600", color: "#f87171" }}>Se detectaron los siguientes problemas:</p>
+            <ul style={{ margin: "0", paddingLeft: "20px", color: "#cbd5e1", lineHeight: "1.6" }}>
+              {missingCriticalMessages.map(msg => <li key={msg}>{msg}</li>)}
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div className="account-actions" style={{ marginTop: "24px" }}>
+        <Button onClick={onInstallToolsOnly} disabled={busyAction !== null}>Instalar herramientas necesarias</Button>
+      </div>
+    </SetupPanel>;
+  }
+
   const needsGithub = workflowNeedsGithub(selectedWorkflow);
   const needsExercism = workflowNeedsExercism(selectedWorkflow);
   const githubReady = github?.configured === true;
@@ -313,10 +361,9 @@ function AccountsScreen({
   const extensionConfig = snapshot?.extensionApiKeyConfig || {};
   const extensionStatus = extensionState.status || "needsUserAction";
   const apiKeyStatus = extensionConfig.status || "needsUserAction";
-  const githubSatisfied = githubReady || !ghInstalled;
   const canContinue = selectedWorkflow === "uninstall" ||
     workspaceReady &&
-    (!needsGithub || githubSatisfied) &&
+    (!needsGithub || githubReady) &&
     (!needsExercism || exercismReady || exercismToken.trim().length > 0);
 
   return <SetupPanel>
@@ -510,6 +557,7 @@ function ExecuteScreen({
   setDeleteStudentData,
   deleteRemoteWorkspaceRepo,
   setDeleteRemoteWorkspaceRepo,
+  toolsOnlyRun,
 }) {
   const resultIssues = finished ? finalIssues(selectedWorkflow, lastSummary, snapshot) : [];
   const resultDetails = finished ? finalReadiness(lastSummary, snapshot) : null;
@@ -548,7 +596,13 @@ function ExecuteScreen({
       {!running && !finished ? <Button variant={selectedWorkflow === "uninstall" ? "danger" : "primary"} onClick={onStart}>{selectedWorkflow === "uninstall" ? "Desinstalar" : "Aplicar configuración"}</Button> : null}
       {running ? <Button disabled icon={false}><Icons.Loader className="h-4 w-4" /> Trabajando...</Button> : null}
       {running ? <Button variant="secondary" icon={false} onClick={onCancel}>Cancelar</Button> : null}
-      {finished ? <Button onClick={onFinish}>{ready && selectedWorkflow !== "uninstall" ? "Abrir VS Code" : "Abrir logs"}</Button> : null}
+      {finished ? (
+        <Button onClick={onFinish}>
+          {toolsOnlyRun 
+            ? "Volver a Cuentas" 
+            : (ready && selectedWorkflow !== "uninstall" ? "Abrir VS Code" : "Abrir logs")}
+        </Button>
+      ) : null}
       <Button variant="secondary" onClick={onExportDiagnostics} icon={false}>Exportar diagnóstico</Button>
     </div>
   </SetupPanel>;
@@ -588,6 +642,7 @@ export default function App() {
   const [cleanReinstall, setCleanReinstall] = useState(false);
   const [deleteStudentData, setDeleteStudentData] = useState(false);
   const [deleteRemoteWorkspaceRepo, setDeleteRemoteWorkspaceRepo] = useState(false);
+  const [toolsOnlyRun, setToolsOnlyRun] = useState(false);
 
   const backendAvailable = isBridgeAvailable();
   const stage = screenLabel(screen, workflow);
@@ -596,6 +651,40 @@ export default function App() {
   const isGhInstalled = useMemo(() => {
     return tools.find(t => t.id === "githubcli")?.status === "ready";
   }, [tools]);
+
+  const missingCriticalMessages = useMemo(() => {
+    if (!snapshot) return [];
+    const list = [];
+    const pythonTool = toolById(tools, "python");
+
+    if (!toolIsReady(tools, "githubcli")) {
+      list.push("Falta instalar GitHub CLI");
+    }
+    if (!toolIsReady(tools, "git")) {
+      list.push("Falta instalar Git");
+    }
+    if (!toolIsReady(tools, "python")) {
+      list.push(isPythonStoreAlias(pythonTool)
+        ? "Python usa alias de Microsoft Store"
+        : "Falta instalar o reparar Python");
+    }
+    if (!toolIsReady(tools, "msys2") || !toolIsReady(tools, "gcc") || !toolIsReady(tools, "make")) {
+      list.push("MSYS2/GCC/Make faltan o necesitan reparación");
+    }
+    if (!toolIsReady(tools, "nodejs")) {
+      list.push("Falta instalar Node.js");
+    }
+    if (!toolIsReady(tools, "exercismcli")) {
+      list.push("Falta instalar Exercism CLI");
+    }
+    return list;
+  }, [tools, snapshot]);
+
+  const startToolsOnlyInstall = () => {
+    setToolsOnlyRun(true);
+    setScreen("execute");
+  };
+
   const ready = summaryIsReady(workflow, lastSummary, snapshot);
   const workspaceReferencePath = snapshot?.recommendedWorkspacePath || snapshot?.workspaceContext?.recommendedWorkspacePath || snapshot?.workspacePath || "";
   const recommendedPath = recommendedWorkspacePath(workspaceReferencePath, localAlias || snapshot?.localAlias || "");
@@ -707,8 +796,15 @@ export default function App() {
     return () => window.removeEventListener("estudio-bridge-event", onBridgeEvent);
   }, []);
 
+  useEffect(() => {
+    if (screen === "execute" && toolsOnlyRun && !running && !finished) {
+      startExecution(true);
+    }
+  }, [screen, toolsOnlyRun, running, finished]);
+
   const selectWorkflow = (nextWorkflow) => {
     setWorkflow(nextWorkflow);
+    setToolsOnlyRun(false);
     setFinished(false);
     setRunning(false);
     setCleanReinstall(false);
@@ -854,7 +950,7 @@ export default function App() {
     }
   };
 
-  const startExecution = async () => {
+  const startExecution = async (isToolsOnly = toolsOnlyRun) => {
     if (!backendAvailable) {
       addLog("No hay bridge WebView2 disponible para ejecutar acciones reales.");
       setFinished(true);
@@ -889,14 +985,15 @@ export default function App() {
         }
       }
 
-      const action =
-        workflow === "reinstall" ? BackendAction.ReinstallManaged :
-        workflow === "uninstall" ? BackendAction.UninstallManaged :
-        workflow === "accounts" ? BackendAction.RunSmokeTest :
-        BackendAction.ApplyWorkflow;
+      const action = isToolsOnly
+        ? BackendAction.ApplyWorkflow
+        : workflow === "reinstall" ? BackendAction.ReinstallManaged :
+          workflow === "uninstall" ? BackendAction.UninstallManaged :
+          workflow === "accounts" ? BackendAction.RunSmokeTest :
+          BackendAction.ApplyWorkflow;
 
       const payload = {
-        mode: modeForWorkflow(workflow),
+        mode: isToolsOnly ? "Install" : modeForWorkflow(workflow),
         exercismToken: exercismToken.trim() || undefined,
         localAlias: localAlias.trim() || undefined,
         workspacePath: effectiveWorkspacePath,
@@ -905,6 +1002,8 @@ export default function App() {
         cleanReinstall: workflow === "reinstall" ? cleanReinstall : false,
         deleteStudentData: workflow === "uninstall" ? deleteStudentData : workflow === "reinstall" ? cleanReinstall : false,
         deleteRemoteWorkspaceRepo: (workflow === "uninstall" && deleteStudentData && deleteRemoteWorkspaceRepo) || (workflow === "reinstall" && cleanReinstall && deleteRemoteWorkspaceRepo),
+        skipGitHubLogin: isToolsOnly ? true : undefined,
+        skipExercism: isToolsOnly ? true : undefined,
       };
 
       const result = await requestBackend(action, payload);
@@ -918,7 +1017,7 @@ export default function App() {
       setCurrentStep(normalizedResult.globalMessage || "Proceso terminado");
       addLog(`Backend finalizó ${action}.`);
       await refreshState("Revisión final");
-      if (workflow !== "uninstall" && normalizedResult.succeeded) {
+      if (workflow !== "uninstall" && normalizedResult.succeeded && !isToolsOnly) {
         await requestBackend(BackendAction.OpenVSCode, { workspacePath: effectiveWorkspacePath });
         addLog("VS Code abierto al finalizar.");
       }
@@ -931,6 +1030,12 @@ export default function App() {
   };
 
   const finishAction = async () => {
+    if (toolsOnlyRun) {
+      setToolsOnlyRun(false);
+      setScreen("accounts");
+      await refreshState("Revalidación de herramientas");
+      return;
+    }
     if (ready && workflow !== "uninstall") {
       try {
         await requestBackend(BackendAction.OpenVSCode, { workspacePath: effectiveWorkspacePath });
@@ -1004,7 +1109,9 @@ export default function App() {
       onNext={() => setScreen("execute")}
       busyAction={busyAction}
       ghInstalled={isGhInstalled}
+      missingCriticalMessages={missingCriticalMessages}
+      onInstallToolsOnly={startToolsOnlyInstall}
     /> : null}
-    {screen === "execute" ? <ExecuteScreen selectedWorkflow={workflow} progress={progress} currentStep={currentStep} running={running} finished={finished} ready={ready} onStart={startExecution} onCancel={cancelWorkflow} onFinish={finishAction} onExportDiagnostics={exportDiagnostics} lastSummary={lastSummary} snapshot={snapshot} cleanReinstall={cleanReinstall} setCleanReinstall={setCleanReinstall} deleteStudentData={deleteStudentData} setDeleteStudentData={setDeleteStudentData} deleteRemoteWorkspaceRepo={deleteRemoteWorkspaceRepo} setDeleteRemoteWorkspaceRepo={setDeleteRemoteWorkspaceRepo} /> : null}
+    {screen === "execute" ? <ExecuteScreen selectedWorkflow={workflow} progress={progress} currentStep={currentStep} running={running} finished={finished} ready={ready} onStart={() => startExecution(toolsOnlyRun)} onCancel={cancelWorkflow} onFinish={finishAction} onExportDiagnostics={exportDiagnostics} lastSummary={lastSummary} snapshot={snapshot} cleanReinstall={cleanReinstall} setCleanReinstall={setCleanReinstall} deleteStudentData={deleteStudentData} setDeleteStudentData={setDeleteStudentData} deleteRemoteWorkspaceRepo={deleteRemoteWorkspaceRepo} setDeleteRemoteWorkspaceRepo={setDeleteRemoteWorkspaceRepo} toolsOnlyRun={toolsOnlyRun} /> : null}
   </AppShell>;
 }

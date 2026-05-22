@@ -70,6 +70,7 @@ public sealed class WingetBroker(ICommandRunner runner, DependencyDetector detec
 public sealed class DependencyInstaller(
     AppPaths paths,
     DependencyDetector detector,
+    ICommandRunner runner,
     WingetBroker winget,
     OfficialInstallerFallback fallback,
     DownloadManager downloadManager,
@@ -96,7 +97,7 @@ public sealed class DependencyInstaller(
 
         if (requirement.ManagedThroughMsys2)
         {
-            var msys2 = new Msys2Manager(this, detector, pathManager, manifestManager, logManager);
+            var msys2 = new Msys2Manager(this, detector, runner, pathManager, manifestManager);
             await msys2.EnsureToolchainAsync(cancellationToken).ConfigureAwait(false);
             var afterMsys = await detector.DetectAsync(requirement, cancellationToken).ConfigureAwait(false);
             await manifestManager.RecordDependencyAsync(before, afterMsys, afterMsys.Status == DependencyStatus.Ready, "msys2-pacman", null, cancellationToken)
@@ -271,9 +272,9 @@ public sealed class DependencyInstaller(
 public sealed class Msys2Manager(
     DependencyInstaller dependencyInstaller,
     DependencyDetector detector,
+    ICommandRunner runner,
     PathManager pathManager,
-    ManifestManager manifestManager,
-    LogManager logManager)
+    ManifestManager manifestManager)
 {
     public async Task<DependencyState> EnsureMsys2Async(CancellationToken cancellationToken)
     {
@@ -298,7 +299,7 @@ public sealed class Msys2Manager(
             throw new InvalidOperationException("MSYS2 no esta instalado en C:\\msys64.");
         }
 
-        var result = await new ProcessCommandRunner(logManager).RunAsync(new CommandSpec
+        var result = await runner.RunAsync(new CommandSpec
         {
             FileName = bash,
             Arguments =

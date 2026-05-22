@@ -235,7 +235,7 @@ public sealed class GitHubLoginTests : IDisposable
     }
 
     [Fact]
-    public async Task GithubLogin_WhenGhMissing_InstallsGhFirst()
+    public async Task FreshSetup_GhMissing_InstallsGhBeforeLogin()
     {
         var runner = new TestCommandRunner(_ghExe, _wingetExe, _gitExe, initialGhInstalled: false);
         var engine = CreateEngine(runner);
@@ -248,7 +248,7 @@ public sealed class GitHubLoginTests : IDisposable
     }
 
     [Fact]
-    public async Task GithubLogin_WhenGhMissing_DoesNotCallAuthLogin()
+    public async Task FreshSetup_DoesNotAllowGithubLoginBeforeGhReady()
     {
         var runner = new TestCommandRunner(_ghExe, _wingetExe, _gitExe, initialGhInstalled: false);
         var engine = CreateEngine(runner);

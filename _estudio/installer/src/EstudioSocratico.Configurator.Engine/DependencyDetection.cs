@@ -39,6 +39,7 @@ public sealed class DependencyDetector(
         return requirement.Id switch
         {
             DependencyId.Msys2 => DetectMsys2(),
+            DependencyId.Python => await DetectPythonAsync(requirement, cancellationToken).ConfigureAwait(false),
             DependencyId.Gcc => await DetectCommandAsync(requirement, ["--version"], ProductInfo.DefaultMsys2UcrtBin, cancellationToken).ConfigureAwait(false),
             DependencyId.Make => await DetectCommandAsync(requirement, ["--version"], ProductInfo.DefaultMsys2UcrtBin, cancellationToken).ConfigureAwait(false),
             DependencyId.Winget => await DetectCommandAsync(requirement, ["--info"], null, cancellationToken).ConfigureAwait(false),
@@ -70,6 +71,65 @@ public sealed class DependencyDetector(
             DisplayName = "MSYS2",
             Status = DependencyStatus.Missing,
             Recommendation = "Instalar MSYS2 en C:\\msys64 y usar UCRT64."
+        };
+    }
+
+    private async Task<DependencyState> DetectPythonAsync(DependencyRequirement requirement, CancellationToken cancellationToken)
+    {
+        var commandPath = await ResolveCommandPathAsync(requirement.CommandName, null, cancellationToken).ConfigureAwait(false);
+        if (commandPath != null)
+        {
+            return await DetectCommandAsync(requirement, ["--version"], null, cancellationToken).ConfigureAwait(false);
+        }
+
+        if (OperatingSystem.IsWindows())
+        {
+            var where = await runner.RunAsync(new CommandSpec
+            {
+                FileName = "where.exe",
+                Arguments = ["python"],
+                Timeout = TimeSpan.FromSeconds(10),
+                AllowNonZeroExitCode = true
+            }, cancellationToken).ConfigureAwait(false);
+
+            if (where.Succeeded)
+            {
+                var candidates = where.StandardOutput
+                    .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                foreach (var path in candidates)
+                {
+                    if (path.Contains("WindowsApps", StringComparison.OrdinalIgnoreCase) && _fileExists(path))
+                    {
+                        if (await IsBrokenStoreAliasAsync(path, "python", cancellationToken).ConfigureAwait(false))
+                        {
+                            return new DependencyState
+                            {
+                                Id = requirement.Id,
+                                DisplayName = requirement.DisplayName,
+                                Status = DependencyStatus.Broken,
+                                Path = path,
+                                Recommendation = "Python está usando el alias de Microsoft Store. Instala Python real.",
+                                Error = new InstallerError
+                                {
+                                    Code = InstallerErrorCode.COMMAND_FAILED,
+                                    Title = "Alias de Microsoft Store detectado",
+                                    Description = "Se detectó el alias de Microsoft Store en WindowsApps que no contiene Python real.",
+                                    ProbableCause = "Python no está instalado, o solo está el alias vacío de la Microsoft Store.",
+                                    RecommendedAction = "Instala Python real usando el configurador."
+                                }
+                            };
+                        }
+                    }
+                }
+            }
+        }
+
+        return new DependencyState
+        {
+            Id = requirement.Id,
+            DisplayName = requirement.DisplayName,
+            Status = DependencyStatus.Missing,
+            Recommendation = "Instalar o reparar Python."
         };
     }
 
@@ -212,6 +272,47 @@ public sealed class DependencyDetector(
         };
     }
 
+    private async Task<bool> IsBrokenStoreAliasAsync(string path, string command, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            return false;
+        }
+
+        if (!path.Contains("WindowsApps", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (!command.Contains("python", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        try
+        {
+            var result = await runner.RunAsync(new CommandSpec
+            {
+                FileName = path,
+                Arguments = ["--version"],
+                Timeout = TimeSpan.FromSeconds(5),
+                AllowNonZeroExitCode = true
+            }, cancellationToken).ConfigureAwait(false);
+
+            var output = (result.StandardOutput ?? "") + (result.StandardError ?? "");
+            if (!result.Succeeded || output.Contains("not found", StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(output))
+            {
+                return true;
+            }
+        }
+        catch
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     public async Task<string?> ResolveCommandPathAsync(string command, string? preferredDirectory, CancellationToken cancellationToken)
     {
         if (!string.IsNullOrWhiteSpace(preferredDirectory))
@@ -219,7 +320,10 @@ public sealed class DependencyDetector(
             var exe = Path.Combine(preferredDirectory, command.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? command : command + ".exe");
             if (_fileExists(exe))
             {
-                return exe;
+                if (!await IsBrokenStoreAliasAsync(exe, command, cancellationToken).ConfigureAwait(false))
+                {
+                    return exe;
+                }
             }
         }
 
@@ -228,7 +332,10 @@ public sealed class DependencyDetector(
             var commonPath = FindInCommonWindowsPaths(command);
             if (commonPath != null)
             {
-                return commonPath;
+                if (!await IsBrokenStoreAliasAsync(commonPath, command, cancellationToken).ConfigureAwait(false))
+                {
+                    return commonPath;
+                }
             }
 
             TryRefreshProcessPath();
@@ -247,9 +354,21 @@ public sealed class DependencyDetector(
             return null;
         }
 
-        return where.StandardOutput
-            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .FirstOrDefault(_fileExists);
+        var candidates = where.StandardOutput
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        foreach (var path in candidates)
+        {
+            if (_fileExists(path))
+            {
+                if (!await IsBrokenStoreAliasAsync(path, command, cancellationToken).ConfigureAwait(false))
+                {
+                    return path;
+                }
+            }
+        }
+
+        return null;
     }
 
     private string? FindInCommonWindowsPaths(string command)
@@ -280,6 +399,10 @@ public sealed class DependencyDetector(
             pathsToCheck.Add(Path.Combine(programFilesX86, "nodejs", cmdName));
             pathsToCheck.Add(Path.Combine(localAppData, "Programs", "nodejs", cmdName));
         }
+        else if (string.Equals(command, "python", StringComparison.OrdinalIgnoreCase))
+        {
+            pathsToCheck.AddRange(FindPythonInstallCandidates(localAppData, programFiles, programFilesX86, cmdName));
+        }
         else if (string.Equals(command, "winget", StringComparison.OrdinalIgnoreCase))
         {
             pathsToCheck.Add(Path.Combine(localAppData, "Microsoft", "WindowsApps", cmdName));
@@ -294,6 +417,45 @@ public sealed class DependencyDetector(
         }
 
         return null;
+    }
+
+    private static IEnumerable<string> FindPythonInstallCandidates(
+        string localAppData,
+        string programFiles,
+        string programFilesX86,
+        string cmdName)
+    {
+        foreach (var root in new[]
+                 {
+                     Path.Combine(localAppData, "Programs", "Python"),
+                     programFiles,
+                     programFilesX86
+                 })
+        {
+            if (string.IsNullOrWhiteSpace(root) || !Directory.Exists(root))
+            {
+                continue;
+            }
+
+            IEnumerable<string> directories;
+            try
+            {
+                directories = Directory.EnumerateDirectories(root, "Python*");
+            }
+            catch (IOException)
+            {
+                continue;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                continue;
+            }
+
+            foreach (var directory in directories.OrderByDescending(path => path, StringComparer.OrdinalIgnoreCase))
+            {
+                yield return Path.Combine(directory, cmdName);
+            }
+        }
     }
 
     private static void TryRefreshProcessPath()
