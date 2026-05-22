@@ -240,16 +240,33 @@ public sealed class ConfiguratorEngine
         };
     }
 
-    public Task<AccountState> SwitchGitHubAccountAsync(CancellationToken cancellationToken = default)
+    public Task<AccountState> SwitchGitHubAccountAsync(bool installGh = false, CancellationToken cancellationToken = default)
     {
-        return ConfigureGitHubAsync(switchAccount: true, cancellationToken: cancellationToken);
+        return ConfigureGitHubAsync(switchAccount: true, workspacePath: null, installGh: installGh, cancellationToken: cancellationToken);
     }
 
     public async Task<AccountState> ConfigureGitHubAsync(
         bool switchAccount = false,
         string? workspacePath = null,
+        bool installGh = false,
         CancellationToken cancellationToken = default)
     {
+        var requirement = DependencyDetector.Requirements.Single(x => x.Id == DependencyId.GitHubCli);
+        var ghState = await _detector.DetectAsync(requirement, cancellationToken).ConfigureAwait(false);
+        if (ghState.Status != DependencyStatus.Ready)
+        {
+            if (!installGh)
+            {
+                throw new InvalidOperationException("Primero necesitamos instalar GitHub CLI para iniciar sesión.");
+            }
+
+            ghState = await _dependencyInstaller.EnsureAsync(requirement, cancellationToken).ConfigureAwait(false);
+            if (ghState.Status != DependencyStatus.Ready)
+            {
+                throw new InvalidOperationException("Primero necesitamos instalar GitHub CLI para iniciar sesión.");
+            }
+        }
+
         var account = await _gitHubAccountManager.EnsureLoginAsync(switchAccount, cancellationToken).ConfigureAwait(false);
         var workspace = await ResolveKnownWorkspaceAsync(workspacePath, cancellationToken).ConfigureAwait(false);
         if (File.Exists(Path.Combine(workspace, "AGENTS.md")))

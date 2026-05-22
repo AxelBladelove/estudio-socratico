@@ -149,12 +149,14 @@ public sealed class WebViewBridge : IProgressSink
             case BridgeAction.ConfigureGithub:
                 return await _engine.ConfigureGitHubAsync(
                     switchAccount: false,
-                    workspacePath: BridgePayload.GetString(request, "workspacePath", "workspace")).ConfigureAwait(false);
+                    workspacePath: BridgePayload.GetString(request, "workspacePath", "workspace"),
+                    installGh: BridgePayload.GetBool(request, "installGh", defaultValue: false)).ConfigureAwait(false);
 
             case BridgeAction.ChangeGithubAccount:
                 return await _engine.ConfigureGitHubAsync(
                     switchAccount: true,
-                    workspacePath: BridgePayload.GetString(request, "workspacePath", "workspace")).ConfigureAwait(false);
+                    workspacePath: BridgePayload.GetString(request, "workspacePath", "workspace"),
+                    installGh: BridgePayload.GetBool(request, "installGh", defaultValue: false)).ConfigureAwait(false);
 
             case BridgeAction.ConfigureExercism:
                 var token = BridgePayload.GetString(request, "token", "exercismToken");
