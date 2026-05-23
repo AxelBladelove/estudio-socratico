@@ -6,6 +6,9 @@ namespace EstudioSocratico.Configurator.Core;
 public sealed record InstallerManifest
 {
     public string ConfiguratorVersion { get; init; } = ProductInfo.Version;
+    public string PublicDisplayVersion { get; init; } = ProductInfo.PublicDisplayVersion;
+    public string InstalledBuild { get; init; } = ProductInfo.GetRuntimeVersionInfo().InstalledBuild;
+    public string VersionSource { get; init; } = ProductInfo.GetRuntimeVersionInfo().Source;
     public DateTimeOffset InstalledAtUtc { get; init; } = DateTimeOffset.UtcNow;
     public DateTimeOffset UpdatedAtUtc { get; init; } = DateTimeOffset.UtcNow;
     public string WindowsUser { get; init; } = Environment.UserName;
@@ -76,6 +79,10 @@ public sealed record ElevatedActionRecord
 public sealed record DiagnosticsReport
 {
     public string ConfiguratorVersion { get; init; } = ProductInfo.Version;
+    public string PublicDisplayVersion { get; init; } = ProductInfo.PublicDisplayVersion;
+    public string InternalPackageVersion { get; init; } = ProductInfo.Version;
+    public string InstalledBuild { get; init; } = ProductInfo.GetRuntimeVersionInfo().InstalledBuild;
+    public string Source { get; init; } = ProductInfo.GetRuntimeVersionInfo().Source;
     public DateTimeOffset CreatedAtUtc { get; init; } = DateTimeOffset.UtcNow;
     public string OperatingSystem { get; init; } = System.Environment.OSVersion.VersionString;
     public string WindowsUser { get; init; } = System.Environment.UserName;

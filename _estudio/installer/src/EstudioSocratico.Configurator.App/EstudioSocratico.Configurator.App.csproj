@@ -28,6 +28,7 @@
   <ItemGroup>
     <Content Include="logo-configurator.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\..\branding\logo-app.svg" Link="logo-app.svg" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\..\soporte\vscode\estudio-exercism\**" Exclude="..\..\..\soporte\vscode\estudio-exercism\node_modules\**" Link="runtime-resources\vscode\estudio-exercism\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="wwwroot\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 

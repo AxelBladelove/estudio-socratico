@@ -116,6 +116,8 @@ public sealed record UIStateSnapshot
     public FinalReadinessCheck FinalReadiness { get; init; } = new();
     public string ConfiguratorVersion { get; init; } = ProductInfo.Version;
     public string PublicDisplayVersion { get; init; } = ProductInfo.PublicDisplayVersion;
+    public string InstalledBuild { get; init; } = ProductInfo.GetRuntimeVersionInfo().InstalledBuild;
+    public string VersionSource { get; init; } = ProductInfo.GetRuntimeVersionInfo().Source;
 }
 
 public static class BridgeProtocol
