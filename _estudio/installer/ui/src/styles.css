@@ -113,7 +113,9 @@ button, input { font: inherit; }
   color: #fff;
 }
 .logo-box { width: 32px; height: 32px; border-radius: 12px; font-size: 12px; font-weight: 700; }
+.logo-box img { width: 20px; height: 20px; }
 .hero-mark { margin: 0 auto 28px; width: 56px; height: 56px; border-radius: 16px; }
+.hero-mark img { width: 36px; height: 36px; }
 
 .stage-pill {
   border: 1px solid rgba(255,255,255,.10);

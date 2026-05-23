@@ -9,6 +9,9 @@
     <MajorUpgrade DowngradeErrorMessage="Ya existe una version mas reciente de Estudio Socratico Configurador." />
     <MediaTemplate EmbedCab="yes" />
 
+    <Icon Id="AppIcon" SourceFile="logo-configurator.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+
     <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="INSTALLFOLDER" Name="Estudio Socratico Configurador" />
     </StandardDirectory>

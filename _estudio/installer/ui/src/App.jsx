@@ -30,6 +30,7 @@ import gccIcon from "./assets/tools/gcc.svg";
 import makeIcon from "./assets/tools/make.svg";
 import exercismIcon from "./assets/tools/exercism.svg";
 import workspaceIcon from "./assets/tools/workspace.svg";
+import logoApp from "./assets/logo-app.svg";
 
 const SCREEN_ORDER = ["welcome", "workflow", "scan", "components", "accounts", "execute"];
 const BASE_REPO = "AxelBladelove/estudio-socratico";
@@ -180,7 +181,7 @@ function AppShell({ children, stage, canGoBack, onBack, consoleOpen, setConsoleO
     <header className="app-header">
       <div className="header-left">
         {canGoBack ? <button onClick={onBack} className="back-button" aria-label="Volver"><Icons.Back /></button> : null}
-        <div className="logo-box">S</div>
+        <div className="logo-box"><img src={logoApp} alt="Logo" /></div>
         <div><p className="brand-title">Estudio Socrático</p><p className="brand-subtitle">Configurador</p></div>
       </div>
       <div className="stage-pill">{stage}</div>
@@ -193,7 +194,7 @@ function AppShell({ children, stage, canGoBack, onBack, consoleOpen, setConsoleO
 
 function Welcome({ onNext }) {
   return <SetupPanel>
-    <div className="hero-mark"><Icons.Spark className="h-7 w-7" /></div>
+    <div className="hero-mark"><img src={logoApp} alt="Logo" /></div>
     <HeaderBlock eyebrow="Configuración" title="Preparemos Estudio Socrático" text="Elige qué necesitas hacer. El configurador instalará y reparará las herramientas necesarias según ese caso de uso." />
     <div className="center-actions"><Button onClick={onNext}>Continuar</Button></div>
   </SetupPanel>;

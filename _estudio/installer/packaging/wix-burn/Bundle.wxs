@@ -4,7 +4,8 @@
       Name="Estudio Socratico Setup"
       Manufacturer="Estudio Socratico"
       Version="$(var.ProductVersion)"
-      UpgradeCode="{D0C76DB4-A496-4CEB-82C5-3B70C4764FA0}">
+      UpgradeCode="{D0C76DB4-A496-4CEB-82C5-3B70C4764FA0}"
+      IconSourceFile="logo-configurator.ico">
     <BootstrapperApplication>
       <bal:WixStandardBootstrapperApplication
           Theme="hyperlinkLicense"
