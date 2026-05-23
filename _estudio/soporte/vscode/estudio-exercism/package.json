@@ -2,7 +2,7 @@
   "name": "estudio-exercism",
   "displayName": "Estudio Socratico - Exercism",
   "description": "Panel de ejercicios para Exercism C y PDF Alejandro Liz dentro de Estudio Socratico.",
-  "version": "2.0.12",
+  "version": "2.0.14",
   "publisher": "estudio-socratico",
   "license": "MIT",
   "icon": "assets/logo-vscode-extension.png",
@@ -44,27 +44,35 @@
     "commands": [
       {
         "command": "estudioExercism.openPanel",
-        "title": "Estudio Socratico: Abrir Panel de Ejercicios"
+        "title": "Abrir ejercicios",
+        "category": "Estudio Socratico",
+        "icon": "$(book)"
       },
       {
         "command": "estudioExercism.testCurrent",
-        "title": "Estudio Socratico: Probar Ejercicio Actual"
+        "title": "Probar ejercicio actual",
+        "category": "Estudio Socratico",
+        "icon": "$(beaker)"
       },
       {
         "command": "estudioExercism.submitCurrent",
-        "title": "Estudio Socratico: Enviar Ejercicio Actual"
+        "title": "Enviar ejercicio actual",
+        "category": "Estudio Socratico"
       },
       {
         "command": "estudioExercism.validateCurrent",
-        "title": "Estudio Socratico: Validar Ejercicio Actual"
+        "title": "Validar ejercicio actual",
+        "category": "Estudio Socratico"
       },
       {
         "command": "estudioExercism.openApiKeyConfig",
-        "title": "Estudio Socratico: Abrir Configuración de API Key"
+        "title": "Abrir configuracion de API Key",
+        "category": "Estudio Socratico"
       },
       {
         "command": "estudioExercism.revealApiKeyConfig",
-        "title": "Estudio Socratico: Revelar Configuración de API Key en Explorador"
+        "title": "Revelar configuracion de API Key",
+        "category": "Estudio Socratico"
       }
     ],
     "menus": {

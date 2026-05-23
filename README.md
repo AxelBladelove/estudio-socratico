@@ -81,7 +81,7 @@ Cuando aprendes C, los errores no siempre son fáciles de entender:
 ### Primera vez
 
 1. Ve a **GitHub Releases** en el repositorio oficial.
-2. Descarga el instalador ejecutable de la versión 2.0 (ej. `Estudio-Socratico-Setup-v2.0.12-x64.exe`).
+2. Descarga el instalador ejecutable de la versión 2.0 (ej. `Estudio-Socratico-Setup-v2.0.14-x64.exe`).
 3. Haz doble click para ejecutarlo.
 4. Sigue el flujo guiado: GitHub, Exercism, workspace y VS Code.
 
@@ -457,7 +457,7 @@ alias.
 <details>
 <summary><strong>❌ <kbd>F9</kbd> no hace nada</strong></summary>
 
-Abre `Estudio-Socratico-Setup-v2.0.12-x64.exe` y elige **Reparar**.
+Abre `Estudio-Socratico-Setup-v2.0.14-x64.exe` y elige **Reparar**.
 
 Luego cierra VS Code completamente y vuelve a abrirlo.
 

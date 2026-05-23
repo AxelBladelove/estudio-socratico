@@ -9,7 +9,7 @@ Para mantener la compatibilidad con Windows Installer (MSI/WiX) y evitar problem
 
 El artefacto de instalación estable final en GitHub Releases se nombra según la versión técnica:
 ```text
-Estudio-Socratico-Setup-v2.0.12-x64.exe
+Estudio-Socratico-Setup-v2.0.14-x64.exe
 ```
 
 ## Stack
