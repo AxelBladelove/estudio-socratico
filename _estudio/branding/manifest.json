@@ -2,6 +2,7 @@
   "name": "Estudio Socratico branding assets",
   "style": "Minimal folded S monogram inspired by developer-tool depth, with light/dark blue layers.",
   "files": [
+    "build-icons.ps1",
     "logo-source.svg",
     "logo-app.svg",
     "logo-app-tile.svg",

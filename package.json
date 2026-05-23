@@ -22,5 +22,18 @@
     "alejandro:icons": "node _estudio/soporte/alejandro/iconify-icons.mjs",
     "alejandro:semantic:report": "node _estudio/soporte/alejandro/report-filter-distribution.mjs",
     "alejandro:semantic:apply": "node _estudio/soporte/alejandro/apply-semantic-results.mjs"
-  }
+  },
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AxelBladelove/estudio-socratico.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/AxelBladelove/estudio-socratico/issues"
+  },
+  "homepage": "https://github.com/AxelBladelove/estudio-socratico#readme"
 }

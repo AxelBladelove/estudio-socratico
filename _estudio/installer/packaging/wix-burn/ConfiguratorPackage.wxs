@@ -29,7 +29,9 @@
           Id="EstudioSocraticoConfiguratorShortcut"
           Name="Estudio Socratico Configurador"
           Target="[INSTALLFOLDER]EstudioSocratico.Configurator.App.exe"
-          WorkingDirectory="INSTALLFOLDER" />
+          WorkingDirectory="INSTALLFOLDER"
+          Icon="AppIcon"
+          IconIndex="0" />
       <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
       <RegistryValue Root="HKCU" Key="Software\EstudioSocratico\Configurator" Name="installed" Type="integer" Value="1" KeyPath="yes" />
     </Component>

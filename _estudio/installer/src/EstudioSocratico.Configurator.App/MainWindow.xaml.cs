@@ -107,6 +107,12 @@ public sealed partial class MainWindow : Window
 
     private void ConfigureWindow()
     {
+        var iconPath = Path.Combine(AppContext.BaseDirectory, "logo-configurator.ico");
+        if (File.Exists(iconPath))
+        {
+            AppWindow.SetIcon(iconPath);
+        }
+
         if (AppWindowTitleBar.IsCustomizationSupported())
         {
             var titleBar = AppWindow.TitleBar;
