@@ -85,8 +85,10 @@ public sealed partial class MainWindow : Window
                     wwwrootFolder, 
                     Microsoft.Web.WebView2.Core.CoreWebView2HostResourceAccessKind.Allow);
 
-                await _engine.Logs.WriteAsync("info", "webview", $"Navegando a https://app.local/index.html usando '{indexHtmlPath}'.");
-                webView.Navigate("https://app.local/index.html");
+                var cacheVersion = File.GetLastWriteTimeUtc(indexHtmlPath).Ticks.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                var indexUri = $"https://app.local/index.html?v={cacheVersion}";
+                await _engine.Logs.WriteAsync("info", "webview", $"Navegando a {indexUri} usando '{indexHtmlPath}'.");
+                webView.Navigate(indexUri);
             }
             else
             {
@@ -107,9 +109,22 @@ public sealed partial class MainWindow : Window
 
     private void ConfigureWindow()
     {
+        var iconPath = Path.Combine(AppContext.BaseDirectory, "logo-configurator.ico");
+        if (File.Exists(iconPath))
+        {
+            AppWindow.SetIcon(iconPath);
+        }
+
+        var titleBarLogoPath = Path.Combine(AppContext.BaseDirectory, "logo-app.svg");
+        if (File.Exists(titleBarLogoPath))
+        {
+            TitleBarLogo.Source = new Microsoft.UI.Xaml.Media.Imaging.SvgImageSource(new Uri(titleBarLogoPath));
+        }
+
         if (AppWindowTitleBar.IsCustomizationSupported())
         {
             var titleBar = AppWindow.TitleBar;
+            titleBar.IconShowOptions = IconShowOptions.HideIconAndSystemMenu;
             titleBar.BackgroundColor = Colors.Transparent;
             titleBar.ButtonBackgroundColor = Colors.Transparent;
             titleBar.ButtonForegroundColor = Colors.White;

@@ -1,0 +1,19 @@
+{
+  "name": "Estudio Socratico branding assets",
+  "style": "Minimal folded S monogram inspired by developer-tool depth, with light/dark blue layers.",
+  "files": [
+    "build-icons.ps1",
+    "logo-source.svg",
+    "logo-app.svg",
+    "logo-app-tile.svg",
+    "logo-configurator.ico",
+    "logo-vscode-extension.png",
+    "logo-vscode-activity.svg"
+  ],
+  "recommended_repo_paths": {
+    "branding": "_estudio/branding/",
+    "configurator_icon": "_estudio/branding/logo-configurator.ico",
+    "vscode_extension_icon": "_estudio/branding/logo-vscode-extension.png",
+    "vscode_activity_icon": "_estudio/branding/logo-vscode-activity.svg"
+  }
+}

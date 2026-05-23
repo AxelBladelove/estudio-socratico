@@ -57,16 +57,16 @@ public sealed class UpdateManagerTests
                 {
                     ""draft"": false,
                     ""prerelease"": false,
-                    ""tag_name"": ""v2.0.11"",
+                    ""tag_name"": ""v2.0.12"",
                     ""body"": ""Test release notes"",
                     ""assets"": [
                         {
-                            ""name"": ""Estudio-Socratico-Setup-v2.0.11-x64.exe"",
-                            ""browser_download_url"": ""https://github.com/AxelBladelove/estudio-socratico/releases/download/v2.0.11/Estudio-Socratico-Setup-v2.0.11-x64.exe""
+                            ""name"": ""Estudio-Socratico-Setup-v2.0.12-x64.exe"",
+                            ""browser_download_url"": ""https://github.com/AxelBladelove/estudio-socratico/releases/download/v2.0.12/Estudio-Socratico-Setup-v2.0.12-x64.exe""
                         },
                         {
-                            ""name"": ""Estudio-Socratico-Setup-v2.0.11-x64.exe.sha256"",
-                            ""browser_download_url"": ""https://github.com/AxelBladelove/estudio-socratico/releases/download/v2.0.11/Estudio-Socratico-Setup-v2.0.11-x64.exe.sha256""
+                            ""name"": ""Estudio-Socratico-Setup-v2.0.12-x64.exe.sha256"",
+                            ""browser_download_url"": ""https://github.com/AxelBladelove/estudio-socratico/releases/download/v2.0.12/Estudio-Socratico-Setup-v2.0.12-x64.exe.sha256""
                         }
                     ]
                 }
@@ -84,8 +84,8 @@ public sealed class UpdateManagerTests
             var result = await updater.CheckForUpdatesAsync();
 
             Assert.True(result.UpdateAvailable);
-            Assert.Equal("2.0.11", result.LatestVersion);
-            Assert.Equal("https://github.com/AxelBladelove/estudio-socratico/releases/download/v2.0.11/Estudio-Socratico-Setup-v2.0.11-x64.exe", result.DownloadUrl);
+            Assert.Equal("2.0.12", result.LatestVersion);
+            Assert.Equal("https://github.com/AxelBladelove/estudio-socratico/releases/download/v2.0.12/Estudio-Socratico-Setup-v2.0.12-x64.exe", result.DownloadUrl);
         }
         finally
         {
@@ -172,10 +172,8 @@ public sealed class UpdateManagerTests
 
             var (updater, _, _) = SetupUpdater(tempDir, handler);
             
-            await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-            {
-                await updater.CheckForUpdatesAsync();
-            });
+            var result = await updater.CheckForUpdatesAsync();
+            Assert.False(result.UpdateAvailable);
         }
         finally
         {
@@ -193,16 +191,16 @@ public sealed class UpdateManagerTests
                 {
                     ""draft"": false,
                     ""prerelease"": false,
-                    ""tag_name"": ""v2.0.10"",
+                    ""tag_name"": ""v2.0.11"",
                     ""body"": ""Same version"",
                     ""assets"": [
                         {
-                            ""name"": ""Estudio-Socratico-Setup-v2.0.10-x64.exe"",
-                            ""browser_download_url"": ""https://github.com/AxelBladelove/estudio-socratico/releases/download/v2.0.10/Estudio-Socratico-Setup-v2.0.10-x64.exe""
+                            ""name"": ""Estudio-Socratico-Setup-v2.0.11-x64.exe"",
+                            ""browser_download_url"": ""https://github.com/AxelBladelove/estudio-socratico/releases/download/v2.0.11/Estudio-Socratico-Setup-v2.0.11-x64.exe""
                         },
                         {
-                            ""name"": ""Estudio-Socratico-Setup-v2.0.10-x64.exe.sha256"",
-                            ""browser_download_url"": ""https://github.com/AxelBladelove/estudio-socratico/releases/download/v2.0.10/Estudio-Socratico-Setup-v2.0.10-x64.exe.sha256""
+                            ""name"": ""Estudio-Socratico-Setup-v2.0.11-x64.exe.sha256"",
+                            ""browser_download_url"": ""https://github.com/AxelBladelove/estudio-socratico/releases/download/v2.0.11/Estudio-Socratico-Setup-v2.0.11-x64.exe.sha256""
                         }
                     ]
                 }
@@ -297,14 +295,14 @@ public sealed class UpdateManagerTests
             };
 
             await updater.TriggerUpdateAsync(
-                "https://github.com/AxelBladelove/estudio-socratico/releases/download/v2.0.11/Estudio-Socratico-Setup-v2.0.11-x64.exe",
-                "https://github.com/AxelBladelove/estudio-socratico/releases/download/v2.0.11/Estudio-Socratico-Setup-v2.0.11-x64.exe.sha256",
-                "2.0.11",
+                "https://github.com/AxelBladelove/estudio-socratico/releases/download/v2.0.12/Estudio-Socratico-Setup-v2.0.12-x64.exe",
+                "https://github.com/AxelBladelove/estudio-socratico/releases/download/v2.0.12/Estudio-Socratico-Setup-v2.0.12-x64.exe.sha256",
+                "2.0.12",
                 NullProgressSink.Instance);
 
             Assert.NotNull(launchedPath);
             Assert.True(File.Exists(launchedPath));
-            Assert.Equal("Estudio-Socratico-Setup-v2.0.11-x64.exe", Path.GetFileName(launchedPath));
+            Assert.Equal("Estudio-Socratico-Setup-v2.0.12-x64.exe", Path.GetFileName(launchedPath));
         }
         finally
         {
@@ -403,9 +401,9 @@ public sealed class UpdateManagerTests
             updater.InstallerLauncher = (path) => { };
 
             await updater.TriggerUpdateAsync(
-                "https://github.com/AxelBladelove/estudio-socratico/releases/download/v2.0.11/Estudio-Socratico-Setup-v2.0.11-x64.exe",
-                "https://github.com/AxelBladelove/estudio-socratico/releases/download/v2.0.11/Estudio-Socratico-Setup-v2.0.11-x64.exe.sha256",
-                "2.0.11",
+                "https://github.com/AxelBladelove/estudio-socratico/releases/download/v2.0.12/Estudio-Socratico-Setup-v2.0.12-x64.exe",
+                "https://github.com/AxelBladelove/estudio-socratico/releases/download/v2.0.12/Estudio-Socratico-Setup-v2.0.12-x64.exe.sha256",
+                "2.0.12",
                 NullProgressSink.Instance);
 
             // Assert that the student data is intact
