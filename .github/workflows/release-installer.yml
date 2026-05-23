@@ -20,12 +20,12 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: "10.0.x"
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Install UI dependencies and build
         working-directory: _estudio/installer/ui
@@ -54,26 +54,23 @@ jobs:
             --output _estudio/installer/artifacts/publish/app
 
       - name: Build MSI Package
-        run: |
-          dotnet build _estudio/installer/packaging/wix-burn/EstudioSocratico.Configurator.Package.wixproj --configuration Release
+        run: dotnet build _estudio/installer/packaging/wix-burn/EstudioSocratico.Configurator.Package.wixproj --configuration Release
 
       - name: Build Bundle Package
-        run: |
-          dotnet build _estudio/installer/packaging/wix-burn/EstudioSocratico.Setup.Bundle.wixproj --configuration Release
+        run: dotnet build _estudio/installer/packaging/wix-burn/EstudioSocratico.Setup.Bundle.wixproj --configuration Release
 
       - name: Generate Checksum
         shell: pwsh
         run: |
           $buildExe = Get-ChildItem "_estudio/installer/packaging/wix-burn/bin/x64/Release/Estudio-Socratico-Setup-v*.exe" | Select-Object -First 1
           if (-not $buildExe) {
-              throw "Installer exe not found!"
+            throw "Installer exe not found!"
           }
+
           Write-Host "Found installer at: $($buildExe.FullName)"
           $hash = (Get-FileHash $buildExe.FullName -Algorithm SHA256).Hash.ToLower()
           $hash | Out-File "$($buildExe.FullName).sha256" -Encoding ascii -NoNewline
-          Write-Host "Generated checksum: $hash"
-          
-          # Write environment variables for later steps
+
           "EXE_PATH=$($buildExe.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
           "SHA_PATH=$($buildExe.FullName).sha256" | Out-File -FilePath $env:GITHUB_ENV -Append
 
@@ -83,6 +80,7 @@ jobs:
         run: |
           $releaseName = "Estudio Socrático 2.0 Stable"
           $releaseNotesPath = Join-Path $env:RUNNER_TEMP "release-notes.md"
+
           if ("${{ github.ref_name }}" -eq "v2.0.11") {
             $releaseName = "Estudio Socrático 2.0 — Branding Update"
             @'
@@ -113,8 +111,8 @@ Esta versión no cambia el backend, el updater, el flujo de instalación, GitHub
           "RELEASE_BODY_PATH=$releaseNotesPath" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
         if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v3
         with:
           name: ${{ env.RELEASE_NAME }}
           body_path: ${{ env.RELEASE_BODY_PATH }}
