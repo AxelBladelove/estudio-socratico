@@ -117,17 +117,49 @@ function getDefaultExtensionConfigText() {
   return `${JSON.stringify(DEFAULT_EXTENSION_CONFIG, null, 2)}\n`;
 }
 
+function normalizeExtensionConfig(config = {}) {
+  return {
+    ...DEFAULT_EXTENSION_CONFIG,
+    ...config,
+    provider: String(config.provider || DEFAULT_EXTENSION_CONFIG.provider),
+    apiKey: String(config.apiKey || ""),
+    model: String(config.model || DEFAULT_EXTENSION_CONFIG.model),
+    features: {
+      ...DEFAULT_EXTENSION_CONFIG.features,
+      ...(config.features || {}),
+    },
+  };
+}
+
+function writeConfigIfChanged(configPath, config) {
+  const nextText = `${JSON.stringify(config, null, 2)}\n`;
+  const currentText = fs.existsSync(configPath) ? fs.readFileSync(configPath, "utf8") : "";
+  if (currentText !== nextText) {
+    fs.writeFileSync(configPath, nextText, "utf8");
+  }
+}
+
+function migrateExtensionConfigFile(configPath) {
+  let current = {};
+  if (fs.existsSync(configPath)) {
+    try {
+      current = JSON.parse(fs.readFileSync(configPath, "utf8"));
+    } catch {
+      current = {};
+    }
+  }
+  const normalized = normalizeExtensionConfig(current);
+  writeConfigIfChanged(configPath, normalized);
+  return normalized;
+}
+
 function ensureExtensionConfigFiles(root) {
   const configDir = getConfigDirectory(root);
   const localConfigPath = getLocalConfigPath(root);
   const exampleConfigPath = getExampleConfigPath(root);
   fs.mkdirSync(configDir, { recursive: true });
-  if (!fs.existsSync(exampleConfigPath)) {
-    fs.writeFileSync(exampleConfigPath, getDefaultExtensionConfigText(), "utf8");
-  }
-  if (!fs.existsSync(localConfigPath)) {
-    fs.writeFileSync(localConfigPath, getDefaultExtensionConfigText(), "utf8");
-  }
+  writeConfigIfChanged(exampleConfigPath, DEFAULT_EXTENSION_CONFIG);
+  migrateExtensionConfigFile(localConfigPath);
   return { localConfigPath, exampleConfigPath };
 }
 
@@ -136,12 +168,7 @@ function readExtensionConfig(root) {
   try {
     const config = JSON.parse(fs.readFileSync(localConfigPath, "utf8"));
     return {
-      ...DEFAULT_EXTENSION_CONFIG,
-      ...config,
-      features: {
-        ...DEFAULT_EXTENSION_CONFIG.features,
-        ...(config.features || {}),
-      },
+      ...normalizeExtensionConfig(config),
       paths: {
         localConfigPath,
         exampleConfigPath,
@@ -179,7 +206,7 @@ function runManager(root, args, options = {}) {
       commandArgs.push("-OutFile", outFile);
     }
 
-    cp.execFile("powershell.exe", commandArgs, { cwd: root, maxBuffer: 1024 * 1024 * 30 }, (error, stdout, stderr) => {
+    cp.execFile("powershell.exe", commandArgs, { cwd: root, env: options.env || process.env, maxBuffer: 1024 * 1024 * 30 }, (error, stdout, stderr) => {
       if (outFile && fs.existsSync(outFile)) {
         try {
           const text = fs.readFileSync(outFile, "utf8");
@@ -205,8 +232,26 @@ function runManager(root, args, options = {}) {
   });
 }
 
-function runManagerJson(root, args) {
-  return runManager(root, args, { jsonFile: true }).then(parseJson);
+function getManagerEnvironment(root) {
+  const extensionConfig = readExtensionConfig(root);
+  const env = { ...process.env };
+  if (String(extensionConfig.provider || "gemini").toLowerCase() === "gemini") {
+    if (extensionConfig.apiKey) {
+      env.GEMINI_API_KEY = extensionConfig.apiKey;
+    }
+    if (extensionConfig.model) {
+      env.GEMINI_MODEL = extensionConfig.model;
+    }
+  }
+  env.ESTUDIO_EXTENSION_CONFIG_PATH = extensionConfig.paths.localConfigPath;
+  env.ESTUDIO_TRANSLATE_INTRODUCTIONS = extensionConfig.features.translateIntroductions ? "1" : "0";
+  env.ESTUDIO_IMPORT_EXERCISM = extensionConfig.features.importExercism ? "1" : "0";
+  env.ESTUDIO_IMPORT_ALEJANDRO_GISTS = extensionConfig.features.importAlejandroGists ? "1" : "0";
+  return env;
+}
+
+function runManagerJson(root, args, options = {}) {
+  return runManager(root, args, { jsonFile: true, env: options.env || getManagerEnvironment(root) }).then(parseJson);
 }
 
 function parseJson(text) {
@@ -363,6 +408,14 @@ async function handleWebviewMessage(root, message, sourceWebview) {
 }
 
 async function importExercise(root, provider, slug) {
+  const extensionConfig = readExtensionConfig(root);
+  if (provider === "exercism" && extensionConfig.features.importExercism === false) {
+    throw new Error("La importacion de Exercism esta desactivada en usuario/config/estudio-socratico.extension.local.json.");
+  }
+  if (provider === "alejandro" && extensionConfig.features.importAlejandroGists === false) {
+    throw new Error("La importacion de Gists esta desactivada en usuario/config/estudio-socratico.extension.local.json.");
+  }
+
   await vscode.window.withProgress(
     { location: vscode.ProgressLocation.Notification, title: "Importando ejercicio", cancellable: false },
     async () => {

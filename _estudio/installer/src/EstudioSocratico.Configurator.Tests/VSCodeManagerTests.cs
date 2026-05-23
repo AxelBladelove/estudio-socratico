@@ -205,7 +205,7 @@ public sealed class VSCodeManagerTests
         var root = NewTemp();
         var workspace = CreateWorkspaceWithExtension(root, "2.0.0", useLegacyBranding: true);
         var packagedRoot = Path.Combine(root, "packaged-root");
-        var packagedWorkspace = CreateWorkspaceWithExtension(packagedRoot, "2.0.15", useLegacyBranding: false);
+        var packagedWorkspace = CreateWorkspaceWithExtension(packagedRoot, "2.0.16", useLegacyBranding: false);
         var packagedSource = Path.Combine(packagedRoot, "_estudio", "soporte", "vscode", "estudio-exercism");
         Directory.CreateDirectory(Path.GetDirectoryName(packagedSource)!);
         CopyDirectory(Path.Combine(packagedWorkspace, "_estudio", "soporte", "vscode", "estudio-exercism"), packagedSource);
@@ -227,7 +227,7 @@ public sealed class VSCodeManagerTests
                 listCalls++;
                 return RecordingRunner.Result(spec, 0, listCalls == 1
                     ? "estudio-socratico.estudio-exercism@2.0.0"
-                    : "estudio-socratico.estudio-exercism@2.0.15");
+                    : "estudio-socratico.estudio-exercism@2.0.16");
             }
 
             return RecordingRunner.Result(spec, 0, "1.100.0");
@@ -242,10 +242,10 @@ public sealed class VSCodeManagerTests
         await manager.PrepareAsync(workspace, CancellationToken.None);
 
         var workspacePackage = JsonNode.Parse(await File.ReadAllTextAsync(Path.Combine(workspace, "_estudio", "soporte", "vscode", "estudio-exercism", "package.json")))!.AsObject();
-        Assert.Equal("2.0.15", workspacePackage["version"]?.GetValue<string>());
+        Assert.Equal("2.0.16", workspacePackage["version"]?.GetValue<string>());
         Assert.Equal("assets/logo-vscode-extension.png", workspacePackage["icon"]?.GetValue<string>());
         Assert.False(File.Exists(Path.Combine(workspace, "_estudio", "soporte", "vscode", "estudio-exercism", "assets", "estudio.svg")));
-        Assert.True(Directory.Exists(Path.Combine(root, ".vscode", "extensions", "estudio-socratico.estudio-exercism-2.0.15")));
+        Assert.True(Directory.Exists(Path.Combine(root, ".vscode", "extensions", "estudio-socratico.estudio-exercism-2.0.16")));
     }
 
     [Fact]
@@ -330,6 +330,40 @@ public sealed class VSCodeManagerTests
         Assert.Contains("registerCommand(\"estudioExercism.compileActiveCFile\"", extensionJs);
         Assert.Contains("vscode.tasks.executeTask", extensionJs);
         Assert.Contains("Compilar y Grabar (Sistema Socratico)", extensionJs);
+    }
+
+    [Fact]
+    public void VSCodeExtension_UsesCompactActivityBarInsteadOfEditorTitleText()
+    {
+        var repoRoot = AppPaths.TryResolveRepoRoot(AppContext.BaseDirectory);
+        Assert.NotNull(repoRoot);
+
+        var extensionRoot = Path.Combine(repoRoot!, "_estudio", "soporte", "vscode", "estudio-exercism");
+        var packageJson = JsonNode.Parse(File.ReadAllText(Path.Combine(extensionRoot, "package.json")))!.AsObject();
+
+        Assert.Equal(
+            "assets/logo-vscode-activity.svg",
+            packageJson["contributes"]?["viewsContainers"]?["activitybar"]?[0]?["icon"]?.GetValue<string>());
+        Assert.Null(packageJson["contributes"]?["menus"]?["editor/title"]);
+        Assert.DoesNotContain("Estudio Socrático: Abrir Panel de Ejercicios", packageJson.ToJsonString());
+    }
+
+    [Fact]
+    public void VSCodeExtension_PassesLocalByokConfigToManagerProcess()
+    {
+        var repoRoot = AppPaths.TryResolveRepoRoot(AppContext.BaseDirectory);
+        Assert.NotNull(repoRoot);
+
+        var extensionRoot = Path.Combine(repoRoot!, "_estudio", "soporte", "vscode", "estudio-exercism");
+        var extensionJs = File.ReadAllText(Path.Combine(extensionRoot, "extension.js"));
+
+        Assert.Contains("model: \"gemini-2.5-flash\"", extensionJs);
+        Assert.Contains("GEMINI_API_KEY", extensionJs);
+        Assert.Contains("GEMINI_MODEL", extensionJs);
+        Assert.Contains("ESTUDIO_EXTENSION_CONFIG_PATH", extensionJs);
+        Assert.Contains("ESTUDIO_TRANSLATE_INTRODUCTIONS", extensionJs);
+        Assert.Contains("getManagerEnvironment", extensionJs);
+        Assert.Contains("env: options.env || getManagerEnvironment(root)", extensionJs);
     }
 
     private static VSCodeManager CreateManager(string root, ICommandRunner runner, Func<VSCodePaths> locator)

@@ -1465,9 +1465,57 @@ public sealed class WorkspaceManager(AppPaths paths, ManifestManager manifestMan
         {
             await File.WriteAllTextAsync(localConfigPath, DefaultExtensionConfigJson, cancellationToken).ConfigureAwait(false);
         }
+        else
+        {
+            await MigrateExtensionApiKeyConfigAsync(localConfigPath, cancellationToken).ConfigureAwait(false);
+        }
 
         await EnsureGitIgnoreEntryAsync(workspacePath, ExtensionConfigRelativePath.Replace('\\', '/'), cancellationToken).ConfigureAwait(false);
         return DescribeExtensionApiKeyConfig(workspacePath);
+    }
+
+    private static async Task MigrateExtensionApiKeyConfigAsync(string localConfigPath, CancellationToken cancellationToken)
+    {
+        JsonObject existing;
+        try
+        {
+            existing = JsonNode.Parse(await File.ReadAllTextAsync(localConfigPath, cancellationToken).ConfigureAwait(false))?.AsObject()
+                ?? [];
+        }
+        catch
+        {
+            existing = [];
+        }
+
+        var defaults = JsonNode.Parse(DefaultExtensionConfigJson)!.AsObject();
+        var merged = new JsonObject();
+        foreach (var item in defaults)
+        {
+            merged[item.Key] = item.Value?.DeepClone();
+        }
+
+        foreach (var item in existing)
+        {
+            if (item.Key.Equals("features", StringComparison.OrdinalIgnoreCase) && item.Value is JsonObject features)
+            {
+                var mergedFeatures = (merged["features"] as JsonObject) ?? [];
+                foreach (var feature in features)
+                {
+                    mergedFeatures[feature.Key] = feature.Value?.DeepClone();
+                }
+                merged["features"] = mergedFeatures;
+                continue;
+            }
+
+            merged[item.Key] = item.Value?.DeepClone();
+        }
+
+        var nextText = merged.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine;
+        var currentText = await File.ReadAllTextAsync(localConfigPath, cancellationToken).ConfigureAwait(false);
+        if (!string.Equals(currentText, nextText, StringComparison.Ordinal))
+        {
+            await File.WriteAllTextAsync(localConfigPath, nextText, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     public void RequireWorkspaceShape(string workspacePath)

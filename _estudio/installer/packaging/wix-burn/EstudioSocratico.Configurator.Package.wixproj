@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Package</OutputType>
     <Platform>x64</Platform>
-    <ProductVersion Condition="'$(ProductVersion)' == ''">2.0.15</ProductVersion>
+    <ProductVersion Condition="'$(ProductVersion)' == ''">2.0.16</ProductVersion>
     <AppProject>$(MSBuildThisFileDirectory)..\..\src\EstudioSocratico.Configurator.App\EstudioSocratico.Configurator.App.csproj</AppProject>
     <AppPublishDir Condition="'$(AppPublishDir)' == ''">$(MSBuildThisFileDirectory)..\..\artifacts\publish\app</AppPublishDir>
     <DefineConstants>ProductVersion=$(ProductVersion);AppPublishDir=$(AppPublishDir)</DefineConstants>

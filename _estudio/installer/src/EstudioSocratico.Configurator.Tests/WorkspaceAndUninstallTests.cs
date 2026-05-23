@@ -135,6 +135,8 @@ public sealed class WorkspaceAndUninstallTests
 
         var content = await File.ReadAllTextAsync(localConfigPath);
         Assert.Contains("persist-me", content);
+        Assert.Contains("gemini-2.5-flash", content);
+        Assert.Contains("translateIntroductions", content);
     }
 
     [Fact]

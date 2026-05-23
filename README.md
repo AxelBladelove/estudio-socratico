@@ -8,7 +8,7 @@ intentos y pedir ayuda socrática sin que la IA resuelva los ejercicios por ti.
 
 ## Estudio Socrático 2.0
 
-La versión estable actual es `v2.0.15`:
+La versión estable actual es `v2.0.16`:
 
 - Instalador visual para Windows.
 - Configuración automática de VS Code, GCC/MSYS2, Git, GitHub CLI, Node.js,
@@ -22,7 +22,7 @@ La versión estable actual es `v2.0.15`:
 ## Instalación
 
 1. Abre la página de GitHub Releases del repositorio.
-2. Descarga `Estudio-Socratico-Setup-v2.0.15-x64.exe`.
+2. Descarga `Estudio-Socratico-Setup-v2.0.16-x64.exe`.
 3. Ejecuta el instalador.
 4. Elige **Configurar por primera vez**.
 5. Sigue el flujo guiado para GitHub, Exercism, workspace y VS Code.
@@ -146,7 +146,7 @@ code --list-extensions --show-versions | findstr estudio-socratico
 El resultado esperado para esta versión es:
 
 ```text
-estudio-socratico.estudio-exercism@2.0.15
+estudio-socratico.estudio-exercism@2.0.16
 ```
 
 ## Desarrollo Del Instalador

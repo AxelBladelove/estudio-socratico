@@ -28,7 +28,7 @@ Para automatizar la propagación de versiones antes de publicar, se utiliza el s
 ```powershell
 .\_estudio\installer\scripts\set-version.ps1 `
   -PublicDisplayVersion "2.0" `
-  -InternalPackageVersion "2.0.15"
+  -InternalPackageVersion "2.0.16"
 ```
 
 El script actualiza de manera coordinada:
@@ -45,7 +45,7 @@ El script actualiza de manera coordinada:
 El workflow de CI/CD configurado en `.github/workflows/release-installer.yml` automatiza la compilación del instalador y su publicación en GitHub Releases.
 
 ### Desencadenantes (Triggers)
-- **Tag push:** Cuando se publica una etiqueta que coincide con el patrón `v*` (ej. `v2.0.15`).
+- **Tag push:** Cuando se publica una etiqueta que coincide con el patrón `v*` (ej. `v2.0.16`).
 - **Manual:** Mediante el botón *Run workflow* en la pestaña Actions de GitHub (`workflow_dispatch`).
 
 ### Flujo de Ejecución (Jobs)
@@ -77,5 +77,12 @@ publicar debe validarse:
 - boton **Actualizar ahora** usando `CheckForUpdates` y `TriggerUpdate`;
 - F9 registrado por la extensión de VS Code;
 - `Ctrl+Shift+B` operativo como build task por defecto;
-- extensión instalada como `estudio-socratico.estudio-exercism@2.0.15`;
+- extensión instalada como `estudio-socratico.estudio-exercism@2.0.16`;
+
+## 6. Hotfix VS Code BYOK 2.0.16
+
+`v2.0.16` corrige la ruta BYOK de la extensión de VS Code. El archivo
+`usuario/config/estudio-socratico.extension.local.json` queda como fuente
+principal para `provider`, `apiKey`, `model` y `features`; las variables de
+entorno de Gemini quedan solo como fallback opcional.
 - MSI/Burn generados por WiX y publicados solo por GitHub Actions.

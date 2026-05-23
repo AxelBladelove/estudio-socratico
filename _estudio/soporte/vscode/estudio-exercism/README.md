@@ -36,13 +36,18 @@ La API Key no se pide dentro del instalador. Para configurarla, abre el panel de
 usuario/config/estudio-socratico.extension.local.json
 ```
 
-Ese archivo es local, esta ignorado por Git y no debe compartirse. Puedes cambiar `provider`, `apiKey` y `model` manualmente:
+Ese archivo es local, esta ignorado por Git y no debe compartirse. La extension lo usa como fuente principal para BYOK; `GEMINI_API_KEY` queda solo como fallback opcional. Puedes cambiar `provider`, `apiKey`, `model` y `features` manualmente:
 
 ```json
 {
   "provider": "gemini",
   "apiKey": "TU_API_KEY_AQUI",
-  "model": "gemini-2.5-flash"
+  "model": "gemini-2.5-flash",
+  "features": {
+    "translateIntroductions": true,
+    "importExercism": true,
+    "importAlejandroGists": true
+  }
 }
 ```
 

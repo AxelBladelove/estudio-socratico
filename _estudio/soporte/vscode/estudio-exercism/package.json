@@ -2,7 +2,7 @@
   "name": "estudio-exercism",
   "displayName": "Estudio Socratico - Exercism",
   "description": "Panel de ejercicios y flujo de compilacion para C dentro de Estudio Socratico.",
-  "version": "2.0.15",
+  "version": "2.0.16",
   "publisher": "estudio-socratico",
   "license": "MIT",
   "icon": "assets/logo-vscode-extension.png",
@@ -82,20 +82,6 @@
         "category": "Estudio Socratico"
       }
     ],
-    "menus": {
-      "editor/title": [
-        {
-          "command": "estudioExercism.openPanel",
-          "when": "resourceLangId == c",
-          "group": "navigation@98"
-        },
-        {
-          "command": "estudioExercism.testCurrent",
-          "when": "resourceLangId == c",
-          "group": "navigation@99"
-        }
-      ]
-    },
     "keybindings": [
       {
         "command": "estudioExercism.compileActiveCFile",

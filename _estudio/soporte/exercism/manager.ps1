@@ -393,12 +393,36 @@ function Get-GeminiModel {
     return "gemini-2.5-flash-lite"
 }
 
+function Get-ProjectFeatureFlag {
+    param(
+        [string]$Name,
+        [bool]$DefaultValue = $true
+    )
+
+    $envName = "ESTUDIO_" + ($Name -replace '([a-z])([A-Z])', '$1_$2').ToUpperInvariant()
+    $envValue = [Environment]::GetEnvironmentVariable($envName, "Process")
+    if (-not [string]::IsNullOrWhiteSpace($envValue)) {
+        return ($envValue -match '^(1|true|yes|on)$')
+    }
+
+    $config = Get-ProjectGeminiConfig
+    if ($config -and $config.features -and $null -ne $config.features.$Name) {
+        return [bool]$config.features.$Name
+    }
+
+    return $DefaultValue
+}
+
 function Get-ProjectGeminiConfig {
     if ([string]::IsNullOrWhiteSpace($script:ResolvedRepoRoot)) {
         return $null
     }
 
-    $paths = @(
+    $paths = @()
+    if (-not [string]::IsNullOrWhiteSpace($env:ESTUDIO_EXTENSION_CONFIG_PATH)) {
+        $paths += $env:ESTUDIO_EXTENSION_CONFIG_PATH
+    }
+    $paths += @(
         (Join-Path $script:ResolvedRepoRoot "usuario\config\estudio-socratico.extension.local.json"),
         (Join-Path $script:ResolvedRepoRoot "_estudio\soporte\exercism\config.local.json"),
         (Join-Path $script:ResolvedRepoRoot "_estudio\soporte\exercism\config.json"),
@@ -429,6 +453,8 @@ function Get-ProjectGeminiConfig {
                 return [pscustomobject]@{
                     apiKey = $apiKey
                     model = $model
+                    provider = if (-not [string]::IsNullOrWhiteSpace($gemini.provider)) { $gemini.provider } else { "gemini" }
+                    features = $config.features
                     source = $path
                 }
             }
@@ -729,6 +755,9 @@ function Invoke-GeminiTranslation {
     )
 
     $Markdown = Select-InstructionMarkdown -Markdown $Markdown
+    if (-not (Get-ProjectFeatureFlag -Name "translateIntroductions" -DefaultValue $true)) {
+        return $Markdown
+    }
 
     $apiKey = Get-GeminiApiKey
     if ([string]::IsNullOrWhiteSpace($apiKey)) {
@@ -737,7 +766,7 @@ function Invoke-GeminiTranslation {
 
 > Traduccion automatica pendiente.
 
-Configura la API Key local de la extension o la variable de entorno `GEMINI_API_KEY` y vuelve a importar este ejercicio para generar las instrucciones en espanol.
+Configura la API Key local de la extension en `usuario/config/estudio-socratico.extension.local.json` y vuelve a importar este ejercicio para generar las instrucciones en espanol. La variable de entorno `GEMINI_API_KEY` queda como fallback opcional.
 
 Mientras tanto, usa los tests del ejercicio como guia de comportamiento esperado.
 "@
@@ -1915,10 +1944,16 @@ try {
         "import" {
             if ([string]::IsNullOrWhiteSpace($Slug)) { throw "Debes indicar -Slug." }
             if ($Provider -eq "exercism") {
+                if (-not (Get-ProjectFeatureFlag -Name "importExercism" -DefaultValue $true)) {
+                    throw "La importacion de Exercism esta desactivada en usuario/config/estudio-socratico.extension.local.json."
+                }
                 $result = Import-ExercismExercise -Root $RepoRoot -ExerciseSlug $Slug -Overwrite:$Force
             } elseif ($Provider -in @("w3", "w3schools", "w3resource")) {
                 throw "El proveedor W3 fue eliminado de Estudio Socrático 1.2. Será reimplementado desde cero en una versión futura."
             } else {
+                if ($Provider -eq "alejandro" -and -not (Get-ProjectFeatureFlag -Name "importAlejandroGists" -DefaultValue $true)) {
+                    throw "La importacion de Gists esta desactivada en usuario/config/estudio-socratico.extension.local.json."
+                }
                 $result = Import-TemplateExercise -Root $RepoRoot -ProviderName $Provider -ExerciseSlug $Slug -Overwrite:$Force
             }
             Write-Json $result

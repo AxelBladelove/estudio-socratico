@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Text.Json.Nodes;
 using EstudioSocratico.Configurator.Core;
 using EstudioSocratico.Configurator.Engine;
 using Xunit;
@@ -210,6 +212,52 @@ public sealed class WorkflowBackendTests
 
         var downloadSpec = Assert.Single(runner.Specs, spec => spec.Arguments.Contains("download"));
         Assert.Contains("exercism-token-check", downloadSpec.WorkingDirectory);
+    }
+
+    [Fact]
+    public async Task ExercismManagerScript_UsesLocalExtensionConfigApiKeyWithoutGeminiEnv()
+    {
+        var repoRoot = AppPaths.TryResolveRepoRoot(AppContext.BaseDirectory);
+        Assert.NotNull(repoRoot);
+        var root = Path.Combine(Path.GetTempPath(), "estudio-byok-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(root, "usuario", "config"));
+        await File.WriteAllTextAsync(Path.Combine(root, "AGENTS.md"), "# test");
+        await File.WriteAllTextAsync(
+            Path.Combine(root, "usuario", "config", "estudio-socratico.extension.local.json"),
+            """
+            {
+              "provider": "gemini",
+              "apiKey": "local-key-from-json",
+              "model": "gemini-2.5-flash",
+              "features": {
+                "translateIntroductions": true,
+                "importExercism": true,
+                "importAlejandroGists": true
+              }
+            }
+            """);
+        var manager = Path.Combine(repoRoot!, "_estudio", "soporte", "exercism", "manager.ps1");
+
+        var json = await RunManagerJsonAsync(manager, root, "status", clearGeminiEnv: true);
+
+        Assert.True(json["geminiConfigured"]?.GetValue<bool>());
+    }
+
+    [Fact]
+    public void ExercismManagerScript_PrioritizesLocalByokConfigBeforeEnvironmentFallback()
+    {
+        var repoRoot = AppPaths.TryResolveRepoRoot(AppContext.BaseDirectory);
+        Assert.NotNull(repoRoot);
+
+        var manager = File.ReadAllText(Path.Combine(repoRoot!, "_estudio", "soporte", "exercism", "manager.ps1"));
+        var getApiKeyBody = manager[
+            manager.IndexOf("function Get-GeminiApiKey", StringComparison.Ordinal)..
+            manager.IndexOf("function Get-GeminiModel", StringComparison.Ordinal)];
+
+        Assert.Contains("usuario\\config\\estudio-socratico.extension.local.json", manager);
+        Assert.Contains("ESTUDIO_EXTENSION_CONFIG_PATH", manager);
+        Assert.True(getApiKeyBody.IndexOf("Get-ProjectGeminiConfig", StringComparison.Ordinal)
+            < getApiKeyBody.IndexOf("GEMINI_API_KEY", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -799,6 +847,44 @@ public sealed class WorkflowBackendTests
         CopyFile(repoRoot, root, Path.Combine("_estudio", "include", "estudio_stdio_cp437.h"));
 
         return root;
+    }
+
+    private static async Task<JsonObject> RunManagerJsonAsync(string managerPath, string repoRoot, string action, bool clearGeminiEnv)
+    {
+        var outFile = Path.Combine(Path.GetTempPath(), "estudio-manager-" + Guid.NewGuid().ToString("N") + ".json");
+        using var process = new Process();
+        process.StartInfo = new ProcessStartInfo
+        {
+            FileName = "powershell.exe",
+            WorkingDirectory = repoRoot,
+            RedirectStandardError = true,
+            RedirectStandardOutput = true,
+            UseShellExecute = false
+        };
+        process.StartInfo.ArgumentList.Add("-NoProfile");
+        process.StartInfo.ArgumentList.Add("-ExecutionPolicy");
+        process.StartInfo.ArgumentList.Add("Bypass");
+        process.StartInfo.ArgumentList.Add("-File");
+        process.StartInfo.ArgumentList.Add(managerPath);
+        process.StartInfo.ArgumentList.Add("-RepoRoot");
+        process.StartInfo.ArgumentList.Add(repoRoot);
+        process.StartInfo.ArgumentList.Add("-Action");
+        process.StartInfo.ArgumentList.Add(action);
+        process.StartInfo.ArgumentList.Add("-OutFile");
+        process.StartInfo.ArgumentList.Add(outFile);
+        if (clearGeminiEnv)
+        {
+            process.StartInfo.Environment.Remove("GEMINI_API_KEY");
+            process.StartInfo.Environment.Remove("GEMINI_MODEL");
+        }
+
+        process.Start();
+        var stdout = await process.StandardOutput.ReadToEndAsync();
+        var stderr = await process.StandardError.ReadToEndAsync();
+        await process.WaitForExitAsync();
+        Assert.Equal(0, process.ExitCode);
+        Assert.True(File.Exists(outFile), $"manager.ps1 no escribio JSON. stdout={stdout} stderr={stderr}");
+        return JsonNode.Parse(await File.ReadAllTextAsync(outFile))!.AsObject();
     }
 
     private static void CopyFile(string repoRoot, string destinationRoot, string relativePath)
