@@ -1,559 +1,170 @@
-<div align="center">
+# Estudio Socrático
 
-# 🏛️ Estudio Socrático
+Estudio Socrático es un entorno guiado para aprender C con VS Code, GitHub,
+Exercism y herramientas de compilación configuradas automáticamente.
 
-**Un entorno de estudio para aprender Fundamentos de Programación en C,<br>con una IA que te guía sin resolver los ejercicios por ti.**
-
-![Versión](https://img.shields.io/badge/versión-2.0-blue?style=flat-square)
-![Plataforma](https://img.shields.io/badge/plataforma-Windows-0078D6?style=flat-square&logo=windows)
-![Lenguaje](https://img.shields.io/badge/lenguaje-C-A8B9CC?style=flat-square&logo=c)
-![Editor](https://img.shields.io/badge/editor-VS_Code-007ACC?style=flat-square&logo=visualstudiocode)
-
-</div>
-
----
-
-## ¿Qué es esto?
-
-Estudio Socrático convierte **VS Code** en un entorno parecido a Code::Blocks,
-pero con una diferencia importante: tiene una **IA integrada que actúa como
-tutor**.
-
-La IA **no te da las respuestas**. Te hace preguntas, te explica conceptos y te
-ayuda a descubrir qué está mal en tu código. El razonamiento siempre es tuyo.
-
-> [!NOTE]
-> Está pensado para el curso de **Fundamentos de Programación** de la PUCMM con
-> el profesor Alejandro Liz, pero funciona para cualquier persona que esté
-> aprendiendo C.
-
----
+La meta es estudiar con rigor: compilar, observar errores reales, guardar
+intentos y pedir ayuda socrática sin que la IA resuelva los ejercicios por ti.
 
 ## Estudio Socrático 2.0
 
-La versión 2.0 introduce un configurador visual para Windows y soporte de actualizaciones integradas:
+La versión estable actual es `v2.0.15`:
 
-- **Un instalador `.exe` descargable desde GitHub Releases** guia todo el flujo.
-- Detecta e instala Git, GitHub CLI, Node.js, Python, VS Code, Exercism CLI y
-  MSYS2/GCC/Make.
-- Autentica GitHub, crea o repara el fork del estudiante y prepara remotos
-  `origin`/`upstream`.
-- Configura Exercism desde una UI segura para el token.
-- Configura VS Code, F9, runtime de consola, `conio.h` y la extension local.
-- **Alejandro** queda como catalogo curado de 132 ejercicios que se importan
-  desde Gists al momento de usarlos.
-- **Exercism C** sigue funcionando como fuente oficial con sus tests y submit.
-- **W3Schools / w3resource** sigue retirado. Se planea
-  reintroducirlo desde cero en una version futura con curaduria semantica.
-- La extension no empaqueta ejercicios completos ni enunciados locales dentro
-  del VSIX.
-
----
-
-## ¿Qué problema resuelve?
-
-Cuando aprendes C, los errores no siempre son fáciles de entender:
-
-| El problema... | Lo que hace Estudio Socrático |
-|---|---|
-| `gcc` muestra un error y no sabes qué significa | La IA te explica el concepto detrás del error |
-| Tu programa compila pero da resultados raros | Puedes pedir una "prueba de escritorio" paso a paso |
-| No entiendes por qué un ciclo repite de más | La IA te muestra cómo cambian las variables |
-| Pierdes el hilo de tus intentos | Cada compilación queda guardada automáticamente |
-| Le preguntas a una IA y te da la solución directa | Aquí la IA te guía, no te resuelve |
-
----
-
-## Lo que necesitas
-
-- 💻 Una computadora con **Windows**
-- 🐙 Una cuenta en **[GitHub](https://github.com/signup)** (es gratis)
-- 🌐 Conexión a internet (solo durante la instalación)
-
-> [!TIP]
-> No necesitas tener nada más instalado. El instalador se encarga de todo:
-> Git, GCC, VS Code y las herramientas del proyecto.
-
----
+- Instalador visual para Windows.
+- Configuración automática de VS Code, GCC/MSYS2, Git, GitHub CLI, Node.js,
+  Python y Exercism CLI.
+- Workspace listo para estudiar C con logs por intento.
+- Compilación con `F9` y alternativa con `Ctrl+Shift+B`.
+- Panel de ejercicios en VS Code con Exercism C y catálogos curados.
+- Actualizaciones integradas desde GitHub Releases con verificación SHA256.
+- API Key local BYOK para proveedores de IA compatibles.
 
 ## Instalación
 
-### Primera vez
+1. Abre la página de GitHub Releases del repositorio.
+2. Descarga `Estudio-Socratico-Setup-v2.0.15-x64.exe`.
+3. Ejecuta el instalador.
+4. Elige **Configurar por primera vez**.
+5. Sigue el flujo guiado para GitHub, Exercism, workspace y VS Code.
 
-1. Ve a **GitHub Releases** en el repositorio oficial.
-2. Descarga el instalador ejecutable de la versión 2.0 (ej. `Estudio-Socratico-Setup-v2.0.14-x64.exe`).
-3. Haz doble click para ejecutarlo.
-4. Sigue el flujo guiado: GitHub, Exercism, workspace y VS Code.
+El instalador conserva tu trabajo. No borra ejercicios, logs, API keys locales
+ni repos remotos durante instalación, actualización o reparación normal.
 
-El instalador te pide:
+## Actualización
 
-- **Tu alias local** — un nombre corto como `axel` o `juan`, que identifica tus
-  archivos dentro del proyecto.
-- **Iniciar sesion en GitHub** — para vincular commits y preparar tu fork.
-- **Token de Exercism** — pegado en una caja segura; no se guarda en el repo.
+Al abrir Estudio Socrático Instalador, la app consulta GitHub Releases. Si hay
+una versión nueva, verás un aviso en la pantalla principal con el botón
+**Actualizar ahora**.
 
-Al terminar quedan listos:
-- ✅ El atajo <kbd>F9</kbd> para compilar
-- ✅ Tu carpeta personal (`usuario/`)
-- ✅ El historial de intentos vacío y listo para empezar
-- ✅ El panel de ejercicios dentro de VS Code
-- ✅ Tu fork y remotos Git configurados
+También puedes abrir el instalador manualmente y elegir **Actualizar
+instalación**. Ese flujo reinstala la extensión gestionada de VS Code si está
+vieja y revalida el entorno sin tocar tu trabajo.
 
-### 🔄 Actualizaciones integradas
+## Uso Diario
 
-El configurador de Estudio Socrático cuenta con un sistema de actualizaciones automáticas:
-- **Sin servidor externo:** Las actualizaciones se detectan y descargan directamente desde los GitHub Releases oficiales del repositorio `AxelBladelove/estudio-socratico`.
-- **Descarga segura:** Al presionar "Actualizar ahora", el configurador descargará de forma segura el instalador `.exe` junto con su firma `.sha256` a tu carpeta local, verificará su integridad y ejecutará el instalador.
-- **Conservación de datos:** El proceso de actualización se instala encima de la versión anterior y conserva intactos tus ejercicios, logs de intentos, alias de identidad, configuración local y claves API.
+1. Abre el workspace de Estudio Socrático en VS Code.
+2. Crea o abre un archivo `.c`, normalmente dentro de `Ejercicios/`.
+3. Presiona `F9`.
 
-<details>
-<summary><strong>🛠️ Ya lo tengo instalado, solo quiero reparar o reconfigurar</strong></summary>
+`F9` compila el archivo C activo con GCC. Si compila bien, ejecuta el programa
+en una consola externa estilo Code::Blocks. Si hay errores, los muestra en la
+terminal de VS Code.
 
-Abre el instalador de nuevo o usa la opción **Reparar**. Valida herramientas, PATH,
-GitHub, Exercism, VS Code, runtime local y workspace sin borrar tus ejercicios.
+`Ctrl+Shift+B` sigue funcionando como alternativa porque ejecuta la tarea de
+build por defecto del workspace.
 
-</details>
+## Si F9 No Responde
 
-<details>
-<summary><strong>🔍 Solo quiero verificar sin cambiar nada</strong></summary>
+1. Confirma que el archivo activo termina en `.c`.
+2. Cierra y vuelve a abrir VS Code.
+3. Ejecuta **Actualizar instalación** o **Reparar instalación** desde el
+   instalador.
+4. Prueba `Ctrl+Shift+B` como alternativa.
+5. Exporta diagnóstico desde el botón **Diagnóstico técnico** del instalador si
+   el problema continúa.
 
-```bash
-npm run check
+La extensión de VS Code registra `F9` para el comando `Compilar archivo C
+activo`. Ese comando usa la misma tarea que `Ctrl+Shift+B` y, si no encuentra la
+tarea, llama directamente a `_estudio/soporte/scripts/build.cmd`.
+
+## Exercism
+
+El instalador puede configurar el token de Exercism durante la primera
+instalación. Si necesitas hacerlo manualmente:
+
+1. Entra a <https://exercism.org/settings/api_cli>.
+2. Copia tu token.
+3. Abre el instalador y entra a **Cuentas y ejercicios**.
+4. Pega el token en la sección de Exercism.
+
+Para ejercicios de Exercism, `F9` ejecuta los tests oficiales cuando estás
+trabajando dentro de un ejercicio importado.
+
+## API Key BYOK
+
+La configuración local de la extensión vive en:
+
+```text
+usuario/config/estudio-socratico.extension.local.json
 ```
 
-Esto ejecuta las pruebas automatizadas del configurador desde el repo fuente.
+Ese archivo no debe subirse al repo. Puedes abrirlo desde el instalador en
+**Cuentas y ejercicios** o desde el panel de la extensión. Un ejemplo mínimo:
 
-</details>
-
-<details>
-<summary><strong>🛠️ Quiero compilar el instalador desde el repo</strong></summary>
-
-```bash
-dotnet restore _estudio/installer/EstudioSocratico.Installer.sln
-npm run installer:test
-npm run installer:build
+```json
+{
+  "provider": "gemini",
+  "apiKey": "TU_API_KEY",
+  "model": "gemini-2.5-flash"
+}
 ```
 
-El `.exe` se genera por GitHub Actions como artefacto de release. No debe
-subirse al repo.
+## Ayuda Socrática
 
-</details>
+Puedes pedir ayuda sin entregar la solución completa:
 
----
+- `@revisar`: pide una pista sobre el error actual.
+- `@ver`: pide una prueba de escritorio del código.
+- `@sintetizar`: resume patrones de error de la sesión.
+- `@test` o `@validar`: genera pruebas locales para ejercicios compatibles.
 
-## Uso diario
+## Dónde Queda Tu Trabajo
 
-### 1️⃣ Abre tu archivo `.c`
-
-Todos tus ejercicios van en la carpeta `Ejercicios/`. El proyecto trae un
-ejemplo:
-
-```
-Ejercicios/Blackjack.c
-```
-
-Puedes crear más archivos ahí cuando quieras.
-
-### 2️⃣ Presiona <kbd>F9</kbd> para compilar y ejecutar
-
-<kbd>F9</kbd> hace lo mismo que el botón de ejecutar en Code::Blocks:
-
-1. Compila tu código con GCC.
-2. Si hay errores, los muestra en la terminal.
-3. Si compila bien, abre una **ventana de consola** con tu programa corriendo.
-4. Al terminar, la consola muestra `Process returned...` como en Code::Blocks.
-
-> [!IMPORTANT]
-> Mientras la consola de tu programa esté abierta, no puedes compilar de nuevo.
-> Cierra esa ventana (o presiona cualquier tecla en ella) antes de volver a
-> presionar <kbd>F9</kbd>.
-
-### 3️⃣ Cada intento queda guardado
-
-No tienes que hacer nada. Cada vez que compilas, el sistema guarda
-automáticamente:
-
-- 🕐 La hora del intento
-- 📄 El código que tenías en ese momento
-- ❌ Los errores que mostró `gcc` (si hubo)
-- ✅ El resultado de la ejecución
-- 🔢 El código de salida del programa
-
-Los registros se agrupan en bloques de ~45 minutos:
-
-```
-usuario/logs/nombre_del_ejercicio/
-├── bloque1.log
-├── bloque2.log
-└── bloque3.log
-```
-
-> [!NOTE]
-> Además, cada compilación crea un **commit automático** en Git con tu nombre.
-> No tienes que hacer nada — esto pasa en segundo plano.
-
----
-
-## Pide ayuda a la IA
-
-La IA está integrada en el chat del editor. Puedes escribirle en español.
-Hay cuatro comandos:
-
-### `@revisar` — *Estoy atascado, dame una pista*
-
-```
-@revisar
-```
-
-La IA lee tu código, tus errores anteriores y el último intento. Te explica el
-concepto de C que está detrás del problema y te hace una pregunta para que lo
-pienses tú.
-
-> [!WARNING]
-> `@revisar` **no te da la solución**. Te ayuda a pensar el siguiente paso.
-> Si quieres salir del modo tutor, díselo explícitamente.
-
----
-
-### `@ver` — *No entiendo qué hace este código*
-
-Úsalo cuando tu programa compila pero no entiendes qué pasa dentro.
-
-```
-@ver linea 1
-@ver main
-@ver linea 45
-@ver el ciclo de esta linea
-@ver la funcion donde esta el cursor
-```
-
-La IA hace una **prueba de escritorio**: te muestra paso a paso cómo cambian
-las variables, qué decisiones toma el programa y qué se imprime en pantalla.
-
-<details>
-<summary><strong>¿Cómo sé el número de línea?</strong></summary>
-
-Mira la barra de estado de VS Code, abajo a la izquierda. Dice algo como
-`Ln 45`. También puedes ver los números al lado izquierdo del código.
-
-</details>
-
-| Si escribes... | La IA analiza... |
-|---|---|
-| `@ver linea 1` | Todo el archivo completo |
-| `@ver main` | Todo el bloque `main` |
-| `@ver linea 45` | La función o ciclo donde está esa línea |
-| `@ver el for de esta linea` | Ese ciclo completo |
-| `@ver la linea del puntero` | Desde esa línea hasta donde termina la acción |
-
-> [!TIP]
-> Si apuntas a un puntero, arreglo, `struct` o `malloc`, la IA puede incluir
-> líneas cercanas (como la comprobación o el `free`) para explicar qué pasa en
-> la memoria.
-
----
-
-### `@sintetizar` — *Terminé la sesión de hoy*
-
-```
-@sintetizar
-```
-
-Úsalo **al final de cada sesión de estudio**. La IA revisa todos los commits y
-logs de la sesión, detecta patrones de error y actualiza tu archivo personal:
-
-```
-usuario/errores.md
-```
-
-Ese archivo se convierte en tu memoria de estudio: errores frecuentes,
-conceptos que se repiten y pistas para estudiar antes de un examen.
-
-> [!NOTE]
-> `errores.md` nunca se borra automáticamente. Cada sesión agrega información
-> nueva o incrementa la frecuencia de patrones que ya existían.
-
----
-
-### `@test` / `@validar` — *Quiero comprobar mi solución*
-
-```
-@test
-@validar
-```
-
-Úsalo en ejercicios del **PDF del profesor** cuando quieras
-saber si tu respuesta es correcta. La IA:
-
-1. Lee el enunciado y tu archivo `.c`
-2. Crea pruebas automáticas en `.estudio-tests/`
-3. Las ejecuta sin tocar tu código
-4. Si todo pasa, el ejercicio queda marcado como completado
-
-> [!IMPORTANT]
-> Para ejercicios de **Exercism**, no necesitas `@test`. Exercism ya trae sus
-> propios tests oficiales y se ejecutan con <kbd>F9</kbd>.
-
----
-
-## Panel de ejercicios
-
-El proyecto incluye un **panel dentro de VS Code** para explorar e importar
-ejercicios de dos fuentes:
-
-| Fuente | Descripción |
-|---|---|
-| **Exercism C** | Plataforma gratuita con ejercicios de programación en C |
-| **PDF Alejandro Liz** | Ejercicios del profesor del curso |
-
-W3Schools / w3resource fue retirado en la version 1.2. Se planea
-reintroducirlo desde cero en una version futura con curaduria semantica.
-
-### Abrir el panel
-
-```
-Ctrl + Shift + P → "Estudio Socratico: Abrir Panel de Ejercicios"
-```
-
-También puedes abrirlo desde el botón del editor cuando tienes un archivo `.c`
-abierto.
-
-### Importar un ejercicio
-
-1. Filtra por la fuente que prefieras (ej. `Exercism C`)
-2. Elige un ejercicio, por ejemplo `Grains`
-3. Haz clic en la tarjeta
-
-El ejercicio se descarga y las instrucciones se traducen al español
-automáticamente:
-
-```
-Ejercicios/Grains/
-├── grains.c          ← Tu solución (aquí escribes)
-├── grains.h          ← Cabecera del ejercicio
-└── .estudio-exercism/ ← Tests y metadata (oculto)
-```
-
-> [!NOTE]
-> Los archivos técnicos (tests, makefiles, metadata) quedan ocultos en carpetas
-> que empiezan con `.estudio-`. Solo ves los archivos donde escribes tu
-> solución.
-
-### <kbd>F9</kbd> cambia de modo automáticamente
-
-| Archivo activo | Qué hace <kbd>F9</kbd> |
-|---|---|
-| `Ejercicios/Blackjack.c` u otro `.c` normal | Compila y ejecuta en consola |
-| `Ejercicios/Grains/grains.c` (Exercism) | Corre los tests oficiales |
-
-Desde el panel también puedes:
-
-- **Probar** — ejecuta los tests locales
-- **Enviar** — envía tu solución a Exercism (`exercism submit`)
-- **Actualizar** — refresca el catálogo y los estados
-
-<details>
-<summary><strong>⚙️ Configurar Exercism (solo una vez)</strong></summary>
-
-Exercism usa un token personal que se configura una sola vez en tu computadora:
-
-```bat
-exercism configure --token TU_TOKEN_AQUI
-```
-
-El instalador te avisa si falta. El token **no se guarda** en el repositorio.
-
-> [!TIP]
-> Puedes encontrar tu token en https://exercism.org/settings/api_cli
-
-</details>
-
----
-
-## Tu carpeta personal
-
-Cuando te instalas por primera vez, el proyecto crea una carpeta solo para ti:
-
-```
+```text
 usuario/
-├── logs/              ← Historial de todos tus intentos
-│   ├── Blackjack/
-│   │   ├── bloque1.log
-│   │   └── bloque2.log
-│   └── Grains/
-│       └── bloque1.log
-└── errores.md         ← Tu memoria de estudio (la llena @sintetizar)
+├── logs/
+├── config/
+│   └── estudio-socratico.extension.local.json
+└── errores.md
 ```
 
-Nadie más ve tu `errores.md`. Es tu resumen personal de patrones de error.
+Cada compilación registra un intento en `usuario/logs/` y puede crear commits
+automáticos para dejar historial de estudio.
 
----
+## Exportar Diagnóstico
 
-## Compatibilidad con `conio.h`
+En el instalador, abre **Diagnóstico técnico** y usa **Exportar diagnóstico**.
+Ese reporte ayuda a revisar estado de herramientas, versión instalada,
+workspace, extensión de VS Code y resultados del smoke test.
 
-Si el ejercicio usa funciones como `gotoxy`, `clrscr`, `getch` o colores de
-consola, **no necesitas instalar nada extra**. El proyecto incluye soporte
-local para:
+## Reportar Errores
 
-```c
-#include <conio.h>
+Al reportar un problema incluye:
+
+- Versión del instalador.
+- Versión de la extensión de VS Code.
+- Qué estabas intentando hacer.
+- Si `F9`, `Ctrl+Shift+B` o ambos fallan.
+- El diagnóstico exportado, sin API keys ni datos sensibles.
+
+Para comprobar la extensión instalada:
+
+```powershell
+code --list-extensions --show-versions | findstr estudio-socratico
 ```
 
-Funciones disponibles:
+El resultado esperado para esta versión es:
 
-| Función | Para qué sirve |
-|---|---|
-| `gotoxy(x, y)` | Mover el cursor a una posición |
-| `clrscr()` | Limpiar la pantalla |
-| `getch()` | Leer una tecla sin mostrarla |
-| `getche()` | Leer una tecla mostrándola |
-| `kbhit()` | Saber si se presionó una tecla |
-| `textcolor(color)` | Cambiar el color del texto |
-| `textbackground(color)` | Cambiar el color de fondo |
-| `wherex()` / `wherey()` | Saber la posición del cursor |
-
-> [!TIP]
-> Los caracteres especiales de la tabla CP437 (como ♥, ♦, ♣, ♠ y bordes de
-> recuadro) también se muestran correctamente sin configuración extra.
-
----
-
-## ¿Dónde está cada cosa?
-
-```
-estudio-socratico/
-├── Ejercicios/                ← Tus archivos .c van aquí
-│   └── Blackjack.c            ← Ejemplo incluido
-├── usuario/                   ← Logs, progreso y errores del estudiante
-│   ├── logs/
-│   └── errores.md
-├── _estudio/                  ← Motor interno, instalador, docs, extensión y tooling
-└── _estudio/installer/        ← Código fuente del configurador v2
+```text
+estudio-socratico.estudio-exercism@2.0.15
 ```
 
----
+## Desarrollo Del Instalador
 
-## Ramas de Git
+Validación local principal:
 
-> No necesitas saber nada de Git para usar esto. El instalador configura todo y
-> los commits se hacen solos cada vez que compilas.
+```powershell
+dotnet build _estudio/installer/EstudioSocratico.Installer.sln --configuration Release -m:1
+dotnet test _estudio/installer/src/EstudioSocratico.Configurator.Tests/EstudioSocratico.Configurator.Tests.csproj --configuration Release
 
-Si varios estudiantes usan el mismo repositorio en GitHub, el proyecto usa
-**ramas** para separar el trabajo de cada uno:
+cd _estudio/installer/ui
+npm.cmd run build
 
-| Rama | Para qué |
-|---|---|
-| `main` | Versión base del framework |
-| `axel`, `juan`, etc. | Trabajo personal de cada estudiante |
-| `pair` | Trabajo compartido (ej. sesiones Live Share) |
-
-El instalador crea tu rama personal automáticamente con el mismo nombre que tu
-alias.
-
----
-
-## Algo no funciona
-
-<details>
-<summary><strong>❌ <kbd>F9</kbd> no hace nada</strong></summary>
-
-Abre `Estudio-Socratico-Setup-v2.0.14-x64.exe` y elige **Reparar**.
-
-Luego cierra VS Code completamente y vuelve a abrirlo.
-
-</details>
-
-<details>
-<summary><strong>⚠️ Dice "ya hay una ejecución abierta"</strong></summary>
-
-Tienes una ventana de consola abierta de una ejecución anterior. Ciérrala o
-presiona cualquier tecla dentro de ella.
-
-Si ya la cerraste y el error persiste, vuelve a intentar compilar — el sistema
-detecta automáticamente que el proceso anterior ya no existe.
-
-</details>
-
-<details>
-<summary><strong>🔀 GitHub muestra commits con otro nombre</strong></summary>
-
-Ejecuta el instalador y revisa los datos de tu cuenta. Para que GitHub asocie
-correctamente tus commits, el correo debe ser uno verificado en tu cuenta o tu
-correo `noreply` de GitHub.
-
-</details>
-
-<details>
-<summary><strong>🤖 La IA responde de forma muy general</strong></summary>
-
-Escríbele esto en el chat:
-
-```
-Lee AGENTS.md y usa @revisar.
+cd _estudio/soporte/vscode/estudio-exercism
+npm.cmd install
+npm.cmd run compile
 ```
 
-Para visualizar ejecución, no uses `@revisar`. Usa:
-
-```
-@ver linea <numero>
-```
-
-</details>
-
----
-
-## Preguntas frecuentes
-
-<details>
-<summary><strong>¿Tengo que saber usar Git?</strong></summary>
-
-No. Git corre en segundo plano. Tú solo presionas <kbd>F9</kbd>. Los commits se
-hacen automáticamente con tu nombre.
-
-</details>
-
-<details>
-<summary><strong>¿Puedo usar <code>conio.h</code> y <code>gotoxy</code>?</strong></summary>
-
-Sí. El proyecto incluye soporte completo para `conio.h` en Windows. Funciones
-como `getch`, `clrscr`, `gotoxy` y colores compilan con <kbd>F9</kbd> sin
-configuración extra.
-
-</details>
-
-<details>
-<summary><strong>¿Funciona en Mac o Linux?</strong></summary>
-
-Por ahora está pensado solo para **Windows**. Los scripts de compilación, la
-consola estilo Code::Blocks y el soporte de `conio.h` son específicos de
-Windows.
-
-</details>
-
-<details>
-<summary><strong>¿Funciona con Live Share?</strong></summary>
-
-Sí. El proyecto incluye una tarea alternativa para sesiones de Live Share que
-ejecuta el programa en la terminal compartida en lugar de abrir una ventana
-externa.
-
-</details>
-
-<details>
-<summary><strong>¿Dónde está la documentación técnica?</strong></summary>
-
-En [`_estudio/docs/guia-tecnica.md`](_estudio/docs/guia-tecnica.md). Ahí se explica la
-arquitectura interna: scripts, logs, ramas, runtime, setup y cómo mantener el
-framework.
-
-</details>
-
----
-
-<div align="center">
-
-**Estudio Socrático 2.0** · Mayo 2026
-
-*Hecho para aprender, no para copiar.*
-
-</div>
+El `.exe` final se genera con WiX/Burn y se publica desde GitHub Actions. No se
+deben versionar `.exe`, `.msi`, `.sha256`, `bin/`, `obj/`, `artifacts/`,
+`node_modules/`, `dist/`, logs ni archivos locales con API keys.

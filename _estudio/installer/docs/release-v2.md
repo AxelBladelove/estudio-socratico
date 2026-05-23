@@ -14,7 +14,7 @@ Para garantizar la estabilidad del branding público y a la vez cumplir con los 
 - **Objetivo:** Ofrecer una marca limpia y unificada para los estudiantes.
 
 ### Versión Técnica (`InternalPackageVersion` / `ProductVersion`)
-- **Valor:** `"2.0.11"`, `"2.0.12"`, etc. (Monotónica creciente).
+- **Valor:** `"2.0.15"`, `"2.0.16"`, etc. (Monotónica creciente).
 - **Ámbito:** `ProductVersion` en archivos `.wixproj` (MSI y Burn Bundle), versión de ensamblado .NET, checks internos de actualización, y etiquetas de Git (tags).
 - **Objetivo:** Permitir que Windows Installer detecte e instale la nueva versión sobre la anterior reemplazando los binarios sin forzar una desinstalación manual.
 
@@ -28,7 +28,7 @@ Para automatizar la propagación de versiones antes de publicar, se utiliza el s
 ```powershell
 .\_estudio\installer\scripts\set-version.ps1 `
   -PublicDisplayVersion "2.0" `
-  -InternalPackageVersion "2.0.11"
+  -InternalPackageVersion "2.0.15"
 ```
 
 El script actualiza de manera coordinada:
@@ -45,7 +45,7 @@ El script actualiza de manera coordinada:
 El workflow de CI/CD configurado en `.github/workflows/release-installer.yml` automatiza la compilación del instalador y su publicación en GitHub Releases.
 
 ### Desencadenantes (Triggers)
-- **Tag push:** Cuando se publica una etiqueta que coincide con el patrón `v*` (ej. `v2.0.11`).
+- **Tag push:** Cuando se publica una etiqueta que coincide con el patrón `v*` (ej. `v2.0.15`).
 - **Manual:** Mediante el botón *Run workflow* en la pestaña Actions de GitHub (`workflow_dispatch`).
 
 ### Flujo de Ejecución (Jobs)
@@ -67,3 +67,15 @@ El actualizador del configurador valida estrictamente los paquetes antes de ejec
 2. **Nombres de Asset Validados:** Los nombres de archivos descargados deben cumplir estrictamente con los patrones regex esperados (`Estudio-Socratico-Setup-v{version}-x64.exe` y su `.sha256` correspondiente).
 3. **Verificación de Firma:** Se descarga y parsea el archivo de firma. Luego se computa el SHA256 del `.exe` localmente. Si no coincide, los archivos se eliminan y la actualización se cancela.
 4. **Protección de Datos:** La instalación encima conserva intacta la carpeta `usuario/` (logs, alias e historial) y el workspace con el trabajo práctico del estudiante.
+
+## 5. Release Estable 2.0.15
+
+`v2.0.15` cierra la etapa inicial estable de Estudio Socrático 2.0. Antes de
+publicar debe validarse:
+
+- banner visible de actualización en pantalla principal;
+- boton **Actualizar ahora** usando `CheckForUpdates` y `TriggerUpdate`;
+- F9 registrado por la extensión de VS Code;
+- `Ctrl+Shift+B` operativo como build task por defecto;
+- extensión instalada como `estudio-socratico.estudio-exercism@2.0.15`;
+- MSI/Burn generados por WiX y publicados solo por GitHub Actions.

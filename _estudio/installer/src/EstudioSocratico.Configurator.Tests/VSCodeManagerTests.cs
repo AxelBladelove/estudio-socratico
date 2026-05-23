@@ -205,7 +205,7 @@ public sealed class VSCodeManagerTests
         var root = NewTemp();
         var workspace = CreateWorkspaceWithExtension(root, "2.0.0", useLegacyBranding: true);
         var packagedRoot = Path.Combine(root, "packaged-root");
-        var packagedWorkspace = CreateWorkspaceWithExtension(packagedRoot, "2.0.12", useLegacyBranding: false);
+        var packagedWorkspace = CreateWorkspaceWithExtension(packagedRoot, "2.0.15", useLegacyBranding: false);
         var packagedSource = Path.Combine(packagedRoot, "_estudio", "soporte", "vscode", "estudio-exercism");
         Directory.CreateDirectory(Path.GetDirectoryName(packagedSource)!);
         CopyDirectory(Path.Combine(packagedWorkspace, "_estudio", "soporte", "vscode", "estudio-exercism"), packagedSource);
@@ -227,7 +227,7 @@ public sealed class VSCodeManagerTests
                 listCalls++;
                 return RecordingRunner.Result(spec, 0, listCalls == 1
                     ? "estudio-socratico.estudio-exercism@2.0.0"
-                    : "estudio-socratico.estudio-exercism@2.0.12");
+                    : "estudio-socratico.estudio-exercism@2.0.15");
             }
 
             return RecordingRunner.Result(spec, 0, "1.100.0");
@@ -242,10 +242,10 @@ public sealed class VSCodeManagerTests
         await manager.PrepareAsync(workspace, CancellationToken.None);
 
         var workspacePackage = JsonNode.Parse(await File.ReadAllTextAsync(Path.Combine(workspace, "_estudio", "soporte", "vscode", "estudio-exercism", "package.json")))!.AsObject();
-        Assert.Equal("2.0.12", workspacePackage["version"]?.GetValue<string>());
+        Assert.Equal("2.0.15", workspacePackage["version"]?.GetValue<string>());
         Assert.Equal("assets/logo-vscode-extension.png", workspacePackage["icon"]?.GetValue<string>());
         Assert.False(File.Exists(Path.Combine(workspace, "_estudio", "soporte", "vscode", "estudio-exercism", "assets", "estudio.svg")));
-        Assert.True(Directory.Exists(Path.Combine(root, ".vscode", "extensions", "estudio-socratico.estudio-exercism-2.0.12")));
+        Assert.True(Directory.Exists(Path.Combine(root, ".vscode", "extensions", "estudio-socratico.estudio-exercism-2.0.15")));
     }
 
     [Fact]
@@ -269,6 +269,69 @@ public sealed class VSCodeManagerTests
         Assert.Contains("currentColor", activityIconSvg);
     }
 
+    [Fact]
+    public void FreshInstall_WritesVSCodeTaskForActiveCFile()
+    {
+        var repoRoot = AppPaths.TryResolveRepoRoot(AppContext.BaseDirectory);
+        Assert.NotNull(repoRoot);
+
+        var tasksJson = JsonNode.Parse(File.ReadAllText(Path.Combine(repoRoot!, ".vscode", "tasks.json")))!.AsObject();
+        var tasks = tasksJson["tasks"]!.AsArray();
+        var buildTask = tasks.First(task => task?["label"]?.GetValue<string>() == "Compilar y Grabar (Sistema Socratico)")!.AsObject();
+
+        Assert.Equal(".\\_estudio\\soporte\\scripts\\build.cmd", buildTask["command"]?.GetValue<string>());
+        Assert.Contains(buildTask["args"]!.AsArray(), arg => arg?.GetValue<string>() == "${file}");
+    }
+
+    [Fact]
+    public void FreshInstall_CtrlShiftBTaskUsesActiveCFile()
+    {
+        var repoRoot = AppPaths.TryResolveRepoRoot(AppContext.BaseDirectory);
+        Assert.NotNull(repoRoot);
+
+        var tasksJson = JsonNode.Parse(File.ReadAllText(Path.Combine(repoRoot!, ".vscode", "tasks.json")))!.AsObject();
+        var tasks = tasksJson["tasks"]!.AsArray();
+        var buildTask = tasks.First(task => task?["label"]?.GetValue<string>() == "Compilar y Grabar (Sistema Socratico)")!.AsObject();
+
+        Assert.True(buildTask["group"]?["isDefault"]?.GetValue<bool>());
+        Assert.Equal("build", buildTask["group"]?["kind"]?.GetValue<string>());
+        Assert.Contains(buildTask["args"]!.AsArray(), arg => arg?.GetValue<string>() == "${file}");
+    }
+
+    [Fact]
+    public void FreshInstall_ConfiguresF9BindingOrExtensionCommand()
+    {
+        var repoRoot = AppPaths.TryResolveRepoRoot(AppContext.BaseDirectory);
+        Assert.NotNull(repoRoot);
+
+        var extensionRoot = Path.Combine(repoRoot!, "_estudio", "soporte", "vscode", "estudio-exercism");
+        var packageJson = JsonNode.Parse(File.ReadAllText(Path.Combine(extensionRoot, "package.json")))!.AsObject();
+        var keybinding = packageJson["contributes"]?["keybindings"]?.AsArray()
+            .FirstOrDefault(node => string.Equals(node?["key"]?.GetValue<string>(), "f9", StringComparison.OrdinalIgnoreCase));
+
+        Assert.NotNull(keybinding);
+        Assert.Equal("estudioExercism.compileActiveCFile", keybinding!["command"]?.GetValue<string>());
+        Assert.Contains("resourceLangId == c", keybinding["when"]?.GetValue<string>());
+    }
+
+    [Fact]
+    public void VSCodeExtension_ContributesF9CompileCommand()
+    {
+        var repoRoot = AppPaths.TryResolveRepoRoot(AppContext.BaseDirectory);
+        Assert.NotNull(repoRoot);
+
+        var extensionRoot = Path.Combine(repoRoot!, "_estudio", "soporte", "vscode", "estudio-exercism");
+        var packageJson = JsonNode.Parse(File.ReadAllText(Path.Combine(extensionRoot, "package.json")))!.AsObject();
+        var extensionJs = File.ReadAllText(Path.Combine(extensionRoot, "extension.js"));
+        var commands = packageJson["contributes"]?["commands"]?.AsArray();
+
+        Assert.Contains(commands!, node => node?["command"]?.GetValue<string>() == "estudioExercism.compileActiveCFile");
+        Assert.Contains("onCommand:estudioExercism.compileActiveCFile", packageJson["activationEvents"]!.ToJsonString());
+        Assert.Contains("registerCommand(\"estudioExercism.compileActiveCFile\"", extensionJs);
+        Assert.Contains("vscode.tasks.executeTask", extensionJs);
+        Assert.Contains("Compilar y Grabar (Sistema Socratico)", extensionJs);
+    }
+
     private static VSCodeManager CreateManager(string root, ICommandRunner runner, Func<VSCodePaths> locator)
     {
         var paths = new AppPaths(localAppDataRoot: Path.Combine(root, "local"));
@@ -284,8 +347,8 @@ public sealed class VSCodeManagerTests
         Directory.CreateDirectory(Path.Combine(extension, "assets"));
         Directory.CreateDirectory(Path.Combine(workspace, "_estudio", "soporte", "exercism"));
         var packageJson = useLegacyBranding
-            ? $"{{\"name\":\"estudio-exercism\",\"publisher\":\"estudio-socratico\",\"version\":\"{version}\",\"icon\":\"assets/estudio.png\",\"contributes\":{{\"viewsContainers\":{{\"activitybar\":[{{\"id\":\"estudioSocratico\",\"title\":\"Estudio\",\"icon\":\"assets/estudio.svg\"}}]}},\"views\":{{\"estudioSocratico\":[{{\"id\":\"estudioExercism.view\",\"name\":\"Ejercicios\",\"icon\":\"assets/estudio.svg\"}}]}},\"commands\":[{{\"command\":\"estudioExercism.openPanel\"}},{{\"command\":\"estudioExercism.openApiKeyConfig\"}},{{\"command\":\"estudioExercism.revealApiKeyConfig\"}}]}}}}"
-            : $"{{\"name\":\"estudio-exercism\",\"publisher\":\"estudio-socratico\",\"version\":\"{version}\",\"icon\":\"assets/logo-vscode-extension.png\",\"contributes\":{{\"viewsContainers\":{{\"activitybar\":[{{\"id\":\"estudioSocratico\",\"title\":\"Estudio\",\"icon\":\"assets/logo-vscode-activity.svg\"}}]}},\"views\":{{\"estudioSocratico\":[{{\"id\":\"estudioExercism.view\",\"name\":\"Ejercicios\",\"icon\":\"assets/logo-vscode-activity.svg\"}}]}},\"commands\":[{{\"command\":\"estudioExercism.openPanel\"}},{{\"command\":\"estudioExercism.openApiKeyConfig\"}},{{\"command\":\"estudioExercism.revealApiKeyConfig\"}}]}}}}";
+            ? $"{{\"name\":\"estudio-exercism\",\"publisher\":\"estudio-socratico\",\"version\":\"{version}\",\"icon\":\"assets/estudio.png\",\"contributes\":{{\"viewsContainers\":{{\"activitybar\":[{{\"id\":\"estudioSocratico\",\"title\":\"Estudio\",\"icon\":\"assets/estudio.svg\"}}]}},\"views\":{{\"estudioSocratico\":[{{\"id\":\"estudioExercism.view\",\"name\":\"Ejercicios\",\"icon\":\"assets/estudio.svg\"}}]}},\"commands\":[{{\"command\":\"estudioExercism.compileActiveCFile\"}},{{\"command\":\"estudioExercism.openPanel\"}},{{\"command\":\"estudioExercism.openApiKeyConfig\"}},{{\"command\":\"estudioExercism.revealApiKeyConfig\"}}]}}}}"
+            : $"{{\"name\":\"estudio-exercism\",\"publisher\":\"estudio-socratico\",\"version\":\"{version}\",\"icon\":\"assets/logo-vscode-extension.png\",\"contributes\":{{\"viewsContainers\":{{\"activitybar\":[{{\"id\":\"estudioSocratico\",\"title\":\"Estudio\",\"icon\":\"assets/logo-vscode-activity.svg\"}}]}},\"views\":{{\"estudioSocratico\":[{{\"id\":\"estudioExercism.view\",\"name\":\"Ejercicios\",\"icon\":\"assets/logo-vscode-activity.svg\"}}]}},\"commands\":[{{\"command\":\"estudioExercism.compileActiveCFile\"}},{{\"command\":\"estudioExercism.openPanel\"}},{{\"command\":\"estudioExercism.openApiKeyConfig\"}},{{\"command\":\"estudioExercism.revealApiKeyConfig\"}}]}}}}";
         File.WriteAllText(Path.Combine(extension, "package.json"), packageJson);
         if (useLegacyBranding)
         {

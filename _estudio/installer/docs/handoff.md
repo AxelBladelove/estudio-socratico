@@ -22,6 +22,9 @@
 - Ajustado `compilar_y_grabar.bat` para priorizar UCRT64 y permitir smoke test
   interno sin commit automatico con `ESTUDIO_SKIP_COMMIT=1`.
 - Ajustado `.vscode/settings.json` a `C:/msys64/ucrt64/bin/gcc.exe`.
+- `v2.0.15` agrega aviso visible de actualizacion en la pantalla principal.
+- `v2.0.15` registra F9 desde la extension de VS Code y conserva
+  `Ctrl+Shift+B` como tarea de build.
 
 ## Como Compilar
 
@@ -41,16 +44,17 @@ Usar el workflow:
 
 Tambien puede ejecutarse manualmente desde GitHub Actions.
 
-## Errores Conocidos
+## Validacion Esperada
 
-- Este entorno local no tenia `dotnet` en PATH durante la implementacion, asi
-  que la compilacion real debe ejecutarse en CI o en una maquina con .NET 10.
-- WinUI y WiX dependen de paquetes NuGet restaurados durante CI.
+- `dotnet build` de la solucion en Release.
+- `dotnet test` del proyecto de tests en Release.
+- `npm.cmd run build` en `_estudio/installer/ui`.
+- `npm.cmd run compile` en la extension de VS Code.
+- Build WiX MSI y Burn Bundle.
 
 ## Decisiones Tecnicas
 
-- El configurador instalado se llama `Estudio Socratico Configurador`, no
-  "Installer".
+- El configurador instalado se llama `Estudio Socratico Instalador`.
 - Burn es entrypoint de release y registra el producto.
 - La experiencia principal vive en WinUI, no en la UI estandar de WiX.
 - PowerShell se conserva solo donde el framework actual ya lo usa:
@@ -88,7 +92,8 @@ instalado y corregirlo sin cambiar el stack.
 - `_estudio/soporte/scripts/compilar_y_grabar.bat`, salvo cambios compatibles
   con F9 y telemetria
 - `_estudio/soporte/exercism/manager.ps1`
-- `_estudio/soporte/vscode/estudio-exercism/`
+- `_estudio/soporte/vscode/estudio-exercism/`, salvo cambios compatibles con
+  comandos, Activity Bar, F9 y versionado.
 
 ## Descartado
 

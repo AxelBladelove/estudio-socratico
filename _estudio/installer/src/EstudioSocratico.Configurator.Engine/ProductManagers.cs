@@ -894,6 +894,7 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
         var activityIconUsesCurrentColor = File.Exists(activityIconPath) &&
                                            File.ReadAllText(activityIconPath).Contains("currentColor", StringComparison.OrdinalIgnoreCase);
         var commandsRegistered =
+            commandIds.Contains("estudioExercism.compileActiveCFile") &&
             commandIds.Contains("estudioExercism.openPanel") &&
             commandIds.Contains("estudioExercism.openApiKeyConfig") &&
             commandIds.Contains("estudioExercism.revealApiKeyConfig");
@@ -1039,7 +1040,7 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
   <Metadata>
     <Identity Language="en-US" Id="{{Xml(descriptor.Name)}}" Version="{{Xml(descriptor.Version)}}" Publisher="{{Xml(descriptor.Publisher)}}" />
     <DisplayName>Estudio Socratico - Exercism</DisplayName>
-    <Description xml:space="preserve">Panel de ejercicios para Exercism C y PDF Alejandro Liz dentro de Estudio Socratico.</Description>
+    <Description xml:space="preserve">Panel de ejercicios y flujo de compilacion para C dentro de Estudio Socratico.</Description>
     <Tags></Tags>
     <Categories>Education,Other</Categories>
     <GalleryFlags>Public</GalleryFlags>

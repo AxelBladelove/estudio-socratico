@@ -1,8 +1,8 @@
 {
   "name": "estudio-exercism",
   "displayName": "Estudio Socratico - Exercism",
-  "description": "Panel de ejercicios para Exercism C y PDF Alejandro Liz dentro de Estudio Socratico.",
-  "version": "2.0.14",
+  "description": "Panel de ejercicios y flujo de compilacion para C dentro de Estudio Socratico.",
+  "version": "2.0.15",
   "publisher": "estudio-socratico",
   "license": "MIT",
   "icon": "assets/logo-vscode-extension.png",
@@ -11,6 +11,7 @@
   },
   "activationEvents": [
     "onView:estudioExercism.view",
+    "onCommand:estudioExercism.compileActiveCFile",
     "onCommand:estudioExercism.openPanel",
     "onCommand:estudioExercism.openApiKeyConfig",
     "onCommand:estudioExercism.revealApiKeyConfig",
@@ -42,6 +43,12 @@
       ]
     },
     "commands": [
+      {
+        "command": "estudioExercism.compileActiveCFile",
+        "title": "Compilar archivo C activo",
+        "category": "Estudio Socratico",
+        "icon": "$(play)"
+      },
       {
         "command": "estudioExercism.openPanel",
         "title": "Abrir ejercicios",
@@ -88,7 +95,14 @@
           "group": "navigation@99"
         }
       ]
-    }
+    },
+    "keybindings": [
+      {
+        "command": "estudioExercism.compileActiveCFile",
+        "key": "f9",
+        "when": "editorTextFocus && resourceLangId == c"
+      }
+    ]
   },
   "scripts": {
     "compile": "node --check extension.js",
