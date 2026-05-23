@@ -21,6 +21,7 @@ public sealed class ConfiguratorEngine
     private readonly TelemetryCompatibilityManager _telemetryCompatibilityManager;
     private readonly GistImporterManager _gistImporterManager;
     private readonly SetupPlanner _planner;
+    private readonly UpdateManager _updateManager;
 
     public ConfiguratorEngine(
         AppPaths? paths = null,
@@ -70,12 +71,14 @@ public sealed class ConfiguratorEngine
         _telemetryCompatibilityManager = new TelemetryCompatibilityManager(runner, _logManager);
         _gistImporterManager = new GistImporterManager();
         _planner = new SetupPlanner();
+        _updateManager = new UpdateManager(_paths, _logManager);
     }
 
     public LogManager Logs => _logManager;
     public ManifestManager Manifest => _manifestManager;
     public VSCodeManager VSCode => _vsCodeManager;
     public SetupPlanner Planner => _planner;
+    public UpdateManager Updater => _updateManager;
 
     public Task<UninstallResult> PreviewUninstallAsync(
         bool allowAggressiveCleanup = false,

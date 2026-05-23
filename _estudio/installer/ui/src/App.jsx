@@ -643,6 +643,10 @@ export default function App() {
   const [deleteStudentData, setDeleteStudentData] = useState(false);
   const [deleteRemoteWorkspaceRepo, setDeleteRemoteWorkspaceRepo] = useState(false);
   const [toolsOnlyRun, setToolsOnlyRun] = useState(false);
+  const [updateInfo, setUpdateInfo] = useState(null);
+  const [updateRunning, setUpdateRunning] = useState(false);
+  const [updateProgress, setUpdateProgress] = useState(0);
+  const [updateStep, setUpdateStep] = useState("");
 
   const backendAvailable = isBridgeAvailable();
   const stage = screenLabel(screen, workflow);
@@ -754,6 +758,53 @@ export default function App() {
     }
   }, [addLog, effectiveWorkspacePath, localAlias]);
 
+  const checkUpdates = useCallback(async (userTriggered = false) => {
+    if (!isBridgeAvailable()) return;
+    setUpdateInfo({ status: "checking", userTriggered });
+    try {
+      const result = await requestBackend(BackendAction.CheckForUpdates);
+      if (result && result.updateAvailable) {
+        setUpdateInfo({
+          status: "available",
+          latestVersion: result.latestVersion,
+          latestDisplayVersion: result.latestDisplayVersion,
+          downloadUrl: result.downloadUrl,
+          sha256Url: result.sha256Url,
+          releaseNotes: result.releaseNotes,
+          userTriggered
+        });
+        addLog(`Actualización disponible: v${result.latestVersion} (Display: v${result.latestDisplayVersion})`);
+      } else {
+        setUpdateInfo(userTriggered ? { status: "no-update", userTriggered: true } : null);
+        if (userTriggered) {
+          addLog("Ya tienes la última versión instalada.");
+        }
+      }
+    } catch (err) {
+      addLog(`Error al comprobar actualizaciones: ${messageFromError(err)}`);
+      setUpdateInfo(userTriggered ? { status: "error", message: messageFromError(err), userTriggered: true } : null);
+    }
+  }, [addLog]);
+
+  const startUpdate = async () => {
+    if (!updateInfo || !updateInfo.downloadUrl || !updateInfo.sha256Url) return;
+    setUpdateRunning(true);
+    setUpdateProgress(0);
+    setUpdateStep("Iniciando actualización...");
+    addLog(`Iniciando actualización a v${updateInfo.latestVersion}...`);
+    try {
+      await requestBackend(BackendAction.TriggerUpdate, {
+        downloadUrl: updateInfo.downloadUrl,
+        sha256Url: updateInfo.sha256Url,
+        latestVersion: updateInfo.latestVersion
+      });
+    } catch (err) {
+      setUpdateRunning(false);
+      addLog(`Error al iniciar actualización: ${messageFromError(err)}`);
+      setUpdateInfo({ status: "error", message: messageFromError(err), userTriggered: true });
+    }
+  };
+
   useEffect(() => {
     const onBridgeEvent = (event) => {
       const evt = event.detail || {};
@@ -767,6 +818,13 @@ export default function App() {
       if (type === "verificationstarted") {
         setRunning(true);
         setFinished(false);
+      }
+
+      if (payload.stepId === "update-download" || payload.stepId === "update-verify" || payload.stepId === "update-launch") {
+        const nextProgress = Number.isFinite(payload.percent) ? Math.max(0, Math.min(100, Math.round(payload.percent))) : 0;
+        setUpdateProgress(nextProgress);
+        setUpdateStep(payload.message || payload.title || "Actualizando");
+        return;
       }
 
       if (["stepstarted", "stepprogress", "stepneedsuserinput", "stepsucceeded", "stepfailed", "stepskipped"].includes(type)) {
@@ -788,11 +846,14 @@ export default function App() {
         setRunning(false);
         setFinished(true);
         addLog(`Error: ${messageFromError(payload)}`);
+        setUpdateRunning(false);
+        setUpdateInfo({ status: "error", message: messageFromError(payload), userTriggered: true });
       }
     };
 
     window.addEventListener("estudio-bridge-event", onBridgeEvent);
     refreshState("Diagnóstico inicial");
+    checkUpdates(false);
     return () => window.removeEventListener("estudio-bridge-event", onBridgeEvent);
   }, []);
 
@@ -1052,7 +1113,47 @@ export default function App() {
     }
   };
 
-  return <AppShell stage={stage} canGoBack={canGoBack} onBack={goBack} consoleOpen={consoleOpen} setConsoleOpen={setConsoleOpen} logs={logs}>
+  if (updateRunning) {
+    return <AppShell
+      stage="Actualización"
+      canGoBack={false}
+      consoleOpen={consoleOpen}
+      setConsoleOpen={setConsoleOpen}
+      logs={logs}
+      publicDisplayVersion={snapshot?.publicDisplayVersion}
+    >
+      <SetupPanel>
+        <HeaderBlock
+          eyebrow="Actualización en curso"
+          title="Instalando Estudio Socrático"
+          text="Descargando y verificando la última versión estable. El configurador se cerrará temporalmente para iniciar la instalación."
+        />
+        <div className="progress-section" style={{ marginTop: "24px" }}>
+          <div className="progress-meta">
+            <span>{updateStep}</span>
+            <span>{updateProgress}%</span>
+          </div>
+          <div className="progress-track">
+            <div className={`progress-fill ${updateProgress < 100 ? "progress-sweep" : ""}`} style={{ width: `${updateProgress}%` }} />
+          </div>
+        </div>
+      </SetupPanel>
+    </AppShell>;
+  }
+
+  return <AppShell
+    stage={stage}
+    canGoBack={canGoBack}
+    onBack={goBack}
+    consoleOpen={consoleOpen}
+    setConsoleOpen={setConsoleOpen}
+    logs={logs}
+    updateInfo={updateInfo}
+    onDismissUpdate={() => setUpdateInfo(null)}
+    onStartUpdate={startUpdate}
+    onCheckUpdates={checkUpdates}
+    publicDisplayVersion={snapshot?.publicDisplayVersion}
+  >
     {screen === "welcome" ? <Welcome onNext={() => setScreen("workflow")} /> : null}
     {screen === "workflow" ? <WorkflowScreen selectedWorkflow={workflow} setSelectedWorkflow={selectWorkflow} onNext={() => setScreen("scan")} /> : null}
     {screen === "scan" ? <ScanScreen selectedWorkflow={workflow} tools={tools} loading={loadingState} backendAvailable={backendAvailable} onRefresh={() => refreshState("Revisión manual")} onNext={() => setScreen("components")} /> : null}

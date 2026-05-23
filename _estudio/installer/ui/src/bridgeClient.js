@@ -70,4 +70,6 @@ export const BackendAction = {
   PreviewUninstall: "PreviewUninstall",
   ReinstallManaged: "ReinstallManaged",
   UninstallManaged: "UninstallManaged",
+  CheckForUpdates: "CheckForUpdates",
+  TriggerUpdate: "TriggerUpdate",
 };
