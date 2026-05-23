@@ -74,48 +74,11 @@ jobs:
           "EXE_PATH=$($buildExe.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
           "SHA_PATH=$($buildExe.FullName).sha256" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-      - name: Prepare Release Metadata
-        if: startsWith(github.ref, 'refs/tags/v')
-        shell: pwsh
-        run: |
-          $releaseName = "Estudio Socrático 2.0 Stable"
-          $releaseNotesPath = Join-Path $env:RUNNER_TEMP "release-notes.md"
-
-          if ("${{ github.ref_name }}" -eq "v2.0.11") {
-            $releaseName = "Estudio Socrático 2.0 — Branding Update"
-            @'
-# Estudio Socrático 2.0 — Branding Update
-
-Actualización visual menor de Estudio Socrático 2.0.
-
-## Cambios
-
-- Nuevo logo oficial de Estudio Socrático.
-- Nuevo icono del configurador.
-- Nuevo icono del instalador de Windows.
-- Nuevo icono transparente para taskbar, Alt-Tab y Start Menu.
-- Nuevo icono de la extensión de VS Code.
-- Nuevo icono monocromático para el Activity Bar de VS Code.
-- Limpieza de assets antiguos y duplicados.
-
-## Sin cambios funcionales
-
-Esta versión no cambia el backend, el updater, el flujo de instalación, GitHub, Exercism ni los datos del usuario.
-'@ | Set-Content $releaseNotesPath -Encoding utf8
-          }
-          else {
-            "Release automática del instalador de Estudio Socrático 2.0." | Set-Content $releaseNotesPath -Encoding utf8
-          }
-
-          "RELEASE_NAME=$releaseName" | Out-File -FilePath $env:GITHUB_ENV -Append
-          "RELEASE_BODY_PATH=$releaseNotesPath" | Out-File -FilePath $env:GITHUB_ENV -Append
-
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v3
         with:
-          name: ${{ env.RELEASE_NAME }}
-          body_path: ${{ env.RELEASE_BODY_PATH }}
+          name: "Estudio Socrático 2.0 — Branding Update"
           draft: false
           prerelease: false
           files: |
