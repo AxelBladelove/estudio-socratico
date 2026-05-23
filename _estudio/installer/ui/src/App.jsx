@@ -103,7 +103,6 @@ const TOOL_ICONS = {
 };
 
 const Icons = {
-  Spark: ({ className = "h-5 w-5" }) => <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3l1.8 4.8L18.8 9.6l-5 1.8L12 16l-1.8-4.6-5-1.8 5-1.8L12 3Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19 15l.8 2.1L22 18l-2.2.9L19 21l-.8-2.1L16 18l2.2-.9L19 15Z" /></svg>,
   Check: ({ className = "h-5 w-5" }) => <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>,
   Arrow: ({ className = "h-4 w-4" }) => <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m-6-6 6 6-6 6" /></svg>,
   Back: ({ className = "h-4 w-4" }) => <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 12H5m6-6-6 6 6 6" /></svg>,
@@ -116,11 +115,12 @@ const Icons = {
 };
 
 function workflowIcon(id) {
+  if (id === "setup") return null;
   if (id === "repair") return Icons.Repair;
   if (id === "reinstall" || id === "update") return Icons.Refresh;
   if (id === "accounts") return Icons.Account;
   if (id === "uninstall") return Icons.Trash;
-  return Icons.Spark;
+  return null;
 }
 
 function workflowNeedsGithub(workflow) {
@@ -167,6 +167,10 @@ function ToolLogo({ icon }) {
   return <img className="tool-logo" src={src} alt="" aria-hidden="true" />;
 }
 
+function LogoMark({ className = "" }) {
+  return <img className={className} src={logoApp} alt="" aria-hidden="true" />;
+}
+
 function HeaderBlock({ eyebrow, title, text }) {
   return <div><p className="kicker">{eyebrow}</p><h1 className="title">{title}</h1>{text ? <p className="subtitle">{text}</p> : null}</div>;
 }
@@ -181,7 +185,7 @@ function AppShell({ children, stage, canGoBack, onBack, consoleOpen, setConsoleO
     <header className="app-header">
       <div className="header-left">
         {canGoBack ? <button onClick={onBack} className="back-button" aria-label="Volver"><Icons.Back /></button> : null}
-        <div className="logo-box"><img src={logoApp} alt="Logo" /></div>
+        <div className="logo-box" aria-hidden="true"><LogoMark /></div>
         <div><p className="brand-title">Estudio Socrático</p><p className="brand-subtitle">Configurador</p></div>
       </div>
       <div className="stage-pill">{stage}</div>
@@ -194,7 +198,7 @@ function AppShell({ children, stage, canGoBack, onBack, consoleOpen, setConsoleO
 
 function Welcome({ onNext }) {
   return <SetupPanel>
-    <div className="hero-mark"><img src={logoApp} alt="Logo" /></div>
+    <div className="hero-mark" aria-hidden="true"><LogoMark /></div>
     <HeaderBlock eyebrow="Configuración" title="Preparemos Estudio Socrático" text="Elige qué necesitas hacer. El configurador instalará y reparará las herramientas necesarias según ese caso de uso." />
     <div className="center-actions"><Button onClick={onNext}>Continuar</Button></div>
   </SetupPanel>;
@@ -212,7 +216,7 @@ function WorkflowCard({ workflow, selected, onClick }) {
   const Icon = workflowIcon(workflow.id);
   return <button className={`workflow-card ${selected ? "selected" : ""}`} onClick={onClick}>
     <div className="workflow-card-head">
-      <div className="icon-tile"><Icon /></div><span className="badge">{workflow.badge}</span>
+      <div className="icon-tile">{Icon ? <Icon /> : <LogoMark className="workflow-logo" />}</div><span className="badge">{workflow.badge}</span>
     </div>
     <h3>{workflow.title}</h3>
     <p>{workflow.subtitle}</p>

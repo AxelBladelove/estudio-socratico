@@ -5,11 +5,11 @@ Este directorio contiene el instalador/configurador v2 de Estudio Socrático.
 ## Estrategia de Versionado
 Para mantener la compatibilidad con Windows Installer (MSI/WiX) y evitar problemas de upgrade, el proyecto maneja dos conceptos de versión:
 - **PublicDisplayVersion:** `"2.0"` (Branding público que se muestra en READMEs, UI, y títulos de release).
-- **InternalPackageVersion:** `"2.0.10"` o superior (Versión técnica monotónica utilizada para metadatos de compilación, WiX ProductVersion, validación de actualizaciones y git tags).
+- **InternalPackageVersion:** `"2.0.11"` o superior (Versión técnica monotónica utilizada para metadatos de compilación, WiX ProductVersion, validación de actualizaciones y git tags).
 
 El artefacto de instalación estable final en GitHub Releases se nombra según la versión técnica:
 ```text
-Estudio-Socratico-Setup-v2.0.10-x64.exe
+Estudio-Socratico-Setup-v2.0.11-x64.exe
 ```
 
 ## Stack

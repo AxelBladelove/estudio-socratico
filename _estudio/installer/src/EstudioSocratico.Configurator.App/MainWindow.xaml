@@ -16,12 +16,22 @@
 
         <!-- Custom title bar area for window drag -->
         <Grid x:Name="TitleBar" Grid.Row="0" Background="#0f1419">
-            <TextBlock
-                Text="Estudio Socrático Configurador"
-                FontSize="12"
-                Foreground="#8b949e"
+            <StackPanel
+                Orientation="Horizontal"
+                Spacing="10"
                 VerticalAlignment="Center"
-                Margin="16,0,0,0" />
+                Margin="16,0,0,0">
+                <Image
+                    x:Name="TitleBarLogo"
+                    Width="28"
+                    Height="28"
+                    Stretch="Uniform" />
+                <TextBlock
+                    Text="Estudio Socrático Configurador"
+                    FontSize="12"
+                    Foreground="#8b949e"
+                    VerticalAlignment="Center" />
+            </StackPanel>
         </Grid>
 
         <!-- WebView2 fills the rest of the window -->

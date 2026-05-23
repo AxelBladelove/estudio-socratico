@@ -2,7 +2,8 @@
   <PropertyGroup>
     <OutputType>Package</OutputType>
     <Platform>x64</Platform>
-    <ProductVersion Condition="'$(ProductVersion)' == ''">2.0.10</ProductVersion>
+    <ProductVersion Condition="'$(ProductVersion)' == ''">2.0.11</ProductVersion>
+    <AppProject>$(MSBuildThisFileDirectory)..\..\src\EstudioSocratico.Configurator.App\EstudioSocratico.Configurator.App.csproj</AppProject>
     <AppPublishDir Condition="'$(AppPublishDir)' == ''">$(MSBuildThisFileDirectory)..\..\artifacts\publish\app</AppPublishDir>
     <DefineConstants>ProductVersion=$(ProductVersion);AppPublishDir=$(AppPublishDir)</DefineConstants>
     <OutputName>EstudioSocratico.Configurator</OutputName>
@@ -11,4 +12,12 @@
   <ItemGroup>
     <Compile Remove="Bundle.wxs" />
   </ItemGroup>
+
+  <Target Name="PublishConfiguratorApp" BeforeTargets="CoreCompile">
+    <RemoveDir Directories="$(AppPublishDir)" Condition="Exists('$(AppPublishDir)')" />
+    <MSBuild
+        Projects="$(AppProject)"
+        Targets="Publish"
+        Properties="Configuration=$(Configuration);Platform=x64;RuntimeIdentifier=win-x64;SelfContained=true;WindowsAppSDKSelfContained=true;PublishSingleFile=false;PublishDir=$(AppPublishDir)\" />
+  </Target>
 </Project>

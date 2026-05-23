@@ -14,7 +14,7 @@ Para garantizar la estabilidad del branding público y a la vez cumplir con los 
 - **Objetivo:** Ofrecer una marca limpia y unificada para los estudiantes.
 
 ### Versión Técnica (`InternalPackageVersion` / `ProductVersion`)
-- **Valor:** `"2.0.10"`, `"2.0.11"`, etc. (Monotónica creciente).
+- **Valor:** `"2.0.11"`, `"2.0.12"`, etc. (Monotónica creciente).
 - **Ámbito:** `ProductVersion` en archivos `.wixproj` (MSI y Burn Bundle), versión de ensamblado .NET, checks internos de actualización, y etiquetas de Git (tags).
 - **Objetivo:** Permitir que Windows Installer detecte e instale la nueva versión sobre la anterior reemplazando los binarios sin forzar una desinstalación manual.
 
@@ -28,7 +28,7 @@ Para automatizar la propagación de versiones antes de publicar, se utiliza el s
 ```powershell
 .\_estudio\installer\scripts\set-version.ps1 `
   -PublicDisplayVersion "2.0" `
-  -InternalPackageVersion "2.0.10"
+  -InternalPackageVersion "2.0.11"
 ```
 
 El script actualiza de manera coordinada:
@@ -45,7 +45,7 @@ El script actualiza de manera coordinada:
 El workflow de CI/CD configurado en `.github/workflows/release-installer.yml` automatiza la compilación del instalador y su publicación en GitHub Releases.
 
 ### Desencadenantes (Triggers)
-- **Tag push:** Cuando se publica una etiqueta que coincide con el patrón `v*` (ej. `v2.0.10`).
+- **Tag push:** Cuando se publica una etiqueta que coincide con el patrón `v*` (ej. `v2.0.11`).
 - **Manual:** Mediante el botón *Run workflow* en la pestaña Actions de GitHub (`workflow_dispatch`).
 
 ### Flujo de Ejecución (Jobs)

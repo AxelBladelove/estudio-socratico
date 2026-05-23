@@ -232,12 +232,12 @@ function Make-PngBackgroundTransparent {
 $icoSizes = @(16, 20, 24, 32, 40, 48, 64, 128, 256)
 $pngTempFiles = @()
 
-Write-Host "1. Rendering multi-resolution icon sizes from tile SVG..." -ForegroundColor DarkGray
+Write-Host "1. Rendering multi-resolution icon sizes from app SVG (transparent)..." -ForegroundColor DarkGray
 foreach ($size in $icoSizes) {
-    # Strip shadow filter for shell sizes where blur hurts legibility the most.
-    $stripShadow = $size -le 64
+    # Always strip shadow for crisp shell rendering on any background.
+    $stripShadow = $true
     $pngDest = Join-Path $tempDir "ico_$($size).png"
-    Render-SvgToPng -SvgPath $svgTilePath -Size $size -StripShadow $stripShadow -PngOutputPath $pngDest
+    Render-SvgToPng -SvgPath $svgAppPath -Size $size -StripShadow $stripShadow -PngOutputPath $pngDest
     $pngTempFiles += $pngDest
     Write-Host "   - Rendered $($size)x$($size)px (StripShadow: $stripShadow)" -ForegroundColor DarkGray
 }
