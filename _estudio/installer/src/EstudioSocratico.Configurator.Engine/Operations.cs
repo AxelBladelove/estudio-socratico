@@ -10,8 +10,14 @@ public sealed class DiagnosticsManager(
     public async Task<DiagnosticsReport> RunAsync(string? workspacePath, CancellationToken cancellationToken)
     {
         var dependencies = await detector.DetectAllAsync(cancellationToken).ConfigureAwait(false);
+        var runtime = ProductInfo.GetRuntimeVersionInfo();
         var report = new DiagnosticsReport
         {
+            ConfiguratorVersion = runtime.InternalPackageVersion,
+            PublicDisplayVersion = runtime.PublicDisplayVersion,
+            InternalPackageVersion = runtime.InternalPackageVersion,
+            InstalledBuild = runtime.InstalledBuild,
+            Source = runtime.Source,
             WorkspacePath = workspacePath,
             Dependencies = dependencies,
             Environment = probe.SnapshotEnvironment()

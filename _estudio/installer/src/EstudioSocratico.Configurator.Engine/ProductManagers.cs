@@ -585,6 +585,7 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
         string Name,
         string Version,
         string SourcePath,
+        bool BrandingAssetsConfigured,
         bool ActivityBarConfigured,
         bool CommandsRegistered,
         bool ExercisePanelConfigured,
@@ -601,8 +602,24 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
         [".vsixmanifest"] = "text/xml"
     };
 
-    public string GetSourcePath(string workspacePath) =>
+    private string GetWorkspaceSourcePath(string workspacePath) =>
         Path.Combine(workspacePath, "_estudio", "soporte", "vscode", "estudio-exercism");
+
+    public string GetSourcePath(string workspacePath) =>
+        GetWorkspaceSourcePath(workspacePath);
+
+    private string? GetBundledSourcePath()
+    {
+        var candidates = new[]
+        {
+            paths.RepoRoot is null ? null : Path.Combine(paths.RepoRoot, "_estudio", "soporte", "vscode", "estudio-exercism"),
+            Path.Combine(AppContext.BaseDirectory, "runtime-resources", "vscode", "estudio-exercism")
+        };
+
+        return candidates
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .FirstOrDefault(Directory.Exists);
+    }
 
     public string GetManagerScriptPath(string workspacePath) =>
         Path.Combine(workspacePath, "_estudio", "soporte", "exercism", "manager.ps1");
@@ -760,6 +777,7 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
             var ready = installedInVSCode &&
                         installedManifestExists &&
                         installedVersionMatches &&
+                        descriptor.BrandingAssetsConfigured &&
                         descriptor.ActivityBarConfigured &&
                         descriptor.CommandsRegistered &&
                         descriptor.ExercisePanelConfigured &&
@@ -782,6 +800,11 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
             if (!descriptor.ActivityBarConfigured)
             {
                 issues.Add("No expone Estudio/Ejercicios en la activity bar.");
+            }
+
+            if (!descriptor.BrandingAssetsConfigured)
+            {
+                issues.Add("La extension local no usa los assets nuevos de branding para VS Code.");
             }
 
             if (!descriptor.CommandsRegistered)
@@ -832,7 +855,7 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
 
     private async Task<LocalExtensionDescriptor> DescribeAsync(string workspacePath, CancellationToken cancellationToken)
     {
-        var source = GetSourcePath(workspacePath);
+        var source = await ResolveManagedSourcePathAsync(workspacePath, cancellationToken).ConfigureAwait(false);
         if (!Directory.Exists(source))
         {
             throw new DirectoryNotFoundException("No se encontro la extension local de VS Code.");
@@ -849,6 +872,7 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
         var name = packageJson["name"]?.GetValue<string>() ?? "estudio-exercism";
         var publisher = packageJson["publisher"]?.GetValue<string>() ?? "estudio-socratico";
         var version = packageJson["version"]?.GetValue<string>() ?? "0.0.0";
+        var packageIcon = packageJson["icon"]?.GetValue<string>() ?? "";
         var commands = packageJson["contributes"]?["commands"]?.AsArray();
         var activityBar = packageJson["contributes"]?["viewsContainers"]?["activitybar"]?.AsArray();
         var views = packageJson["contributes"]?["views"]?["estudioSocratico"]?.AsArray();
@@ -861,10 +885,24 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
         var exercisePanelConfigured = views?.Any(node =>
             string.Equals(node?["id"]?.GetValue<string>(), "estudioExercism.view", StringComparison.OrdinalIgnoreCase) &&
             string.Equals(node?["name"]?.GetValue<string>(), "Ejercicios", StringComparison.OrdinalIgnoreCase)) == true;
+        var activityBarIconConfigured = activityBar?.Any(node =>
+            string.Equals(node?["icon"]?.GetValue<string>(), "assets/logo-vscode-activity.svg", StringComparison.OrdinalIgnoreCase)) == true;
+        var viewIconConfigured = views?.Any(node =>
+            string.Equals(node?["icon"]?.GetValue<string>(), "assets/logo-vscode-activity.svg", StringComparison.OrdinalIgnoreCase)) == true;
+        var extensionIconPath = Path.Combine(source, "assets", "logo-vscode-extension.png");
+        var activityIconPath = Path.Combine(source, "assets", "logo-vscode-activity.svg");
+        var activityIconUsesCurrentColor = File.Exists(activityIconPath) &&
+                                           File.ReadAllText(activityIconPath).Contains("currentColor", StringComparison.OrdinalIgnoreCase);
         var commandsRegistered =
             commandIds.Contains("estudioExercism.openPanel") &&
             commandIds.Contains("estudioExercism.openApiKeyConfig") &&
             commandIds.Contains("estudioExercism.revealApiKeyConfig");
+        var brandingAssetsConfigured =
+            string.Equals(packageIcon, "assets/logo-vscode-extension.png", StringComparison.OrdinalIgnoreCase) &&
+            activityBarIconConfigured &&
+            viewIconConfigured &&
+            File.Exists(extensionIconPath) &&
+            activityIconUsesCurrentColor;
 
         return new LocalExtensionDescriptor(
             Id: $"{publisher}.{name}",
@@ -872,10 +910,86 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
             Name: name,
             Version: version,
             SourcePath: source,
+            BrandingAssetsConfigured: brandingAssetsConfigured,
             ActivityBarConfigured: activityBarConfigured,
             CommandsRegistered: commandsRegistered,
             ExercisePanelConfigured: exercisePanelConfigured,
             ManagerScriptExists: File.Exists(GetManagerScriptPath(workspacePath)));
+    }
+
+    private async Task<string> ResolveManagedSourcePathAsync(string workspacePath, CancellationToken cancellationToken)
+    {
+        var workspaceSource = GetWorkspaceSourcePath(workspacePath);
+        var bundledSource = GetBundledSourcePath();
+        if (string.IsNullOrWhiteSpace(bundledSource) ||
+            !Directory.Exists(bundledSource) ||
+            string.Equals(Path.GetFullPath(workspaceSource), Path.GetFullPath(bundledSource), StringComparison.OrdinalIgnoreCase))
+        {
+            return workspaceSource;
+        }
+
+        var bundledVersion = await TryReadPackageVersionAsync(bundledSource, cancellationToken).ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(bundledVersion))
+        {
+            return workspaceSource;
+        }
+
+        var workspaceVersion = await TryReadPackageVersionAsync(workspaceSource, cancellationToken).ConfigureAwait(false);
+        var workspaceUsesCurrentBranding = await UsesCurrentBrandingAsync(workspaceSource, cancellationToken).ConfigureAwait(false);
+        var shouldRefreshWorkspace =
+            !Directory.Exists(workspaceSource) ||
+            VersionParsing.CompareLoose(bundledVersion, workspaceVersion) > 0 ||
+            !workspaceUsesCurrentBranding;
+
+        if (!shouldRefreshWorkspace)
+        {
+            return workspaceSource;
+        }
+
+        ReplaceDirectory(bundledSource, workspaceSource);
+        await logManager.WriteAsync(
+            "info",
+            "vscode-extension",
+            $"Se actualizo la extension gestionada del workspace a {bundledVersion}.",
+            cancellationToken).ConfigureAwait(false);
+        return workspaceSource;
+    }
+
+    private static async Task<string?> TryReadPackageVersionAsync(string sourcePath, CancellationToken cancellationToken)
+    {
+        var packageJsonPath = Path.Combine(sourcePath, "package.json");
+        if (!File.Exists(packageJsonPath))
+        {
+            return null;
+        }
+
+        var packageJson = JsonNode.Parse(await File.ReadAllTextAsync(packageJsonPath, cancellationToken).ConfigureAwait(false)) as JsonObject;
+        return packageJson?["version"]?.GetValue<string>();
+    }
+
+    private static async Task<bool> UsesCurrentBrandingAsync(string sourcePath, CancellationToken cancellationToken)
+    {
+        var packageJsonPath = Path.Combine(sourcePath, "package.json");
+        var activityIconPath = Path.Combine(sourcePath, "assets", "logo-vscode-activity.svg");
+        var extensionIconPath = Path.Combine(sourcePath, "assets", "logo-vscode-extension.png");
+        if (!File.Exists(packageJsonPath) || !File.Exists(activityIconPath) || !File.Exists(extensionIconPath))
+        {
+            return false;
+        }
+
+        var packageJson = JsonNode.Parse(await File.ReadAllTextAsync(packageJsonPath, cancellationToken).ConfigureAwait(false)) as JsonObject;
+        var packageIcon = packageJson?["icon"]?.GetValue<string>();
+        var activityBar = packageJson?["contributes"]?["viewsContainers"]?["activitybar"]?.AsArray();
+        var views = packageJson?["contributes"]?["views"]?["estudioSocratico"]?.AsArray();
+        var activityBarIconConfigured = activityBar?.Any(node =>
+            string.Equals(node?["icon"]?.GetValue<string>(), "assets/logo-vscode-activity.svg", StringComparison.OrdinalIgnoreCase)) == true;
+        var viewIconConfigured = views?.Any(node =>
+            string.Equals(node?["icon"]?.GetValue<string>(), "assets/logo-vscode-activity.svg", StringComparison.OrdinalIgnoreCase)) == true;
+        var activitySvg = await File.ReadAllTextAsync(activityIconPath, cancellationToken).ConfigureAwait(false);
+        return string.Equals(packageIcon, "assets/logo-vscode-extension.png", StringComparison.OrdinalIgnoreCase) &&
+               activityBarIconConfigured &&
+               viewIconConfigured &&
+               activitySvg.Contains("currentColor", StringComparison.OrdinalIgnoreCase);
     }
 
     private string GetInstalledExtensionsRoot()
@@ -937,7 +1051,7 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
       <Property Id="Microsoft.VisualStudio.Services.Content.Pricing" Value="Free" />
     </Properties>
     <License>extension/LICENSE.txt</License>
-    <Icon>extension/assets/estudio.png</Icon>
+    <Icon>extension/assets/logo-vscode-extension.png</Icon>
   </Metadata>
   <Installation>
     <InstallationTarget Id="Microsoft.VisualStudio.Code"/>
@@ -996,6 +1110,21 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
             Directory.CreateDirectory(Path.GetDirectoryName(target)!);
             File.Copy(file, target, overwrite: true);
         }
+    }
+
+    private static void ReplaceDirectory(string source, string destination)
+    {
+        var parent = Path.GetDirectoryName(destination)
+            ?? throw new InvalidOperationException("No se pudo determinar el directorio destino de la extension.");
+        Directory.CreateDirectory(parent);
+        var staging = Path.Combine(parent, $"{Path.GetFileName(destination)}.sync-{Guid.NewGuid():N}");
+        CopyDirectory(source, staging);
+        if (Directory.Exists(destination))
+        {
+            Directory.Delete(destination, recursive: true);
+        }
+
+        Directory.Move(staging, destination);
     }
 }
 

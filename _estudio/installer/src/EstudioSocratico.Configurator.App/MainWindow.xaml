@@ -6,7 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d"
-    Title="Estudio Socrático Configurador">
+    Title="Estudio Socrático Instalador">
 
     <Grid x:Name="Root" Background="#0f1419">
         <Grid.RowDefinitions>
@@ -27,7 +27,7 @@
                     Height="28"
                     Stretch="Uniform" />
                 <TextBlock
-                    Text="Estudio Socrático Configurador"
+                    Text="Estudio Socrático Instalador"
                     FontSize="12"
                     Foreground="#8b949e"
                     VerticalAlignment="Center" />

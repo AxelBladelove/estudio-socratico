@@ -1,19 +1,19 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Package
-      Name="Estudio Socratico Configurador"
+      Name="Estudio Socratico Instalador"
       Manufacturer="Estudio Socratico"
       Version="$(var.ProductVersion)"
       UpgradeCode="{93E3EB67-5D12-45BC-B479-A128CEF2D030}"
       Scope="perMachine">
 
-    <MajorUpgrade DowngradeErrorMessage="Ya existe una version mas reciente de Estudio Socratico Configurador." />
+    <MajorUpgrade DowngradeErrorMessage="Ya existe una version mas reciente de Estudio Socratico Instalador." />
     <MediaTemplate EmbedCab="yes" />
 
     <Icon Id="AppIcon" SourceFile="logo-configurator.ico" />
     <Property Id="ARPPRODUCTICON" Value="AppIcon" />
 
     <StandardDirectory Id="ProgramFiles64Folder">
-      <Directory Id="INSTALLFOLDER" Name="Estudio Socratico Configurador" />
+      <Directory Id="INSTALLFOLDER" Name="Estudio Socratico Instalador" />
     </StandardDirectory>
 
     <StandardDirectory Id="ProgramMenuFolder">
@@ -27,7 +27,7 @@
     <Component Id="StartMenuShortcut" Directory="ApplicationProgramsFolder" Guid="{770F7286-A257-48C1-B15B-9B7EB17ABA52}">
       <Shortcut
           Id="EstudioSocraticoConfiguratorShortcut"
-          Name="Estudio Socratico Configurador"
+          Name="Estudio Socratico Instalador"
           Target="[INSTALLFOLDER]EstudioSocratico.Configurator.App.exe"
           WorkingDirectory="INSTALLFOLDER"
           Icon="AppIcon"
@@ -36,7 +36,7 @@
       <RegistryValue Root="HKCU" Key="Software\EstudioSocratico\Configurator" Name="installed" Type="integer" Value="1" KeyPath="yes" />
     </Component>
 
-    <Feature Id="MainFeature" Title="Estudio Socratico Configurador" Level="1">
+    <Feature Id="MainFeature" Title="Estudio Socratico Instalador" Level="1">
       <ComponentGroupRef Id="PublishedAppFiles" />
       <ComponentRef Id="StartMenuShortcut" />
     </Feature>

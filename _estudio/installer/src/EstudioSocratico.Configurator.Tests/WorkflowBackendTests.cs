@@ -300,6 +300,151 @@ public sealed class WorkflowBackendTests
     }
 
     [Fact]
+    public async Task Workspace_OwnerOfBaseRepo_StillUsesWorkspaceRepo()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "estudio-github-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        File.WriteAllText(Path.Combine(root, "AGENTS.md"), "# test");
+        var paths = new AppPaths(repoRoot: root, localAppDataRoot: Path.Combine(root, "local"));
+        var runner = new RecordingRunner(spec =>
+        {
+            if (spec.Arguments.SequenceEqual(["api", "user", "--jq", ".login"]))
+            {
+                return RecordingRunner.Result(spec, 0, "AxelBladelove\n");
+            }
+
+            return RecordingRunner.Result(spec, 0, "ok");
+        });
+        var manager = new GitHubAccountManager(runner, new ManifestManager(paths), new LogManager(paths));
+
+        await manager.ConfigureRepositoryAsync(root, "axel", CancellationToken.None);
+
+        Assert.Contains(runner.Specs, spec => spec.Arguments.SequenceEqual(["config", "--local", "estudio.workspaceRepo", "AxelBladelove/estudio-socratico-axel"]));
+        Assert.Contains(runner.Specs, spec => spec.Arguments.SequenceEqual(["remote", "add", "origin", "https://github.com/AxelBladelove/estudio-socratico-axel.git"]) ||
+                                              spec.Arguments.SequenceEqual(["remote", "set-url", "origin", "https://github.com/AxelBladelove/estudio-socratico-axel.git"]));
+    }
+
+    [Fact]
+    public async Task Workspace_ConfiguresOriginToWorkspaceAndUpstreamToBase()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "estudio-github-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        File.WriteAllText(Path.Combine(root, "AGENTS.md"), "# test");
+        var paths = new AppPaths(repoRoot: root, localAppDataRoot: Path.Combine(root, "local"));
+        var runner = new RecordingRunner(spec =>
+        {
+            if (spec.Arguments.SequenceEqual(["api", "user", "--jq", ".login"]))
+            {
+                return RecordingRunner.Result(spec, 0, "ericgabriel\n");
+            }
+
+            if (spec.Arguments.SequenceEqual(["remote", "get-url", "origin"]))
+            {
+                return RecordingRunner.Result(spec, 0, "https://github.com/otro/repo.git\n");
+            }
+
+            if (spec.Arguments.SequenceEqual(["remote", "get-url", "upstream"]))
+            {
+                return RecordingRunner.Result(spec, 1);
+            }
+
+            return RecordingRunner.Result(spec, 0, "ok");
+        });
+        var manager = new GitHubAccountManager(runner, new ManifestManager(paths), new LogManager(paths));
+
+        await manager.ConfigureRepositoryAsync(root, "alias-local", CancellationToken.None);
+
+        Assert.Contains(runner.Specs, spec => spec.Arguments.SequenceEqual(["remote", "set-url", "origin", "https://github.com/ericgabriel/estudio-socratico-alias-local.git"]));
+        Assert.Contains(runner.Specs, spec => spec.Arguments.SequenceEqual(["remote", "add", "upstream", "https://github.com/AxelBladelove/estudio-socratico.git"]));
+    }
+
+    [Fact]
+    public async Task Workspace_DoesNotOverwriteExistingWorkspaceWithDifferentGithubLogin()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "estudio-github-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        File.WriteAllText(Path.Combine(root, "AGENTS.md"), "# test");
+        await WorkspaceIdentityStore.WriteAsync(root, "alias-local", "old-login", CancellationToken.None);
+        var paths = new AppPaths(repoRoot: root, localAppDataRoot: Path.Combine(root, "local"));
+        var runner = new RecordingRunner(spec =>
+        {
+            if (spec.Arguments.SequenceEqual(["api", "user", "--jq", ".login"]))
+            {
+                return RecordingRunner.Result(spec, 0, "new-login\n");
+            }
+
+            return RecordingRunner.Result(spec, 0, "ok");
+        });
+        var manager = new GitHubAccountManager(runner, new ManifestManager(paths), new LogManager(paths));
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => manager.ConfigureRepositoryAsync(root, "alias-local", CancellationToken.None));
+
+        Assert.Equal(WorkspaceIdentityStore.AccountMismatchMessage, ex.Message);
+    }
+
+    [Fact]
+    public async Task Workspace_WhenRepoAlreadyExists_ClonesExistingWorkspaceRepo()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "estudio-github-" + Guid.NewGuid().ToString("N"));
+        var workspace = Path.Combine(root, "Estudio-Socratico-axel");
+        Directory.CreateDirectory(root);
+        var paths = new AppPaths(repoRoot: root, localAppDataRoot: Path.Combine(root, "local"));
+        var runner = new RecordingRunner(spec =>
+        {
+            if (spec.Arguments.SequenceEqual(["api", "user", "--jq", ".login"]))
+            {
+                return RecordingRunner.Result(spec, 0, "AxelBladelove\n");
+            }
+
+            if (spec.Arguments.Count >= 5 &&
+                spec.Arguments[0] == "repo" &&
+                spec.Arguments[1] == "view" &&
+                spec.Arguments[2] == "AxelBladelove/estudio-socratico-axel")
+            {
+                return RecordingRunner.Result(spec, 0, "AxelBladelove/estudio-socratico-axel\n");
+            }
+
+            if (spec.Arguments.Count >= 3 && spec.Arguments[0] == "clone")
+            {
+                Directory.CreateDirectory(Path.Combine(workspace, ".git"));
+                File.WriteAllText(Path.Combine(workspace, "AGENTS.md"), "# test");
+                return RecordingRunner.Result(spec, 0, "ok");
+            }
+
+            if (spec.Arguments.SequenceEqual(["remote", "get-url", "origin"]) ||
+                spec.Arguments.SequenceEqual(["remote", "get-url", "upstream"]) ||
+                spec.Arguments.SequenceEqual(["auth", "status", "--hostname", "github.com"]))
+            {
+                return RecordingRunner.Result(spec, 1);
+            }
+
+            return RecordingRunner.Result(spec, 0, "ok");
+        });
+        var manager = new GitHubAccountManager(runner, new ManifestManager(paths), new LogManager(paths));
+
+        var resolved = await manager.EnsureWorkspaceRepositoryAsync(workspace, "axel", skipGitHub: false, CancellationToken.None);
+
+        Assert.Equal(workspace, resolved);
+        Assert.Contains(runner.Specs, spec => spec.Arguments.SequenceEqual(["clone", "https://github.com/AxelBladelove/estudio-socratico-axel.git", workspace]));
+        Assert.DoesNotContain(runner.Specs, spec => spec.Arguments.SequenceEqual(["repo", "create", "AxelBladelove/estudio-socratico-axel", "--public", "--clone=false", "--description", "Workspace personal de Estudio Socratico"]));
+    }
+
+    [Fact]
+    public async Task Workspace_SameGithubAndAlias_UsesSameRepoAcrossDevices()
+    {
+        var deviceOne = Path.Combine(Path.GetTempPath(), "estudio-device-one-" + Guid.NewGuid().ToString("N"));
+        var deviceTwo = Path.Combine(Path.GetTempPath(), "estudio-device-two-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(deviceOne);
+        Directory.CreateDirectory(deviceTwo);
+
+        await WorkspaceIdentityStore.WriteAsync(deviceOne, "axel", "AxelBladelove", CancellationToken.None);
+        await WorkspaceIdentityStore.WriteAsync(deviceTwo, "axel", "AxelBladelove", CancellationToken.None);
+
+        Assert.Equal("AxelBladelove/estudio-socratico-axel", WorkspaceIdentityStore.Read(deviceOne)?.WorkspaceRepo);
+        Assert.Equal("AxelBladelove/estudio-socratico-axel", WorkspaceIdentityStore.Read(deviceTwo)?.WorkspaceRepo);
+    }
+
+    [Fact]
     public async Task Remotes_OriginAndUpstreamAreCorrect()
     {
         var root = Path.Combine(Path.GetTempPath(), "estudio-github-" + Guid.NewGuid().ToString("N"));

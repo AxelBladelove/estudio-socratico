@@ -853,6 +853,7 @@ public sealed class ConfiguratorEngine
             workspace,
             smokeTestStatus);
         var resources = _planner.ToResourceStates(diagnostics.Dependencies, manifest.GitHub, manifest.Exercism, workspaceValid, workspace);
+        var runtime = ProductInfo.GetRuntimeVersionInfo();
 
         return (new UIStateSnapshot
         {
@@ -869,7 +870,11 @@ public sealed class ConfiguratorEngine
             WorkspaceContext = workspaceContext,
             VSCodeExtension = vsCodeExtension,
             ExtensionApiKeyConfig = extensionApiKeyConfig,
-            FinalReadiness = finalReadiness
+            FinalReadiness = finalReadiness,
+            ConfiguratorVersion = runtime.InternalPackageVersion,
+            PublicDisplayVersion = runtime.PublicDisplayVersion,
+            InstalledBuild = runtime.InstalledBuild,
+            VersionSource = runtime.Source
         }, diagnostics.Dependencies);
     }
 

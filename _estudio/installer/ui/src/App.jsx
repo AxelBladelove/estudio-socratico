@@ -179,19 +179,20 @@ function SetupPanel({ children, wide = false }) {
   return <section className={`panel enter-soft ${wide ? "wide" : "normal"}`}>{children}</section>;
 }
 
-function AppShell({ children, stage, canGoBack, onBack, consoleOpen, setConsoleOpen, logs }) {
+function AppShell({ children, stage, canGoBack, onBack, consoleOpen, setConsoleOpen, logs, publicDisplayVersion, configuratorVersion, installedBuild, versionSource }) {
+  const versionSummary = [`v${publicDisplayVersion || "2.0"}`, configuratorVersion ? `paquete ${configuratorVersion}` : null, versionSource || null].filter(Boolean).join(" · ");
   return <div className="estudio-ui">
     <div className="dark-bloom" />
     <header className="app-header">
       <div className="header-left">
         {canGoBack ? <button onClick={onBack} className="back-button" aria-label="Volver"><Icons.Back /></button> : null}
         <div className="logo-box" aria-hidden="true"><LogoMark /></div>
-        <div><p className="brand-title">Estudio Socrático</p><p className="brand-subtitle">Configurador</p></div>
+        <div><p className="brand-title">Estudio Socrático</p><p className="brand-subtitle">Instalador</p></div>
       </div>
       <div className="stage-pill">{stage}</div>
     </header>
     <main className="main">{children}</main>
-    <footer className="app-footer"><span>WinUI · WebView2 · instalación segura</span><button className="footer-button" onClick={() => setConsoleOpen(!consoleOpen)}><Icons.Terminal /> Diagnóstico técnico</button></footer>
+    <footer className="app-footer"><span title={installedBuild ? `Build ${installedBuild}` : undefined}>{`WinUI · WebView2 · instalación segura · ${versionSummary}`}</span><button className="footer-button" onClick={() => setConsoleOpen(!consoleOpen)}><Icons.Terminal /> Diagnóstico técnico</button></footer>
     {consoleOpen ? <TechConsole logs={logs} onClose={() => setConsoleOpen(false)} /> : null}
   </div>;
 }
@@ -1126,6 +1127,9 @@ export default function App() {
       setConsoleOpen={setConsoleOpen}
       logs={logs}
       publicDisplayVersion={snapshot?.publicDisplayVersion}
+      configuratorVersion={snapshot?.configuratorVersion}
+      installedBuild={snapshot?.installedBuild}
+      versionSource={snapshot?.versionSource}
     >
       <SetupPanel>
         <HeaderBlock
@@ -1158,6 +1162,9 @@ export default function App() {
     onStartUpdate={startUpdate}
     onCheckUpdates={checkUpdates}
     publicDisplayVersion={snapshot?.publicDisplayVersion}
+    configuratorVersion={snapshot?.configuratorVersion}
+    installedBuild={snapshot?.installedBuild}
+    versionSource={snapshot?.versionSource}
   >
     {screen === "welcome" ? <Welcome onNext={() => setScreen("workflow")} /> : null}
     {screen === "workflow" ? <WorkflowScreen selectedWorkflow={workflow} setSelectedWorkflow={selectWorkflow} onNext={() => setScreen("scan")} /> : null}

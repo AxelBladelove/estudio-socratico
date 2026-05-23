@@ -78,7 +78,21 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v3
         with:
-          name: "Estudio Socrático 2.0 — Branding Update"
+          name: "Estudio Socrático 2.0 — Update Validation Hotfix"
+          body: |
+            # Estudio Socrático 2.0 — Update Validation Hotfix
+
+            ## Cambios
+
+            - El modo Actualizar ahora reinstala la extensión de VS Code si hay una versión nueva.
+            - El Activity Bar de VS Code usa el nuevo branding.
+            - El diagnóstico reporta versión pública, versión interna y build instalado de forma clara.
+            - Ajustes de nombre visible del producto a Estudio Socrático Instalador.
+            - Validación del modelo multi-dispositivo: misma cuenta GitHub + mismo alias usa el mismo repo workspace.
+
+            ## Sin cambios destructivos
+
+            No cambia datos del usuario, ejercicios, logs, API keys ni repos remotos.
           draft: false
           prerelease: false
           files: |

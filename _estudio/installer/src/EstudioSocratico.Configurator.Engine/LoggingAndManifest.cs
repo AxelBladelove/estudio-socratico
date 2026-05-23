@@ -15,17 +15,22 @@ public sealed class LogManager(AppPaths paths) : IProgressSink
     public async Task StartRunAsync(CancellationToken cancellationToken = default)
     {
         paths.EnsureBaseDirectories();
+        var runtime = ProductInfo.GetRuntimeVersionInfo();
         var payload = new
         {
             product = ProductInfo.DisplayName,
-            version = ProductInfo.Version,
+            version = runtime.InternalPackageVersion,
+            publicDisplayVersion = runtime.PublicDisplayVersion,
+            internalPackageVersion = runtime.InternalPackageVersion,
+            installedBuild = runtime.InstalledBuild,
+            source = runtime.Source,
             startedAtUtc = DateTimeOffset.UtcNow,
             os = Environment.OSVersion.VersionString,
             user = Environment.UserName
         };
         await File.WriteAllTextAsync(LastRunPath, JsonSerializer.Serialize(payload, JsonDefaults.Options), cancellationToken)
             .ConfigureAwait(false);
-        await WriteAsync("info", "run", "Configurador iniciado.", cancellationToken).ConfigureAwait(false);
+        await WriteAsync("info", "run", "Instalador iniciado.", cancellationToken).ConfigureAwait(false);
     }
 
     public Task ReportAsync(ProgressEvent progress, CancellationToken cancellationToken = default)
@@ -128,7 +133,15 @@ public sealed class ManifestManager(AppPaths paths)
     public async Task SaveAsync(InstallerManifest manifest, CancellationToken cancellationToken = default)
     {
         paths.EnsureBaseDirectories();
-        var next = manifest with { UpdatedAtUtc = DateTimeOffset.UtcNow };
+        var runtime = ProductInfo.GetRuntimeVersionInfo();
+        var next = manifest with
+        {
+            ConfiguratorVersion = runtime.InternalPackageVersion,
+            PublicDisplayVersion = runtime.PublicDisplayVersion,
+            InstalledBuild = runtime.InstalledBuild,
+            VersionSource = runtime.Source,
+            UpdatedAtUtc = DateTimeOffset.UtcNow
+        };
         var json = JsonSerializer.Serialize(next, JsonDefaults.Options);
         await File.WriteAllTextAsync(paths.ManifestPath, SecretRedactor.Redact(json), cancellationToken)
             .ConfigureAwait(false);

@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using EstudioSocratico.Configurator.Core;
 using EstudioSocratico.Configurator.Engine;
 using Xunit;
@@ -198,6 +199,76 @@ public sealed class VSCodeManagerTests
         Assert.Contains("pidio reinicio", log);
     }
 
+    [Fact]
+    public async Task Update_ReinstallsVSCodeExtensionWhenPackagedVersionIsNewer()
+    {
+        var root = NewTemp();
+        var workspace = CreateWorkspaceWithExtension(root, "2.0.0", useLegacyBranding: true);
+        var packagedRoot = Path.Combine(root, "packaged-root");
+        var packagedWorkspace = CreateWorkspaceWithExtension(packagedRoot, "2.0.12", useLegacyBranding: false);
+        var packagedSource = Path.Combine(packagedRoot, "_estudio", "soporte", "vscode", "estudio-exercism");
+        Directory.CreateDirectory(Path.GetDirectoryName(packagedSource)!);
+        CopyDirectory(Path.Combine(packagedWorkspace, "_estudio", "soporte", "vscode", "estudio-exercism"), packagedSource);
+        var codeExe = Path.Combine(root, "Code.exe");
+        var codeCmd = Path.Combine(root, "code.cmd");
+        File.WriteAllText(codeExe, "");
+        File.WriteAllText(codeCmd, "");
+        var stalePath = Path.Combine(root, ".vscode", "extensions", "estudio-socratico.estudio-exercism-2.0.0");
+        Directory.CreateDirectory(stalePath);
+        File.WriteAllText(Path.Combine(stalePath, "stale.txt"), "old");
+        var paths = new AppPaths(repoRoot: packagedRoot, localAppDataRoot: Path.Combine(root, "local"));
+        var logManager = new LogManager(paths);
+        var listCalls = 0;
+        var runner = new RecordingRunner(spec =>
+        {
+            if (spec.FileName.Equals("cmd.exe", StringComparison.OrdinalIgnoreCase) &&
+                spec.ArgumentString?.Contains("--list-extensions", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                listCalls++;
+                return RecordingRunner.Result(spec, 0, listCalls == 1
+                    ? "estudio-socratico.estudio-exercism@2.0.0"
+                    : "estudio-socratico.estudio-exercism@2.0.12");
+            }
+
+            return RecordingRunner.Result(spec, 0, "1.100.0");
+        });
+        var manager = new VSCodeManager(
+            runner,
+            new ExtensionManager(paths, logManager, userProfileRoot: root),
+            new ManifestManager(paths),
+            logManager,
+            () => new VSCodePaths(codeExe, codeCmd));
+
+        await manager.PrepareAsync(workspace, CancellationToken.None);
+
+        var workspacePackage = JsonNode.Parse(await File.ReadAllTextAsync(Path.Combine(workspace, "_estudio", "soporte", "vscode", "estudio-exercism", "package.json")))!.AsObject();
+        Assert.Equal("2.0.12", workspacePackage["version"]?.GetValue<string>());
+        Assert.Equal("assets/logo-vscode-extension.png", workspacePackage["icon"]?.GetValue<string>());
+        Assert.False(File.Exists(Path.Combine(workspace, "_estudio", "soporte", "vscode", "estudio-exercism", "assets", "estudio.svg")));
+        Assert.True(Directory.Exists(Path.Combine(root, ".vscode", "extensions", "estudio-socratico.estudio-exercism-2.0.12")));
+    }
+
+    [Fact]
+    public void VSCodeExtension_ActivityBarIconUsesNewBrandingAsset()
+    {
+        var repoRoot = AppPaths.TryResolveRepoRoot(AppContext.BaseDirectory);
+        Assert.NotNull(repoRoot);
+
+        var extensionRoot = Path.Combine(repoRoot!, "_estudio", "soporte", "vscode", "estudio-exercism");
+        var packageJson = JsonNode.Parse(File.ReadAllText(Path.Combine(extensionRoot, "package.json")))!.AsObject();
+        var activityIconPath = Path.Combine(extensionRoot, "assets", "logo-vscode-activity.svg");
+        var activityIconSvg = File.ReadAllText(activityIconPath);
+
+        Assert.Equal("assets/logo-vscode-extension.png", packageJson["icon"]?.GetValue<string>());
+        Assert.Equal(
+            "assets/logo-vscode-activity.svg",
+            packageJson["contributes"]?["viewsContainers"]?["activitybar"]?[0]?["icon"]?.GetValue<string>());
+        Assert.Equal(
+            "assets/logo-vscode-activity.svg",
+            packageJson["contributes"]?["views"]?["estudioSocratico"]?[0]?["icon"]?.GetValue<string>());
+        Assert.Contains("currentColor", activityIconSvg);
+    }
+
     private static VSCodeManager CreateManager(string root, ICommandRunner runner, Func<VSCodePaths> locator)
     {
         var paths = new AppPaths(localAppDataRoot: Path.Combine(root, "local"));
@@ -205,17 +276,43 @@ public sealed class VSCodeManagerTests
         return new VSCodeManager(runner, new ExtensionManager(paths, logManager, userProfileRoot: root), new ManifestManager(paths), logManager, locator);
     }
 
-    private static string CreateWorkspaceWithExtension(string root)
+    private static string CreateWorkspaceWithExtension(string root, string version = "1.0.0", bool useLegacyBranding = false)
     {
         var workspace = Path.Combine(root, "workspace");
         var extension = Path.Combine(workspace, "_estudio", "soporte", "vscode", "estudio-exercism");
         Directory.CreateDirectory(extension);
+        Directory.CreateDirectory(Path.Combine(extension, "assets"));
         Directory.CreateDirectory(Path.Combine(workspace, "_estudio", "soporte", "exercism"));
-        File.WriteAllText(Path.Combine(extension, "package.json"), """
-{"name":"estudio-exercism","publisher":"estudio-socratico","version":"1.0.0","contributes":{"viewsContainers":{"activitybar":[{"id":"estudioSocratico","title":"Estudio"}]},"views":{"estudioSocratico":[{"id":"estudioExercism.view","name":"Ejercicios"}]},"commands":[{"command":"estudioExercism.openPanel"},{"command":"estudioExercism.openApiKeyConfig"},{"command":"estudioExercism.revealApiKeyConfig"}]}}
-""");
+        var packageJson = useLegacyBranding
+            ? $"{{\"name\":\"estudio-exercism\",\"publisher\":\"estudio-socratico\",\"version\":\"{version}\",\"icon\":\"assets/estudio.png\",\"contributes\":{{\"viewsContainers\":{{\"activitybar\":[{{\"id\":\"estudioSocratico\",\"title\":\"Estudio\",\"icon\":\"assets/estudio.svg\"}}]}},\"views\":{{\"estudioSocratico\":[{{\"id\":\"estudioExercism.view\",\"name\":\"Ejercicios\",\"icon\":\"assets/estudio.svg\"}}]}},\"commands\":[{{\"command\":\"estudioExercism.openPanel\"}},{{\"command\":\"estudioExercism.openApiKeyConfig\"}},{{\"command\":\"estudioExercism.revealApiKeyConfig\"}}]}}}}"
+            : $"{{\"name\":\"estudio-exercism\",\"publisher\":\"estudio-socratico\",\"version\":\"{version}\",\"icon\":\"assets/logo-vscode-extension.png\",\"contributes\":{{\"viewsContainers\":{{\"activitybar\":[{{\"id\":\"estudioSocratico\",\"title\":\"Estudio\",\"icon\":\"assets/logo-vscode-activity.svg\"}}]}},\"views\":{{\"estudioSocratico\":[{{\"id\":\"estudioExercism.view\",\"name\":\"Ejercicios\",\"icon\":\"assets/logo-vscode-activity.svg\"}}]}},\"commands\":[{{\"command\":\"estudioExercism.openPanel\"}},{{\"command\":\"estudioExercism.openApiKeyConfig\"}},{{\"command\":\"estudioExercism.revealApiKeyConfig\"}}]}}}}";
+        File.WriteAllText(Path.Combine(extension, "package.json"), packageJson);
+        if (useLegacyBranding)
+        {
+            File.WriteAllBytes(Path.Combine(extension, "assets", "estudio.png"), [0x89, 0x50, 0x4E, 0x47]);
+            File.WriteAllText(Path.Combine(extension, "assets", "estudio.svg"), """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#ffffff" d="M12 2 4 6v12l8 4 8-4V6z"/></svg>""");
+        }
+        else
+        {
+            File.WriteAllBytes(Path.Combine(extension, "assets", "logo-vscode-extension.png"), [0x89, 0x50, 0x4E, 0x47]);
+            File.WriteAllText(Path.Combine(extension, "assets", "logo-vscode-activity.svg"), """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2 4 6v12l8 4 8-4V6z"/></svg>""");
+        }
         File.WriteAllText(Path.Combine(workspace, "_estudio", "soporte", "exercism", "manager.ps1"), "");
         return workspace;
+    }
+
+    private static void CopyDirectory(string source, string destination)
+    {
+        Directory.CreateDirectory(destination);
+        foreach (var directory in Directory.GetDirectories(source, "*", SearchOption.AllDirectories))
+        {
+            Directory.CreateDirectory(directory.Replace(source, destination, StringComparison.Ordinal));
+        }
+
+        foreach (var file in Directory.GetFiles(source, "*", SearchOption.AllDirectories))
+        {
+            File.Copy(file, file.Replace(source, destination, StringComparison.Ordinal), overwrite: true);
+        }
     }
 
     private static string NewTemp()
