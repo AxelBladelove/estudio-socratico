@@ -32,7 +32,9 @@ public enum BridgeAction
     GetCurrentState,
     PreviewUninstall,
     ReinstallManaged,
-    UninstallManaged
+    UninstallManaged,
+    CheckForUpdates,
+    TriggerUpdate
 }
 
 /// <summary>
@@ -113,6 +115,7 @@ public sealed record UIStateSnapshot
     public ExtensionApiKeyConfigState ExtensionApiKeyConfig { get; init; } = new();
     public FinalReadinessCheck FinalReadiness { get; init; } = new();
     public string ConfiguratorVersion { get; init; } = ProductInfo.Version;
+    public string PublicDisplayVersion { get; init; } = ProductInfo.PublicDisplayVersion;
 }
 
 public static class BridgeProtocol
@@ -331,4 +334,15 @@ public static class BridgePayload
             ? boolValue
             : bool.TryParse(value.ToString(), out var parsedValue) ? parsedValue : defaultValue;
     }
+}
+
+public sealed record UpdateCheckResult
+{
+    public required bool UpdateAvailable { get; init; }
+    public required string LocalVersion { get; init; }
+    public required string LatestVersion { get; init; }
+    public required string LatestDisplayVersion { get; init; }
+    public string? DownloadUrl { get; init; }
+    public string? Sha256Url { get; init; }
+    public string? ReleaseNotes { get; init; }
 }

@@ -282,6 +282,39 @@ public sealed class WebViewBridge : IProgressSink
                 }).ConfigureAwait(false);
                 return smokeSummary;
 
+            case BridgeAction.CheckForUpdates:
+                return await _engine.Updater.CheckForUpdatesAsync(CancellationToken.None).ConfigureAwait(false);
+
+            case BridgeAction.TriggerUpdate:
+                _planCts?.Cancel();
+                _planCts = new CancellationTokenSource();
+                var downloadUrl = BridgePayload.GetString(request, "downloadUrl") 
+                    ?? throw new ArgumentException("Se requiere la URL de descarga.");
+                var sha256Url = BridgePayload.GetString(request, "sha256Url") 
+                    ?? throw new ArgumentException("Se requiere la URL de la firma.");
+                var latestVersion = BridgePayload.GetString(request, "latestVersion") 
+                    ?? throw new ArgumentException("Se requiere la version esperada.");
+                
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _engine.Updater.TriggerUpdateAsync(downloadUrl, sha256Url, latestVersion, this, _planCts.Token)
+                            .ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        var error = InstallerError.FromException(ex);
+                        await _engine.Logs.WriteErrorAsync(error).ConfigureAwait(false);
+                        await EmitEventAsync(new BridgeEvent
+                        {
+                            Type = BridgeEventType.Error,
+                            Payload = error
+                        }).ConfigureAwait(false);
+                    }
+                });
+                return new { updating = true };
+
             default:
                 throw new InvalidOperationException($"Accion no permitida: {request.Action}");
         }

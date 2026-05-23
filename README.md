@@ -4,7 +4,7 @@
 
 **Un entorno de estudio para aprender Fundamentos de Programación en C,<br>con una IA que te guía sin resolver los ejercicios por ti.**
 
-![Versión](https://img.shields.io/badge/versión-2.0.0-blue?style=flat-square)
+![Versión](https://img.shields.io/badge/versión-2.0-blue?style=flat-square)
 ![Plataforma](https://img.shields.io/badge/plataforma-Windows-0078D6?style=flat-square&logo=windows)
 ![Lenguaje](https://img.shields.io/badge/lenguaje-C-A8B9CC?style=flat-square&logo=c)
 ![Editor](https://img.shields.io/badge/editor-VS_Code-007ACC?style=flat-square&logo=visualstudiocode)
@@ -29,9 +29,9 @@ ayuda a descubrir qué está mal en tu código. El razonamiento siempre es tuyo.
 
 ---
 
-## Versión 2.0.0
+## Estudio Socrático 2.0
 
-La version 2.0 cambia la instalacion a un configurador visual para Windows:
+La versión 2.0 introduce un configurador visual para Windows y soporte de actualizaciones integradas:
 
 - **Un instalador `.exe` descargable desde GitHub Releases** guia todo el flujo.
 - Detecta e instala Git, GitHub CLI, Node.js, Python, VS Code, Exercism CLI y
@@ -80,9 +80,9 @@ Cuando aprendes C, los errores no siempre son fáciles de entender:
 
 ### Primera vez
 
-1. Ve a **GitHub Releases**.
-2. Descarga `Estudio-Socratico-Setup-v2.0.0-x64.exe`.
-3. Haz doble click.
+1. Ve a **GitHub Releases** en el repositorio oficial.
+2. Descarga el instalador ejecutable de la versión 2.0 (ej. `Estudio-Socratico-Setup-v2.0.10-x64.exe`).
+3. Haz doble click para ejecutarlo.
 4. Sigue el flujo guiado: GitHub, Exercism, workspace y VS Code.
 
 El instalador te pide:
@@ -99,10 +99,17 @@ Al terminar quedan listos:
 - ✅ El panel de ejercicios dentro de VS Code
 - ✅ Tu fork y remotos Git configurados
 
-<details>
-<summary><strong>🔄 Ya lo tengo instalado, solo quiero reparar o reconfigurar</strong></summary>
+### 🔄 Actualizaciones integradas
 
-Abre el instalador de nuevo y elige **Reparar**. Valida herramientas, PATH,
+El configurador de Estudio Socrático cuenta con un sistema de actualizaciones automáticas:
+- **Sin servidor externo:** Las actualizaciones se detectan y descargan directamente desde los GitHub Releases oficiales del repositorio `AxelBladelove/estudio-socratico`.
+- **Descarga segura:** Al presionar "Actualizar ahora", el configurador descargará de forma segura el instalador `.exe` junto con su firma `.sha256` a tu carpeta local, verificará su integridad y ejecutará el instalador.
+- **Conservación de datos:** El proceso de actualización se instala encima de la versión anterior y conserva intactos tus ejercicios, logs de intentos, alias de identidad, configuración local y claves API.
+
+<details>
+<summary><strong>🛠️ Ya lo tengo instalado, solo quiero reparar o reconfigurar</strong></summary>
+
+Abre el instalador de nuevo o usa la opción **Reparar**. Valida herramientas, PATH,
 GitHub, Exercism, VS Code, runtime local y workspace sin borrar tus ejercicios.
 
 </details>
@@ -450,7 +457,7 @@ alias.
 <details>
 <summary><strong>❌ <kbd>F9</kbd> no hace nada</strong></summary>
 
-Abre `Estudio-Socratico-Setup-v2.0.0-x64.exe` y elige **Reparar**.
+Abre `Estudio-Socratico-Setup-v2.0.10-x64.exe` y elige **Reparar**.
 
 Luego cierra VS Code completamente y vuelve a abrirlo.
 
@@ -545,7 +552,7 @@ framework.
 
 <div align="center">
 
-**Estudio Socrático** · v2.0.0 · Mayo 2026
+**Estudio Socrático 2.0** · Mayo 2026
 
 *Hecho para aprender, no para copiar.*
 

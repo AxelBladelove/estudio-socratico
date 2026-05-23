@@ -12,6 +12,7 @@ public sealed class AppPaths
             ProductInfo.AppDataFolderName);
         LogsRoot = Path.Combine(LocalAppDataRoot, ProductInfo.LogsFolderName);
         DownloadCache = Path.Combine(LocalAppDataRoot, "Downloads");
+        UpdatesRoot = Path.Combine(LocalAppDataRoot, "Updates");
         ToolsRoot = Path.Combine(LocalAppDataRoot, "Tools");
         ManifestPath = Path.Combine(LocalAppDataRoot, ProductInfo.ManifestFileName);
         RepoRoot = repoRoot ?? TryResolveRepoRoot(Environment.CurrentDirectory);
@@ -22,6 +23,7 @@ public sealed class AppPaths
     public string LocalAppDataRoot { get; }
     public string LogsRoot { get; }
     public string DownloadCache { get; }
+    public string UpdatesRoot { get; }
     public string ToolsRoot { get; }
     public string ManifestPath { get; }
     public string? RepoRoot { get; }
@@ -38,6 +40,7 @@ public sealed class AppPaths
         Directory.CreateDirectory(LocalAppDataRoot);
         Directory.CreateDirectory(LogsRoot);
         Directory.CreateDirectory(DownloadCache);
+        Directory.CreateDirectory(UpdatesRoot);
         Directory.CreateDirectory(ToolsRoot);
     }
 

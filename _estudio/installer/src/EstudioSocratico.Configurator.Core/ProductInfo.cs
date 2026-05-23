@@ -2,8 +2,9 @@ namespace EstudioSocratico.Configurator.Core;
 
 public static class ProductInfo
 {
-    public const string Version = "2.0.9";
-    public const string SetupFileName = "Estudio-Socratico-Setup-v2.0.9-x64.exe";
+    public const string PublicDisplayVersion = "2.0";
+    public const string Version = "2.0.10";
+    public const string SetupFileName = "Estudio-Socratico-Setup-v2.0.10-x64.exe";
     public const string DisplayName = "Estudio Socratico Configurador";
     public const string CompanyName = "Estudio Socratico";
     public const string AppDataFolderName = "EstudioSocratico";
