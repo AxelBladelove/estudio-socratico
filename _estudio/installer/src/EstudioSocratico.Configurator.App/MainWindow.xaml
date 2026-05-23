@@ -6,7 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d"
-    Title="Estudio Socrático Instalador">
+    Title="Estudio Socrático">
 
     <Grid x:Name="Root" Background="#0f1419">
         <Grid.RowDefinitions>
@@ -21,13 +21,8 @@
                 Spacing="10"
                 VerticalAlignment="Center"
                 Margin="16,0,0,0">
-                <Image
-                    x:Name="TitleBarLogo"
-                    Width="28"
-                    Height="28"
-                    Stretch="Uniform" />
                 <TextBlock
-                    Text="Estudio Socrático Instalador"
+                    Text="Estudio Socrático"
                     FontSize="12"
                     Foreground="#8b949e"
                     VerticalAlignment="Center" />

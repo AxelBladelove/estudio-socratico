@@ -18,6 +18,7 @@ import {
   recommendedWorkspacePath,
   resolveWorkspaceSelection,
 } from "./workspaceState.js";
+import { getUpdateBannerView } from "./updateBannerState.js";
 
 import nodejsIcon from "./assets/tools/nodejs.svg";
 import pythonIcon from "./assets/tools/python.svg";
@@ -179,8 +180,9 @@ function SetupPanel({ children, wide = false }) {
   return <section className={`panel enter-soft ${wide ? "wide" : "normal"}`}>{children}</section>;
 }
 
-function AppShell({ children, stage, canGoBack, onBack, consoleOpen, setConsoleOpen, logs, publicDisplayVersion, configuratorVersion, installedBuild, versionSource }) {
+function AppShell({ children, stage, canGoBack, onBack, consoleOpen, setConsoleOpen, logs, updateInfo, onStartUpdate, publicDisplayVersion, configuratorVersion, installedBuild, versionSource }) {
   const versionSummary = [`v${publicDisplayVersion || "2.0"}`, configuratorVersion ? `paquete ${configuratorVersion}` : null, versionSource || null].filter(Boolean).join(" · ");
+  const updateBanner = getUpdateBannerView(updateInfo, configuratorVersion || publicDisplayVersion);
   return <div className="estudio-ui">
     <div className="dark-bloom" />
     <header className="app-header">
@@ -191,10 +193,26 @@ function AppShell({ children, stage, canGoBack, onBack, consoleOpen, setConsoleO
       </div>
       <div className="stage-pill">{stage}</div>
     </header>
-    <main className="main">{children}</main>
+    <main className="main">
+      <div className="main-stack">
+        {updateBanner.visible ? <UpdateBanner view={updateBanner} onStartUpdate={onStartUpdate} /> : null}
+        {children}
+      </div>
+    </main>
     <footer className="app-footer"><span title={installedBuild ? `Build ${installedBuild}` : undefined}>{`WinUI · WebView2 · instalación segura · ${versionSummary}`}</span><button className="footer-button" onClick={() => setConsoleOpen(!consoleOpen)}><Icons.Terminal /> Diagnóstico técnico</button></footer>
     {consoleOpen ? <TechConsole logs={logs} onClose={() => setConsoleOpen(false)} /> : null}
   </div>;
+}
+
+function UpdateBanner({ view, onStartUpdate }) {
+  return <section className="update-banner enter-soft" aria-label="Actualización disponible">
+    <div className="update-banner-text">
+      <p className="update-banner-kicker">{view.title}</p>
+      <p className="update-banner-copy">{view.body}</p>
+      <p className="update-banner-meta">Versión actual: {view.currentVersion} · Disponible: {view.latestVersion}</p>
+    </div>
+    <Button onClick={onStartUpdate} icon={false}>{view.buttonLabel}</Button>
+  </section>;
 }
 
 function Welcome({ onNext }) {

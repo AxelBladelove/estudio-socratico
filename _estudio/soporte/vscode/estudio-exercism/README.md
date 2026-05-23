@@ -1,6 +1,34 @@
 # Estudio Socratico - Extension VS Code
 
-Esta extension muestra el panel de ejercicios de Estudio Socratico y puede usar una API Key propia del estudiante para funciones opcionales como traducciones o importacion avanzada.
+Esta extension muestra el panel de ejercicios de Estudio Socratico, registra el
+atajo F9 para compilar el archivo C activo y puede usar una API Key propia del
+estudiante para funciones opcionales como traducciones o importacion avanzada.
+
+## F9
+
+La extension contribuye el comando:
+
+```text
+Estudio Socratico: Compilar archivo C activo
+```
+
+con el atajo:
+
+```text
+F9
+```
+
+El comando ejecuta la tarea del workspace `Compilar y Grabar (Sistema
+Socratico)`. Si esa tarea no existe, llama directamente a:
+
+```text
+_estudio/soporte/scripts/build.cmd <archivo.c>
+```
+
+`Ctrl+Shift+B` sigue funcionando porque usa la misma tarea de build por defecto
+del workspace.
+
+## API Key BYOK
 
 La API Key no se pide dentro del instalador. Para configurarla, abre el panel de la extension y pulsa **Abrir configuracion de API Key**. Esto crea y abre:
 

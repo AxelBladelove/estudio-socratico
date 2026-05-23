@@ -115,12 +115,6 @@ public sealed partial class MainWindow : Window
             AppWindow.SetIcon(iconPath);
         }
 
-        var titleBarLogoPath = Path.Combine(AppContext.BaseDirectory, "logo-app.svg");
-        if (File.Exists(titleBarLogoPath))
-        {
-            TitleBarLogo.Source = new Microsoft.UI.Xaml.Media.Imaging.SvgImageSource(new Uri(titleBarLogoPath));
-        }
-
         if (AppWindowTitleBar.IsCustomizationSupported())
         {
             var titleBar = AppWindow.TitleBar;

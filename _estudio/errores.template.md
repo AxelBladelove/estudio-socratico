@@ -10,8 +10,8 @@ INSTRUCCIONES PARA IA — NO BORRAR
 
 CONTEXTO DEL ESTUDIANTE:
 Este archivo documenta los patrones de error de un estudiante de primer semestre de
-Ingeniería en Computación y Telemática (PUCMM), preparándose para el 2do Parcial del
-Prof. Alejandro Liz (structs con memoria dinámica, recursión, archivos binarios).
+programacion en C, practicando temas como funciones, arreglos, structs,
+punteros, memoria dinamica, recursion y archivos.
 
 PROPÓSITO DE ESTE ARCHIVO:
 No es un registro de errores de una sesión. Es una base de conocimiento acumulativa

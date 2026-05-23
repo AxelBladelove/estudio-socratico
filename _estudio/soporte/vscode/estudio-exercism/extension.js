@@ -22,6 +22,7 @@ function activate(context) {
   currentProvider = new ExerciseViewProvider(context);
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider("estudioExercism.view", currentProvider),
+    vscode.commands.registerCommand("estudioExercism.compileActiveCFile", () => compileActiveCFile()),
     vscode.commands.registerCommand("estudioExercism.openPanel", () => openPanel(context)),
     vscode.commands.registerCommand("estudioExercism.openApiKeyConfig", () => openApiKeyConfig(getWorkspaceRoot())),
     vscode.commands.registerCommand("estudioExercism.revealApiKeyConfig", () => revealApiKeyConfig(getWorkspaceRoot())),
@@ -56,6 +57,48 @@ function getWorkspaceRoot() {
 
 function getManagerPath(root) {
   return path.join(root, "_estudio", "soporte", "exercism", "manager.ps1");
+}
+
+async function compileActiveCFile() {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    throw new Error("Abre primero un archivo .c para compilarlo con F9.");
+  }
+
+  const activeFile = editor.document.uri.fsPath;
+  if (path.extname(activeFile).toLowerCase() !== ".c") {
+    throw new Error("F9 compila el archivo .c activo. Abre un archivo C y vuelve a intentar.");
+  }
+
+  if (editor.document.isDirty) {
+    await editor.document.save();
+  }
+
+  const tasks = await vscode.tasks.fetchTasks({ type: "shell" });
+  const estudioTask = tasks.find((task) => task.name === "Compilar y Grabar (Sistema Socratico)");
+  if (estudioTask) {
+    await vscode.tasks.executeTask(estudioTask);
+    return;
+  }
+
+  const root = getWorkspaceRoot();
+  const buildScript = path.join(root, "_estudio", "soporte", "scripts", "build.cmd");
+  if (!fs.existsSync(buildScript)) {
+    throw new Error("No se encontro _estudio/soporte/scripts/build.cmd en el workspace.");
+  }
+
+  const terminal = vscode.window.createTerminal({
+    name: "Estudio Socratico",
+    cwd: root,
+    shellPath: "powershell.exe",
+    shellArgs: ["-NoProfile"],
+  });
+  terminal.show();
+  terminal.sendText(`& ${quotePowerShell(buildScript)} ${quotePowerShell(activeFile)}`);
+}
+
+function quotePowerShell(value) {
+  return `'${String(value).replace(/'/g, "''")}'`;
 }
 
 function getConfigDirectory(root) {

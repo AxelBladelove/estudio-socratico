@@ -1,15 +1,16 @@
-# Estudio Socrático Configurador v2
+# Estudio Socrático Instalador v2
 
-Este directorio contiene el instalador/configurador v2 de Estudio Socrático.
+Este directorio contiene el instalador/configurador v2 de Estudio Socrático. La
+versión estable actual es `v2.0.15`.
 
 ## Estrategia de Versionado
 Para mantener la compatibilidad con Windows Installer (MSI/WiX) y evitar problemas de upgrade, el proyecto maneja dos conceptos de versión:
 - **PublicDisplayVersion:** `"2.0"` (Branding público que se muestra en READMEs, UI, y títulos de release).
-- **InternalPackageVersion:** `"2.0.11"` o superior (Versión técnica monotónica utilizada para metadatos de compilación, WiX ProductVersion, validación de actualizaciones y git tags).
+- **InternalPackageVersion:** `"2.0.15"` o superior (Versión técnica monotónica utilizada para metadatos de compilación, WiX ProductVersion, validación de actualizaciones y git tags).
 
 El artefacto de instalación estable final en GitHub Releases se nombra según la versión técnica:
 ```text
-Estudio-Socratico-Setup-v2.0.14-x64.exe
+Estudio-Socratico-Setup-v2.0.15-x64.exe
 ```
 
 ## Stack
@@ -22,6 +23,17 @@ Estudio-Socratico-Setup-v2.0.14-x64.exe
 - Motor: librerias C# modulares.
 - Worker elevado: `EstudioSocratico.Configurator.Elevated.exe`.
 - Toolchain C: MSYS2 UCRT64, GCC y Make.
+
+## UX Estable 2.0
+
+- La pantalla principal consulta updates al abrir y muestra un aviso visible si
+  existe una version nueva.
+- El boton **Actualizar ahora** usa el flujo real del updater: descarga `.exe`,
+  descarga `.sha256`, verifica hash y lanza el bundle Burn.
+- La barra nativa superior queda simplificada; el branding completo vive dentro
+  del header WebView.
+- F9 queda registrado desde la extension de VS Code y ejecuta la tarea de build
+  por defecto del workspace; `Ctrl+Shift+B` sigue siendo alternativa.
 
 ## Estructura
 

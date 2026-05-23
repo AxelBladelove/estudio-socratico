@@ -708,6 +708,46 @@ public sealed class WorkflowBackendTests
         Assert.True(string.IsNullOrWhiteSpace(stderr), stderr);
     }
 
+    [Fact]
+    public async Task BuildCmd_AcceptsNormalCFilePath()
+    {
+        var workspace = CreateRealScriptWorkspace();
+        var buildScript = Path.Combine(workspace, "_estudio", "soporte", "scripts", "build.cmd");
+        var probe = Path.Combine(workspace, "Ejercicios", "test_manual.c");
+        Directory.CreateDirectory(Path.GetDirectoryName(probe)!);
+        await File.WriteAllTextAsync(probe, "#include <stdio.h>\nint main(void){printf(\"ok\\n\");return 0;}\n");
+
+        using var process = StartBuildProcess(buildScript, workspace, probe);
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
+        await process.WaitForExitAsync();
+        var stdout = await stdoutTask;
+        var stderr = await stderrTask;
+
+        Assert.Equal(0, process.ExitCode);
+        Assert.Contains("[OK] Compilacion exitosa", stdout);
+        Assert.True(string.IsNullOrWhiteSpace(stderr), stderr);
+    }
+
+    [Fact]
+    public async Task BuildCmd_DoesNotTreatBatchScriptAsSourceFile()
+    {
+        var workspace = CreateRealScriptWorkspace();
+        var buildScript = Path.Combine(workspace, "_estudio", "soporte", "scripts", "build.cmd");
+        var batchScript = Path.Combine(workspace, "_estudio", "soporte", "scripts", "compilar_y_grabar.bat");
+
+        using var process = StartBuildProcess(buildScript, workspace, batchScript);
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
+        await process.WaitForExitAsync();
+        var stdout = await stdoutTask;
+        var stderr = await stderrTask;
+
+        Assert.NotEqual(0, process.ExitCode);
+        Assert.Contains("El archivo debe tener extension .c", stdout);
+        Assert.True(string.IsNullOrWhiteSpace(stderr), stderr);
+    }
+
     private static string CreateSmokeWorkspace()
     {
         var root = Path.Combine(Path.GetTempPath(), "estudio-smoke-" + Guid.NewGuid().ToString("N"));
@@ -716,6 +756,29 @@ public sealed class WorkflowBackendTests
         File.WriteAllText(Path.Combine(root, "AGENTS.md"), "# test");
         File.WriteAllText(Path.Combine(root, "_estudio", "soporte", "scripts", "build.cmd"), "@echo off");
         return root;
+    }
+
+    private static System.Diagnostics.Process StartBuildProcess(string buildScript, string workspace, string sourcePath)
+    {
+        var process = new System.Diagnostics.Process();
+        process.StartInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = buildScript,
+            WorkingDirectory = workspace,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+        process.StartInfo.ArgumentList.Add(sourcePath);
+        process.StartInfo.ArgumentList.Add("--installer-smoke");
+        process.StartInfo.ArgumentList.Add("--non-interactive");
+        process.StartInfo.Environment["ESTUDIO_INSTALLER_SMOKE"] = "1";
+        process.StartInfo.Environment["ESTUDIO_NONINTERACTIVE"] = "1";
+        process.StartInfo.Environment["ESTUDIO_SKIP_PAUSE"] = "1";
+        process.StartInfo.Environment["ESTUDIO_SKIP_COMMIT"] = "1";
+        process.Start();
+        return process;
     }
 
     private static string CreateRealScriptWorkspace()

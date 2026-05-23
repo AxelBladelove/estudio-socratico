@@ -65,6 +65,35 @@ Accion:
 - Elegir otra carpeta.
 - Usar Reparar solo si la carpeta contiene `AGENTS.md` y `_estudio/`.
 
+## F9_NO_RESPONDE
+
+`Ctrl+Shift+B` compila, pero `F9` no hace nada.
+
+Accion:
+
+- Cerrar y volver a abrir VS Code.
+- Confirmar que la extension `estudio-socratico.estudio-exercism` esta instalada.
+- Ejecutar Actualizar instalacion o Reparar instalacion.
+- Confirmar que el archivo activo termina en `.c`.
+- Usar `Ctrl+Shift+B` como alternativa mientras se revisa el atajo.
+
+Detalle tecnico:
+
+- `Ctrl+Shift+B` usa `.vscode/tasks.json`.
+- `F9` lo registra la extension de VS Code con el comando
+  `estudioExercism.compileActiveCFile`.
+
+## UPDATE_BANNER_NO_APARECE
+
+La app no muestra aviso de update.
+
+Accion:
+
+- Revisar conexion a internet.
+- Abrir Diagnostico tecnico para ver si la consulta fallo.
+- Si ya estas en la ultima version, no se muestra aviso.
+- El fallo de red no debe bloquear la pantalla inicial.
+
 ## UNINSTALL_MANIFEST_MISSING
 
 No hay manifest local para saber que limpiar.
