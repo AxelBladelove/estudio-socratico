@@ -2,6 +2,7 @@ use anyhow::{anyhow, Context, Result};
 use chrono::{SecondsFormat, Utc};
 use regex::Regex;
 use reqwest::Client;
+use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 use std::collections::HashMap;
@@ -176,6 +177,14 @@ impl Engine {
             "reveal-tests" => self.reveal_tests(params).await,
             "submit" => self.submit(params).await,
             "detect" => self.detect(params).await,
+            "fundamentals.catalog" => self.fundamentals_catalog(),
+            "fundamentals.route" => self.fundamentals_route(),
+            "fundamentals.categories" => self.fundamentals_categories(),
+            "fundamentals.quizzes" => self.fundamentals_quizzes(),
+            "fundamentals.projects" => self.fundamentals_projects(),
+            "fundamentals.progress" => self.fundamentals_progress(),
+            "fundamentals.recommendations" => self.fundamentals_recommendations(),
+            "fundamentals.unlocks" => self.fundamentals_unlocks(),
             other => Err(anyhow!("Metodo desconocido: {other}")),
         }
     }
@@ -968,6 +977,564 @@ impl Engine {
             .unwrap_or_default())
     }
 
+    fn fundamentals_catalog(&self) -> Result<Value> {
+        self.ensure_fundamentals_db()?;
+        Ok(json!({
+            "courseId": "fundamentos-c",
+            "generatedAt": now_iso(),
+            "concepts": self.fundamentals_file("concepts")?,
+            "route": self.fundamentals_route()?,
+            "categories": self.fundamentals_categories()?,
+            "exercises": self.fundamentals_exercises_with_state()?,
+            "quizzes": self.fundamentals_quizzes()?,
+            "projects": self.fundamentals_projects()?,
+            "sources": self.fundamentals_file("sources")?,
+            "graph": self.fundamentals_file("graph")?,
+            "progress": self.fundamentals_progress()?,
+            "recommendations": self.fundamentals_recommendations()?,
+            "unlocks": self.fundamentals_unlocks()?,
+            "ai": {
+                "required": false,
+                "preferredBroker": "opencode",
+                "fallbackMode": "direct",
+                "directByokProviders": ["google", "openai", "anthropic", "openrouter", "groq", "mistral", "ollama", "lmstudio"]
+            }
+        }))
+    }
+
+    fn fundamentals_route(&self) -> Result<Value> {
+        self.ensure_fundamentals_db()?;
+        let mut route = self.fundamentals_file("route")?;
+        let exercises = keyed_by_id(array_from(
+            &self.fundamentals_file("exercises")?,
+            "exercises",
+        ));
+        let quizzes = keyed_by_id(array_from(&self.fundamentals_file("quizzes")?, "quizzes"));
+        let projects = keyed_by_id(array_from(&self.fundamentals_file("projects")?, "projects"));
+        let unlocks = self.fundamentals_unlock_map()?;
+        let progress = self.exercise_progress_map()?;
+
+        if let Some(modules) = route.get_mut("modules").and_then(Value::as_array_mut) {
+            for module in modules {
+                let module_id = str_field(module, "id").unwrap_or_default();
+                let module_unlocked = self.module_unlocked(&module_id, &unlocks);
+                set_json(module, "unlocked", json!(module_unlocked));
+                if let Some(nodes) = module.get_mut("nodes").and_then(Value::as_array_mut) {
+                    for node in nodes {
+                        let node_type = str_field(node, "type").unwrap_or_default();
+                        let reference = str_field(node, "ref").unwrap_or_default();
+                        let item = match node_type.as_str() {
+                            "quiz" => quizzes.get(&reference),
+                            "project" => projects.get(&reference),
+                            _ => exercises.get(&reference),
+                        };
+                        if let Some(item) = item {
+                            let unlocked = module_unlocked && self.item_unlocked(item, &unlocks);
+                            set_json(node, "unlocked", json!(unlocked));
+                            set_json(
+                                node,
+                                "status",
+                                json!(progress
+                                    .get(&reference)
+                                    .cloned()
+                                    .unwrap_or_else(|| "not_started".to_string())),
+                            );
+                            set_json(node, "item", item.clone());
+                        }
+                    }
+                }
+            }
+        }
+        Ok(route)
+    }
+
+    fn fundamentals_categories(&self) -> Result<Value> {
+        self.ensure_fundamentals_db()?;
+        let mut categories = array_from(&self.fundamentals_file("categories")?, "categories");
+        let exercises = self.fundamentals_exercises_with_state()?;
+        let projects = self.fundamentals_projects()?;
+        let quizzes = self.fundamentals_quizzes()?;
+
+        for category in &mut categories {
+            let topic = str_field(category, "topic").unwrap_or_default();
+            let exercise_count = exercises
+                .iter()
+                .filter(|item| item_topics(item).contains(&topic))
+                .count();
+            let project_count = projects
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter(|item| item_topics(item).contains(&topic))
+                .count();
+            let quiz_count = quizzes
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter(|item| item_topics(item).contains(&topic))
+                .count();
+            set_json(category, "exerciseCount", json!(exercise_count));
+            set_json(category, "projectCount", json!(project_count));
+            set_json(category, "quizCount", json!(quiz_count));
+        }
+
+        Ok(json!({
+            "courseId": "fundamentos-c",
+            "categories": categories,
+            "exercises": exercises,
+            "projects": projects,
+            "quizzes": quizzes
+        }))
+    }
+
+    fn fundamentals_quizzes(&self) -> Result<Value> {
+        self.ensure_fundamentals_db()?;
+        let mut quizzes = array_from(&self.fundamentals_file("quizzes")?, "quizzes");
+        let unlocks = self.fundamentals_unlock_map()?;
+        let quiz_scores = self.quiz_score_map()?;
+        for quiz in &mut quizzes {
+            let id = str_field(quiz, "id").unwrap_or_default();
+            set_json(quiz, "unlocked", json!(self.item_unlocked(quiz, &unlocks)));
+            set_json(
+                quiz,
+                "bestScore",
+                quiz_scores
+                    .get(&id)
+                    .map(|score| json!(score))
+                    .unwrap_or(Value::Null),
+            );
+        }
+        Ok(Value::Array(quizzes))
+    }
+
+    fn fundamentals_projects(&self) -> Result<Value> {
+        self.ensure_fundamentals_db()?;
+        let mut projects = array_from(&self.fundamentals_file("projects")?, "projects");
+        let unlocks = self.fundamentals_unlock_map()?;
+        for project in &mut projects {
+            set_json(
+                project,
+                "unlocked",
+                json!(self.item_unlocked(project, &unlocks)),
+            );
+        }
+        Ok(Value::Array(projects))
+    }
+
+    fn fundamentals_progress(&self) -> Result<Value> {
+        let db = self.ensure_fundamentals_db()?;
+        Ok(json!({
+            "courseId": "fundamentos-c",
+            "dbPath": path_string(&self.fundamentals_db_path()),
+            "exerciseProgress": self.query_json_rows(&db, "SELECT exercise_id, status, best_score, attempts, updated_at FROM exercise_progress ORDER BY exercise_id")?,
+            "quizAttempts": self.query_json_rows(&db, "SELECT quiz_id, score, passed, attempted_at FROM quiz_attempts ORDER BY attempted_at DESC LIMIT 50")?,
+            "conceptMastery": self.query_json_rows(&db, "SELECT concept_id, mastery, updated_at FROM concept_mastery ORDER BY concept_id")?,
+            "signals": self.query_json_rows(&db, "SELECT kind, topic, ref_id, weight, message, created_at FROM signals ORDER BY created_at DESC LIMIT 50")?,
+            "recommendations": self.query_json_rows(&db, "SELECT recommendation_id, kind, ref_id, reason, score, created_at, dismissed_at FROM recommendations ORDER BY created_at DESC LIMIT 20")?,
+            "unlocks": self.query_json_rows(&db, "SELECT item_type, item_id, unlocked, reason, updated_at FROM unlocks ORDER BY item_type, item_id")?
+        }))
+    }
+
+    fn fundamentals_recommendations(&self) -> Result<Value> {
+        self.ensure_fundamentals_db()?;
+        let route = self.fundamentals_route()?;
+        let projects = self.fundamentals_projects()?;
+        let quizzes = self.fundamentals_quizzes()?;
+        let mastery = self.concept_mastery_map()?;
+        let mut recommendations = Vec::new();
+
+        if let Some(next) = next_route_node(&route) {
+            recommendations.push(json!({
+                "id": format!("next-route-{}", str_field(&next, "ref").unwrap_or_default()),
+                "kind": "next-route",
+                "refId": str_field(&next, "ref").unwrap_or_default(),
+                "title": str_field(&next, "title").unwrap_or_else(|| "Continua la Ruta C".to_string()),
+                "reason": "Siguiente paso desbloqueado en Ruta C.",
+                "score": 90
+            }));
+        }
+
+        for project in projects.as_array().into_iter().flatten() {
+            if bool_field(project, "unlocked").unwrap_or(false) {
+                recommendations.push(json!({
+                    "id": format!("project-{}", str_field(project, "id").unwrap_or_default()),
+                    "kind": "project-unlocked",
+                    "refId": str_field(project, "id").unwrap_or_default(),
+                    "title": str_field(project, "title").unwrap_or_default(),
+                    "reason": "Ya tienes base suficiente para intentar esta asignacion o proyecto.",
+                    "score": 72
+                }));
+                break;
+            }
+        }
+
+        for quiz in quizzes.as_array().into_iter().flatten() {
+            if bool_field(quiz, "unlocked").unwrap_or(false) {
+                recommendations.push(json!({
+                    "id": format!("quiz-{}", str_field(quiz, "id").unwrap_or_default()),
+                    "kind": "quiz-recommended",
+                    "refId": str_field(quiz, "id").unwrap_or_default(),
+                    "title": str_field(quiz, "title").unwrap_or_default(),
+                    "reason": "Quiz teorico disponible para comprobar dominio bajo presion.",
+                    "score": 64
+                }));
+                break;
+            }
+        }
+
+        for (topic, value) in mastery {
+            if value < 0.5 {
+                recommendations.push(json!({
+                    "id": format!("reinforce-{topic}"),
+                    "kind": "reinforcement",
+                    "topic": topic,
+                    "reason": "Dominio local bajo; conviene practicar antes de avanzar demasiado.",
+                    "score": 55
+                }));
+                break;
+            }
+        }
+
+        self.persist_recommendations(&recommendations)?;
+        Ok(json!({
+            "courseId": "fundamentos-c",
+            "generatedAt": now_iso(),
+            "recommendations": recommendations
+        }))
+    }
+
+    fn fundamentals_unlocks(&self) -> Result<Value> {
+        self.ensure_fundamentals_db()?;
+        let exercises = array_from(&self.fundamentals_file("exercises")?, "exercises");
+        let quizzes = array_from(&self.fundamentals_file("quizzes")?, "quizzes");
+        let projects = array_from(&self.fundamentals_file("projects")?, "projects");
+        let unlocks = self.fundamentals_unlock_map()?;
+        let mut items = Vec::new();
+        for (kind, list) in [
+            ("exercise", exercises),
+            ("quiz", quizzes),
+            ("project", projects),
+        ] {
+            for item in list {
+                let id = str_field(&item, "id").unwrap_or_default();
+                let unlocked = self.item_unlocked(&item, &unlocks);
+                items.push(json!({
+                    "itemType": kind,
+                    "itemId": id,
+                    "unlocked": unlocked,
+                    "reason": if unlocked { "prerequisitos satisfechos" } else { "faltan prerequisitos" }
+                }));
+            }
+        }
+        self.persist_unlocks(&items)?;
+        Ok(json!({
+            "courseId": "fundamentos-c",
+            "unlocks": items
+        }))
+    }
+
+    fn fundamentals_exercises_with_state(&self) -> Result<Vec<Value>> {
+        self.ensure_fundamentals_db()?;
+        let mut exercises = array_from(&self.fundamentals_file("exercises")?, "exercises");
+        let unlocks = self.fundamentals_unlock_map()?;
+        let progress = self.exercise_progress_map()?;
+        for exercise in &mut exercises {
+            let id = str_field(exercise, "id").unwrap_or_default();
+            let topics = item_topics(exercise);
+            set_json(exercise, "topics", json!(topics));
+            set_json(
+                exercise,
+                "unlocked",
+                json!(self.item_unlocked(exercise, &unlocks)),
+            );
+            set_json(
+                exercise,
+                "status",
+                json!(progress
+                    .get(&id)
+                    .cloned()
+                    .unwrap_or_else(|| "not_started".to_string())),
+            );
+        }
+        Ok(exercises)
+    }
+
+    fn fundamentals_file(&self, name: &str) -> Result<Value> {
+        let path = self
+            .repo_root
+            .join("_estudio")
+            .join("soporte")
+            .join("catalog")
+            .join("fundamentos-c")
+            .join(format!("{name}.json"));
+        read_json(&path)
+    }
+
+    fn fundamentals_db_path(&self) -> PathBuf {
+        self.repo_root
+            .join("usuario")
+            .join("progreso")
+            .join("fundamentos-c")
+            .join("estudio.db")
+    }
+
+    fn ensure_fundamentals_db(&self) -> Result<Connection> {
+        let path = self.fundamentals_db_path();
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        let db = Connection::open(path)?;
+        db.execute_batch(
+            r#"
+            CREATE TABLE IF NOT EXISTS attempts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                item_type TEXT NOT NULL,
+                item_id TEXT NOT NULL,
+                status TEXT NOT NULL,
+                score REAL,
+                created_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS exercise_progress (
+                exercise_id TEXT PRIMARY KEY,
+                status TEXT NOT NULL DEFAULT 'not_started',
+                best_score REAL,
+                attempts INTEGER NOT NULL DEFAULT 0,
+                updated_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS quiz_attempts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                quiz_id TEXT NOT NULL,
+                score REAL NOT NULL,
+                passed INTEGER NOT NULL,
+                attempted_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS concept_mastery (
+                concept_id TEXT PRIMARY KEY,
+                mastery REAL NOT NULL DEFAULT 0,
+                updated_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS signals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                kind TEXT NOT NULL,
+                topic TEXT,
+                ref_id TEXT,
+                weight REAL NOT NULL DEFAULT 1,
+                message TEXT,
+                created_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS recommendations (
+                recommendation_id TEXT PRIMARY KEY,
+                kind TEXT NOT NULL,
+                ref_id TEXT,
+                reason TEXT,
+                score REAL NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                dismissed_at TEXT
+            );
+            CREATE TABLE IF NOT EXISTS unlocks (
+                item_type TEXT NOT NULL,
+                item_id TEXT NOT NULL,
+                unlocked INTEGER NOT NULL,
+                reason TEXT,
+                updated_at TEXT NOT NULL,
+                PRIMARY KEY (item_type, item_id)
+            );
+            "#,
+        )?;
+
+        let concepts = array_from(&self.fundamentals_file("concepts")?, "concepts");
+        for concept in concepts {
+            if let Some(id) = str_field(&concept, "id") {
+                db.execute(
+                    "INSERT OR IGNORE INTO concept_mastery (concept_id, mastery, updated_at) VALUES (?1, 0, ?2)",
+                    params![id, now_iso()],
+                )?;
+            }
+        }
+        Ok(db)
+    }
+
+    fn query_json_rows(&self, db: &Connection, sql: &str) -> Result<Value> {
+        let mut stmt = db.prepare(sql)?;
+        let names: Vec<String> = stmt
+            .column_names()
+            .iter()
+            .map(|name| name.to_string())
+            .collect();
+        let rows = stmt.query_map([], |row| {
+            let mut object = Map::new();
+            for (index, name) in names.iter().enumerate() {
+                let value = row.get_ref(index)?;
+                let json_value = match value {
+                    rusqlite::types::ValueRef::Null => Value::Null,
+                    rusqlite::types::ValueRef::Integer(v) => json!(v),
+                    rusqlite::types::ValueRef::Real(v) => json!(v),
+                    rusqlite::types::ValueRef::Text(v) => {
+                        Value::String(String::from_utf8_lossy(v).to_string())
+                    }
+                    rusqlite::types::ValueRef::Blob(_) => Value::Null,
+                };
+                object.insert(name.clone(), json_value);
+            }
+            Ok(Value::Object(object))
+        })?;
+        let mut result = Vec::new();
+        for row in rows {
+            result.push(row?);
+        }
+        Ok(Value::Array(result))
+    }
+
+    fn exercise_progress_map(&self) -> Result<HashMap<String, String>> {
+        let db = self.ensure_fundamentals_db()?;
+        let mut stmt = db.prepare("SELECT exercise_id, status FROM exercise_progress")?;
+        let mut rows = stmt.query([])?;
+        let mut result = HashMap::new();
+        while let Some(row) = rows.next()? {
+            result.insert(row.get::<_, String>(0)?, row.get::<_, String>(1)?);
+        }
+        Ok(result)
+    }
+
+    fn quiz_score_map(&self) -> Result<HashMap<String, f64>> {
+        let db = self.ensure_fundamentals_db()?;
+        let mut stmt =
+            db.prepare("SELECT quiz_id, MAX(score) FROM quiz_attempts GROUP BY quiz_id")?;
+        let mut rows = stmt.query([])?;
+        let mut result = HashMap::new();
+        while let Some(row) = rows.next()? {
+            result.insert(row.get::<_, String>(0)?, row.get::<_, f64>(1)?);
+        }
+        Ok(result)
+    }
+
+    fn concept_mastery_map(&self) -> Result<HashMap<String, f64>> {
+        let db = self.ensure_fundamentals_db()?;
+        let mut stmt = db.prepare("SELECT concept_id, mastery FROM concept_mastery")?;
+        let mut rows = stmt.query([])?;
+        let mut result = HashMap::new();
+        while let Some(row) = rows.next()? {
+            result.insert(row.get::<_, String>(0)?, row.get::<_, f64>(1)?);
+        }
+        Ok(result)
+    }
+
+    fn fundamentals_unlock_map(&self) -> Result<HashMap<String, bool>> {
+        let progress = self.exercise_progress_map()?;
+        let quiz_scores = self.quiz_score_map()?;
+        let mastery = self.concept_mastery_map()?;
+        let route = self.fundamentals_file("route")?;
+        let mut completed_modules = HashMap::new();
+        if let Some(modules) = route.get("modules").and_then(Value::as_array) {
+            for module in modules {
+                let module_id = str_field(module, "id").unwrap_or_default();
+                let refs: Vec<String> = module
+                    .get("nodes")
+                    .and_then(Value::as_array)
+                    .into_iter()
+                    .flatten()
+                    .filter(|node| str_field(node, "type").as_deref() == Some("exercise"))
+                    .filter_map(|node| str_field(node, "ref"))
+                    .collect();
+                let complete = !refs.is_empty()
+                    && refs.iter().all(|id| {
+                        matches!(
+                            progress.get(id).map(String::as_str),
+                            Some("completed" | "tests_passed" | "submitted")
+                        )
+                    });
+                completed_modules.insert(module_id, complete);
+            }
+        }
+
+        let mut result = HashMap::new();
+        let mut all_items = Vec::new();
+        all_items.extend(array_from(
+            &self.fundamentals_file("exercises")?,
+            "exercises",
+        ));
+        all_items.extend(array_from(&self.fundamentals_file("quizzes")?, "quizzes"));
+        all_items.extend(array_from(&self.fundamentals_file("projects")?, "projects"));
+        for item in all_items {
+            if let Some(id) = str_field(&item, "id") {
+                let unlocked = item_unlock_satisfied(
+                    &item,
+                    &progress,
+                    &quiz_scores,
+                    &mastery,
+                    &completed_modules,
+                );
+                result.insert(id, unlocked);
+            }
+        }
+        Ok(result)
+    }
+
+    fn module_unlocked(&self, module_id: &str, unlocks: &HashMap<String, bool>) -> bool {
+        if module_id == "primeros-programas" {
+            return true;
+        }
+        let route = self
+            .fundamentals_file("route")
+            .unwrap_or_else(|_| json!({}));
+        route
+            .get("modules")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+            .find(|module| str_field(module, "id").as_deref() == Some(module_id))
+            .and_then(|module| module.get("nodes").and_then(Value::as_array))
+            .map(|nodes| {
+                nodes
+                    .iter()
+                    .filter_map(|node| str_field(node, "ref"))
+                    .any(|id| unlocks.get(&id).copied().unwrap_or(false))
+            })
+            .unwrap_or(false)
+    }
+
+    fn item_unlocked(&self, item: &Value, unlocks: &HashMap<String, bool>) -> bool {
+        str_field(item, "id")
+            .and_then(|id| unlocks.get(&id).copied())
+            .unwrap_or(false)
+    }
+
+    fn persist_recommendations(&self, recommendations: &[Value]) -> Result<()> {
+        let db = self.ensure_fundamentals_db()?;
+        for recommendation in recommendations {
+            let id = str_field(recommendation, "id").unwrap_or_else(|| to_slug(&now_iso()));
+            db.execute(
+                "INSERT OR REPLACE INTO recommendations (recommendation_id, kind, ref_id, reason, score, created_at, dismissed_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, NULL)",
+                params![
+                    id,
+                    str_field(recommendation, "kind").unwrap_or_default(),
+                    str_field(recommendation, "refId").or_else(|| str_field(recommendation, "topic")),
+                    str_field(recommendation, "reason").unwrap_or_default(),
+                    int_value(recommendation, "score").unwrap_or(0) as f64,
+                    now_iso()
+                ],
+            )?;
+        }
+        Ok(())
+    }
+
+    fn persist_unlocks(&self, unlocks: &[Value]) -> Result<()> {
+        let db = self.ensure_fundamentals_db()?;
+        for item in unlocks {
+            db.execute(
+                "INSERT OR REPLACE INTO unlocks (item_type, item_id, unlocked, reason, updated_at) VALUES (?1, ?2, ?3, ?4, ?5)",
+                params![
+                    str_field(item, "itemType").unwrap_or_default(),
+                    str_field(item, "itemId").unwrap_or_default(),
+                    if bool_field(item, "unlocked").unwrap_or(false) { 1 } else { 0 },
+                    str_field(item, "reason").unwrap_or_default(),
+                    now_iso()
+                ],
+            )?;
+        }
+        Ok(())
+    }
+
     async fn exercism_catalog(&self) -> Vec<Value> {
         let fallback = vec![
             json!({"slug":"hello-world","title":"Hello World","difficulty":"easy","blurb":"Exercism's classic introductory exercise.","icon_url":""}),
@@ -1513,6 +2080,109 @@ fn read_json(path: &Path) -> Result<Value> {
     let text =
         fs::read_to_string(path).with_context(|| format!("Leyendo {}", path_string(path)))?;
     Ok(serde_json::from_str(&text)?)
+}
+
+fn array_from(value: &Value, key: &str) -> Vec<Value> {
+    value
+        .get(key)
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default()
+}
+
+fn keyed_by_id(items: Vec<Value>) -> HashMap<String, Value> {
+    items
+        .into_iter()
+        .filter_map(|item| str_field(&item, "id").map(|id| (id, item)))
+        .collect()
+}
+
+fn string_array(value: &Value, key: &str) -> Vec<String> {
+    value
+        .get(key)
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .map(String::from)
+        .collect()
+}
+
+fn item_topics(item: &Value) -> Vec<String> {
+    let mut topics = Vec::new();
+    for key in ["primaryTopics", "supportTopics", "combinedTopics", "topics"] {
+        for topic in string_array(item, key) {
+            if !topics.contains(&topic) {
+                topics.push(topic);
+            }
+        }
+    }
+    topics
+}
+
+fn item_unlock_satisfied(
+    item: &Value,
+    progress: &HashMap<String, String>,
+    quiz_scores: &HashMap<String, f64>,
+    mastery: &HashMap<String, f64>,
+    completed_modules: &HashMap<String, bool>,
+) -> bool {
+    let unlock = item.get("unlock").unwrap_or(&Value::Null);
+
+    for exercise in string_array(unlock, "requiresExercises") {
+        if !matches!(
+            progress.get(&exercise).map(String::as_str),
+            Some("completed" | "tests_passed" | "submitted")
+        ) {
+            return false;
+        }
+    }
+
+    for module_or_topic in string_array(unlock, "requiresModules") {
+        let module_ok = completed_modules
+            .get(&module_or_topic)
+            .copied()
+            .unwrap_or(false);
+        let topic_ok = mastery.get(&module_or_topic).copied().unwrap_or(0.0) >= 0.6;
+        if !module_ok && !topic_ok {
+            return false;
+        }
+    }
+
+    if let Some(required) = unlock
+        .get("requiresQuizScore")
+        .filter(|value| !value.is_null())
+    {
+        let quiz_id = str_field(required, "quizId").unwrap_or_default();
+        let min_score = int_value(required, "minScore").unwrap_or(0) as f64;
+        if quiz_scores.get(&quiz_id).copied().unwrap_or(0.0) < min_score {
+            return false;
+        }
+    }
+
+    true
+}
+
+fn next_route_node(route: &Value) -> Option<Value> {
+    route
+        .get("modules")
+        .and_then(Value::as_array)?
+        .iter()
+        .flat_map(|module| {
+            module
+                .get("nodes")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+        })
+        .find(|node| {
+            bool_field(node, "unlocked").unwrap_or(false)
+                && !matches!(
+                    str_field(node, "status").as_deref(),
+                    Some("completed" | "tests_passed" | "submitted")
+                )
+        })
+        .cloned()
 }
 
 fn write_json(path: &Path, value: &Value) -> Result<()> {

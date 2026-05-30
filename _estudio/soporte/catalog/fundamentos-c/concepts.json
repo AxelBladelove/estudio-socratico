@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "courseId": "fundamentos-c",
+  "title": "Fundamentos de Programacion en C",
+  "concepts": [
+    {
+      "id": "io",
+      "title": "Entrada y salida",
+      "description": "Uso inicial de printf y scanf para comunicar datos con el programa.",
+      "level": 1,
+      "category": "base",
+      "skills": ["printf-formatting", "scanf-basic", "prompt-design"],
+      "commonErrors": ["scanf-ampersand", "format-specifier-mismatch"]
+    },
+    {
+      "id": "variables",
+      "title": "Variables y operadores",
+      "description": "Declarar variables, elegir tipos y transformar valores con operadores aritmeticos.",
+      "level": 1,
+      "category": "base",
+      "skills": ["type-selection", "assignment", "arithmetic-expressions"],
+      "commonErrors": ["integer-division", "uninitialized-variable"]
+    },
+    {
+      "id": "conditionals",
+      "title": "Condicionales",
+      "description": "Tomar decisiones con if, else y operadores relacionales.",
+      "level": 2,
+      "category": "control",
+      "skills": ["boolean-expression", "branching", "comparison-operators"],
+      "commonErrors": ["assignment-in-condition", "missing-else-case"]
+    },
+    {
+      "id": "loops",
+      "title": "Ciclos",
+      "description": "Repetir procesos con for, while y do while controlando inicio, condicion y avance.",
+      "level": 2,
+      "category": "control",
+      "skills": ["counter-loop", "sentinel-loop", "accumulators"],
+      "commonErrors": ["off-by-one", "infinite-loop", "wrong-initial-value"]
+    },
+    {
+      "id": "functions",
+      "title": "Funciones",
+      "description": "Separar un problema en piezas con parametros, retorno y contratos claros.",
+      "level": 3,
+      "category": "abstraction",
+      "skills": ["function-signature", "return-value", "parameter-passing"],
+      "commonErrors": ["missing-prototype", "wrong-return-type"]
+    },
+    {
+      "id": "arrays",
+      "title": "Arreglos",
+      "description": "Guardar colecciones de valores y recorrerlas por indice.",
+      "level": 3,
+      "category": "data",
+      "skills": ["indexing", "array-traversal", "bounds-awareness"],
+      "commonErrors": ["out-of-bounds", "off-by-one", "wrong-array-size"]
+    },
+    {
+      "id": "strings",
+      "title": "Cadenas",
+      "description": "Trabajar con arreglos de char terminados en cero.",
+      "level": 4,
+      "category": "data",
+      "skills": ["char-array-traversal", "null-terminator-awareness", "character-classification"],
+      "commonErrors": ["missing-null-terminator", "strlen-vs-capacity", "newline-in-buffer"]
+    },
+    {
+      "id": "matrices",
+      "title": "Matrices",
+      "description": "Modelar tablas y tableros con arreglos de dos dimensiones.",
+      "level": 5,
+      "category": "data",
+      "skills": ["nested-loop", "row-column-indexing", "matrix-traversal"],
+      "commonErrors": ["swapped-row-column", "wrong-loop-bound"]
+    }
+  ]
+}

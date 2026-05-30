@@ -21,6 +21,38 @@ const DEFAULT_EXTENSION_CONFIG = {
     applyHeaderPatchesAutomatically: false,
     appendInstructionHintsAutomatically: false,
   },
+  ai: {
+    mode: "opencode",
+    fallbackMode: "direct",
+    taskRouting: {
+      translation: "direct-or-opencode-fast",
+      exerciseMetadata: "opencode-best",
+      quizGeneration: "opencode-best-reasoning",
+      errorExplanation: "opencode-fast",
+      testAdapter: "opencode-code",
+    },
+  },
+  directProviders: {
+    google: {
+      apiKey: "",
+      model: "gemini-2.5-flash",
+    },
+    openai: {
+      apiKey: "",
+      model: "gpt-5-mini",
+    },
+    anthropic: {
+      apiKey: "",
+      model: "claude-haiku-4.5",
+    },
+  },
+  opencode: {
+    enabled: true,
+    command: "opencode",
+    preferredFreeModelStrategy: "best-for-learning-c",
+    allowCopilotProvider: true,
+    allowLocalModels: true,
+  },
 };
 
 function getConfigDirectory(root) {

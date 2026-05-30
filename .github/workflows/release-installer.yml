@@ -27,6 +27,12 @@ jobs:
         with:
           bun-version: "1.3.13"
 
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Rust engine
+        run: .\_estudio\soporte\engine\build-engine.cmd
+
       - name: Install UI dependencies and build
         working-directory: .
         run: |

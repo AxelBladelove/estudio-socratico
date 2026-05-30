@@ -1,0 +1,591 @@
+{
+  "schemaVersion": 1,
+  "courseId": "fundamentos-c",
+  "exercises": [
+    {
+      "id": "io-saludo-01",
+      "title": "Saludar con printf",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": ["io"],
+      "supportTopics": [],
+      "combinedTopics": [],
+      "requiredMastery": [],
+      "newTopicFocus": ["io"],
+      "skills": ["printf-formatting"],
+      "commonErrors": ["missing-semicolon", "format-string-typo"],
+      "remediates": ["first-compile-error"],
+      "preparesFor": ["variables-conversion-pulgadas-01", "quiz-base-io-variables-01"],
+      "relatedProjects": [],
+      "route": {
+        "routeEligible": true,
+        "moduleId": "primeros-programas",
+        "orderInModule": 1,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 8,
+        "band": "beginner",
+        "conceptualLevel": 1,
+        "syntaxLoad": 1,
+        "stateControl": 0,
+        "loopDepth": 0,
+        "functionComplexity": 0,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 0,
+        "hiddenTraps": 1,
+        "debugDifficulty": 1,
+        "expectedMinutes": 8
+      },
+      "unlock": {
+        "requiresModules": [],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "",
+            "expectedOutputPattern": "Hola|Saludos|Bienvenido"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "variables-conversion-pulgadas-01",
+      "title": "Convertir pulgadas a centimetros",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": ["variables"],
+      "supportTopics": ["io"],
+      "combinedTopics": [],
+      "requiredMastery": ["io"],
+      "newTopicFocus": ["variables"],
+      "skills": ["type-selection", "arithmetic-expressions", "scanf-basic"],
+      "commonErrors": ["integer-division", "format-specifier-mismatch", "scanf-ampersand"],
+      "remediates": ["numeric-conversion-confusion"],
+      "preparesFor": ["conditionals-mayor-de-tres-01"],
+      "relatedProjects": [],
+      "route": {
+        "routeEligible": true,
+        "moduleId": "primeros-programas",
+        "orderInModule": 2,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 16,
+        "band": "beginner",
+        "conceptualLevel": 1,
+        "syntaxLoad": 2,
+        "stateControl": 0,
+        "loopDepth": 0,
+        "functionComplexity": 0,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 2,
+        "debugDifficulty": 1,
+        "expectedMinutes": 12
+      },
+      "unlock": {
+        "requiresModules": [],
+        "requiresExercises": ["io-saludo-01"],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "10\n",
+            "expectedOutputPattern": "25\\.4"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "conditionals-mayor-de-tres-01",
+      "title": "Mayor de tres numeros",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": ["conditionals"],
+      "supportTopics": ["io", "variables"],
+      "combinedTopics": [],
+      "requiredMastery": ["io", "variables"],
+      "newTopicFocus": ["conditionals"],
+      "skills": ["boolean-expression", "branching", "comparison-operators"],
+      "commonErrors": ["assignment-in-condition", "missing-else-case"],
+      "remediates": ["comparison-operator-confusion"],
+      "preparesFor": ["loops-suma-hasta-n-01", "checkpoint-control-01"],
+      "relatedProjects": [],
+      "route": {
+        "routeEligible": true,
+        "moduleId": "control-de-flujo",
+        "orderInModule": 1,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 24,
+        "band": "easy",
+        "conceptualLevel": 2,
+        "syntaxLoad": 2,
+        "stateControl": 2,
+        "loopDepth": 0,
+        "functionComplexity": 0,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 2,
+        "debugDifficulty": 2,
+        "expectedMinutes": 15
+      },
+      "unlock": {
+        "requiresModules": ["primeros-programas"],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "5 12 7\n",
+            "expectedOutputPattern": "12"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "loops-suma-hasta-n-01",
+      "title": "Suma hasta N",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": "Problemas de Programacion - Rolando J. Batista & Alejandro J. Liz",
+      "language": "c",
+      "primaryTopics": ["loops"],
+      "supportTopics": ["io", "variables"],
+      "combinedTopics": [],
+      "requiredMastery": ["io", "variables", "conditionals"],
+      "newTopicFocus": ["loops"],
+      "skills": ["counter-loop", "accumulators", "loop-boundary"],
+      "commonErrors": ["off-by-one", "wrong-initial-value", "infinite-loop"],
+      "remediates": ["loop-boundary-confusion"],
+      "preparesFor": ["functions-promedio-01", "arrays-maximo-01"],
+      "relatedProjects": ["menu-notas-basico"],
+      "route": {
+        "routeEligible": true,
+        "moduleId": "control-de-flujo",
+        "orderInModule": 2,
+        "masteryChallengeEligible": true
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 30,
+        "band": "easy",
+        "conceptualLevel": 2,
+        "syntaxLoad": 2,
+        "stateControl": 2,
+        "loopDepth": 1,
+        "functionComplexity": 0,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 3,
+        "debugDifficulty": 2,
+        "expectedMinutes": 18
+      },
+      "unlock": {
+        "requiresModules": ["primeros-programas"],
+        "requiresExercises": ["conditionals-mayor-de-tres-01"],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "5\n",
+            "expectedOutputPattern": "15"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "functions-promedio-01",
+      "title": "Promedio con funcion",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": ["functions"],
+      "supportTopics": ["loops", "variables"],
+      "combinedTopics": [],
+      "requiredMastery": ["loops", "variables"],
+      "newTopicFocus": ["functions"],
+      "skills": ["function-signature", "return-value", "parameter-passing"],
+      "commonErrors": ["missing-prototype", "wrong-return-type"],
+      "remediates": ["function-contract-confusion"],
+      "preparesFor": ["arrays-maximo-01", "strings-count-lowercase-01"],
+      "relatedProjects": ["menu-notas-basico"],
+      "route": {
+        "routeEligible": true,
+        "moduleId": "funciones-y-arreglos",
+        "orderInModule": 1,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 38,
+        "band": "easy+",
+        "conceptualLevel": 3,
+        "syntaxLoad": 3,
+        "stateControl": 1,
+        "loopDepth": 1,
+        "functionComplexity": 3,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 3,
+        "debugDifficulty": 2,
+        "expectedMinutes": 22
+      },
+      "unlock": {
+        "requiresModules": ["control-de-flujo"],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "function",
+        "expectedSymbols": [
+          {
+            "name": "calcular_promedio",
+            "returnType": "double",
+            "params": ["double", "double", "double"]
+          }
+        ],
+        "allowAdapter": true
+      }
+    },
+    {
+      "id": "arrays-maximo-01",
+      "title": "Maximo en arreglo",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": ["arrays"],
+      "supportTopics": ["loops", "functions"],
+      "combinedTopics": [],
+      "requiredMastery": ["loops", "functions"],
+      "newTopicFocus": ["arrays"],
+      "skills": ["indexing", "array-traversal", "bounds-awareness"],
+      "commonErrors": ["out-of-bounds", "off-by-one", "wrong-array-size"],
+      "remediates": ["array-indexing"],
+      "preparesFor": ["strings-count-lowercase-01", "matrix-string-transform-01"],
+      "relatedProjects": ["bingo-basico"],
+      "route": {
+        "routeEligible": true,
+        "moduleId": "funciones-y-arreglos",
+        "orderInModule": 2,
+        "masteryChallengeEligible": true
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 44,
+        "band": "easy+",
+        "conceptualLevel": 3,
+        "syntaxLoad": 3,
+        "stateControl": 1,
+        "loopDepth": 1,
+        "functionComplexity": 2,
+        "arrayComplexity": 3,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 3,
+        "debugDifficulty": 3,
+        "expectedMinutes": 25
+      },
+      "unlock": {
+        "requiresModules": ["control-de-flujo"],
+        "requiresExercises": ["functions-promedio-01"],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "hybrid",
+        "preferred": "function",
+        "fallback": "io",
+        "allowAiAdapter": false,
+        "expectedSymbols": [
+          {
+            "name": "maximo",
+            "returnType": "int",
+            "params": ["const int *", "int"]
+          }
+        ]
+      }
+    },
+    {
+      "id": "strings-count-lowercase-01",
+      "title": "Contar minusculas en una linea",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": ["strings"],
+      "supportTopics": ["loops", "conditionals", "functions"],
+      "combinedTopics": [],
+      "requiredMastery": ["loops", "conditionals", "functions"],
+      "newTopicFocus": ["strings"],
+      "skills": ["char-array-traversal", "character-classification", "null-terminator-awareness"],
+      "commonErrors": ["off-by-one", "strlen-vs-capacity", "missing-null-terminator"],
+      "remediates": ["islower-confusion", "char-array-indexing"],
+      "preparesFor": ["strings-normalizar-frase-hard", "quiz-strings-01"],
+      "relatedProjects": ["text-menu-analyzer"],
+      "route": {
+        "routeEligible": true,
+        "moduleId": "cadenas-y-combinaciones",
+        "orderInModule": 1,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 42,
+        "band": "easy+",
+        "conceptualLevel": 3,
+        "syntaxLoad": 3,
+        "stateControl": 1,
+        "loopDepth": 2,
+        "functionComplexity": 2,
+        "arrayComplexity": 2,
+        "matrixComplexity": 0,
+        "stringComplexity": 4,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 3,
+        "hiddenTraps": 3,
+        "debugDifficulty": 2,
+        "expectedMinutes": 20
+      },
+      "unlock": {
+        "requiresModules": ["loops", "functions"],
+        "requiresExercises": ["arrays-maximo-01"],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "Hola Mundo\n",
+            "expectedOutputPattern": "7"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "matrix-string-transform-01",
+      "title": "Transformar matriz de caracteres",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": ["matrices", "strings"],
+      "supportTopics": ["loops", "functions"],
+      "combinedTopics": ["matrices", "strings"],
+      "requiredMastery": ["matrices", "strings"],
+      "newTopicFocus": [],
+      "skills": ["nested-loop", "row-column-indexing", "char-array-traversal"],
+      "commonErrors": ["swapped-row-column", "missing-null-terminator", "wrong-loop-bound"],
+      "remediates": ["matrix-indexing", "char-array-indexing"],
+      "preparesFor": ["text-menu-analyzer"],
+      "relatedProjects": ["text-menu-analyzer"],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 70,
+        "band": "medium",
+        "conceptualLevel": 5,
+        "syntaxLoad": 4,
+        "stateControl": 2,
+        "loopDepth": 2,
+        "functionComplexity": 3,
+        "arrayComplexity": 3,
+        "matrixComplexity": 4,
+        "stringComplexity": 4,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 4,
+        "hiddenTraps": 5,
+        "debugDifficulty": 4,
+        "expectedMinutes": 45
+      },
+      "unlock": {
+        "requiresModules": ["cadenas-y-combinaciones"],
+        "requiresExercises": ["strings-count-lowercase-01"],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "hybrid",
+        "preferred": "io",
+        "fallback": "function",
+        "allowAiAdapter": false
+      }
+    },
+    {
+      "id": "strings-normalizar-frase-hard",
+      "title": "Normalizar frase",
+      "kind": "masteryChallenge",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": ["strings"],
+      "supportTopics": ["loops", "conditionals", "functions"],
+      "combinedTopics": [],
+      "requiredMastery": ["strings", "loops", "functions"],
+      "newTopicFocus": [],
+      "skills": ["char-array-traversal", "input-cleaning", "stateful-string-transform"],
+      "commonErrors": ["newline-in-buffer", "missing-null-terminator", "off-by-one"],
+      "remediates": ["strlen-vs-capacity", "char-array-indexing"],
+      "preparesFor": ["matrix-string-transform-01", "text-menu-analyzer"],
+      "relatedProjects": ["text-menu-analyzer"],
+      "route": {
+        "routeEligible": true,
+        "moduleId": "cadenas-y-combinaciones",
+        "orderInModule": 2,
+        "masteryChallengeEligible": true
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 78,
+        "band": "hard",
+        "conceptualLevel": 5,
+        "syntaxLoad": 4,
+        "stateControl": 4,
+        "loopDepth": 2,
+        "functionComplexity": 3,
+        "arrayComplexity": 3,
+        "matrixComplexity": 0,
+        "stringComplexity": 5,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 5,
+        "hiddenTraps": 6,
+        "debugDifficulty": 5,
+        "expectedMinutes": 55
+      },
+      "unlock": {
+        "requiresModules": ["funciones-y-arreglos"],
+        "requiresExercises": ["strings-count-lowercase-01"],
+        "requiresQuizScore": {
+          "quizId": "quiz-strings-01",
+          "minScore": 70
+        }
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "  Hola   Mundo  \n",
+            "expectedOutputPattern": "Hola Mundo"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "courseId": "fundamentos-c",
+  "sources": [
+    {
+      "id": "estudio-socratico",
+      "title": "Estudio Socratico",
+      "type": "curated",
+      "license": "internal-course-material",
+      "description": "Material curado para la ruta adaptativa de Fundamentos C."
+    },
+    {
+      "id": "batista-liz-problemas",
+      "title": "Problemas de Programacion - Rolando J. Batista & Alejandro J. Liz",
+      "type": "reference",
+      "license": "course-reference",
+      "description": "Fuente academica usada como referencia para ejercicios de practica."
+    },
+    {
+      "id": "exercism-c",
+      "title": "Exercism C Track",
+      "type": "external-platform",
+      "url": "https://exercism.org/tracks/c",
+      "description": "Plataforma externa conservada como flujo separado."
+    }
+  ],
+  "aiRuntime": {
+    "required": false,
+    "preferredBroker": "opencode",
+    "fallbackMode": "direct",
+    "taskRouting": {
+      "translation": "direct-or-opencode-fast",
+      "exerciseMetadata": "opencode-best",
+      "quizGeneration": "opencode-best-reasoning",
+      "errorExplanation": "opencode-fast",
+      "testAdapter": "opencode-code"
+    },
+    "directProviders": ["google", "openai", "anthropic", "openrouter", "groq", "mistral", "ollama", "lmstudio"]
+  }
+}

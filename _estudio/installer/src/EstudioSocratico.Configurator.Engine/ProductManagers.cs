@@ -1359,7 +1359,50 @@ public sealed class WorkspaceManager(AppPaths paths, ManifestManager manifestMan
   "features": {
     "translateIntroductions": true,
     "importExercism": true,
-    "importAlejandroGists": true
+    "importAlejandroGists": true,
+    "aiExerciseAnalysis": false,
+    "opencodeIntegration": false,
+    "aiGeneratedTests": false,
+    "autoGitSync": false
+  },
+  "experimental": {
+    "aiExerciseAnalysisProvider": "gemini",
+    "opencodeCommand": "opencode",
+    "preferredFreeModelStrategy": "best-for-c-exercises",
+    "applyHeaderPatchesAutomatically": false,
+    "appendInstructionHintsAutomatically": false
+  },
+  "ai": {
+    "mode": "opencode",
+    "fallbackMode": "direct",
+    "taskRouting": {
+      "translation": "direct-or-opencode-fast",
+      "exerciseMetadata": "opencode-best",
+      "quizGeneration": "opencode-best-reasoning",
+      "errorExplanation": "opencode-fast",
+      "testAdapter": "opencode-code"
+    }
+  },
+  "directProviders": {
+    "google": {
+      "apiKey": "",
+      "model": "gemini-2.5-flash"
+    },
+    "openai": {
+      "apiKey": "",
+      "model": "gpt-5-mini"
+    },
+    "anthropic": {
+      "apiKey": "",
+      "model": "claude-haiku-4.5"
+    }
+  },
+  "opencode": {
+    "enabled": true,
+    "command": "opencode",
+    "preferredFreeModelStrategy": "best-for-learning-c",
+    "allowCopilotProvider": true,
+    "allowLocalModels": true
   }
 }
 """;

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "courseId": "fundamentos-c",
+  "categories": [
+    { "id": "io", "title": "Entrada y salida", "topic": "io", "order": 1 },
+    { "id": "variables", "title": "Variables y operadores", "topic": "variables", "order": 2 },
+    { "id": "conditionals", "title": "Condicionales", "topic": "conditionals", "order": 3 },
+    { "id": "loops", "title": "Ciclos", "topic": "loops", "order": 4 },
+    { "id": "functions", "title": "Funciones", "topic": "functions", "order": 5 },
+    { "id": "arrays", "title": "Arreglos", "topic": "arrays", "order": 6 },
+    { "id": "strings", "title": "Cadenas", "topic": "strings", "order": 7 },
+    { "id": "matrices", "title": "Matrices", "topic": "matrices", "order": 8 },
+    { "id": "menus", "title": "Menus", "topic": "menus", "order": 9 },
+    { "id": "juegos", "title": "Juegos y simulacion", "topic": "juegos", "order": 10 }
+  ]
+}

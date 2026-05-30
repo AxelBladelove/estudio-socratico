@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "courseId": "fundamentos-c",
+  "title": "Ruta C",
+  "description": "Camino progresivo para Fundamentos de Programacion en C.",
+  "modules": [
+    {
+      "id": "primeros-programas",
+      "title": "Primeros programas",
+      "order": 1,
+      "concepts": ["io", "variables"],
+      "nodes": [
+        {
+          "id": "route-io-printf-01",
+          "type": "exercise",
+          "ref": "io-saludo-01",
+          "title": "Saludar con printf",
+          "order": 1
+        },
+        {
+          "id": "route-vars-conversion-01",
+          "type": "exercise",
+          "ref": "variables-conversion-pulgadas-01",
+          "title": "Convertir pulgadas",
+          "order": 2
+        },
+        {
+          "id": "route-quiz-base-01",
+          "type": "quiz",
+          "ref": "quiz-base-io-variables-01",
+          "title": "Quiz: entrada, salida y variables",
+          "order": 3
+        }
+      ]
+    },
+    {
+      "id": "control-de-flujo",
+      "title": "Control de flujo",
+      "order": 2,
+      "concepts": ["conditionals", "loops"],
+      "requiresModules": ["primeros-programas"],
+      "nodes": [
+        {
+          "id": "route-cond-max-01",
+          "type": "exercise",
+          "ref": "conditionals-mayor-de-tres-01",
+          "title": "Mayor de tres numeros",
+          "order": 1
+        },
+        {
+          "id": "route-loops-sum-01",
+          "type": "exercise",
+          "ref": "loops-suma-hasta-n-01",
+          "title": "Suma hasta N",
+          "order": 2
+        },
+        {
+          "id": "route-checkpoint-control-01",
+          "type": "checkpoint",
+          "ref": "checkpoint-control-01",
+          "title": "Checkpoint: decisiones y ciclos",
+          "order": 3
+        }
+      ]
+    },
+    {
+      "id": "funciones-y-arreglos",
+      "title": "Funciones y arreglos",
+      "order": 3,
+      "concepts": ["functions", "arrays"],
+      "requiresModules": ["control-de-flujo"],
+      "nodes": [
+        {
+          "id": "route-functions-promedio-01",
+          "type": "exercise",
+          "ref": "functions-promedio-01",
+          "title": "Promedio con funcion",
+          "order": 1
+        },
+        {
+          "id": "route-arrays-max-01",
+          "type": "exercise",
+          "ref": "arrays-maximo-01",
+          "title": "Maximo en arreglo",
+          "order": 2
+        }
+      ]
+    },
+    {
+      "id": "cadenas-y-combinaciones",
+      "title": "Cadenas y combinaciones",
+      "order": 4,
+      "concepts": ["strings", "matrices"],
+      "requiresModules": ["funciones-y-arreglos"],
+      "nodes": [
+        {
+          "id": "route-strings-count-01",
+          "type": "exercise",
+          "ref": "strings-count-lowercase-01",
+          "title": "Contar minusculas",
+          "order": 1
+        },
+        {
+          "id": "route-mastery-strings-01",
+          "type": "masteryChallenge",
+          "ref": "strings-normalizar-frase-hard",
+          "title": "Reto de dominio: normalizar frase",
+          "order": 2
+        }
+      ]
+    }
+  ]
+}
