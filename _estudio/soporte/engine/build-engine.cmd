@@ -8,6 +8,8 @@ set "ENGINE_EXE=%ENGINE_DIR%\target\release\estudio-engine.exe"
 set "TARGET_EXE=%BIN_DIR%\estudio-engine.exe"
 set "EXTENSION_ENGINE_DIR=%SCRIPT_DIR%..\vscode\estudio-exercism\engine"
 set "EXTENSION_ENGINE_EXE=%EXTENSION_ENGINE_DIR%\estudio-engine.exe"
+set "CATALOG_SOURCE_DIR=%SCRIPT_DIR%..\catalog\fundamentos-c"
+set "EXTENSION_CATALOG_DIR=%SCRIPT_DIR%..\vscode\estudio-exercism\catalog\fundamentos-c"
 
 if exist "%USERPROFILE%\.cargo\bin\cargo.exe" (
     set "PATH=%USERPROFILE%\.cargo\bin;%PATH%"
@@ -50,3 +52,17 @@ if errorlevel 1 (
 )
 
 echo [OK] Engine VSIX listo: %EXTENSION_ENGINE_EXE%
+
+if not exist "%CATALOG_SOURCE_DIR%\" (
+    echo [ERROR] No se encontro %CATALOG_SOURCE_DIR%
+    exit /b 1
+)
+
+if not exist "%EXTENSION_CATALOG_DIR%\" mkdir "%EXTENSION_CATALOG_DIR%\"
+xcopy "%CATALOG_SOURCE_DIR%\*.json" "%EXTENSION_CATALOG_DIR%\" /Y /I >nul
+if errorlevel 1 (
+    echo [ERROR] No se pudo copiar el catalogo de Fundamentos C a %EXTENSION_CATALOG_DIR%.
+    exit /b 1
+)
+
+echo [OK] Catalogo VSIX listo: %EXTENSION_CATALOG_DIR%

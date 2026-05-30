@@ -8,6 +8,7 @@ const extensionRoot = resolve(here, "..");
 const repoRoot = resolve(extensionRoot, "..", "..", "..", "..");
 const buildScript = join(repoRoot, "_estudio", "soporte", "engine", "build-engine.cmd");
 const enginePath = join(extensionRoot, "engine", "estudio-engine.exe");
+const catalogPath = join(extensionRoot, "catalog", "fundamentos-c", "concepts.json");
 
 if (!existsSync(buildScript)) {
   throw new Error(`No se encontro ${buildScript}`);
@@ -25,4 +26,8 @@ if (result.status !== 0) {
 
 if (!existsSync(enginePath)) {
   throw new Error(`No se genero ${enginePath}`);
+}
+
+if (!existsSync(catalogPath)) {
+  throw new Error(`No se genero ${catalogPath}`);
 }

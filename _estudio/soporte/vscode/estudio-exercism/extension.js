@@ -78,6 +78,10 @@ function getEnginePath() {
   return packagedEngine;
 }
 
+function getAssetsRoot() {
+  return extensionBasePath;
+}
+
 async function compileActiveCFile() {
   const editor = vscode.window.activeTextEditor;
   if (!editor) {
@@ -184,7 +188,7 @@ class EngineClient {
     }
 
     this.stderr = "";
-    this.proc = cp.spawn(engine, ["daemon", "--repo-root", this.root], {
+    this.proc = cp.spawn(engine, ["daemon", "--repo-root", this.root, "--assets-root", getAssetsRoot()], {
       cwd: this.root,
       stdio: ["pipe", "pipe", "pipe"],
       windowsHide: true,
@@ -580,6 +584,8 @@ function runInTerminal(root, action, targetPath) {
     action,
     "--repo-root",
     cmdQuote(root),
+    "--assets-root",
+    cmdQuote(getAssetsRoot()),
     "--exercise-path",
     cmdQuote(targetPath),
   ].join(" "));

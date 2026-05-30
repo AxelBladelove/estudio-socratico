@@ -72,6 +72,7 @@ _estudio/installer/*.blockmap
 # Extension local de VS Code generada por setup
 _estudio/soporte/vscode/**/node_modules/
 _estudio/soporte/vscode/**/*.vsix
+_estudio/soporte/vscode/estudio-exercism/catalog/
 _estudio/soporte/runtime/vscode/
 
 # Configuracion local de APIs auxiliares (nunca guardar tokens)

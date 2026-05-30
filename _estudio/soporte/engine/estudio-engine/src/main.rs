@@ -18,6 +18,7 @@ use tokio::time::{sleep, Duration};
 #[derive(Clone)]
 struct Engine {
     repo_root: PathBuf,
+    assets_root: PathBuf,
     http: Client,
 }
 
@@ -56,7 +57,14 @@ async fn main() -> Result<()> {
                 .or_else(|| params.get("reporoot"))
                 .map(String::as_str),
         )?;
-        return daemon(root).await;
+        let assets_root = resolve_assets_root(
+            params
+                .get("assets-root")
+                .or_else(|| params.get("assetsroot"))
+                .map(String::as_str),
+            &root,
+        )?;
+        return daemon(root, assets_root).await;
     }
 
     if let Err(error) = direct_cli(args).await {
@@ -66,8 +74,8 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn daemon(repo_root: PathBuf) -> Result<()> {
-    let engine = Engine::new(repo_root)?;
+async fn daemon(repo_root: PathBuf, assets_root: PathBuf) -> Result<()> {
+    let engine = Engine::new(repo_root, assets_root)?;
     let stdin = io::stdin();
     let mut stdout = io::stdout();
     for line in stdin.lock().lines() {
@@ -113,7 +121,11 @@ async fn direct_cli(args: Vec<String>) -> Result<()> {
         .or_else(|| string_param(&params, "repo-root"))
         .or_else(|| string_param(&params, "reporoot"));
     let root = resolve_repo_root(root_arg.as_deref())?;
-    let engine = Engine::new(root)?;
+    let assets_arg = string_param(&params, "assetsRoot")
+        .or_else(|| string_param(&params, "assets-root"))
+        .or_else(|| string_param(&params, "assetsroot"));
+    let assets_root = resolve_assets_root(assets_arg.as_deref(), &root)?;
+    let engine = Engine::new(root, assets_root)?;
 
     match method.as_str() {
         "detect" => {
@@ -157,9 +169,10 @@ async fn direct_cli(args: Vec<String>) -> Result<()> {
 }
 
 impl Engine {
-    fn new(repo_root: PathBuf) -> Result<Self> {
+    fn new(repo_root: PathBuf, assets_root: PathBuf) -> Result<Self> {
         Ok(Self {
             repo_root,
+            assets_root,
             http: Client::builder().timeout(Duration::from_secs(90)).build()?,
         })
     }
@@ -194,6 +207,7 @@ impl Engine {
         Ok(json!({
             "ok": true,
             "repoRoot": path_string(&self.repo_root),
+            "assetsRoot": path_string(&self.assets_root),
             "exercismCli": {
                 "available": cli.is_some(),
                 "path": cli.as_ref().map(|path| path_string(path)),
@@ -403,7 +417,7 @@ impl Engine {
             "title": if action == "test" { "Estudio Ejercicios" } else { "Estudio Validacion" },
             "command": {
                 "exe": path_string(&exe),
-                "args": [action, "--repo-root", &path_string(&self.repo_root), "--exercise-path", &path],
+                "args": [action, "--repo-root", &path_string(&self.repo_root), "--assets-root", &path_string(&self.assets_root), "--exercise-path", &path],
             }
         }))
     }
@@ -1261,9 +1275,7 @@ impl Engine {
 
     fn fundamentals_file(&self, name: &str) -> Result<Value> {
         let path = self
-            .repo_root
-            .join("_estudio")
-            .join("soporte")
+            .assets_root
             .join("catalog")
             .join("fundamentos-c")
             .join(format!("{name}.json"));
@@ -2052,6 +2064,33 @@ fn resolve_repo_root(root: Option<&str>) -> Result<PathBuf> {
         }
     }
     Ok(env::current_dir()?)
+}
+
+fn resolve_assets_root(root: Option<&str>, repo_root: &Path) -> Result<PathBuf> {
+    if let Some(root) = root.filter(|r| !r.trim().is_empty()) {
+        let path = PathBuf::from(root);
+        let full = clean_path(if path.is_absolute() {
+            path
+        } else {
+            env::current_dir()?.join(path)
+        });
+        return Ok(full);
+    }
+
+    let exe_assets = env::current_exe()
+        .ok()
+        .and_then(|path| path.parent().and_then(Path::parent).map(Path::to_path_buf))
+        .filter(|path| path.join("catalog").join("fundamentos-c").exists());
+    if let Some(path) = exe_assets {
+        return Ok(clean_path(path));
+    }
+
+    let dev_assets = repo_root.join("_estudio").join("soporte");
+    if dev_assets.join("catalog").join("fundamentos-c").exists() {
+        return Ok(clean_path(dev_assets));
+    }
+
+    Ok(clean_path(repo_root.to_path_buf()))
 }
 
 fn clean_path(path: PathBuf) -> PathBuf {
