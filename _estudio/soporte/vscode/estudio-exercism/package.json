@@ -55,8 +55,11 @@
       {
         "command": "estudioExercism.openPanel",
         "title": "Open",
-        "category": "Estudio Socratico",
-        "icon": "assets/logo-vscode-activity.svg"
+        "category": "Estudio Socrático",
+        "icon": {
+          "light": "assets/logo-vscode-command-light.svg",
+          "dark": "assets/logo-vscode-command-dark.svg"
+        }
       },
       {
         "command": "estudioExercism.testCurrent",
@@ -126,6 +129,8 @@
   },
   "scripts": {
     "compile": "bun scripts/check-syntax.mjs",
+    "prepare-engine": "bun scripts/prepare-engine.mjs",
+    "vscode:prepublish": "bun scripts/prepare-engine.mjs",
     "package": "bunx --bun @vscode/vsce package --no-dependencies --allow-missing-repository"
   },
   "devDependencies": {

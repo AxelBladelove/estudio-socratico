@@ -6,6 +6,8 @@ set "ENGINE_DIR=%SCRIPT_DIR%estudio-engine"
 set "BIN_DIR=%SCRIPT_DIR%bin"
 set "ENGINE_EXE=%ENGINE_DIR%\target\release\estudio-engine.exe"
 set "TARGET_EXE=%BIN_DIR%\estudio-engine.exe"
+set "EXTENSION_ENGINE_DIR=%SCRIPT_DIR%..\vscode\estudio-exercism\engine"
+set "EXTENSION_ENGINE_EXE=%EXTENSION_ENGINE_DIR%\estudio-engine.exe"
 
 if exist "%USERPROFILE%\.cargo\bin\cargo.exe" (
     set "PATH=%USERPROFILE%\.cargo\bin;%PATH%"
@@ -39,3 +41,12 @@ if errorlevel 1 (
 )
 
 echo [OK] Engine listo: %TARGET_EXE%
+
+if not exist "%EXTENSION_ENGINE_DIR%\" mkdir "%EXTENSION_ENGINE_DIR%\"
+copy /Y "%ENGINE_EXE%" "%EXTENSION_ENGINE_EXE%" >nul
+if errorlevel 1 (
+    echo [ERROR] No se pudo copiar %ENGINE_EXE% a %EXTENSION_ENGINE_EXE%.
+    exit /b 1
+)
+
+echo [OK] Engine VSIX listo: %EXTENSION_ENGINE_EXE%

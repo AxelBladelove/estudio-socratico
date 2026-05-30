@@ -597,6 +597,7 @@ public sealed class ExtensionManager(AppPaths paths, LogManager logManager, stri
         [".json"] = "application/json",
         [".png"] = "image/png",
         [".svg"] = "image/svg+xml",
+        [".exe"] = "application/octet-stream",
         [".txt"] = "text/plain",
         [".md"] = "text/markdown",
         [".vsixmanifest"] = "text/xml"

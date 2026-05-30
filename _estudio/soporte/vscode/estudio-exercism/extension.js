@@ -16,9 +16,11 @@ const { describeAiTestGeneration } = require("./src/ai/testGeneration");
 let currentPanel;
 let currentProvider;
 let aiOutputChannel;
+let extensionBasePath = __dirname;
 const engineClients = new Map();
 
 function activate(context) {
+  extensionBasePath = context.extensionPath || __dirname;
   currentProvider = new ExerciseViewProvider(context);
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider("estudioExercism.view", currentProvider),
@@ -62,8 +64,18 @@ function getWorkspaceRoot() {
   return folder.uri.fsPath;
 }
 
-function getEnginePath(root) {
-  return path.join(root, "_estudio", "soporte", "engine", "bin", "estudio-engine.exe");
+function getEnginePath() {
+  const packagedEngine = path.join(extensionBasePath, "engine", "estudio-engine.exe");
+  if (fs.existsSync(packagedEngine)) {
+    return packagedEngine;
+  }
+
+  const devEngine = path.resolve(extensionBasePath, "..", "..", "engine", "bin", "estudio-engine.exe");
+  if (fs.existsSync(devEngine)) {
+    return devEngine;
+  }
+
+  return packagedEngine;
 }
 
 async function compileActiveCFile() {
@@ -166,9 +178,9 @@ class EngineClient {
 
   start() {
     if (this.proc && !this.proc.killed) return;
-    const engine = getEnginePath(this.root);
+    const engine = getEnginePath();
     if (!fs.existsSync(engine)) {
-      throw new Error(`Falta el daemon Rust: ${engine}`);
+      throw new Error(`Falta el daemon Rust: ${engine}. Ejecuta _estudio\\soporte\\engine\\build-engine.cmd antes de empaquetar o instalar la extension.`);
     }
 
     this.stderr = "";
@@ -564,7 +576,7 @@ function runInTerminal(root, action, targetPath) {
   const terminal = vscode.window.createTerminal(terminalName);
   terminal.show();
   terminal.sendText([
-    cmdQuote(getEnginePath(root)),
+    cmdQuote(getEnginePath()),
     action,
     "--repo-root",
     cmdQuote(root),
