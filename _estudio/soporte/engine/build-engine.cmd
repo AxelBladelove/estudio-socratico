@@ -7,6 +7,10 @@ set "BIN_DIR=%SCRIPT_DIR%bin"
 set "ENGINE_EXE=%ENGINE_DIR%\target\release\estudio-engine.exe"
 set "TARGET_EXE=%BIN_DIR%\estudio-engine.exe"
 
+if exist "%USERPROFILE%\.cargo\bin\cargo.exe" (
+    set "PATH=%USERPROFILE%\.cargo\bin;%PATH%"
+)
+
 where cargo >nul 2>nul
 if errorlevel 1 (
     echo [ERROR] No se encontro cargo en PATH.
