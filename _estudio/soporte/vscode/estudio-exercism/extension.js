@@ -842,30 +842,181 @@ function normalizeFundamentalsItems(items) {
 
 function renderFundamentalsRoute(route) {
   const modules = route.modules || [];
-  const nextNode = modules.flatMap((module) => module.nodes || []).find((node) => node.unlocked && (!node.status || node.status === "not_started"));
-  return `<section class="routePath">
-    <section class="notice routePreview">
-      <strong>Preview de Ruta C.</strong>
-      <span>La vista visual con nodos conectados se implementara despues. Por ahora esta lista muestra modulos, estados y el proximo paso.</span>
-      <span>${nextNode ? `Proximo paso: ${escapeHtml(nextNode.title || nextNode.item?.title || "")}` : "No hay pasos desbloqueados pendientes."}</span>
-    </section>
-    ${modules.map((module) => `
-      <article class="routeModule ${module.unlocked ? "" : "locked"}">
-        <div class="routeModuleHead">
-          <span>${escapeHtml(module.unlocked ? "Disponible" : "Bloqueado")}</span>
-          <h3>${escapeHtml(module.title)}</h3>
+  const firstActive = modules.find((module) => module.unlocked) || modules[0] || {};
+  return `<section class="routePath routeRoadmap">
+    <div class="routeTabs" aria-label="Modulos de Ruta C">
+      ${modules.map((module) => {
+        const theme = routeTheme(module);
+        return `<button class="routeTab ${module.id === firstActive.id ? "active" : ""}" data-route-target="${escapeHtml(module.id || "")}" style="--route-accent:${theme.accent};--route-glow:${theme.glow};">
+          <span>${escapeHtml(module.title || "Modulo")}</span>
+        </button>`;
+      }).join("")}
+    </div>
+    ${modules.map((module) => renderRouteModuleCard(module, module.id === firstActive.id)).join("")}
+  </section>`;
+}
+
+function renderRouteModuleCard(module, active) {
+  const nodes = module.nodes || [];
+  const decorated = decorateRouteNodes(nodes);
+  const theme = routeTheme(module);
+  const completed = decorated.filter((node) => node.routeState === "completed").length;
+  const total = Math.max(decorated.length, 1);
+  const percent = Math.round((completed / total) * 100);
+  const next = decorated.find((node) => node.routeState === "current") || decorated.find((node) => node.routeState === "available") || decorated[0];
+  const defaultDetail = next || decorated[0] || {};
+  return `
+    <article class="routeModuleCard ${active ? "active" : "hidden"} ${module.unlocked ? "" : "locked"} theme-${escapeHtml(theme.name)}"
+      data-route-module="${escapeHtml(module.id || "")}"
+      style="--route-accent:${theme.accent};--route-accent-2:${theme.accent2};--route-glow:${theme.glow};">
+      <header class="routeHero">
+        <div>
+          <span class="routeEyebrow">Modulo ${escapeHtml(String(module.order || ""))}</span>
+          <h3>${escapeHtml(module.title || "Ruta C")}</h3>
+          <p>${escapeHtml((module.concepts || []).join(" · ") || "Fundamentos C")}</p>
         </div>
-        <div class="routeNodes">
-          ${(module.nodes || []).map((node) => `
-            <div class="routeNode ${node.unlocked ? "" : "locked"} ${escapeHtml(node.type || "")}">
+        <button class="routeGuideButton" disabled>Guia</button>
+      </header>
+      <div class="routeProgress">
+        <span>${completed}/${total} pasos</span>
+        <div class="routeSegments" aria-label="${escapeHtml(`${percent}% completado`)}">
+          ${decorated.map((node) => `<span class="${node.routeState === "completed" ? "done" : (node.routeState === "current" ? "current" : "")}"></span>`).join("")}
+        </div>
+        <span>${percent}% completado</span>
+      </div>
+      <div class="routeBody">
+        <div class="snakeWrap">
+          <svg class="snakeLine" viewBox="0 0 120 ${Math.max(260, decorated.length * 88)}" preserveAspectRatio="none" aria-hidden="true">
+            <path d="${escapeHtml(snakePath(decorated.length))}" />
+          </svg>
+          <div class="snakeNodes">
+            ${decorated.map((node, index) => renderRouteNode(node, index)).join("")}
+          </div>
+        </div>
+        <div class="routeNodeList">
+          ${decorated.map((node) => `
+            <button class="routeListItem ${(node.ref || node.id) === (defaultDetail.ref || defaultDetail.id) ? "active" : ""}" data-route-node-ref="${escapeHtml(node.ref || node.id || "")}">
+              <span>${escapeHtml(nodeIcon(node))}</span>
               <strong>${escapeHtml(node.title || node.item?.title || "")}</strong>
-              <span>${escapeHtml(routeNodeLabel(node))}</span>
-            </div>
+              <small>${escapeHtml(routeNodeLabel(node))}</small>
+            </button>
           `).join("")}
         </div>
-      </article>
-    `).join("")}
-  </section>`;
+        <aside class="routeVisual">
+          ${routeIllustration(theme)}
+          <div class="routeDetail" data-route-detail>
+            ${renderRouteDetail(defaultDetail)}
+          </div>
+        </aside>
+      </div>
+      <footer class="routeFooter">
+        <span>Proximo paso: ${escapeHtml(next?.title || next?.item?.title || "Completa los requisitos previos")}</span>
+        <div class="routeLegend" aria-label="Estados de la ruta">
+          <span><i class="legendNode completed">✓</i>Completado</span>
+          <span><i class="legendNode current">&lt;/&gt;</i>Actual</span>
+          <span><i class="legendNode locked">🔒</i>Bloqueado</span>
+          <span><i class="legendNode challenge">★</i>Reto</span>
+        </div>
+        <button disabled>${next?.routeState === "locked" ? "Bloqueado" : "Sigue aqui"}</button>
+      </footer>
+    </article>
+  `;
+}
+
+function decorateRouteNodes(nodes) {
+  const completedStatuses = new Set(["completed", "tests_passed", "submitted"]);
+  let currentAssigned = false;
+  return nodes.map((node) => {
+    const special = isSpecialRouteNode(node);
+    let routeState = "locked";
+    if (completedStatuses.has(node.status)) {
+      routeState = "completed";
+    } else if (node.unlocked) {
+      routeState = currentAssigned ? "available" : "current";
+      currentAssigned = true;
+    }
+    return { ...node, routeState, special };
+  });
+}
+
+function renderRouteNode(node, index) {
+  const side = index % 2 === 0 ? "left" : "right";
+  const top = 18 + index * 86;
+  const title = node.title || node.item?.title || "";
+  const description = node.item?.description || node.item?.blurb || "";
+  return `
+    <button class="snakeNode ${side} ${escapeHtml(node.routeState)} ${node.special ? "challenge" : ""}"
+      style="top:${top}px"
+      data-route-node-ref="${escapeHtml(node.ref || node.id || "")}"
+      data-route-title="${escapeHtml(title)}"
+      data-route-description="${escapeHtml(description)}"
+      data-route-label="${escapeHtml(routeNodeLabel(node))}"
+      data-route-state="${escapeHtml(node.routeState)}"
+      data-route-lock="${escapeHtml(node.routeState === "locked" ? "Completa los pasos anteriores." : "")}"
+      aria-label="${escapeHtml(`${title}. ${routeNodeLabel(node)}`)}">
+      <span>${escapeHtml(nodeIcon(node))}</span>
+    </button>
+  `;
+}
+
+function renderRouteDetail(node) {
+  const title = node.title || node.item?.title || "Selecciona un nodo";
+  const label = node.ref ? routeNodeLabel(node) : "Detalle";
+  const state = node.routeState || "available";
+  const description = node.item?.description || node.item?.blurb || (state === "locked" ? "Completa los pasos anteriores para desbloquear este nodo." : "Listo para continuar cuando quieras.");
+  const action = state === "locked" ? "Bloqueado" : "Iniciar";
+  return `
+    <span class="routeDetailState">${escapeHtml(statusText(state))}</span>
+    <h4>${escapeHtml(title)}</h4>
+    <p>${escapeHtml(description)}</p>
+    <div class="routeDetailMeta">${escapeHtml(label)}</div>
+    <button disabled>${escapeHtml(action)}</button>
+  `;
+}
+
+function snakePath(count) {
+  const steps = Math.max(count, 2);
+  let d = "M60 24";
+  for (let index = 1; index < steps; index += 1) {
+    const y = 24 + index * 86;
+    const x = index % 2 === 0 ? 46 : 74;
+    d += ` C60 ${y - 48}, ${x} ${y - 38}, ${x} ${y}`;
+  }
+  return d;
+}
+
+function routeTheme(module) {
+  const concepts = ((module.concepts || []).join(" ") + " " + (module.title || "")).toLowerCase();
+  if (concepts.includes("string") || concepts.includes("cadena")) return { name: "teal", accent: "#12d6ad", accent2: "#0aa084", glow: "rgba(18,214,173,.36)" };
+  if (concepts.includes("matriz") || concepts.includes("matrix") || concepts.includes("array") || concepts.includes("arreglo")) return { name: "blue", accent: "#1e9bff", accent2: "#1469ff", glow: "rgba(30,155,255,.34)" };
+  if (concepts.includes("memoria") || concepts.includes("pointer") || concepts.includes("puntero")) return { name: "orange", accent: "#ff980e", accent2: "#f35c00", glow: "rgba(255,152,14,.34)" };
+  if (concepts.includes("struct") || concepts.includes("archivo")) return { name: "purple", accent: "#a970ff", accent2: "#6f3bdc", glow: "rgba(169,112,255,.34)" };
+  if (concepts.includes("cond") || concepts.includes("loop") || concepts.includes("ciclo")) return { name: "orange", accent: "#ffb02e", accent2: "#f06d00", glow: "rgba(255,176,46,.28)" };
+  return { name: "teal", accent: "#18c7bd", accent2: "#2f6bff", glow: "rgba(24,199,189,.28)" };
+}
+
+function routeIllustration(theme) {
+  return `<svg class="routeIllustration" viewBox="0 0 160 150" role="img" aria-label="Ilustracion conceptual de modulo">
+    <rect x="28" y="34" width="84" height="58" rx="12" fill="none" stroke="var(--route-accent)" stroke-width="3"/>
+    <path d="M44 54h28M44 72h48M44 90h34" stroke="var(--route-accent)" stroke-width="3" stroke-linecap="round"/>
+    <path d="M112 86c24 2 34 14 30 31-4 18-28 18-42 8" fill="none" stroke="var(--route-accent)" stroke-width="3" stroke-dasharray="5 6"/>
+    <circle cx="114" cy="47" r="12" fill="var(--route-accent)" opacity=".2"/>
+    <path d="M113 39v16M105 47h16" stroke="var(--route-accent)" stroke-width="3" stroke-linecap="round"/>
+    <path d="M28 118c18-18 36-18 54 0 17 17 34 17 51 0" fill="none" stroke="var(--route-accent)" stroke-width="3"/>
+  </svg>`;
+}
+
+function nodeIcon(node) {
+  if (node.routeState === "completed") return "✓";
+  if (node.routeState === "locked") return "🔒";
+  if (node.special) return "★";
+  if (node.type === "quiz") return "?";
+  if (node.type === "project") return "P";
+  return "</>";
+}
+
+function isSpecialRouteNode(node) {
+  return ["challenge", "masteryChallenge", "checkpoint", "project"].includes(node.type) || node.item?.kind === "masteryChallenge";
 }
 
 function routeNodeLabel(node) {
@@ -1048,6 +1199,7 @@ function statusText(status) {
     available: "Disponible",
     imported: "En progreso",
     not_started: "Disponible",
+    current: "Actual",
     locked: "Bloqueado",
     tests_passed: "Tests OK",
     tests_failed: "Tests fallando",
@@ -1229,7 +1381,160 @@ function baseHtml(body) {
     .rootCard:hover, .rootCard:focus-visible { border-color: var(--accent); outline: none; background: var(--cardHover); }
     .subhead { display: flex; align-items: center; gap: 12px; margin: 8px 0 14px; }
     .routePath { display: grid; gap: 14px; }
-    .routePreview { display: grid; gap: 6px; }
+    .routeRoadmap { padding: 4px 0 18px; }
+    .routeTabs { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 10px; }
+    .routeTab { flex: 0 0 auto; border-color: color-mix(in srgb, var(--route-accent) 50%, var(--border)); background: color-mix(in srgb, var(--route-accent) 11%, var(--panel)); color: var(--fg); }
+    .routeTab.active { border-color: var(--route-accent); box-shadow: 0 0 20px var(--route-glow); }
+    .routeModuleCard {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid color-mix(in srgb, var(--route-accent) 35%, var(--border));
+      border-radius: 12px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.035), transparent 34%),
+        radial-gradient(circle at 74% 40%, var(--route-glow), transparent 34%),
+        linear-gradient(135deg, color-mix(in srgb, var(--route-accent) 10%, #06131a), #07131c 62%, #041017);
+      box-shadow: 0 22px 56px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.035);
+      min-height: 540px;
+    }
+    .routeModuleCard::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 32px 32px;
+      opacity: .28;
+      pointer-events: none;
+    }
+    .routeHero {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      margin: 18px;
+      padding: 18px 20px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--route-accent), var(--route-accent-2));
+      color: white;
+      box-shadow: 0 12px 34px var(--route-glow);
+    }
+    .routeHero h3 { margin: 3px 0 0; color: white; font-size: 24px; }
+    .routeHero p { margin: 5px 0 0; color: rgba(255,255,255,.78); font-size: 13px; }
+    .routeEyebrow { display: block; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; opacity: .86; }
+    .routeGuideButton { border-color: rgba(255,255,255,.36); background: rgba(0,0,0,.16); color: white; }
+    .routeProgress {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: auto minmax(120px, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      margin: -8px 18px 18px;
+      padding: 10px 14px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 10px;
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .routeSegments { display: flex; gap: 5px; min-width: 0; }
+    .routeSegments span { height: 7px; flex: 1; border-radius: 999px; background: rgba(255,255,255,.09); }
+    .routeSegments span.done, .routeSegments span.current { background: var(--route-accent); box-shadow: 0 0 14px var(--route-glow); }
+    .routeBody { position: relative; z-index: 1; display: grid; grid-template-columns: 190px minmax(180px, 1fr) 210px; gap: 18px; align-items: stretch; padding: 0 18px 18px; }
+    .snakeWrap { position: relative; min-height: 330px; }
+    .snakeLine { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .snakeLine path { fill: none; stroke: color-mix(in srgb, var(--route-accent) 60%, #ffffff); stroke-width: 4; stroke-linecap: round; filter: drop-shadow(0 0 8px var(--route-glow)); opacity: .68; }
+    .snakeNodes { position: relative; min-height: inherit; }
+    .snakeNode {
+      position: absolute;
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      font-weight: 900;
+      border: 2px solid rgba(255,255,255,.22);
+      background: rgba(17,32,43,.94);
+      color: var(--muted);
+      box-shadow: 0 0 0 6px rgba(255,255,255,.035);
+    }
+    .snakeNode.left { left: 28px; }
+    .snakeNode.right { right: 28px; }
+    .snakeNode.completed { background: var(--route-accent); color: white; border-color: color-mix(in srgb, white 45%, var(--route-accent)); box-shadow: 0 0 24px var(--route-glow); }
+    .snakeNode.current { background: #f7ffff; color: #08202a; border-color: var(--route-accent); box-shadow: 0 0 0 7px color-mix(in srgb, var(--route-accent) 24%, transparent), 0 0 32px var(--route-accent); animation: routePulse 1.7s ease-in-out infinite; }
+    .snakeNode.available { color: white; border-color: var(--route-accent); background: color-mix(in srgb, var(--route-accent) 32%, #13232c); }
+    .snakeNode.locked { color: #9cabb6; background: #1b2a34; border-color: rgba(255,255,255,.08); box-shadow: none; opacity: .82; }
+    .snakeNode.selected { outline: 2px solid white; outline-offset: 3px; }
+    .snakeNode.challenge { clip-path: polygon(50% 0%, 62% 30%, 96% 35%, 70% 57%, 79% 91%, 50% 72%, 21% 91%, 30% 57%, 4% 35%, 38% 30%); border-radius: 0; }
+    .snakeNode.current::after {
+      content: "Sigue aqui";
+      position: absolute;
+      left: 50px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 1px solid var(--route-accent);
+      border-radius: 999px;
+      padding: 3px 8px;
+      color: var(--route-accent);
+      background: rgba(0,0,0,.36);
+      font-size: 10px;
+      white-space: nowrap;
+      font-weight: 800;
+    }
+    @keyframes routePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+    .routeNodeList { display: flex; flex-direction: column; justify-content: center; gap: 9px; min-width: 0; }
+    .routeListItem {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+      text-align: left;
+      white-space: normal;
+      border-color: rgba(255,255,255,.08);
+      background: rgba(255,255,255,.035);
+      color: var(--fg);
+    }
+    .routeListItem span { grid-row: 1 / span 2; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 999px; background: color-mix(in srgb, var(--route-accent) 20%, #0a1a23); color: var(--route-accent); font-weight: 800; }
+    .routeListItem strong, .routeListItem small { overflow: hidden; text-overflow: ellipsis; }
+    .routeListItem small { color: var(--muted); font-size: 11px; }
+    .routeListItem.active { border-color: var(--route-accent); background: color-mix(in srgb, var(--route-accent) 13%, rgba(255,255,255,.04)); }
+    .routeVisual { display: flex; flex-direction: column; justify-content: center; gap: 14px; min-width: 0; }
+    .routeIllustration { width: 100%; min-height: 150px; filter: drop-shadow(0 0 18px var(--route-glow)); }
+    .routeDetail { border: 1px solid rgba(255,255,255,.09); border-radius: 10px; background: rgba(0,0,0,.18); padding: 14px; }
+    .routeDetailState { color: var(--route-accent); font-size: 12px; font-weight: 800; }
+    .routeDetail h4 { margin: 6px 0 0; font-size: 16px; }
+    .routeDetail p { font-size: 13px; margin-top: 8px; }
+    .routeDetailMeta { color: var(--muted); font-size: 12px; margin: 10px 0; }
+    .routeDetail button { border-color: var(--route-accent); color: var(--fg); background: color-mix(in srgb, var(--route-accent) 18%, transparent); }
+    .routeFooter {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 0 18px 18px;
+      padding: 12px 14px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 10px;
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .routeFooter button { border-color: var(--route-accent); color: var(--route-accent); background: rgba(255,255,255,.04); }
+    .routeLegend { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: center; }
+    .routeLegend span { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+    .legendNode { width: 20px; height: 20px; display: grid; place-items: center; border-radius: 999px; font-style: normal; font-size: 10px; font-weight: 900; border: 1px solid rgba(255,255,255,.16); }
+    .legendNode.completed { background: var(--route-accent); color: white; }
+    .legendNode.current { background: white; color: #08202a; border-color: var(--route-accent); box-shadow: 0 0 12px var(--route-glow); }
+    .legendNode.locked { background: #1b2a34; color: #9cabb6; }
+    .legendNode.challenge { background: color-mix(in srgb, var(--route-accent) 28%, #13232c); color: white; clip-path: polygon(50% 0%, 62% 30%, 96% 35%, 70% 57%, 79% 91%, 50% 72%, 21% 91%, 30% 57%, 4% 35%, 38% 30%); border-radius: 0; }
     .routeModule { border: 1px solid var(--border); background: var(--card); border-radius: 8px; padding: 16px; }
     .routeModule.locked, .routeNode.locked { opacity: 0.55; }
     .routeModuleHead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
@@ -1279,6 +1584,12 @@ function baseHtml(body) {
       .cardActions { grid-column: 2; justify-content: flex-start; }
       .rootGrid, .rootGrid.compactRoots { grid-template-columns: 1fr; }
       .rootCard { grid-template-columns: 58px minmax(0, 1fr); }
+      .routeHero, .routeFooter, .routeProgress { margin-left: 12px; margin-right: 12px; }
+      .routeBody { grid-template-columns: 1fr; padding-left: 12px; padding-right: 12px; }
+      .snakeWrap { min-height: 300px; max-width: 240px; margin: 0 auto; width: 100%; }
+      .routeNodeList { order: 2; }
+      .routeVisual { order: 3; }
+      .routeProgress { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -1345,6 +1656,14 @@ ${body}
       applyFilters();
       return;
     }
+    if (button?.classList.contains('routeTab')) {
+      showRouteModule(button.dataset.routeTarget);
+      return;
+    }
+    if (button?.classList.contains('snakeNode') || button?.classList.contains('routeListItem')) {
+      selectRouteNode(button);
+      return;
+    }
     if (button?.dataset.command) {
       event.stopPropagation();
       vscode.postMessage({
@@ -1399,6 +1718,37 @@ ${body}
     document.querySelectorAll('.statusFilter').forEach((button) => button.classList.toggle('active', button.dataset.status === state.status));
     document.querySelectorAll('.themeButton').forEach((button) => button.classList.toggle('active', button.dataset.theme === state.theme));
     document.querySelectorAll('.logicButton').forEach((button) => button.classList.toggle('active', button.dataset.logic === state.logic));
+  }
+  function showRouteModule(moduleId) {
+    if (!moduleId) return;
+    document.querySelectorAll('.routeTab').forEach((button) => button.classList.toggle('active', button.dataset.routeTarget === moduleId));
+    document.querySelectorAll('.routeModuleCard').forEach((card) => card.classList.toggle('hidden', card.dataset.routeModule !== moduleId));
+  }
+  function selectRouteNode(button) {
+    const moduleCard = button.closest('.routeModuleCard');
+    const ref = button.dataset.routeNodeRef;
+    if (!moduleCard || !ref) return;
+    const source = moduleCard.querySelector(\`.snakeNode[data-route-node-ref="\${cssEscape(ref)}"]\`);
+    if (!source) return;
+    moduleCard.querySelectorAll('.routeListItem').forEach((item) => item.classList.toggle('active', item.dataset.routeNodeRef === ref));
+    moduleCard.querySelectorAll('.snakeNode').forEach((item) => item.classList.toggle('selected', item.dataset.routeNodeRef === ref));
+    const detail = moduleCard.querySelector('[data-route-detail]');
+    if (!detail) return;
+    const locked = source.dataset.routeState === 'locked';
+    detail.innerHTML = [
+      \`<span class="routeDetailState">\${locked ? 'Bloqueado' : (source.dataset.routeState === 'current' ? 'Actual' : 'Disponible')}</span>\`,
+      \`<h4>\${escapeText(source.dataset.routeTitle || 'Nodo')}</h4>\`,
+      \`<p>\${escapeText(locked ? (source.dataset.routeLock || 'Completa los pasos anteriores.') : (source.dataset.routeDescription || 'Listo para continuar cuando quieras.'))}</p>\`,
+      \`<div class="routeDetailMeta">\${escapeText(source.dataset.routeLabel || '')}</div>\`,
+      \`<button disabled>\${locked ? 'Bloqueado' : 'Iniciar'}</button>\`
+    ].join('');
+  }
+  function cssEscape(value) {
+    if (window.CSS && typeof window.CSS.escape === 'function') return window.CSS.escape(value);
+    return String(value).replace(/["\\\\]/g, '\\\\$&');
+  }
+  function escapeText(value) {
+    return String(value || '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
   }
   function selectedValues(selector, attr) {
     return Array.from(document.querySelectorAll(selector + ':checked')).map((item) => item.dataset[attr]).filter(Boolean);
