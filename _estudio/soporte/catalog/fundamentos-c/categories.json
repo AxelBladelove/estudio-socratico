@@ -10,7 +10,9 @@
     { "id": "arrays", "title": "Arreglos", "topic": "arrays", "order": 6 },
     { "id": "strings", "title": "Cadenas", "topic": "strings", "order": 7 },
     { "id": "matrices", "title": "Matrices", "topic": "matrices", "order": 8 },
-    { "id": "menus", "title": "Menus", "topic": "menus", "order": 9 },
-    { "id": "juegos", "title": "Juegos y simulacion", "topic": "juegos", "order": 10 }
+    { "id": "pointers", "title": "Punteros basicos", "topic": "pointers", "order": 9 },
+    { "id": "recursion", "title": "Recursion", "topic": "recursion", "order": 10 },
+    { "id": "menus", "title": "Menus", "topic": "menus", "order": 11 },
+    { "id": "juegos", "title": "Juegos y simulacion", "topic": "juegos", "order": 12 }
   ]
 }

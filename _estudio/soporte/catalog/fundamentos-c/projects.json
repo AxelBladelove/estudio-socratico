@@ -7,24 +7,58 @@
       "title": "Menu de notas basico",
       "kind": "assignment",
       "description": "Programa con menu para capturar notas, calcular promedio y mostrar estado.",
-      "primaryTopics": ["loops", "conditionals"],
-      "supportTopics": ["io", "variables", "functions"],
-      "combinedTopics": ["menus", "loops", "conditionals"],
-      "requiredMastery": ["loops", "conditionals"],
-      "newTopicFocus": ["menus"],
-      "skills": ["menu-loop", "state-control", "input-validation"],
-      "commonErrors": ["infinite-loop", "missing-else-case", "scanf-ampersand"],
-      "remediates": ["menu-state-confusion"],
-      "preparesFor": ["bingo-basico"],
-      "relatedProjects": ["bingo-basico"],
+      "primaryTopics": [
+        "loops",
+        "conditionals"
+      ],
+      "supportTopics": [
+        "io",
+        "variables",
+        "functions"
+      ],
+      "combinedTopics": [
+        "menus",
+        "loops",
+        "conditionals"
+      ],
+      "requiredMastery": [
+        "loops",
+        "conditionals"
+      ],
+      "newTopicFocus": [
+        "menus"
+      ],
+      "skills": [
+        "menu-loop",
+        "state-control",
+        "input-validation"
+      ],
+      "commonErrors": [
+        "infinite-loop",
+        "missing-else-case",
+        "scanf-ampersand"
+      ],
+      "remediates": [
+        "menu-state-confusion"
+      ],
+      "preparesFor": [
+        "bingo-basico"
+      ],
+      "relatedProjects": [
+        "bingo-basico"
+      ],
       "difficulty": {
         "score": 48,
         "band": "easy+",
         "expectedMinutes": 60
       },
       "unlock": {
-        "requiresModules": ["control-de-flujo"],
-        "requiresExercises": ["loops-suma-hasta-n-01"],
+        "requiresModules": [
+          "control-de-flujo"
+        ],
+        "requiresExercises": [
+          "loops-suma-hasta-n-01"
+        ],
         "requiresQuizScore": null
       },
       "visibility": {
@@ -42,31 +76,79 @@
           }
         ],
         "timeoutMs": 5000
-      }
+      },
+      "topics": [
+        "loops",
+        "conditionals",
+        "io",
+        "variables",
+        "functions",
+        "menus"
+      ],
+      "requiredConcepts": [
+        "loops",
+        "conditionals"
+      ],
+      "projectType": "assignment"
     },
     {
       "id": "bingo-basico",
       "title": "Bingo basico",
       "kind": "project",
       "description": "Tablero sencillo con numeros, recorrido de matriz y marcado de jugadas.",
-      "primaryTopics": ["arrays", "matrices"],
-      "supportTopics": ["loops", "conditionals", "functions"],
-      "combinedTopics": ["juegos", "matrices", "arrays"],
-      "requiredMastery": ["loops", "arrays", "functions"],
-      "newTopicFocus": ["matrices"],
-      "skills": ["nested-loop", "row-column-indexing", "state-control"],
-      "commonErrors": ["swapped-row-column", "out-of-bounds", "wrong-loop-bound"],
-      "remediates": ["matrix-indexing"],
-      "preparesFor": ["text-menu-analyzer"],
-      "relatedProjects": ["text-menu-analyzer"],
+      "primaryTopics": [
+        "arrays",
+        "matrices"
+      ],
+      "supportTopics": [
+        "loops",
+        "conditionals",
+        "functions"
+      ],
+      "combinedTopics": [
+        "juegos",
+        "matrices",
+        "arrays"
+      ],
+      "requiredMastery": [
+        "loops",
+        "arrays",
+        "functions"
+      ],
+      "newTopicFocus": [
+        "matrices"
+      ],
+      "skills": [
+        "nested-loop",
+        "row-column-indexing",
+        "state-control"
+      ],
+      "commonErrors": [
+        "swapped-row-column",
+        "out-of-bounds",
+        "wrong-loop-bound"
+      ],
+      "remediates": [
+        "matrix-indexing"
+      ],
+      "preparesFor": [
+        "text-menu-analyzer"
+      ],
+      "relatedProjects": [
+        "text-menu-analyzer"
+      ],
       "difficulty": {
         "score": 66,
         "band": "medium",
         "expectedMinutes": 120
       },
       "unlock": {
-        "requiresModules": ["funciones-y-arreglos"],
-        "requiresExercises": ["arrays-maximo-01"],
+        "requiresModules": [
+          "funciones-y-arreglos"
+        ],
+        "requiresExercises": [
+          "arrays-maximo-01"
+        ],
         "requiresQuizScore": null
       },
       "visibility": {
@@ -84,21 +166,61 @@
           }
         ],
         "timeoutMs": 7000
-      }
+      },
+      "topics": [
+        "arrays",
+        "matrices",
+        "loops",
+        "conditionals",
+        "functions",
+        "juegos"
+      ],
+      "requiredConcepts": [
+        "loops",
+        "arrays",
+        "functions"
+      ],
+      "projectType": "project"
     },
     {
       "id": "text-menu-analyzer",
       "title": "Analizador de texto con menu",
       "kind": "project",
       "description": "Menu para cargar una frase, contar caracteres y aplicar transformaciones simples.",
-      "primaryTopics": ["strings", "functions"],
-      "supportTopics": ["loops", "arrays", "conditionals"],
-      "combinedTopics": ["strings", "menus", "functions"],
-      "requiredMastery": ["strings", "loops", "functions"],
+      "primaryTopics": [
+        "strings",
+        "functions"
+      ],
+      "supportTopics": [
+        "loops",
+        "arrays",
+        "conditionals"
+      ],
+      "combinedTopics": [
+        "strings",
+        "menus",
+        "functions"
+      ],
+      "requiredMastery": [
+        "strings",
+        "loops",
+        "functions"
+      ],
       "newTopicFocus": [],
-      "skills": ["char-array-traversal", "menu-loop", "input-cleaning"],
-      "commonErrors": ["newline-in-buffer", "missing-null-terminator", "strlen-vs-capacity"],
-      "remediates": ["char-array-indexing", "menu-state-confusion"],
+      "skills": [
+        "char-array-traversal",
+        "menu-loop",
+        "input-cleaning"
+      ],
+      "commonErrors": [
+        "newline-in-buffer",
+        "missing-null-terminator",
+        "strlen-vs-capacity"
+      ],
+      "remediates": [
+        "char-array-indexing",
+        "menu-state-confusion"
+      ],
       "preparesFor": [],
       "relatedProjects": [],
       "difficulty": {
@@ -107,8 +229,12 @@
         "expectedMinutes": 150
       },
       "unlock": {
-        "requiresModules": ["cadenas-y-combinaciones"],
-        "requiresExercises": ["strings-count-lowercase-01"],
+        "requiresModules": [
+          "cadenas-y-combinaciones"
+        ],
+        "requiresExercises": [
+          "strings-count-lowercase-01"
+        ],
         "requiresQuizScore": {
           "quizId": "quiz-strings-01",
           "minScore": 70
@@ -129,7 +255,21 @@
           }
         ],
         "timeoutMs": 7000
-      }
+      },
+      "topics": [
+        "strings",
+        "functions",
+        "loops",
+        "arrays",
+        "conditionals",
+        "menus"
+      ],
+      "requiredConcepts": [
+        "strings",
+        "loops",
+        "functions"
+      ],
+      "projectType": "project"
     }
   ]
 }

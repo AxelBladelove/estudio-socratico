@@ -2,54 +2,901 @@
   "schemaVersion": 1,
   "courseId": "fundamentos-c",
   "nodes": [
-    { "id": "io", "type": "concept" },
-    { "id": "variables", "type": "concept" },
-    { "id": "conditionals", "type": "concept" },
-    { "id": "loops", "type": "concept" },
-    { "id": "functions", "type": "concept" },
-    { "id": "arrays", "type": "concept" },
-    { "id": "strings", "type": "concept" },
-    { "id": "matrices", "type": "concept" },
-    { "id": "io-saludo-01", "type": "exercise" },
-    { "id": "variables-conversion-pulgadas-01", "type": "exercise" },
-    { "id": "conditionals-mayor-de-tres-01", "type": "exercise" },
-    { "id": "loops-suma-hasta-n-01", "type": "exercise" },
-    { "id": "functions-promedio-01", "type": "exercise" },
-    { "id": "arrays-maximo-01", "type": "exercise" },
-    { "id": "strings-count-lowercase-01", "type": "exercise" },
-    { "id": "matrix-string-transform-01", "type": "exercise" },
-    { "id": "strings-normalizar-frase-hard", "type": "exercise" },
-    { "id": "quiz-base-io-variables-01", "type": "quiz" },
-    { "id": "quiz-control-01", "type": "quiz" },
-    { "id": "quiz-strings-01", "type": "quiz" },
-    { "id": "menu-notas-basico", "type": "project" },
-    { "id": "bingo-basico", "type": "project" },
-    { "id": "text-menu-analyzer", "type": "project" },
-    { "id": "off-by-one", "type": "commonError" },
-    { "id": "missing-null-terminator", "type": "commonError" },
-    { "id": "scanf-ampersand", "type": "commonError" }
+    {
+      "id": "io",
+      "type": "concept"
+    },
+    {
+      "id": "variables",
+      "type": "concept"
+    },
+    {
+      "id": "conditionals",
+      "type": "concept"
+    },
+    {
+      "id": "loops",
+      "type": "concept"
+    },
+    {
+      "id": "functions",
+      "type": "concept"
+    },
+    {
+      "id": "arrays",
+      "type": "concept"
+    },
+    {
+      "id": "strings",
+      "type": "concept"
+    },
+    {
+      "id": "matrices",
+      "type": "concept"
+    },
+    {
+      "id": "pointers",
+      "type": "concept"
+    },
+    {
+      "id": "recursion",
+      "type": "concept"
+    },
+    {
+      "id": "io-saludo-01",
+      "type": "exercise"
+    },
+    {
+      "id": "variables-conversion-pulgadas-01",
+      "type": "exercise"
+    },
+    {
+      "id": "variables-area-rectangulo-01",
+      "type": "exercise"
+    },
+    {
+      "id": "variables-segundos-a-tiempo-01",
+      "type": "exercise"
+    },
+    {
+      "id": "variables-intercambio-01",
+      "type": "exercise"
+    },
+    {
+      "id": "variables-descuento-itbis-01",
+      "type": "exercise"
+    },
+    {
+      "id": "conditionals-mayor-de-tres-01",
+      "type": "exercise"
+    },
+    {
+      "id": "conditionals-par-impar-rango-01",
+      "type": "exercise"
+    },
+    {
+      "id": "conditionals-nota-literal-01",
+      "type": "exercise"
+    },
+    {
+      "id": "conditionals-triangulo-valido-01",
+      "type": "exercise"
+    },
+    {
+      "id": "conditionals-tarifa-estacionamiento-01",
+      "type": "exercise"
+    },
+    {
+      "id": "loops-suma-hasta-n-01",
+      "type": "exercise"
+    },
+    {
+      "id": "loops-tabla-multiplicar-01",
+      "type": "exercise"
+    },
+    {
+      "id": "loops-contar-digitos-01",
+      "type": "exercise"
+    },
+    {
+      "id": "loops-factorial-io-01",
+      "type": "exercise"
+    },
+    {
+      "id": "loops-sentinel-promedio-01",
+      "type": "exercise"
+    },
+    {
+      "id": "functions-promedio-01",
+      "type": "exercise"
+    },
+    {
+      "id": "functions-es-primo-01",
+      "type": "exercise"
+    },
+    {
+      "id": "functions-potencia-entera-01",
+      "type": "exercise"
+    },
+    {
+      "id": "functions-menu-operacion-01",
+      "type": "exercise"
+    },
+    {
+      "id": "functions-prototipo-area-circulo-01",
+      "type": "exercise"
+    },
+    {
+      "id": "arrays-maximo-01",
+      "type": "exercise"
+    },
+    {
+      "id": "arrays-promedio-notas-01",
+      "type": "exercise"
+    },
+    {
+      "id": "arrays-contar-pares-01",
+      "type": "exercise"
+    },
+    {
+      "id": "arrays-busqueda-lineal-01",
+      "type": "exercise"
+    },
+    {
+      "id": "arrays-invertir-01",
+      "type": "exercise"
+    },
+    {
+      "id": "strings-count-lowercase-01",
+      "type": "exercise"
+    },
+    {
+      "id": "strings-contar-vocales-01",
+      "type": "exercise"
+    },
+    {
+      "id": "strings-palindromo-basico-01",
+      "type": "exercise"
+    },
+    {
+      "id": "strings-normalizar-frase-hard",
+      "type": "exercise"
+    },
+    {
+      "id": "strings-mayusculas-minusculas-01",
+      "type": "exercise"
+    },
+    {
+      "id": "matrices-suma-diagonal-01",
+      "type": "exercise"
+    },
+    {
+      "id": "matrices-transpuesta-01",
+      "type": "exercise"
+    },
+    {
+      "id": "matrices-mayor-fila-01",
+      "type": "exercise"
+    },
+    {
+      "id": "pointers-swap-basico-01",
+      "type": "exercise"
+    },
+    {
+      "id": "pointers-maximo-referencia-01",
+      "type": "exercise"
+    },
+    {
+      "id": "pointers-recorrer-arreglo-01",
+      "type": "exercise"
+    },
+    {
+      "id": "matrix-string-transform-01",
+      "type": "exercise"
+    },
+    {
+      "id": "combined-arrays-functions-stats-01",
+      "type": "exercise"
+    },
+    {
+      "id": "combined-strings-recursion-vowels-01",
+      "type": "exercise"
+    },
+    {
+      "id": "quiz-base-io-variables-01",
+      "type": "quiz"
+    },
+    {
+      "id": "quiz-control-01",
+      "type": "quiz"
+    },
+    {
+      "id": "quiz-strings-01",
+      "type": "quiz"
+    },
+    {
+      "id": "menu-notas-basico",
+      "type": "project"
+    },
+    {
+      "id": "bingo-basico",
+      "type": "project"
+    },
+    {
+      "id": "text-menu-analyzer",
+      "type": "project"
+    }
   ],
   "edges": [
-    { "from": "variables-conversion-pulgadas-01", "to": "io", "type": "requires" },
-    { "from": "conditionals-mayor-de-tres-01", "to": "variables", "type": "requires" },
-    { "from": "loops-suma-hasta-n-01", "to": "conditionals", "type": "requires" },
-    { "from": "functions-promedio-01", "to": "loops", "type": "requires" },
-    { "from": "arrays-maximo-01", "to": "functions", "type": "requires" },
-    { "from": "strings-count-lowercase-01", "to": "arrays", "type": "requires" },
-    { "from": "strings-count-lowercase-01", "to": "strings", "type": "reinforces" },
-    { "from": "matrix-string-transform-01", "to": "matrices", "type": "reinforces" },
-    { "from": "matrix-string-transform-01", "to": "strings", "type": "reinforces" },
-    { "from": "strings-normalizar-frase-hard", "to": "strings", "type": "assesses" },
-    { "from": "strings-count-lowercase-01", "to": "islower-confusion", "type": "remediates" },
-    { "from": "strings-count-lowercase-01", "to": "strings-normalizar-frase-hard", "type": "preparesFor" },
-    { "from": "arrays-maximo-01", "to": "bingo-basico", "type": "preparesFor" },
-    { "from": "strings-count-lowercase-01", "to": "text-menu-analyzer", "type": "preparesFor" },
-    { "from": "quiz-base-io-variables-01", "to": "io", "type": "assesses" },
-    { "from": "quiz-base-io-variables-01", "to": "variables", "type": "assesses" },
-    { "from": "quiz-strings-01", "to": "strings", "type": "assesses" },
-    { "from": "bingo-basico", "to": "arrays", "type": "combinesWith" },
-    { "from": "bingo-basico", "to": "matrices", "type": "combinesWith" },
-    { "from": "text-menu-analyzer", "to": "strings", "type": "combinesWith" },
-    { "from": "text-menu-analyzer", "to": "functions", "type": "combinesWith" }
+    {
+      "from": "io-saludo-01",
+      "to": "io",
+      "type": "practices"
+    },
+    {
+      "from": "io-saludo-01",
+      "to": "variables-conversion-pulgadas-01",
+      "type": "preparesFor"
+    },
+    {
+      "from": "io-saludo-01",
+      "to": "quiz-base-io-variables-01",
+      "type": "preparesFor"
+    },
+    {
+      "from": "variables-conversion-pulgadas-01",
+      "to": "io",
+      "type": "requires"
+    },
+    {
+      "from": "variables-conversion-pulgadas-01",
+      "to": "variables",
+      "type": "practices"
+    },
+    {
+      "from": "variables-area-rectangulo-01",
+      "to": "io",
+      "type": "requires"
+    },
+    {
+      "from": "variables-area-rectangulo-01",
+      "to": "variables",
+      "type": "practices"
+    },
+    {
+      "from": "variables-segundos-a-tiempo-01",
+      "to": "io",
+      "type": "requires"
+    },
+    {
+      "from": "variables-segundos-a-tiempo-01",
+      "to": "variables",
+      "type": "practices"
+    },
+    {
+      "from": "variables-intercambio-01",
+      "to": "io",
+      "type": "requires"
+    },
+    {
+      "from": "variables-intercambio-01",
+      "to": "variables",
+      "type": "practices"
+    },
+    {
+      "from": "variables-descuento-itbis-01",
+      "to": "io",
+      "type": "requires"
+    },
+    {
+      "from": "variables-descuento-itbis-01",
+      "to": "variables",
+      "type": "practices"
+    },
+    {
+      "from": "conditionals-mayor-de-tres-01",
+      "to": "io",
+      "type": "requires"
+    },
+    {
+      "from": "conditionals-mayor-de-tres-01",
+      "to": "variables",
+      "type": "requires"
+    },
+    {
+      "from": "conditionals-mayor-de-tres-01",
+      "to": "conditionals",
+      "type": "practices"
+    },
+    {
+      "from": "conditionals-par-impar-rango-01",
+      "to": "io",
+      "type": "requires"
+    },
+    {
+      "from": "conditionals-par-impar-rango-01",
+      "to": "variables",
+      "type": "requires"
+    },
+    {
+      "from": "conditionals-par-impar-rango-01",
+      "to": "conditionals",
+      "type": "practices"
+    },
+    {
+      "from": "conditionals-nota-literal-01",
+      "to": "io",
+      "type": "requires"
+    },
+    {
+      "from": "conditionals-nota-literal-01",
+      "to": "variables",
+      "type": "requires"
+    },
+    {
+      "from": "conditionals-nota-literal-01",
+      "to": "conditionals",
+      "type": "practices"
+    },
+    {
+      "from": "conditionals-triangulo-valido-01",
+      "to": "io",
+      "type": "requires"
+    },
+    {
+      "from": "conditionals-triangulo-valido-01",
+      "to": "variables",
+      "type": "requires"
+    },
+    {
+      "from": "conditionals-triangulo-valido-01",
+      "to": "conditionals",
+      "type": "practices"
+    },
+    {
+      "from": "conditionals-tarifa-estacionamiento-01",
+      "to": "io",
+      "type": "requires"
+    },
+    {
+      "from": "conditionals-tarifa-estacionamiento-01",
+      "to": "variables",
+      "type": "requires"
+    },
+    {
+      "from": "conditionals-tarifa-estacionamiento-01",
+      "to": "conditionals",
+      "type": "practices"
+    },
+    {
+      "from": "loops-suma-hasta-n-01",
+      "to": "io",
+      "type": "requires"
+    },
+    {
+      "from": "loops-suma-hasta-n-01",
+      "to": "variables",
+      "type": "requires"
+    },
+    {
+      "from": "loops-suma-hasta-n-01",
+      "to": "loops",
+      "type": "practices"
+    },
+    {
+      "from": "loops-tabla-multiplicar-01",
+      "to": "io",
+      "type": "requires"
+    },
+    {
+      "from": "loops-tabla-multiplicar-01",
+      "to": "variables",
+      "type": "requires"
+    },
+    {
+      "from": "loops-tabla-multiplicar-01",
+      "to": "loops",
+      "type": "practices"
+    },
+    {
+      "from": "loops-contar-digitos-01",
+      "to": "io",
+      "type": "requires"
+    },
+    {
+      "from": "loops-contar-digitos-01",
+      "to": "variables",
+      "type": "requires"
+    },
+    {
+      "from": "loops-contar-digitos-01",
+      "to": "loops",
+      "type": "practices"
+    },
+    {
+      "from": "loops-factorial-io-01",
+      "to": "io",
+      "type": "requires"
+    },
+    {
+      "from": "loops-factorial-io-01",
+      "to": "variables",
+      "type": "requires"
+    },
+    {
+      "from": "loops-factorial-io-01",
+      "to": "loops",
+      "type": "practices"
+    },
+    {
+      "from": "loops-sentinel-promedio-01",
+      "to": "io",
+      "type": "requires"
+    },
+    {
+      "from": "loops-sentinel-promedio-01",
+      "to": "variables",
+      "type": "requires"
+    },
+    {
+      "from": "loops-sentinel-promedio-01",
+      "to": "conditionals",
+      "type": "requires"
+    },
+    {
+      "from": "loops-sentinel-promedio-01",
+      "to": "loops",
+      "type": "practices"
+    },
+    {
+      "from": "functions-promedio-01",
+      "to": "loops",
+      "type": "requires"
+    },
+    {
+      "from": "functions-promedio-01",
+      "to": "variables",
+      "type": "requires"
+    },
+    {
+      "from": "functions-promedio-01",
+      "to": "functions",
+      "type": "practices"
+    },
+    {
+      "from": "functions-es-primo-01",
+      "to": "loops",
+      "type": "requires"
+    },
+    {
+      "from": "functions-es-primo-01",
+      "to": "conditionals",
+      "type": "requires"
+    },
+    {
+      "from": "functions-es-primo-01",
+      "to": "functions",
+      "type": "practices"
+    },
+    {
+      "from": "functions-potencia-entera-01",
+      "to": "loops",
+      "type": "requires"
+    },
+    {
+      "from": "functions-potencia-entera-01",
+      "to": "variables",
+      "type": "requires"
+    },
+    {
+      "from": "functions-potencia-entera-01",
+      "to": "functions",
+      "type": "practices"
+    },
+    {
+      "from": "functions-menu-operacion-01",
+      "to": "conditionals",
+      "type": "requires"
+    },
+    {
+      "from": "functions-menu-operacion-01",
+      "to": "io",
+      "type": "requires"
+    },
+    {
+      "from": "functions-menu-operacion-01",
+      "to": "functions",
+      "type": "practices"
+    },
+    {
+      "from": "functions-prototipo-area-circulo-01",
+      "to": "variables",
+      "type": "requires"
+    },
+    {
+      "from": "functions-prototipo-area-circulo-01",
+      "to": "io",
+      "type": "requires"
+    },
+    {
+      "from": "functions-prototipo-area-circulo-01",
+      "to": "functions",
+      "type": "practices"
+    },
+    {
+      "from": "arrays-maximo-01",
+      "to": "loops",
+      "type": "requires"
+    },
+    {
+      "from": "arrays-maximo-01",
+      "to": "functions",
+      "type": "requires"
+    },
+    {
+      "from": "arrays-maximo-01",
+      "to": "arrays",
+      "type": "practices"
+    },
+    {
+      "from": "arrays-promedio-notas-01",
+      "to": "loops",
+      "type": "requires"
+    },
+    {
+      "from": "arrays-promedio-notas-01",
+      "to": "variables",
+      "type": "requires"
+    },
+    {
+      "from": "arrays-promedio-notas-01",
+      "to": "arrays",
+      "type": "practices"
+    },
+    {
+      "from": "arrays-contar-pares-01",
+      "to": "loops",
+      "type": "requires"
+    },
+    {
+      "from": "arrays-contar-pares-01",
+      "to": "conditionals",
+      "type": "requires"
+    },
+    {
+      "from": "arrays-contar-pares-01",
+      "to": "arrays",
+      "type": "practices"
+    },
+    {
+      "from": "arrays-busqueda-lineal-01",
+      "to": "loops",
+      "type": "requires"
+    },
+    {
+      "from": "arrays-busqueda-lineal-01",
+      "to": "conditionals",
+      "type": "requires"
+    },
+    {
+      "from": "arrays-busqueda-lineal-01",
+      "to": "arrays",
+      "type": "practices"
+    },
+    {
+      "from": "arrays-invertir-01",
+      "to": "loops",
+      "type": "requires"
+    },
+    {
+      "from": "arrays-invertir-01",
+      "to": "arrays",
+      "type": "practices"
+    },
+    {
+      "from": "strings-count-lowercase-01",
+      "to": "loops",
+      "type": "requires"
+    },
+    {
+      "from": "strings-count-lowercase-01",
+      "to": "conditionals",
+      "type": "requires"
+    },
+    {
+      "from": "strings-count-lowercase-01",
+      "to": "functions",
+      "type": "requires"
+    },
+    {
+      "from": "strings-count-lowercase-01",
+      "to": "strings",
+      "type": "practices"
+    },
+    {
+      "from": "strings-contar-vocales-01",
+      "to": "loops",
+      "type": "requires"
+    },
+    {
+      "from": "strings-contar-vocales-01",
+      "to": "conditionals",
+      "type": "requires"
+    },
+    {
+      "from": "strings-contar-vocales-01",
+      "to": "strings",
+      "type": "practices"
+    },
+    {
+      "from": "strings-palindromo-basico-01",
+      "to": "arrays",
+      "type": "requires"
+    },
+    {
+      "from": "strings-palindromo-basico-01",
+      "to": "loops",
+      "type": "requires"
+    },
+    {
+      "from": "strings-palindromo-basico-01",
+      "to": "strings",
+      "type": "practices"
+    },
+    {
+      "from": "strings-normalizar-frase-hard",
+      "to": "loops",
+      "type": "requires"
+    },
+    {
+      "from": "strings-normalizar-frase-hard",
+      "to": "conditionals",
+      "type": "requires"
+    },
+    {
+      "from": "strings-normalizar-frase-hard",
+      "to": "functions",
+      "type": "requires"
+    },
+    {
+      "from": "strings-normalizar-frase-hard",
+      "to": "strings",
+      "type": "practices"
+    },
+    {
+      "from": "strings-mayusculas-minusculas-01",
+      "to": "loops",
+      "type": "requires"
+    },
+    {
+      "from": "strings-mayusculas-minusculas-01",
+      "to": "conditionals",
+      "type": "requires"
+    },
+    {
+      "from": "strings-mayusculas-minusculas-01",
+      "to": "strings",
+      "type": "practices"
+    },
+    {
+      "from": "matrices-suma-diagonal-01",
+      "to": "arrays",
+      "type": "requires"
+    },
+    {
+      "from": "matrices-suma-diagonal-01",
+      "to": "loops",
+      "type": "requires"
+    },
+    {
+      "from": "matrices-suma-diagonal-01",
+      "to": "matrices",
+      "type": "practices"
+    },
+    {
+      "from": "matrices-transpuesta-01",
+      "to": "arrays",
+      "type": "requires"
+    },
+    {
+      "from": "matrices-transpuesta-01",
+      "to": "loops",
+      "type": "requires"
+    },
+    {
+      "from": "matrices-transpuesta-01",
+      "to": "matrices",
+      "type": "practices"
+    },
+    {
+      "from": "matrices-mayor-fila-01",
+      "to": "arrays",
+      "type": "requires"
+    },
+    {
+      "from": "matrices-mayor-fila-01",
+      "to": "loops",
+      "type": "requires"
+    },
+    {
+      "from": "matrices-mayor-fila-01",
+      "to": "matrices",
+      "type": "practices"
+    },
+    {
+      "from": "pointers-swap-basico-01",
+      "to": "functions",
+      "type": "requires"
+    },
+    {
+      "from": "pointers-swap-basico-01",
+      "to": "variables",
+      "type": "requires"
+    },
+    {
+      "from": "pointers-swap-basico-01",
+      "to": "pointers",
+      "type": "practices"
+    },
+    {
+      "from": "pointers-maximo-referencia-01",
+      "to": "functions",
+      "type": "requires"
+    },
+    {
+      "from": "pointers-maximo-referencia-01",
+      "to": "conditionals",
+      "type": "requires"
+    },
+    {
+      "from": "pointers-maximo-referencia-01",
+      "to": "pointers",
+      "type": "practices"
+    },
+    {
+      "from": "pointers-recorrer-arreglo-01",
+      "to": "arrays",
+      "type": "requires"
+    },
+    {
+      "from": "pointers-recorrer-arreglo-01",
+      "to": "loops",
+      "type": "requires"
+    },
+    {
+      "from": "pointers-recorrer-arreglo-01",
+      "to": "pointers",
+      "type": "practices"
+    },
+    {
+      "from": "matrix-string-transform-01",
+      "to": "matrices",
+      "type": "requires"
+    },
+    {
+      "from": "matrix-string-transform-01",
+      "to": "strings",
+      "type": "requires"
+    },
+    {
+      "from": "matrix-string-transform-01",
+      "to": "loops",
+      "type": "requires"
+    },
+    {
+      "from": "matrix-string-transform-01",
+      "to": "matrices",
+      "type": "practices"
+    },
+    {
+      "from": "matrix-string-transform-01",
+      "to": "strings",
+      "type": "practices"
+    },
+    {
+      "from": "combined-arrays-functions-stats-01",
+      "to": "arrays",
+      "type": "requires"
+    },
+    {
+      "from": "combined-arrays-functions-stats-01",
+      "to": "functions",
+      "type": "requires"
+    },
+    {
+      "from": "combined-arrays-functions-stats-01",
+      "to": "loops",
+      "type": "requires"
+    },
+    {
+      "from": "combined-arrays-functions-stats-01",
+      "to": "arrays",
+      "type": "practices"
+    },
+    {
+      "from": "combined-arrays-functions-stats-01",
+      "to": "functions",
+      "type": "practices"
+    },
+    {
+      "from": "combined-strings-recursion-vowels-01",
+      "to": "strings",
+      "type": "requires"
+    },
+    {
+      "from": "combined-strings-recursion-vowels-01",
+      "to": "recursion",
+      "type": "requires"
+    },
+    {
+      "from": "combined-strings-recursion-vowels-01",
+      "to": "functions",
+      "type": "requires"
+    },
+    {
+      "from": "combined-strings-recursion-vowels-01",
+      "to": "strings",
+      "type": "practices"
+    },
+    {
+      "from": "combined-strings-recursion-vowels-01",
+      "to": "recursion",
+      "type": "practices"
+    },
+    {
+      "from": "quiz-base-io-variables-01",
+      "to": "io",
+      "type": "assesses"
+    },
+    {
+      "from": "quiz-base-io-variables-01",
+      "to": "variables",
+      "type": "assesses"
+    },
+    {
+      "from": "quiz-control-01",
+      "to": "conditionals",
+      "type": "assesses"
+    },
+    {
+      "from": "quiz-control-01",
+      "to": "loops",
+      "type": "assesses"
+    },
+    {
+      "from": "quiz-strings-01",
+      "to": "strings",
+      "type": "assesses"
+    },
+    {
+      "from": "menu-notas-basico",
+      "to": "loops",
+      "type": "combinesWith"
+    },
+    {
+      "from": "menu-notas-basico",
+      "to": "conditionals",
+      "type": "combinesWith"
+    },
+    {
+      "from": "bingo-basico",
+      "to": "arrays",
+      "type": "combinesWith"
+    },
+    {
+      "from": "bingo-basico",
+      "to": "matrices",
+      "type": "combinesWith"
+    },
+    {
+      "from": "text-menu-analyzer",
+      "to": "strings",
+      "type": "combinesWith"
+    },
+    {
+      "from": "text-menu-analyzer",
+      "to": "functions",
+      "type": "combinesWith"
+    }
   ]
 }

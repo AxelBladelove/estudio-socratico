@@ -6,10 +6,19 @@
       "id": "quiz-base-io-variables-01",
       "title": "Entrada, salida y variables",
       "description": "Comprueba formato de salida, lectura basica y operadores.",
-      "topics": ["io", "variables"],
-      "primaryTopics": ["io", "variables"],
+      "topics": [
+        "io",
+        "variables"
+      ],
+      "primaryTopics": [
+        "io",
+        "variables"
+      ],
       "supportTopics": [],
-      "combinedTopics": ["io", "variables"],
+      "combinedTopics": [
+        "io",
+        "variables"
+      ],
       "requiredMastery": [],
       "newTopicFocus": [],
       "difficulty": {
@@ -19,7 +28,9 @@
       },
       "unlock": {
         "requiresModules": [],
-        "requiresExercises": ["io-saludo-01"],
+        "requiresExercises": [
+          "io-saludo-01"
+        ],
         "requiresQuizScore": null
       },
       "route": {
@@ -32,29 +43,59 @@
           "id": "q-printf-01",
           "type": "multipleChoice",
           "prompt": "Que especificador corresponde a un int en printf?",
-          "choices": ["%d", "%f", "%s", "%c"],
+          "choices": [
+            "%d",
+            "%f",
+            "%s",
+            "%c"
+          ],
           "answer": "%d",
-          "topics": ["io"]
+          "topics": [
+            "io"
+          ]
         },
         {
           "id": "q-division-01",
           "type": "multipleChoice",
           "prompt": "Que resultado produce 5 / 2 si ambos operandos son int?",
-          "choices": ["2", "2.5", "3", "error de compilacion"],
+          "choices": [
+            "2",
+            "2.5",
+            "3",
+            "error de compilacion"
+          ],
           "answer": "2",
-          "topics": ["variables"]
+          "topics": [
+            "variables"
+          ]
         }
-      ]
+      ],
+      "requiredConcepts": [],
+      "quizType": "tema",
+      "timeLimitMinutes": 10
     },
     {
       "id": "quiz-control-01",
       "title": "Condicionales y ciclos",
       "description": "Preguntas cortas sobre trazas, limites de ciclos y decisiones.",
-      "topics": ["conditionals", "loops"],
-      "primaryTopics": ["conditionals", "loops"],
-      "supportTopics": ["variables"],
-      "combinedTopics": ["conditionals", "loops"],
-      "requiredMastery": ["variables"],
+      "topics": [
+        "conditionals",
+        "loops"
+      ],
+      "primaryTopics": [
+        "conditionals",
+        "loops"
+      ],
+      "supportTopics": [
+        "variables"
+      ],
+      "combinedTopics": [
+        "conditionals",
+        "loops"
+      ],
+      "requiredMastery": [
+        "variables"
+      ],
       "newTopicFocus": [],
       "difficulty": {
         "score": 34,
@@ -62,8 +103,12 @@
         "expectedMinutes": 12
       },
       "unlock": {
-        "requiresModules": ["primeros-programas"],
-        "requiresExercises": ["conditionals-mayor-de-tres-01"],
+        "requiresModules": [
+          "primeros-programas"
+        ],
+        "requiresExercises": [
+          "conditionals-mayor-de-tres-01"
+        ],
         "requiresQuizScore": null
       },
       "route": {
@@ -74,30 +119,58 @@
           "id": "q-off-by-one-01",
           "type": "multipleChoice",
           "prompt": "Cuantas veces corre for (i = 0; i < 5; i++)?",
-          "choices": ["4", "5", "6", "depende de i"],
+          "choices": [
+            "4",
+            "5",
+            "6",
+            "depende de i"
+          ],
           "answer": "5",
-          "topics": ["loops"]
+          "topics": [
+            "loops"
+          ]
         }
-      ]
+      ],
+      "requiredConcepts": [
+        "variables"
+      ],
+      "quizType": "combinado",
+      "timeLimitMinutes": 12
     },
     {
       "id": "quiz-strings-01",
       "title": "Cadenas y terminador nulo",
       "description": "Evalua lectura cuidadosa de strings, longitud y recorrido.",
-      "topics": ["strings"],
-      "primaryTopics": ["strings"],
-      "supportTopics": ["loops", "arrays"],
+      "topics": [
+        "strings"
+      ],
+      "primaryTopics": [
+        "strings"
+      ],
+      "supportTopics": [
+        "loops",
+        "arrays"
+      ],
       "combinedTopics": [],
-      "requiredMastery": ["loops", "arrays"],
-      "newTopicFocus": ["strings"],
+      "requiredMastery": [
+        "loops",
+        "arrays"
+      ],
+      "newTopicFocus": [
+        "strings"
+      ],
       "difficulty": {
         "score": 52,
         "band": "medium",
         "expectedMinutes": 12
       },
       "unlock": {
-        "requiresModules": ["funciones-y-arreglos"],
-        "requiresExercises": ["strings-count-lowercase-01"],
+        "requiresModules": [
+          "funciones-y-arreglos"
+        ],
+        "requiresExercises": [
+          "strings-count-lowercase-01"
+        ],
         "requiresQuizScore": null
       },
       "route": {
@@ -108,11 +181,24 @@
           "id": "q-null-01",
           "type": "multipleChoice",
           "prompt": "Que marca el final logico de un string en C?",
-          "choices": ["'\\0'", "'\\n'", "EOF", "strlen"],
+          "choices": [
+            "'\\0'",
+            "'\\n'",
+            "EOF",
+            "strlen"
+          ],
           "answer": "'\\0'",
-          "topics": ["strings"]
+          "topics": [
+            "strings"
+          ]
         }
-      ]
+      ],
+      "requiredConcepts": [
+        "loops",
+        "arrays"
+      ],
+      "quizType": "tema",
+      "timeLimitMinutes": 12
     }
   ]
 }

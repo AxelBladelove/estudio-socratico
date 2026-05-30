@@ -5,19 +5,34 @@
     {
       "id": "io-saludo-01",
       "title": "Saludar con printf",
+      "description": "Escribe un programa minimo que imprima un saludo claro usando printf.",
       "kind": "practice",
       "source": "estudio-socratico",
       "sourceUrl": null,
       "language": "c",
-      "primaryTopics": ["io"],
+      "primaryTopics": [
+        "io"
+      ],
       "supportTopics": [],
       "combinedTopics": [],
       "requiredMastery": [],
-      "newTopicFocus": ["io"],
-      "skills": ["printf-formatting"],
-      "commonErrors": ["missing-semicolon", "format-string-typo"],
-      "remediates": ["first-compile-error"],
-      "preparesFor": ["variables-conversion-pulgadas-01", "quiz-base-io-variables-01"],
+      "newTopicFocus": [
+        "io"
+      ],
+      "skills": [
+        "printf-formatting"
+      ],
+      "commonErrors": [
+        "missing-semicolon",
+        "format-string-typo"
+      ],
+      "remediates": [
+        "first-compile-error"
+      ],
+      "preparesFor": [
+        "variables-conversion-pulgadas-01",
+        "quiz-base-io-variables-01"
+      ],
       "relatedProjects": [],
       "route": {
         "routeEligible": true,
@@ -70,19 +85,36 @@
     {
       "id": "variables-conversion-pulgadas-01",
       "title": "Convertir pulgadas a centimetros",
+      "description": "Lee una cantidad en pulgadas y muestra su equivalente en centimetros con una precision razonable.",
       "kind": "practice",
       "source": "estudio-socratico",
       "sourceUrl": null,
       "language": "c",
-      "primaryTopics": ["variables"],
-      "supportTopics": ["io"],
+      "primaryTopics": [
+        "variables"
+      ],
+      "supportTopics": [
+        "io"
+      ],
       "combinedTopics": [],
-      "requiredMastery": ["io"],
-      "newTopicFocus": ["variables"],
-      "skills": ["type-selection", "arithmetic-expressions", "scanf-basic"],
-      "commonErrors": ["integer-division", "format-specifier-mismatch", "scanf-ampersand"],
-      "remediates": ["numeric-conversion-confusion"],
-      "preparesFor": ["conditionals-mayor-de-tres-01"],
+      "requiredMastery": [
+        "io"
+      ],
+      "newTopicFocus": [
+        "variables"
+      ],
+      "skills": [
+        "variables-practice",
+        "io-practice"
+      ],
+      "commonErrors": [
+        "numeric-conversion-confusion",
+        "off-by-one"
+      ],
+      "remediates": [
+        "numeric-conversion-confusion"
+      ],
+      "preparesFor": [],
       "relatedProjects": [],
       "route": {
         "routeEligible": true,
@@ -99,8 +131,8 @@
         "score": 16,
         "band": "beginner",
         "conceptualLevel": 1,
-        "syntaxLoad": 2,
-        "stateControl": 0,
+        "syntaxLoad": 1,
+        "stateControl": 1,
         "loopDepth": 0,
         "functionComplexity": 0,
         "arrayComplexity": 0,
@@ -113,11 +145,13 @@
         "inputParsingComplexity": 2,
         "hiddenTraps": 2,
         "debugDifficulty": 1,
-        "expectedMinutes": 12
+        "expectedMinutes": 15
       },
       "unlock": {
         "requiresModules": [],
-        "requiresExercises": ["io-saludo-01"],
+        "requiresExercises": [
+          "io-saludo-01"
+        ],
         "requiresQuizScore": null
       },
       "testContract": {
@@ -125,7 +159,335 @@
         "stdinCases": [
           {
             "input": "10\n",
-            "expectedOutputPattern": "25\\.4"
+            "expectedOutputPattern": "25.4"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "variables-area-rectangulo-01",
+      "title": "Area y perimetro de un rectangulo",
+      "description": "Lee base y altura, calcula area y perimetro, y muestra ambos resultados.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "variables"
+      ],
+      "supportTopics": [
+        "io"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "io"
+      ],
+      "newTopicFocus": [
+        "variables"
+      ],
+      "skills": [
+        "variables-practice",
+        "io-practice"
+      ],
+      "commonErrors": [
+        "operator-precedence-confusion",
+        "off-by-one"
+      ],
+      "remediates": [
+        "operator-precedence-confusion"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 18,
+        "band": "beginner",
+        "conceptualLevel": 2,
+        "syntaxLoad": 1,
+        "stateControl": 1,
+        "loopDepth": 0,
+        "functionComplexity": 0,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 3,
+        "debugDifficulty": 1,
+        "expectedMinutes": 20
+      },
+      "unlock": {
+        "requiresModules": [],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "4 7\n",
+            "expectedOutputPattern": "28.*22"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "variables-segundos-a-tiempo-01",
+      "title": "Convertir segundos a horas minutos y segundos",
+      "description": "Lee una cantidad total de segundos y descomponla en horas, minutos y segundos restantes.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "variables"
+      ],
+      "supportTopics": [
+        "io"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "io"
+      ],
+      "newTopicFocus": [
+        "variables"
+      ],
+      "skills": [
+        "variables-practice",
+        "io-practice"
+      ],
+      "commonErrors": [
+        "integer-division",
+        "off-by-one"
+      ],
+      "remediates": [
+        "integer-division"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 20,
+        "band": "beginner",
+        "conceptualLevel": 2,
+        "syntaxLoad": 1,
+        "stateControl": 1,
+        "loopDepth": 0,
+        "functionComplexity": 0,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 4,
+        "debugDifficulty": 1,
+        "expectedMinutes": 24
+      },
+      "unlock": {
+        "requiresModules": [],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "3671\n",
+            "expectedOutputPattern": "1.*1.*11"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "variables-intercambio-01",
+      "title": "Intercambiar dos valores",
+      "description": "Lee dos enteros, intercambia sus valores usando una variable temporal y muestra el nuevo orden.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "variables"
+      ],
+      "supportTopics": [
+        "io"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "io"
+      ],
+      "newTopicFocus": [
+        "variables"
+      ],
+      "skills": [
+        "variables-practice",
+        "io-practice"
+      ],
+      "commonErrors": [
+        "assignment-order-confusion",
+        "off-by-one"
+      ],
+      "remediates": [
+        "assignment-order-confusion"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 22,
+        "band": "beginner",
+        "conceptualLevel": 2,
+        "syntaxLoad": 2,
+        "stateControl": 1,
+        "loopDepth": 0,
+        "functionComplexity": 0,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 5,
+        "debugDifficulty": 1,
+        "expectedMinutes": 29
+      },
+      "unlock": {
+        "requiresModules": [],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "8 3\n",
+            "expectedOutputPattern": "3.*8"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "variables-descuento-itbis-01",
+      "title": "Precio con descuento e ITBIS",
+      "description": "Lee precio y porcentaje de descuento, aplica descuento y luego ITBIS de 18 por ciento.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "variables"
+      ],
+      "supportTopics": [
+        "io"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "io"
+      ],
+      "newTopicFocus": [
+        "variables"
+      ],
+      "skills": [
+        "variables-practice",
+        "io-practice"
+      ],
+      "commonErrors": [
+        "percentage-formula-confusion",
+        "off-by-one"
+      ],
+      "remediates": [
+        "percentage-formula-confusion"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 24,
+        "band": "beginner",
+        "conceptualLevel": 2,
+        "syntaxLoad": 2,
+        "stateControl": 1,
+        "loopDepth": 0,
+        "functionComplexity": 0,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 2,
+        "debugDifficulty": 1,
+        "expectedMinutes": 34
+      },
+      "unlock": {
+        "requiresModules": [],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "1000 10\n",
+            "expectedOutputPattern": "1062"
           }
         ],
         "normalizeOutput": true,
@@ -135,19 +497,39 @@
     {
       "id": "conditionals-mayor-de-tres-01",
       "title": "Mayor de tres numeros",
+      "description": "Lee tres numeros enteros y muestra el mayor sin perder los casos de empate.",
       "kind": "practice",
       "source": "estudio-socratico",
       "sourceUrl": null,
       "language": "c",
-      "primaryTopics": ["conditionals"],
-      "supportTopics": ["io", "variables"],
+      "primaryTopics": [
+        "conditionals"
+      ],
+      "supportTopics": [
+        "io",
+        "variables"
+      ],
       "combinedTopics": [],
-      "requiredMastery": ["io", "variables"],
-      "newTopicFocus": ["conditionals"],
-      "skills": ["boolean-expression", "branching", "comparison-operators"],
-      "commonErrors": ["assignment-in-condition", "missing-else-case"],
-      "remediates": ["comparison-operator-confusion"],
-      "preparesFor": ["loops-suma-hasta-n-01", "checkpoint-control-01"],
+      "requiredMastery": [
+        "io",
+        "variables"
+      ],
+      "newTopicFocus": [
+        "conditionals"
+      ],
+      "skills": [
+        "conditionals-practice",
+        "io-practice",
+        "variables-practice"
+      ],
+      "commonErrors": [
+        "comparison-operator-confusion",
+        "off-by-one"
+      ],
+      "remediates": [
+        "comparison-operator-confusion"
+      ],
+      "preparesFor": [],
       "relatedProjects": [],
       "route": {
         "routeEligible": true,
@@ -161,7 +543,7 @@
         "recommendable": true
       },
       "difficulty": {
-        "score": 24,
+        "score": 26,
         "band": "easy",
         "conceptualLevel": 2,
         "syntaxLoad": 2,
@@ -178,10 +560,12 @@
         "inputParsingComplexity": 2,
         "hiddenTraps": 2,
         "debugDifficulty": 2,
-        "expectedMinutes": 15
+        "expectedMinutes": 18
       },
       "unlock": {
-        "requiresModules": ["primeros-programas"],
+        "requiresModules": [
+          "primeros-programas"
+        ],
         "requiresExercises": [],
         "requiresQuizScore": null
       },
@@ -198,22 +582,392 @@
       }
     },
     {
-      "id": "loops-suma-hasta-n-01",
-      "title": "Suma hasta N",
+      "id": "conditionals-par-impar-rango-01",
+      "title": "Paridad y rango",
+      "description": "Lee un entero y reporta si es par o impar y si pertenece al rango 1..100.",
       "kind": "practice",
       "source": "estudio-socratico",
-      "sourceUrl": "Problemas de Programacion - Rolando J. Batista & Alejandro J. Liz",
+      "sourceUrl": null,
       "language": "c",
-      "primaryTopics": ["loops"],
-      "supportTopics": ["io", "variables"],
+      "primaryTopics": [
+        "conditionals"
+      ],
+      "supportTopics": [
+        "io",
+        "variables"
+      ],
       "combinedTopics": [],
-      "requiredMastery": ["io", "variables", "conditionals"],
-      "newTopicFocus": ["loops"],
-      "skills": ["counter-loop", "accumulators", "loop-boundary"],
-      "commonErrors": ["off-by-one", "wrong-initial-value", "infinite-loop"],
-      "remediates": ["loop-boundary-confusion"],
-      "preparesFor": ["functions-promedio-01", "arrays-maximo-01"],
-      "relatedProjects": ["menu-notas-basico"],
+      "requiredMastery": [
+        "io",
+        "variables"
+      ],
+      "newTopicFocus": [
+        "conditionals"
+      ],
+      "skills": [
+        "conditionals-practice",
+        "io-practice",
+        "variables-practice"
+      ],
+      "commonErrors": [
+        "missing-else-case",
+        "off-by-one"
+      ],
+      "remediates": [
+        "missing-else-case"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 28,
+        "band": "easy",
+        "conceptualLevel": 2,
+        "syntaxLoad": 2,
+        "stateControl": 2,
+        "loopDepth": 0,
+        "functionComplexity": 0,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 3,
+        "debugDifficulty": 2,
+        "expectedMinutes": 23
+      },
+      "unlock": {
+        "requiresModules": [
+          "primeros-programas"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "42\n",
+            "expectedOutputPattern": "par|Par.*rango|Rango"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "conditionals-nota-literal-01",
+      "title": "Nota numerica a literal",
+      "description": "Convierte una nota de 0 a 100 en A, B, C, D o F usando rangos claros.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "conditionals"
+      ],
+      "supportTopics": [
+        "io",
+        "variables"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "io",
+        "variables"
+      ],
+      "newTopicFocus": [
+        "conditionals"
+      ],
+      "skills": [
+        "conditionals-practice",
+        "io-practice",
+        "variables-practice"
+      ],
+      "commonErrors": [
+        "boundary-condition",
+        "off-by-one"
+      ],
+      "remediates": [
+        "boundary-condition"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 30,
+        "band": "easy",
+        "conceptualLevel": 2,
+        "syntaxLoad": 2,
+        "stateControl": 2,
+        "loopDepth": 0,
+        "functionComplexity": 0,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 4,
+        "debugDifficulty": 2,
+        "expectedMinutes": 28
+      },
+      "unlock": {
+        "requiresModules": [
+          "primeros-programas"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "86\n",
+            "expectedOutputPattern": "B"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "conditionals-triangulo-valido-01",
+      "title": "Validar triangulo",
+      "description": "Lee tres lados y decide si pueden formar un triangulo; si pueden, clasificalo.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "conditionals"
+      ],
+      "supportTopics": [
+        "io",
+        "variables"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "io",
+        "variables"
+      ],
+      "newTopicFocus": [
+        "conditionals"
+      ],
+      "skills": [
+        "conditionals-practice",
+        "io-practice",
+        "variables-practice"
+      ],
+      "commonErrors": [
+        "compound-condition-confusion",
+        "off-by-one"
+      ],
+      "remediates": [
+        "compound-condition-confusion"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 32,
+        "band": "easy",
+        "conceptualLevel": 2,
+        "syntaxLoad": 2,
+        "stateControl": 2,
+        "loopDepth": 0,
+        "functionComplexity": 0,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 5,
+        "debugDifficulty": 2,
+        "expectedMinutes": 32
+      },
+      "unlock": {
+        "requiresModules": [
+          "primeros-programas"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "3 4 5\n",
+            "expectedOutputPattern": "escaleno|Escaleno|valido"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "conditionals-tarifa-estacionamiento-01",
+      "title": "Tarifa de estacionamiento",
+      "description": "Calcula el monto a pagar segun horas estacionadas y reglas por tramos.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "conditionals"
+      ],
+      "supportTopics": [
+        "io",
+        "variables"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "io",
+        "variables"
+      ],
+      "newTopicFocus": [
+        "conditionals"
+      ],
+      "skills": [
+        "conditionals-practice",
+        "io-practice",
+        "variables-practice"
+      ],
+      "commonErrors": [
+        "range-order-confusion",
+        "off-by-one"
+      ],
+      "remediates": [
+        "range-order-confusion"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 34,
+        "band": "easy",
+        "conceptualLevel": 2,
+        "syntaxLoad": 2,
+        "stateControl": 2,
+        "loopDepth": 0,
+        "functionComplexity": 0,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 2,
+        "debugDifficulty": 2,
+        "expectedMinutes": 37
+      },
+      "unlock": {
+        "requiresModules": [
+          "primeros-programas"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "5\n",
+            "expectedOutputPattern": "250|240|300"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "loops-suma-hasta-n-01",
+      "title": "Suma hasta N",
+      "description": "Lee N y calcula la suma de 1 hasta N usando un ciclo controlado por contador.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "loops"
+      ],
+      "supportTopics": [
+        "io",
+        "variables"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "io",
+        "variables"
+      ],
+      "newTopicFocus": [
+        "loops"
+      ],
+      "skills": [
+        "loops-practice",
+        "io-practice",
+        "variables-practice"
+      ],
+      "commonErrors": [
+        "loop-boundary-confusion",
+        "off-by-one"
+      ],
+      "remediates": [
+        "loop-boundary-confusion"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [
+        "menu-notas-basico"
+      ],
       "route": {
         "routeEligible": true,
         "moduleId": "control-de-flujo",
@@ -226,7 +980,96 @@
         "recommendable": true
       },
       "difficulty": {
-        "score": 30,
+        "score": 32,
+        "band": "easy",
+        "conceptualLevel": 2,
+        "syntaxLoad": 2,
+        "stateControl": 2,
+        "loopDepth": 1,
+        "functionComplexity": 0,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 2,
+        "debugDifficulty": 2,
+        "expectedMinutes": 20
+      },
+      "unlock": {
+        "requiresModules": [
+          "primeros-programas"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "5\n",
+            "expectedOutputPattern": "15"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "loops-tabla-multiplicar-01",
+      "title": "Tabla de multiplicar",
+      "description": "Lee un numero y muestra su tabla del 1 al 12, una linea por multiplicacion.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "loops"
+      ],
+      "supportTopics": [
+        "io",
+        "variables"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "io",
+        "variables"
+      ],
+      "newTopicFocus": [
+        "loops"
+      ],
+      "skills": [
+        "loops-practice",
+        "io-practice",
+        "variables-practice"
+      ],
+      "commonErrors": [
+        "loop-output-format",
+        "off-by-one"
+      ],
+      "remediates": [
+        "loop-output-format"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [
+        "menu-notas-basico"
+      ],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 34,
         "band": "easy",
         "conceptualLevel": 2,
         "syntaxLoad": 2,
@@ -243,11 +1086,191 @@
         "inputParsingComplexity": 2,
         "hiddenTraps": 3,
         "debugDifficulty": 2,
-        "expectedMinutes": 18
+        "expectedMinutes": 25
       },
       "unlock": {
-        "requiresModules": ["primeros-programas"],
-        "requiresExercises": ["conditionals-mayor-de-tres-01"],
+        "requiresModules": [
+          "primeros-programas"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "7\n",
+            "expectedOutputPattern": "7.*84"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "loops-contar-digitos-01",
+      "title": "Contar digitos de un entero",
+      "description": "Lee un entero positivo y cuenta cuantos digitos tiene sin convertirlo a string.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "loops"
+      ],
+      "supportTopics": [
+        "io",
+        "variables"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "io",
+        "variables"
+      ],
+      "newTopicFocus": [
+        "loops"
+      ],
+      "skills": [
+        "loops-practice",
+        "io-practice",
+        "variables-practice"
+      ],
+      "commonErrors": [
+        "while-condition-confusion",
+        "off-by-one"
+      ],
+      "remediates": [
+        "while-condition-confusion"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [
+        "menu-notas-basico"
+      ],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 36,
+        "band": "easy",
+        "conceptualLevel": 3,
+        "syntaxLoad": 2,
+        "stateControl": 2,
+        "loopDepth": 1,
+        "functionComplexity": 0,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 4,
+        "debugDifficulty": 2,
+        "expectedMinutes": 30
+      },
+      "unlock": {
+        "requiresModules": [
+          "primeros-programas"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "12045\n",
+            "expectedOutputPattern": "5"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "loops-factorial-io-01",
+      "title": "Factorial con ciclo",
+      "description": "Lee N y calcula N! usando acumulador; valida el caso 0.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "loops"
+      ],
+      "supportTopics": [
+        "io",
+        "variables"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "io",
+        "variables"
+      ],
+      "newTopicFocus": [
+        "loops"
+      ],
+      "skills": [
+        "loops-practice",
+        "io-practice",
+        "variables-practice"
+      ],
+      "commonErrors": [
+        "wrong-initial-value",
+        "off-by-one"
+      ],
+      "remediates": [
+        "wrong-initial-value"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [
+        "menu-notas-basico"
+      ],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 38,
+        "band": "easy",
+        "conceptualLevel": 3,
+        "syntaxLoad": 2,
+        "stateControl": 2,
+        "loopDepth": 1,
+        "functionComplexity": 0,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 5,
+        "debugDifficulty": 2,
+        "expectedMinutes": 34
+      },
+      "unlock": {
+        "requiresModules": [
+          "primeros-programas"
+        ],
+        "requiresExercises": [],
         "requiresQuizScore": null
       },
       "testContract": {
@@ -255,7 +1278,99 @@
         "stdinCases": [
           {
             "input": "5\n",
-            "expectedOutputPattern": "15"
+            "expectedOutputPattern": "120"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "loops-sentinel-promedio-01",
+      "title": "Promedio con centinela",
+      "description": "Lee notas hasta recibir -1 y muestra el promedio de las notas validas.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "loops"
+      ],
+      "supportTopics": [
+        "io",
+        "variables",
+        "conditionals"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "io",
+        "variables",
+        "conditionals"
+      ],
+      "newTopicFocus": [
+        "loops"
+      ],
+      "skills": [
+        "loops-practice",
+        "io-practice",
+        "variables-practice",
+        "conditionals-practice"
+      ],
+      "commonErrors": [
+        "sentinel-handling",
+        "off-by-one"
+      ],
+      "remediates": [
+        "sentinel-handling"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [
+        "menu-notas-basico"
+      ],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 40,
+        "band": "easy",
+        "conceptualLevel": 3,
+        "syntaxLoad": 2,
+        "stateControl": 2,
+        "loopDepth": 1,
+        "functionComplexity": 0,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 2,
+        "debugDifficulty": 2,
+        "expectedMinutes": 39
+      },
+      "unlock": {
+        "requiresModules": [
+          "primeros-programas"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "80\n90\n-1\n",
+            "expectedOutputPattern": "85"
           }
         ],
         "normalizeOutput": true,
@@ -265,20 +1380,40 @@
     {
       "id": "functions-promedio-01",
       "title": "Promedio con funcion",
+      "description": "Implementa una funcion que reciba tres notas y devuelva su promedio.",
       "kind": "practice",
       "source": "estudio-socratico",
       "sourceUrl": null,
       "language": "c",
-      "primaryTopics": ["functions"],
-      "supportTopics": ["loops", "variables"],
+      "primaryTopics": [
+        "functions"
+      ],
+      "supportTopics": [
+        "loops",
+        "variables"
+      ],
       "combinedTopics": [],
-      "requiredMastery": ["loops", "variables"],
-      "newTopicFocus": ["functions"],
-      "skills": ["function-signature", "return-value", "parameter-passing"],
-      "commonErrors": ["missing-prototype", "wrong-return-type"],
-      "remediates": ["function-contract-confusion"],
-      "preparesFor": ["arrays-maximo-01", "strings-count-lowercase-01"],
-      "relatedProjects": ["menu-notas-basico"],
+      "requiredMastery": [
+        "loops",
+        "variables"
+      ],
+      "newTopicFocus": [
+        "functions"
+      ],
+      "skills": [
+        "functions-practice",
+        "loops-practice",
+        "variables-practice"
+      ],
+      "commonErrors": [
+        "function-contract-confusion",
+        "off-by-one"
+      ],
+      "remediates": [
+        "function-contract-confusion"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [],
       "route": {
         "routeEligible": true,
         "moduleId": "funciones-y-arreglos",
@@ -291,12 +1426,101 @@
         "recommendable": true
       },
       "difficulty": {
-        "score": 38,
+        "score": 40,
         "band": "easy+",
         "conceptualLevel": 3,
-        "syntaxLoad": 3,
+        "syntaxLoad": 2,
         "stateControl": 1,
-        "loopDepth": 1,
+        "loopDepth": 0,
+        "functionComplexity": 3,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 2,
+        "debugDifficulty": 2,
+        "expectedMinutes": 23
+      },
+      "unlock": {
+        "requiresModules": [
+          "control-de-flujo"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "function",
+        "allowAdapter": true,
+        "fallback": "io",
+        "stdinCases": [
+          {
+            "input": "80 90 100\n",
+            "expectedOutputPattern": "90"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "functions-es-primo-01",
+      "title": "Funcion es primo",
+      "description": "Escribe una funcion que determine si un entero mayor que 1 es primo.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "functions"
+      ],
+      "supportTopics": [
+        "loops",
+        "conditionals"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "loops",
+        "conditionals"
+      ],
+      "newTopicFocus": [
+        "functions"
+      ],
+      "skills": [
+        "functions-practice",
+        "loops-practice",
+        "conditionals-practice"
+      ],
+      "commonErrors": [
+        "return-too-early",
+        "off-by-one"
+      ],
+      "remediates": [
+        "return-too-early"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 42,
+        "band": "easy+",
+        "conceptualLevel": 3,
+        "syntaxLoad": 2,
+        "stateControl": 1,
+        "loopDepth": 0,
         "functionComplexity": 3,
         "arrayComplexity": 0,
         "matrixComplexity": 0,
@@ -308,47 +1532,71 @@
         "inputParsingComplexity": 2,
         "hiddenTraps": 3,
         "debugDifficulty": 2,
-        "expectedMinutes": 22
+        "expectedMinutes": 28
       },
       "unlock": {
-        "requiresModules": ["control-de-flujo"],
+        "requiresModules": [
+          "control-de-flujo"
+        ],
         "requiresExercises": [],
         "requiresQuizScore": null
       },
       "testContract": {
         "mode": "function",
-        "expectedSymbols": [
+        "allowAdapter": true,
+        "fallback": "io",
+        "stdinCases": [
           {
-            "name": "calcular_promedio",
-            "returnType": "double",
-            "params": ["double", "double", "double"]
+            "input": "13\n",
+            "expectedOutputPattern": "primo|Primo|1"
           }
         ],
-        "allowAdapter": true
+        "normalizeOutput": true,
+        "timeoutMs": 3000
       }
     },
     {
-      "id": "arrays-maximo-01",
-      "title": "Maximo en arreglo",
+      "id": "functions-potencia-entera-01",
+      "title": "Potencia entera positiva",
+      "description": "Crea una funcion para calcular base elevada a exponente entero no negativo usando ciclos.",
       "kind": "practice",
       "source": "estudio-socratico",
       "sourceUrl": null,
       "language": "c",
-      "primaryTopics": ["arrays"],
-      "supportTopics": ["loops", "functions"],
+      "primaryTopics": [
+        "functions"
+      ],
+      "supportTopics": [
+        "loops",
+        "variables"
+      ],
       "combinedTopics": [],
-      "requiredMastery": ["loops", "functions"],
-      "newTopicFocus": ["arrays"],
-      "skills": ["indexing", "array-traversal", "bounds-awareness"],
-      "commonErrors": ["out-of-bounds", "off-by-one", "wrong-array-size"],
-      "remediates": ["array-indexing"],
-      "preparesFor": ["strings-count-lowercase-01", "matrix-string-transform-01"],
-      "relatedProjects": ["bingo-basico"],
+      "requiredMastery": [
+        "loops",
+        "variables"
+      ],
+      "newTopicFocus": [
+        "functions"
+      ],
+      "skills": [
+        "functions-practice",
+        "loops-practice",
+        "variables-practice"
+      ],
+      "commonErrors": [
+        "parameter-order-confusion",
+        "off-by-one"
+      ],
+      "remediates": [
+        "parameter-order-confusion"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [],
       "route": {
-        "routeEligible": true,
-        "moduleId": "funciones-y-arreglos",
-        "orderInModule": 2,
-        "masteryChallengeEligible": true
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
       },
       "visibility": {
         "categoryVisible": true,
@@ -361,8 +1609,366 @@
         "conceptualLevel": 3,
         "syntaxLoad": 3,
         "stateControl": 1,
+        "loopDepth": 0,
+        "functionComplexity": 3,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 4,
+        "debugDifficulty": 2,
+        "expectedMinutes": 32
+      },
+      "unlock": {
+        "requiresModules": [
+          "control-de-flujo"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "function",
+        "allowAdapter": true,
+        "fallback": "io",
+        "stdinCases": [
+          {
+            "input": "2 10\n",
+            "expectedOutputPattern": "1024"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "functions-menu-operacion-01",
+      "title": "Operacion seleccionada por funcion",
+      "description": "Lee dos numeros y una opcion; delega suma, resta, multiplicacion o division en funciones separadas.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "functions"
+      ],
+      "supportTopics": [
+        "conditionals",
+        "io"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "conditionals",
+        "io"
+      ],
+      "newTopicFocus": [
+        "functions"
+      ],
+      "skills": [
+        "functions-practice",
+        "conditionals-practice",
+        "io-practice"
+      ],
+      "commonErrors": [
+        "missing-prototype",
+        "off-by-one"
+      ],
+      "remediates": [
+        "missing-prototype"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 46,
+        "band": "easy+",
+        "conceptualLevel": 3,
+        "syntaxLoad": 3,
+        "stateControl": 1,
+        "loopDepth": 0,
+        "functionComplexity": 3,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 5,
+        "debugDifficulty": 2,
+        "expectedMinutes": 37
+      },
+      "unlock": {
+        "requiresModules": [
+          "control-de-flujo"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "function",
+        "allowAdapter": true,
+        "fallback": "io",
+        "stdinCases": [
+          {
+            "input": "8 2 3\n",
+            "expectedOutputPattern": "16"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "functions-prototipo-area-circulo-01",
+      "title": "Area de circulo con prototipo",
+      "description": "Declara prototipo y define una funcion que calcule el area de un circulo dado su radio.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "functions"
+      ],
+      "supportTopics": [
+        "variables",
+        "io"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "variables",
+        "io"
+      ],
+      "newTopicFocus": [
+        "functions"
+      ],
+      "skills": [
+        "functions-practice",
+        "variables-practice",
+        "io-practice"
+      ],
+      "commonErrors": [
+        "wrong-return-type",
+        "off-by-one"
+      ],
+      "remediates": [
+        "wrong-return-type"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 48,
+        "band": "easy+",
+        "conceptualLevel": 3,
+        "syntaxLoad": 3,
+        "stateControl": 1,
+        "loopDepth": 0,
+        "functionComplexity": 3,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 2,
+        "debugDifficulty": 2,
+        "expectedMinutes": 42
+      },
+      "unlock": {
+        "requiresModules": [
+          "control-de-flujo"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "function",
+        "allowAdapter": true,
+        "fallback": "io",
+        "stdinCases": [
+          {
+            "input": "2\n",
+            "expectedOutputPattern": "12.56|12.5"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "arrays-maximo-01",
+      "title": "Maximo en arreglo",
+      "description": "Lee N valores en un arreglo y muestra el mayor recorriendo por indice.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "arrays"
+      ],
+      "supportTopics": [
+        "loops",
+        "functions"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "loops",
+        "functions"
+      ],
+      "newTopicFocus": [
+        "arrays"
+      ],
+      "skills": [
+        "arrays-practice",
+        "loops-practice",
+        "functions-practice"
+      ],
+      "commonErrors": [
+        "array-indexing",
+        "off-by-one"
+      ],
+      "remediates": [
+        "array-indexing"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [
+        "bingo-basico"
+      ],
+      "route": {
+        "routeEligible": true,
+        "moduleId": "funciones-y-arreglos",
+        "orderInModule": 2,
+        "masteryChallengeEligible": true
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 45,
+        "band": "easy+",
+        "conceptualLevel": 3,
+        "syntaxLoad": 3,
+        "stateControl": 1,
         "loopDepth": 1,
-        "functionComplexity": 2,
+        "functionComplexity": 0,
+        "arrayComplexity": 3,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 2,
+        "debugDifficulty": 2,
+        "expectedMinutes": 25
+      },
+      "unlock": {
+        "requiresModules": [
+          "control-de-flujo"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "5\n3 9 2 11 4\n",
+            "expectedOutputPattern": "11"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "arrays-promedio-notas-01",
+      "title": "Promedio de notas en arreglo",
+      "description": "Lee varias notas en un arreglo, calcula promedio y cuenta cuantas estan por encima del promedio.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "arrays"
+      ],
+      "supportTopics": [
+        "loops",
+        "variables"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "loops",
+        "variables"
+      ],
+      "newTopicFocus": [
+        "arrays"
+      ],
+      "skills": [
+        "arrays-practice",
+        "loops-practice",
+        "variables-practice"
+      ],
+      "commonErrors": [
+        "array-count-confusion",
+        "off-by-one"
+      ],
+      "remediates": [
+        "array-count-confusion"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [
+        "bingo-basico"
+      ],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 47,
+        "band": "easy+",
+        "conceptualLevel": 3,
+        "syntaxLoad": 3,
+        "stateControl": 1,
+        "loopDepth": 1,
+        "functionComplexity": 0,
         "arrayComplexity": 3,
         "matrixComplexity": 0,
         "stringComplexity": 0,
@@ -372,45 +1978,334 @@
         "fileIoComplexity": 0,
         "inputParsingComplexity": 2,
         "hiddenTraps": 3,
-        "debugDifficulty": 3,
-        "expectedMinutes": 25
+        "debugDifficulty": 2,
+        "expectedMinutes": 29
       },
       "unlock": {
-        "requiresModules": ["control-de-flujo"],
-        "requiresExercises": ["functions-promedio-01"],
+        "requiresModules": [
+          "control-de-flujo"
+        ],
+        "requiresExercises": [],
         "requiresQuizScore": null
       },
       "testContract": {
-        "mode": "hybrid",
-        "preferred": "function",
-        "fallback": "io",
-        "allowAiAdapter": false,
-        "expectedSymbols": [
+        "mode": "io",
+        "stdinCases": [
           {
-            "name": "maximo",
-            "returnType": "int",
-            "params": ["const int *", "int"]
+            "input": "4\n80 90 70 100\n",
+            "expectedOutputPattern": "85.*2"
           }
-        ]
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "arrays-contar-pares-01",
+      "title": "Contar pares e impares",
+      "description": "Lee un arreglo de enteros y muestra cuantos son pares y cuantos impares.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "arrays"
+      ],
+      "supportTopics": [
+        "loops",
+        "conditionals"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "loops",
+        "conditionals"
+      ],
+      "newTopicFocus": [
+        "arrays"
+      ],
+      "skills": [
+        "arrays-practice",
+        "loops-practice",
+        "conditionals-practice"
+      ],
+      "commonErrors": [
+        "modulo-confusion",
+        "off-by-one"
+      ],
+      "remediates": [
+        "modulo-confusion"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [
+        "bingo-basico"
+      ],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 49,
+        "band": "easy+",
+        "conceptualLevel": 3,
+        "syntaxLoad": 3,
+        "stateControl": 1,
+        "loopDepth": 1,
+        "functionComplexity": 0,
+        "arrayComplexity": 3,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 4,
+        "debugDifficulty": 2,
+        "expectedMinutes": 34
+      },
+      "unlock": {
+        "requiresModules": [
+          "control-de-flujo"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "6\n1 2 3 4 5 6\n",
+            "expectedOutputPattern": "3.*3"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "arrays-busqueda-lineal-01",
+      "title": "Busqueda lineal",
+      "description": "Lee un arreglo y un objetivo; muestra la posicion donde aparece o -1 si no esta.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "arrays"
+      ],
+      "supportTopics": [
+        "loops",
+        "conditionals"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "loops",
+        "conditionals"
+      ],
+      "newTopicFocus": [
+        "arrays"
+      ],
+      "skills": [
+        "arrays-practice",
+        "loops-practice",
+        "conditionals-practice"
+      ],
+      "commonErrors": [
+        "index-base-confusion",
+        "off-by-one"
+      ],
+      "remediates": [
+        "index-base-confusion"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [
+        "bingo-basico"
+      ],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 51,
+        "band": "easy+",
+        "conceptualLevel": 3,
+        "syntaxLoad": 3,
+        "stateControl": 1,
+        "loopDepth": 1,
+        "functionComplexity": 0,
+        "arrayComplexity": 3,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 5,
+        "debugDifficulty": 3,
+        "expectedMinutes": 39
+      },
+      "unlock": {
+        "requiresModules": [
+          "control-de-flujo"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "5\n4 8 15 16 23\n15\n",
+            "expectedOutputPattern": "2|3"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "arrays-invertir-01",
+      "title": "Invertir arreglo",
+      "description": "Lee N enteros y muestra los elementos en orden inverso sin crear otro arreglo grande.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "arrays"
+      ],
+      "supportTopics": [
+        "loops"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "loops"
+      ],
+      "newTopicFocus": [
+        "arrays"
+      ],
+      "skills": [
+        "arrays-practice",
+        "loops-practice"
+      ],
+      "commonErrors": [
+        "reverse-boundary-confusion",
+        "off-by-one"
+      ],
+      "remediates": [
+        "reverse-boundary-confusion"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [
+        "bingo-basico"
+      ],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 53,
+        "band": "easy+",
+        "conceptualLevel": 3,
+        "syntaxLoad": 3,
+        "stateControl": 1,
+        "loopDepth": 1,
+        "functionComplexity": 0,
+        "arrayComplexity": 3,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 2,
+        "debugDifficulty": 3,
+        "expectedMinutes": 43
+      },
+      "unlock": {
+        "requiresModules": [
+          "control-de-flujo"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "4\n10 20 30 40\n",
+            "expectedOutputPattern": "40.*30.*20.*10"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
       }
     },
     {
       "id": "strings-count-lowercase-01",
       "title": "Contar minusculas en una linea",
+      "description": "Lee una linea y cuenta cuantos caracteres son letras minusculas.",
       "kind": "practice",
       "source": "estudio-socratico",
       "sourceUrl": null,
       "language": "c",
-      "primaryTopics": ["strings"],
-      "supportTopics": ["loops", "conditionals", "functions"],
+      "primaryTopics": [
+        "strings"
+      ],
+      "supportTopics": [
+        "loops",
+        "conditionals",
+        "functions"
+      ],
       "combinedTopics": [],
-      "requiredMastery": ["loops", "conditionals", "functions"],
-      "newTopicFocus": ["strings"],
-      "skills": ["char-array-traversal", "character-classification", "null-terminator-awareness"],
-      "commonErrors": ["off-by-one", "strlen-vs-capacity", "missing-null-terminator"],
-      "remediates": ["islower-confusion", "char-array-indexing"],
-      "preparesFor": ["strings-normalizar-frase-hard", "quiz-strings-01"],
-      "relatedProjects": ["text-menu-analyzer"],
+      "requiredMastery": [
+        "loops",
+        "conditionals",
+        "functions"
+      ],
+      "newTopicFocus": [
+        "strings"
+      ],
+      "skills": [
+        "strings-practice",
+        "loops-practice",
+        "conditionals-practice",
+        "functions-practice"
+      ],
+      "commonErrors": [
+        "char-array-indexing",
+        "off-by-one"
+      ],
+      "remediates": [
+        "char-array-indexing"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [
+        "text-menu-analyzer"
+      ],
       "route": {
         "routeEligible": true,
         "moduleId": "cadenas-y-combinaciones",
@@ -423,28 +2318,30 @@
         "recommendable": true
       },
       "difficulty": {
-        "score": 42,
-        "band": "easy+",
+        "score": 52,
+        "band": "medium",
         "conceptualLevel": 3,
         "syntaxLoad": 3,
         "stateControl": 1,
-        "loopDepth": 2,
-        "functionComplexity": 2,
-        "arrayComplexity": 2,
+        "loopDepth": 1,
+        "functionComplexity": 0,
+        "arrayComplexity": 3,
         "matrixComplexity": 0,
-        "stringComplexity": 4,
+        "stringComplexity": 3,
         "pointerDepth": 0,
         "dynamicMemoryRisk": 0,
         "structComplexity": 0,
         "fileIoComplexity": 0,
         "inputParsingComplexity": 3,
-        "hiddenTraps": 3,
-        "debugDifficulty": 2,
-        "expectedMinutes": 20
+        "hiddenTraps": 2,
+        "debugDifficulty": 3,
+        "expectedMinutes": 27
       },
       "unlock": {
-        "requiresModules": ["loops", "functions"],
-        "requiresExercises": ["arrays-maximo-01"],
+        "requiresModules": [
+          "funciones-y-arreglos"
+        ],
+        "requiresExercises": [],
         "requiresQuizScore": null
       },
       "testContract": {
@@ -460,22 +2357,933 @@
       }
     },
     {
-      "id": "matrix-string-transform-01",
-      "title": "Transformar matriz de caracteres",
+      "id": "strings-contar-vocales-01",
+      "title": "Contar vocales",
+      "description": "Lee una palabra o frase corta y cuenta las vocales sin distinguir mayusculas.",
       "kind": "practice",
       "source": "estudio-socratico",
       "sourceUrl": null,
       "language": "c",
-      "primaryTopics": ["matrices", "strings"],
-      "supportTopics": ["loops", "functions"],
-      "combinedTopics": ["matrices", "strings"],
-      "requiredMastery": ["matrices", "strings"],
+      "primaryTopics": [
+        "strings"
+      ],
+      "supportTopics": [
+        "loops",
+        "conditionals"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "loops",
+        "conditionals"
+      ],
+      "newTopicFocus": [
+        "strings"
+      ],
+      "skills": [
+        "strings-practice",
+        "loops-practice",
+        "conditionals-practice"
+      ],
+      "commonErrors": [
+        "character-classification",
+        "off-by-one"
+      ],
+      "remediates": [
+        "character-classification"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [
+        "text-menu-analyzer"
+      ],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 54,
+        "band": "medium",
+        "conceptualLevel": 4,
+        "syntaxLoad": 3,
+        "stateControl": 1,
+        "loopDepth": 1,
+        "functionComplexity": 0,
+        "arrayComplexity": 3,
+        "matrixComplexity": 0,
+        "stringComplexity": 3,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 3,
+        "hiddenTraps": 3,
+        "debugDifficulty": 3,
+        "expectedMinutes": 32
+      },
+      "unlock": {
+        "requiresModules": [
+          "funciones-y-arreglos"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "Programacion\n",
+            "expectedOutputPattern": "5"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "strings-palindromo-basico-01",
+      "title": "Palindromo basico",
+      "description": "Lee una palabra sin espacios y determina si se lee igual al derecho y al reves.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "strings"
+      ],
+      "supportTopics": [
+        "arrays",
+        "loops"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "arrays",
+        "loops"
+      ],
+      "newTopicFocus": [
+        "strings"
+      ],
+      "skills": [
+        "strings-practice",
+        "arrays-practice",
+        "loops-practice"
+      ],
+      "commonErrors": [
+        "two-pointer-confusion",
+        "off-by-one"
+      ],
+      "remediates": [
+        "two-pointer-confusion"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [
+        "text-menu-analyzer"
+      ],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 56,
+        "band": "medium",
+        "conceptualLevel": 4,
+        "syntaxLoad": 3,
+        "stateControl": 1,
+        "loopDepth": 1,
+        "functionComplexity": 0,
+        "arrayComplexity": 3,
+        "matrixComplexity": 0,
+        "stringComplexity": 3,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 3,
+        "hiddenTraps": 4,
+        "debugDifficulty": 3,
+        "expectedMinutes": 36
+      },
+      "unlock": {
+        "requiresModules": [
+          "funciones-y-arreglos"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "radar\n",
+            "expectedOutputPattern": "si|Si|palindromo"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "strings-normalizar-frase-hard",
+      "title": "Normalizar frase",
+      "description": "Lee una frase con espacios extras y produce una version con un solo espacio entre palabras.",
+      "kind": "masteryChallenge",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "strings"
+      ],
+      "supportTopics": [
+        "loops",
+        "conditionals",
+        "functions"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "loops",
+        "conditionals",
+        "functions"
+      ],
+      "newTopicFocus": [
+        "strings"
+      ],
+      "skills": [
+        "strings-practice",
+        "loops-practice",
+        "conditionals-practice",
+        "functions-practice"
+      ],
+      "commonErrors": [
+        "strlen-vs-capacity",
+        "off-by-one"
+      ],
+      "remediates": [
+        "strlen-vs-capacity"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [
+        "text-menu-analyzer"
+      ],
+      "route": {
+        "routeEligible": true,
+        "moduleId": "cadenas-y-combinaciones",
+        "orderInModule": 2,
+        "masteryChallengeEligible": true
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 58,
+        "band": "medium",
+        "conceptualLevel": 4,
+        "syntaxLoad": 3,
+        "stateControl": 1,
+        "loopDepth": 1,
+        "functionComplexity": 0,
+        "arrayComplexity": 3,
+        "matrixComplexity": 0,
+        "stringComplexity": 3,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 3,
+        "hiddenTraps": 5,
+        "debugDifficulty": 3,
+        "expectedMinutes": 41
+      },
+      "unlock": {
+        "requiresModules": [
+          "funciones-y-arreglos"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "  Hola   Mundo  \n",
+            "expectedOutputPattern": "Hola Mundo"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "strings-mayusculas-minusculas-01",
+      "title": "Alternar mayusculas y minusculas",
+      "description": "Lee una cadena y transforma letras alternando mayuscula y minuscula segun su posicion alfabetica.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "strings"
+      ],
+      "supportTopics": [
+        "loops",
+        "conditionals"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "loops",
+        "conditionals"
+      ],
+      "newTopicFocus": [
+        "strings"
+      ],
+      "skills": [
+        "strings-practice",
+        "loops-practice",
+        "conditionals-practice"
+      ],
+      "commonErrors": [
+        "ascii-assumption-confusion",
+        "off-by-one"
+      ],
+      "remediates": [
+        "ascii-assumption-confusion"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [
+        "text-menu-analyzer"
+      ],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 60,
+        "band": "medium",
+        "conceptualLevel": 4,
+        "syntaxLoad": 3,
+        "stateControl": 1,
+        "loopDepth": 1,
+        "functionComplexity": 0,
+        "arrayComplexity": 3,
+        "matrixComplexity": 0,
+        "stringComplexity": 3,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 3,
+        "hiddenTraps": 2,
+        "debugDifficulty": 3,
+        "expectedMinutes": 46
+      },
+      "unlock": {
+        "requiresModules": [
+          "funciones-y-arreglos"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "estudio\n",
+            "expectedOutputPattern": "EsTuDiO|eStUdIo"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "matrices-suma-diagonal-01",
+      "title": "Suma de diagonal principal",
+      "description": "Lee una matriz cuadrada pequena y suma los elementos de la diagonal principal.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "matrices"
+      ],
+      "supportTopics": [
+        "arrays",
+        "loops"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "arrays",
+        "loops"
+      ],
+      "newTopicFocus": [
+        "matrices"
+      ],
+      "skills": [
+        "matrices-practice",
+        "arrays-practice",
+        "loops-practice"
+      ],
+      "commonErrors": [
+        "matrix-indexing",
+        "off-by-one"
+      ],
+      "remediates": [
+        "matrix-indexing"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 62,
+        "band": "medium",
+        "conceptualLevel": 4,
+        "syntaxLoad": 3,
+        "stateControl": 1,
+        "loopDepth": 2,
+        "functionComplexity": 0,
+        "arrayComplexity": 4,
+        "matrixComplexity": 3,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 2,
+        "debugDifficulty": 3,
+        "expectedMinutes": 30
+      },
+      "unlock": {
+        "requiresModules": [
+          "funciones-y-arreglos"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "3\n1 2 3\n4 5 6\n7 8 9\n",
+            "expectedOutputPattern": "15"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "matrices-transpuesta-01",
+      "title": "Transpuesta de matriz",
+      "description": "Lee dimensiones y una matriz, luego muestra su transpuesta.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "matrices"
+      ],
+      "supportTopics": [
+        "arrays",
+        "loops"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "arrays",
+        "loops"
+      ],
+      "newTopicFocus": [
+        "matrices"
+      ],
+      "skills": [
+        "matrices-practice",
+        "arrays-practice",
+        "loops-practice"
+      ],
+      "commonErrors": [
+        "swapped-row-column",
+        "off-by-one"
+      ],
+      "remediates": [
+        "swapped-row-column"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 64,
+        "band": "medium",
+        "conceptualLevel": 4,
+        "syntaxLoad": 3,
+        "stateControl": 1,
+        "loopDepth": 2,
+        "functionComplexity": 0,
+        "arrayComplexity": 4,
+        "matrixComplexity": 3,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 3,
+        "debugDifficulty": 3,
+        "expectedMinutes": 35
+      },
+      "unlock": {
+        "requiresModules": [
+          "funciones-y-arreglos"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "2 3\n1 2 3\n4 5 6\n",
+            "expectedOutputPattern": "1.*4.*2.*5.*3.*6"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "matrices-mayor-fila-01",
+      "title": "Mayor por fila",
+      "description": "Lee una matriz y muestra el mayor valor de cada fila.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "matrices"
+      ],
+      "supportTopics": [
+        "arrays",
+        "loops"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "arrays",
+        "loops"
+      ],
+      "newTopicFocus": [
+        "matrices"
+      ],
+      "skills": [
+        "matrices-practice",
+        "arrays-practice",
+        "loops-practice"
+      ],
+      "commonErrors": [
+        "wrong-loop-bound",
+        "off-by-one"
+      ],
+      "remediates": [
+        "wrong-loop-bound"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 66,
+        "band": "medium",
+        "conceptualLevel": 4,
+        "syntaxLoad": 4,
+        "stateControl": 1,
+        "loopDepth": 2,
+        "functionComplexity": 0,
+        "arrayComplexity": 4,
+        "matrixComplexity": 3,
+        "stringComplexity": 0,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 4,
+        "debugDifficulty": 3,
+        "expectedMinutes": 40
+      },
+      "unlock": {
+        "requiresModules": [
+          "funciones-y-arreglos"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "2 3\n1 9 2\n4 3 8\n",
+            "expectedOutputPattern": "9.*8"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "pointers-swap-basico-01",
+      "title": "Intercambiar usando punteros",
+      "description": "Implementa una funcion que reciba dos punteros a int e intercambie los valores apuntados.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "pointers"
+      ],
+      "supportTopics": [
+        "functions",
+        "variables"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "functions",
+        "variables"
+      ],
+      "newTopicFocus": [
+        "pointers"
+      ],
+      "skills": [
+        "pointers-practice",
+        "functions-practice",
+        "variables-practice"
+      ],
+      "commonErrors": [
+        "address-vs-value-confusion",
+        "off-by-one"
+      ],
+      "remediates": [
+        "address-vs-value-confusion"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 58,
+        "band": "medium",
+        "conceptualLevel": 4,
+        "syntaxLoad": 3,
+        "stateControl": 1,
+        "loopDepth": 0,
+        "functionComplexity": 3,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 1,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 2,
+        "debugDifficulty": 3,
+        "expectedMinutes": 29
+      },
+      "unlock": {
+        "requiresModules": [
+          "funciones-y-arreglos"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "hybrid",
+        "preferred": "function",
+        "fallback": "io",
+        "stdinCases": [
+          {
+            "input": "4 9\n",
+            "expectedOutputPattern": "9.*4"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "pointers-maximo-referencia-01",
+      "title": "Mayor usando parametros de salida",
+      "description": "Usa punteros para devolver el mayor y el menor de dos enteros desde una funcion.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "pointers"
+      ],
+      "supportTopics": [
+        "functions",
+        "conditionals"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "functions",
+        "conditionals"
+      ],
+      "newTopicFocus": [
+        "pointers"
+      ],
+      "skills": [
+        "pointers-practice",
+        "functions-practice",
+        "conditionals-practice"
+      ],
+      "commonErrors": [
+        "uninitialized-output-parameter",
+        "off-by-one"
+      ],
+      "remediates": [
+        "uninitialized-output-parameter"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 60,
+        "band": "medium",
+        "conceptualLevel": 4,
+        "syntaxLoad": 3,
+        "stateControl": 1,
+        "loopDepth": 0,
+        "functionComplexity": 3,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 1,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 3,
+        "debugDifficulty": 3,
+        "expectedMinutes": 34
+      },
+      "unlock": {
+        "requiresModules": [
+          "funciones-y-arreglos"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "hybrid",
+        "preferred": "function",
+        "fallback": "io",
+        "stdinCases": [
+          {
+            "input": "8 3\n",
+            "expectedOutputPattern": "8.*3"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "pointers-recorrer-arreglo-01",
+      "title": "Recorrer arreglo con puntero",
+      "description": "Suma los valores de un arreglo avanzando con un puntero en lugar de usar solo indices.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "pointers"
+      ],
+      "supportTopics": [
+        "arrays",
+        "loops"
+      ],
+      "combinedTopics": [],
+      "requiredMastery": [
+        "arrays",
+        "loops"
+      ],
+      "newTopicFocus": [
+        "pointers"
+      ],
+      "skills": [
+        "pointers-practice",
+        "arrays-practice",
+        "loops-practice"
+      ],
+      "commonErrors": [
+        "pointer-increment-confusion",
+        "off-by-one"
+      ],
+      "remediates": [
+        "pointer-increment-confusion"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 62,
+        "band": "medium",
+        "conceptualLevel": 4,
+        "syntaxLoad": 3,
+        "stateControl": 1,
+        "loopDepth": 0,
+        "functionComplexity": 3,
+        "arrayComplexity": 0,
+        "matrixComplexity": 0,
+        "stringComplexity": 0,
+        "pointerDepth": 1,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 4,
+        "debugDifficulty": 3,
+        "expectedMinutes": 38
+      },
+      "unlock": {
+        "requiresModules": [
+          "funciones-y-arreglos"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "hybrid",
+        "preferred": "function",
+        "fallback": "io",
+        "stdinCases": [
+          {
+            "input": "5\n1 2 3 4 5\n",
+            "expectedOutputPattern": "15"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "matrix-string-transform-01",
+      "title": "Transformar matriz de caracteres",
+      "description": "Lee una matriz de caracteres y reemplaza vocales por asteriscos, mostrando el tablero resultante.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "matrices",
+        "strings"
+      ],
+      "supportTopics": [
+        "loops",
+        "functions"
+      ],
+      "combinedTopics": [
+        "matrices",
+        "strings"
+      ],
+      "requiredMastery": [
+        "matrices",
+        "strings",
+        "loops"
+      ],
       "newTopicFocus": [],
-      "skills": ["nested-loop", "row-column-indexing", "char-array-traversal"],
-      "commonErrors": ["swapped-row-column", "missing-null-terminator", "wrong-loop-bound"],
-      "remediates": ["matrix-indexing", "char-array-indexing"],
-      "preparesFor": ["text-menu-analyzer"],
-      "relatedProjects": ["text-menu-analyzer"],
+      "skills": [
+        "matrices-practice",
+        "strings-practice",
+        "loops-practice",
+        "functions-practice"
+      ],
+      "commonErrors": [
+        "matrix-string-indexing",
+        "off-by-one"
+      ],
+      "remediates": [
+        "matrix-string-indexing"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [],
       "route": {
         "routeEligible": false,
         "moduleId": null,
@@ -489,58 +3297,87 @@
       },
       "difficulty": {
         "score": 70,
-        "band": "medium",
-        "conceptualLevel": 5,
+        "band": "medium+",
+        "conceptualLevel": 4,
         "syntaxLoad": 4,
         "stateControl": 2,
-        "loopDepth": 2,
+        "loopDepth": 1,
         "functionComplexity": 3,
         "arrayComplexity": 3,
-        "matrixComplexity": 4,
-        "stringComplexity": 4,
+        "matrixComplexity": 3,
+        "stringComplexity": 3,
         "pointerDepth": 0,
         "dynamicMemoryRisk": 0,
         "structComplexity": 0,
         "fileIoComplexity": 0,
-        "inputParsingComplexity": 4,
-        "hiddenTraps": 5,
-        "debugDifficulty": 4,
-        "expectedMinutes": 45
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 2,
+        "debugDifficulty": 3,
+        "expectedMinutes": 33
       },
       "unlock": {
-        "requiresModules": ["cadenas-y-combinaciones"],
-        "requiresExercises": ["strings-count-lowercase-01"],
+        "requiresModules": [
+          "funciones-y-arreglos"
+        ],
+        "requiresExercises": [],
         "requiresQuizScore": null
       },
       "testContract": {
-        "mode": "hybrid",
-        "preferred": "io",
-        "fallback": "function",
-        "allowAiAdapter": false
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "2 4\ncasa\nluna\n",
+            "expectedOutputPattern": "c*s*|l*n*"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
       }
     },
     {
-      "id": "strings-normalizar-frase-hard",
-      "title": "Normalizar frase",
-      "kind": "masteryChallenge",
+      "id": "combined-arrays-functions-stats-01",
+      "title": "Estadisticas con arreglos y funciones",
+      "description": "Divide un programa de estadisticas en funciones para leer, promediar y encontrar maximo de un arreglo.",
+      "kind": "practice",
       "source": "estudio-socratico",
       "sourceUrl": null,
       "language": "c",
-      "primaryTopics": ["strings"],
-      "supportTopics": ["loops", "conditionals", "functions"],
-      "combinedTopics": [],
-      "requiredMastery": ["strings", "loops", "functions"],
+      "primaryTopics": [
+        "arrays",
+        "functions"
+      ],
+      "supportTopics": [
+        "loops"
+      ],
+      "combinedTopics": [
+        "arrays",
+        "functions"
+      ],
+      "requiredMastery": [
+        "arrays",
+        "functions",
+        "loops"
+      ],
       "newTopicFocus": [],
-      "skills": ["char-array-traversal", "input-cleaning", "stateful-string-transform"],
-      "commonErrors": ["newline-in-buffer", "missing-null-terminator", "off-by-one"],
-      "remediates": ["strlen-vs-capacity", "char-array-indexing"],
-      "preparesFor": ["matrix-string-transform-01", "text-menu-analyzer"],
-      "relatedProjects": ["text-menu-analyzer"],
+      "skills": [
+        "arrays-practice",
+        "functions-practice",
+        "loops-practice"
+      ],
+      "commonErrors": [
+        "shared-state-confusion",
+        "off-by-one"
+      ],
+      "remediates": [
+        "shared-state-confusion"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [],
       "route": {
-        "routeEligible": true,
-        "moduleId": "cadenas-y-combinaciones",
-        "orderInModule": 2,
-        "masteryChallengeEligible": true
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
       },
       "visibility": {
         "categoryVisible": true,
@@ -548,39 +3385,127 @@
         "recommendable": true
       },
       "difficulty": {
-        "score": 78,
-        "band": "hard",
+        "score": 72,
+        "band": "medium+",
         "conceptualLevel": 5,
         "syntaxLoad": 4,
-        "stateControl": 4,
-        "loopDepth": 2,
+        "stateControl": 2,
+        "loopDepth": 1,
         "functionComplexity": 3,
         "arrayComplexity": 3,
-        "matrixComplexity": 0,
-        "stringComplexity": 5,
+        "matrixComplexity": 3,
+        "stringComplexity": 3,
         "pointerDepth": 0,
         "dynamicMemoryRisk": 0,
         "structComplexity": 0,
         "fileIoComplexity": 0,
-        "inputParsingComplexity": 5,
-        "hiddenTraps": 6,
-        "debugDifficulty": 5,
-        "expectedMinutes": 55
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 3,
+        "debugDifficulty": 3,
+        "expectedMinutes": 38
       },
       "unlock": {
-        "requiresModules": ["funciones-y-arreglos"],
-        "requiresExercises": ["strings-count-lowercase-01"],
-        "requiresQuizScore": {
-          "quizId": "quiz-strings-01",
-          "minScore": 70
-        }
+        "requiresModules": [
+          "funciones-y-arreglos"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
       },
       "testContract": {
         "mode": "io",
         "stdinCases": [
           {
-            "input": "  Hola   Mundo  \n",
-            "expectedOutputPattern": "Hola Mundo"
+            "input": "5\n10 20 30 40 50\n",
+            "expectedOutputPattern": "30.*50"
+          }
+        ],
+        "normalizeOutput": true,
+        "timeoutMs": 3000
+      }
+    },
+    {
+      "id": "combined-strings-recursion-vowels-01",
+      "title": "Vocales recursivas en cadena",
+      "description": "Cuenta vocales de una cadena usando una funcion recursiva que avanza por posicion.",
+      "kind": "practice",
+      "source": "estudio-socratico",
+      "sourceUrl": null,
+      "language": "c",
+      "primaryTopics": [
+        "strings",
+        "recursion"
+      ],
+      "supportTopics": [
+        "functions"
+      ],
+      "combinedTopics": [
+        "strings",
+        "recursion"
+      ],
+      "requiredMastery": [
+        "strings",
+        "recursion",
+        "functions"
+      ],
+      "newTopicFocus": [],
+      "skills": [
+        "strings-practice",
+        "recursion-practice",
+        "functions-practice"
+      ],
+      "commonErrors": [
+        "recursive-base-case-missing",
+        "off-by-one"
+      ],
+      "remediates": [
+        "recursive-base-case-missing"
+      ],
+      "preparesFor": [],
+      "relatedProjects": [],
+      "route": {
+        "routeEligible": false,
+        "moduleId": null,
+        "orderInModule": null,
+        "masteryChallengeEligible": false
+      },
+      "visibility": {
+        "categoryVisible": true,
+        "projectEligible": false,
+        "recommendable": true
+      },
+      "difficulty": {
+        "score": 74,
+        "band": "medium+",
+        "conceptualLevel": 5,
+        "syntaxLoad": 4,
+        "stateControl": 2,
+        "loopDepth": 1,
+        "functionComplexity": 3,
+        "arrayComplexity": 3,
+        "matrixComplexity": 3,
+        "stringComplexity": 3,
+        "pointerDepth": 0,
+        "dynamicMemoryRisk": 0,
+        "structComplexity": 0,
+        "fileIoComplexity": 0,
+        "inputParsingComplexity": 2,
+        "hiddenTraps": 4,
+        "debugDifficulty": 3,
+        "expectedMinutes": 42
+      },
+      "unlock": {
+        "requiresModules": [
+          "funciones-y-arreglos"
+        ],
+        "requiresExercises": [],
+        "requiresQuizScore": null
+      },
+      "testContract": {
+        "mode": "io",
+        "stdinCases": [
+          {
+            "input": "banana\n",
+            "expectedOutputPattern": "3"
           }
         ],
         "normalizeOutput": true,

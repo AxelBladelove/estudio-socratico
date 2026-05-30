@@ -686,6 +686,9 @@ function renderCatalogHtml(catalog, extensionConfig, apiKeyNotice, fundamentals 
   const quizCards = fundamentalsQuizzes.map((item) => renderFundamentalsCard(item, "quiz")).join("");
   const projectCards = fundamentalsProjects.map((item) => renderFundamentalsCard(item, "project")).join("");
   const fundamentalsCards = fundamentalsExercises.map((item) => renderFundamentalsCard(item, "exercise")).join("");
+  const exerciseKinds = [["practice", "Practica"], ["masteryChallenge", "Reto"], ["combined", "Combinado"]];
+  const projectKinds = [["assignment", "Asignacion"], ["project", "Proyecto"]];
+  const quizKinds = [["tema", "Tema"], ["combinado", "Combinado"], ["acumulativo", "Acumulativo"], ["examen", "Examen"]];
   const topicButtons = topics.map((topic) => `
     <button class="topicToggle" data-topic="${escapeHtml(topic)}" data-topic-state="off" aria-pressed="false">
       <span class="topicMark" aria-hidden="true"></span>
@@ -732,10 +735,10 @@ function renderCatalogHtml(catalog, extensionConfig, apiKeyNotice, fundamentals 
 
       <section class="viewSection hidden" data-view-section="fundamentals">
         <div class="rootGrid compactRoots">
-          <article class="rootCard" data-view="fundamentals-route" tabindex="0" role="button"><div class="fallbackIcon">RC</div><div><h2>Ruta C</h2><p>Camino progresivo con desbloqueos.</p></div></article>
-          <article class="rootCard" data-view="fundamentals-quizzes" tabindex="0" role="button"><div class="fallbackIcon">QT</div><div><h2>Quizzes teoricos</h2><p>Preguntas cortas por concepto.</p></div></article>
-          <article class="rootCard" data-view="fundamentals-projects" tabindex="0" role="button"><div class="fallbackIcon">AP</div><div><h2>Asignaciones y proyectos</h2><p>Practica integradora filtrable.</p></div></article>
           <article class="rootCard" data-view="fundamentals-categories" tabindex="0" role="button"><div class="fallbackIcon">EC</div><div><h2>Ejercicios por categoria</h2><p>Ejercicios puros y combinados con OR/AND.</p></div></article>
+          <article class="rootCard" data-view="fundamentals-projects" tabindex="0" role="button"><div class="fallbackIcon">AP</div><div><h2>Asignaciones y proyectos</h2><p>Practica integradora filtrable.</p></div></article>
+          <article class="rootCard" data-view="fundamentals-quizzes" tabindex="0" role="button"><div class="fallbackIcon">QT</div><div><h2>Quizzes teoricos</h2><p>Preguntas cortas por concepto.</p></div></article>
+          <article class="rootCard" data-view="fundamentals-route" tabindex="0" role="button"><div class="fallbackIcon">RC</div><div><h2>Ruta C</h2><p>Preview progresivo; vista visual despues.</p></div></article>
         </div>
       </section>
 
@@ -752,26 +755,29 @@ function renderCatalogHtml(catalog, extensionConfig, apiKeyNotice, fundamentals 
 
       <section class="viewSection hidden" data-view-section="fundamentals-quizzes">
         <div class="subhead"><button data-view="fundamentals">Volver</button><h2>Quizzes teoricos</h2></div>
-        ${renderFilters({ providers: [["fundamentals", "Fundamentos C"]], topicButtons, includeStatus: false })}
+        ${renderFilters({ providers: [["fundamentals", "Fundamentos C"]], topicButtons, includeStatus: false, kindOptions: quizKinds, kindTitle: "Tipo de quiz" })}
         <section class="cards">${quizCards || "<section class='empty'>No hay quizzes todavia.</section>"}</section>
+        <section class="empty hidden">No hay quizzes con esos filtros.</section>
       </section>
 
       <section class="viewSection hidden" data-view-section="fundamentals-projects">
         <div class="subhead"><button data-view="fundamentals">Volver</button><h2>Asignaciones y proyectos</h2></div>
-        ${renderFilters({ providers: [["fundamentals", "Fundamentos C"]], topicButtons, includeStatus: false })}
+        ${renderFilters({ providers: [["fundamentals", "Fundamentos C"]], topicButtons, includeStatus: false, kindOptions: projectKinds, kindTitle: "Tipo" })}
         <section class="cards">${projectCards || "<section class='empty'>No hay proyectos todavia.</section>"}</section>
+        <section class="empty hidden">No hay proyectos con esos filtros.</section>
       </section>
 
       <section class="viewSection hidden" data-view-section="fundamentals-categories">
         <div class="subhead"><button data-view="fundamentals">Volver</button><h2>Ejercicios por categoria</h2></div>
-        ${renderFilters({ providers: [["fundamentals", "Fundamentos C"]], topicButtons, includeStatus: false })}
+        ${renderFilters({ providers: [["fundamentals", "Fundamentos C"]], topicButtons, includeStatus: false, kindOptions: exerciseKinds, kindTitle: "Tipo de ejercicio" })}
         <section class="cards">${fundamentalsCards || "<section class='empty'>No hay ejercicios todavia.</section>"}</section>
+        <section class="empty hidden">No hay ejercicios con esos filtros.</section>
       </section>
     </main>
   `);
 }
 
-function renderFilters({ providers, topicButtons, includeStatus }) {
+function renderFilters({ providers, topicButtons, includeStatus, kindOptions = [], kindTitle = "Tipo" }) {
   return `
     ${includeStatus ? `<section class="statusFilters" aria-label="Filtrar por estado">
       <button class="statusFilter active" data-status="all"><span>Todos</span><strong data-count="all">0</strong></button>
@@ -795,6 +801,12 @@ function renderFilters({ providers, topicButtons, includeStatus }) {
       </div>
     </section>
     <section class="filterPanel hidden">
+      ${kindOptions.length ? `<div class="filterGroup">
+        <h3>${escapeHtml(kindTitle)}</h3>
+        <div class="filterList compact">
+          ${kindOptions.map(([id, label]) => `<label class="check"><input type="checkbox" data-kind="${escapeHtml(id)}" />${escapeHtml(label)}</label>`).join("")}
+        </div>
+      </div>` : ""}
       <div class="filterGroup">
         <h3>Dificultad</h3>
         <div class="filterList compact">
@@ -824,12 +836,19 @@ function normalizeFundamentalsItems(items) {
     difficulty: typeof item.difficulty === "object" ? item.difficulty.band : item.difficulty,
     topics: item.topics || [...new Set([...(item.primaryTopics || []), ...(item.supportTopics || []), ...(item.combinedTopics || [])])],
     status: item.status || "not_started",
+    kind: item.kind || item.quizType || "practice",
   }));
 }
 
 function renderFundamentalsRoute(route) {
   const modules = route.modules || [];
+  const nextNode = modules.flatMap((module) => module.nodes || []).find((node) => node.unlocked && (!node.status || node.status === "not_started"));
   return `<section class="routePath">
+    <section class="notice routePreview">
+      <strong>Preview de Ruta C.</strong>
+      <span>La vista visual con nodos conectados se implementara despues. Por ahora esta lista muestra modulos, estados y el proximo paso.</span>
+      <span>${nextNode ? `Proximo paso: ${escapeHtml(nextNode.title || nextNode.item?.title || "")}` : "No hay pasos desbloqueados pendientes."}</span>
+    </section>
     ${modules.map((module) => `
       <article class="routeModule ${module.unlocked ? "" : "locked"}">
         <div class="routeModuleHead">
@@ -866,15 +885,30 @@ function renderFundamentalsCard(item, kind) {
   const statusGroup = item.unlocked === false ? "locked" : statusGroupName(status);
   const topics = (item.topics || []).slice(0, 6).map((topic) => `<span>${escapeHtml(topic)}</span>`).join("");
   const allTopics = (item.topics || []).join("|").toLowerCase();
-  const search = `${item.title} ${item.description || item.blurb || ""} ${(item.topics || []).join(" ")} ${kind}`.toLowerCase();
+  const itemKind = cardKind(item, kind);
+  const search = `${item.title} ${item.description || item.blurb || ""} ${(item.topics || []).join(" ")} ${kind} ${itemKind}`.toLowerCase();
   const difficulty = String(item.difficulty || "sin nivel").toLowerCase();
+  const difficultyGroup = difficultyClassName(difficulty);
   const mode = item.testContract?.mode ? `<span>${escapeHtml(`test: ${item.testContract.mode}`)}</span>` : "";
+  const combined = (item.combinedTopics || []).length > 0 || (item.primaryTopics || []).length > 1;
+  const routeEligible = item.route?.routeEligible === true;
+  const typeBadges = [
+    `<span>${escapeHtml(combined ? "combinado" : "puro")}</span>`,
+    kind === "exercise" ? `<span>${escapeHtml(routeEligible ? "Ruta C" : "categoria")}</span>` : "",
+    mode,
+  ].filter(Boolean).join("");
+  const requirementText = requirementSummary(item, kind);
+  const lock = item.unlocked === false ? lockReason(item) : "";
+  const questions = kind === "quiz" && Array.isArray(item.questions) ? `<span>${item.questions.length} preguntas</span>` : "";
+  const time = kind === "quiz" && (item.timeLimitMinutes || item.difficulty?.expectedMinutes) ? `<span>${escapeHtml(`${item.timeLimitMinutes || item.difficulty?.expectedMinutes} min`)}</span>` : "";
+  const actionLabel = item.unlocked === false ? "Bloqueado" : (kind === "quiz" ? "Abrir preview" : "Iniciar");
   return `
     <article class="exerciseCard disabled"
       data-provider="fundamentals"
+      data-kind="${escapeHtml(itemKind)}"
       data-status="${escapeHtml(status)}"
       data-status-group="${escapeHtml(statusGroup)}"
-      data-difficulty="${escapeHtml(difficulty)}"
+      data-difficulty="${escapeHtml(difficultyGroup)}"
       data-topics="${escapeHtml(allTopics)}"
       data-search="${escapeHtml(search)}">
       <div class="icon"><div class="fallbackIcon">${escapeHtml(kindInitials(kind))}</div></div>
@@ -885,15 +919,41 @@ function renderFundamentalsCard(item, kind) {
         </div>
         <div class="badges">
           <span class="status ${escapeHtml(status)}">${escapeHtml(item.unlocked === false ? "Bloqueado" : statusText(status))}</span>
-          <span class="difficulty ${escapeHtml(difficultyClassName(difficulty))}">${escapeHtml(item.difficulty || "sin nivel")}</span>
-          ${mode}
+          <span class="difficulty ${escapeHtml(difficultyGroup)}">${escapeHtml(item.difficulty || "sin nivel")}</span>
+          ${typeBadges}
+          ${questions}
+          ${time}
         </div>
         <p>${escapeHtml(item.description || item.blurb || "")}</p>
+        ${requirementText ? `<div class="metaLine">${escapeHtml(requirementText)}</div>` : ""}
+        ${lock ? `<div class="lockReason">${escapeHtml(lock)}</div>` : ""}
         <div class="topics">${topics}</div>
       </div>
-      <div class="cardActions"></div>
+      <div class="cardActions"><button disabled>${escapeHtml(actionLabel)}</button></div>
     </article>
   `;
+}
+
+function cardKind(item, kind) {
+  if (kind === "quiz") return item.quizType || "tema";
+  if (kind === "project") return item.projectType || item.kind || "project";
+  if ((item.combinedTopics || []).length > 0 || (item.primaryTopics || []).length > 1) return "combined";
+  return item.kind || "practice";
+}
+
+function requirementSummary(item, kind) {
+  const required = item.requiredConcepts || item.requiredMastery || [];
+  if (kind === "project" && required.length) return `Requiere: ${required.join(", ")}`;
+  if (kind === "exercise" && item.testContract?.mode) return `Contrato: ${item.testContract.mode}`;
+  return "";
+}
+
+function lockReason(item) {
+  const unlock = item.unlock || {};
+  if ((unlock.requiresExercises || []).length) return `Bloqueado por ejercicios: ${unlock.requiresExercises.join(", ")}`;
+  if ((unlock.requiresModules || []).length) return `Bloqueado por modulos: ${unlock.requiresModules.join(", ")}`;
+  if (unlock.requiresQuizScore) return `Bloqueado por quiz: ${unlock.requiresQuizScore.quizId || "quiz requerido"}`;
+  return "Bloqueado hasta completar requisitos previos.";
 }
 
 function kindInitials(kind) {
@@ -1169,6 +1229,7 @@ function baseHtml(body) {
     .rootCard:hover, .rootCard:focus-visible { border-color: var(--accent); outline: none; background: var(--cardHover); }
     .subhead { display: flex; align-items: center; gap: 12px; margin: 8px 0 14px; }
     .routePath { display: grid; gap: 14px; }
+    .routePreview { display: grid; gap: 6px; }
     .routeModule { border: 1px solid var(--border); background: var(--card); border-radius: 8px; padding: 16px; }
     .routeModule.locked, .routeNode.locked { opacity: 0.55; }
     .routeModuleHead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
@@ -1188,6 +1249,8 @@ function baseHtml(body) {
     .provider { color: var(--muted); font-size: 12px; white-space: nowrap; }
     .badges, .topics { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
     .badges span, .topics span { display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 999px; min-height: 22px; padding: 0 10px; color: var(--muted); font-size: 12px; line-height: 1.1; background: var(--pill); }
+    .metaLine, .lockReason { color: var(--soft); font-size: 12px; line-height: 1.35; margin-top: 8px; }
+    .lockReason { color: var(--warn); }
     .difficulty.easy { border-color: var(--ok) !important; color: var(--ok) !important; background: var(--okBg) !important; font-weight: 650; }
     .difficulty.medium { border-color: var(--warn) !important; color: var(--warn) !important; background: var(--warnBg) !important; font-weight: 650; }
     .difficulty.hard { border-color: var(--bad) !important; color: var(--bad) !important; background: var(--badBg) !important; font-weight: 650; }
@@ -1360,6 +1423,7 @@ ${body}
     const section = document.querySelector(\`.viewSection[data-view-section="\${state.view}"]\`) || document;
     const query = (section.querySelector('.searchBox')?.value || '').trim().toLowerCase();
     const difficulties = Array.from(section.querySelectorAll('input[data-difficulty]:checked')).map((item) => item.dataset.difficulty).filter(Boolean);
+    const kinds = Array.from(section.querySelectorAll('input[data-kind]:checked')).map((item) => item.dataset.kind).filter(Boolean);
     const includeTopics = Array.from(section.querySelectorAll('.topicToggle[data-topic-state="include"]')).map((item) => item.dataset.topic).filter(Boolean).map((x) => x.toLowerCase());
     const excludeTopics = Array.from(section.querySelectorAll('.topicToggle[data-topic-state="exclude"]')).map((item) => item.dataset.topic).filter(Boolean).map((x) => x.toLowerCase());
     let visible = 0;
@@ -1370,11 +1434,12 @@ ${body}
       const statusOk = state.status === 'all' || card.dataset.statusGroup === state.status;
       const queryOk = !query || (card.dataset.search || '').includes(query);
       const difficultyOk = difficulties.length === 0 || difficulties.includes(card.dataset.difficulty || '');
+      const kindOk = kinds.length === 0 || kinds.includes(card.dataset.kind || '');
       const includeOk = includeTopics.length === 0 || (state.logic === 'and'
         ? includeTopics.every((topic) => topics.includes(topic))
         : includeTopics.some((topic) => topics.includes(topic)));
       const excludeOk = excludeTopics.length === 0 || !excludeTopics.some((topic) => topics.includes(topic));
-      const show = providerOk && statusOk && queryOk && difficultyOk && includeOk && excludeOk;
+      const show = providerOk && statusOk && queryOk && difficultyOk && kindOk && includeOk && excludeOk;
       card.classList.toggle('hidden', !show);
       if (show) visible += 1;
     });

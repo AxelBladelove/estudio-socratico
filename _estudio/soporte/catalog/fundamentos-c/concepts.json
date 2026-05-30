@@ -74,6 +74,24 @@
       "category": "data",
       "skills": ["nested-loop", "row-column-indexing", "matrix-traversal"],
       "commonErrors": ["swapped-row-column", "wrong-loop-bound"]
+    },
+    {
+      "id": "pointers",
+      "title": "Punteros basicos",
+      "description": "Usar direcciones, desreferenciacion y parametros por referencia sin perder el valor apuntado.",
+      "level": 5,
+      "category": "memory",
+      "skills": ["address-of", "dereference", "output-parameters"],
+      "commonErrors": ["address-vs-value-confusion", "uninitialized-output-parameter"]
+    },
+    {
+      "id": "recursion",
+      "title": "Recursion",
+      "description": "Resolver un problema con caso base, avance y combinacion del resultado parcial.",
+      "level": 6,
+      "category": "abstraction",
+      "skills": ["base-case", "recursive-step", "call-stack-tracing"],
+      "commonErrors": ["recursive-base-case-missing", "no-progress-recursion"]
     }
   ]
 }
