@@ -12,7 +12,7 @@ const EXTENSION_CATALOG = '_estudio/soporte/vscode/estudio-exercism/generated/al
 function injectManifest() {
     if (!fs.existsSync(MANIFEST_FILE)) {
         console.error(`ERROR: No se encontró el manifest privado en ${MANIFEST_FILE}`);
-        console.error("Ejecuta primero: npm run alejandro:gists:publish");
+        console.error("Ejecuta primero: bun run alejandro:gists:publish");
         process.exit(1);
     }
 

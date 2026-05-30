@@ -39,6 +39,7 @@ _estudio/logs/
 **/artifacts/
 **/dist/
 **/build/
+**/target/
 **/.vs/
 **/.wix/
 **/*.wixpdb

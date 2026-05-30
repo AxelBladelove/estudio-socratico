@@ -1,5 +1,6 @@
 using EstudioSocratico.Configurator.Core;
 using EstudioSocratico.Configurator.Engine;
+using System.Text.Json.Nodes;
 using Xunit;
 
 namespace EstudioSocratico.Configurator.Tests;
@@ -88,6 +89,24 @@ public sealed class WorkspaceAndUninstallTests
     }
 
     [Fact]
+    public async Task ExtensionConfig_DefaultsExperimentalFlagsOff()
+    {
+        var workspace = CreateMinimalWorkspace();
+        var paths = new AppPaths(repoRoot: workspace, localAppDataRoot: Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")));
+        var manager = new WorkspaceManager(paths, new ManifestManager(paths), new LogManager(paths));
+
+        await manager.PrepareAsync(workspace, "axel", CancellationToken.None);
+
+        var localConfigPath = Path.Combine(workspace, "usuario", "config", "estudio-socratico.extension.local.json");
+        var config = JsonNode.Parse(await File.ReadAllTextAsync(localConfigPath))!.AsObject();
+        Assert.False(config["features"]!["aiExerciseAnalysis"]!.GetValue<bool>());
+        Assert.False(config["features"]!["opencodeIntegration"]!.GetValue<bool>());
+        Assert.False(config["features"]!["aiGeneratedTests"]!.GetValue<bool>());
+        Assert.False(config["features"]!["autoGitSync"]!.GetValue<bool>());
+        Assert.Equal("gemini", config["experimental"]!["aiExerciseAnalysisProvider"]!.GetValue<string>());
+    }
+
+    [Fact]
     public async Task UpdatePreservesAliasIdentity()
     {
         var workspace = CreateMinimalWorkspace();
@@ -137,6 +156,8 @@ public sealed class WorkspaceAndUninstallTests
         Assert.Contains("persist-me", content);
         Assert.Contains("gemini-2.5-flash", content);
         Assert.Contains("translateIntroductions", content);
+        var config = JsonNode.Parse(content)!.AsObject();
+        Assert.False(config["features"]!["aiExerciseAnalysis"]!.GetValue<bool>());
     }
 
     [Fact]

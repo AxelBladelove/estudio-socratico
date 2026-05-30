@@ -22,16 +22,17 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: "20"
+          bun-version: "1.3.13"
 
       - name: Install UI dependencies and build
-        working-directory: _estudio/installer/ui
+        working-directory: .
         run: |
-          npm ci
-          npm run build
+          bun ci
+          cd _estudio/installer/ui
+          bun run build
 
       - name: Restore solution
         run: dotnet restore _estudio/installer/EstudioSocratico.Installer.sln

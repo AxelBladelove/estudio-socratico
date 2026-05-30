@@ -19,19 +19,19 @@ Ese archivo esta ignorado por Git.
 ## Comandos
 
 ```bat
-npm run drive:auth
-npm run drive:check
-npm run drive:generate
-npm run drive:sync
-npm run drive:generate:alejandro
-npm run drive:sync:alejandro
+bun run drive:auth
+bun run drive:check
+bun run drive:generate
+bun run drive:sync
+bun run drive:generate:alejandro
+bun run drive:sync:alejandro
 ```
 
 Para sincronizar Alejandro con paquetes provisionales creados desde la metadata
 del catalogo:
 
 ```bat
-npm run drive:sync:alejandro
+bun run drive:sync:alejandro
 ```
 
 `drive:sync` sube o actualiza archivos Markdown, los deja publicos como solo
@@ -62,4 +62,4 @@ real del PDF.
 > [!NOTE]
 > La sesion de Google Drive conectada a Codex/ChatGPT no es la misma que usa
 > este script. Para publicar desde el repo necesitas el OAuth local de
-> `.estudio-drive/oauth-client.json` y `npm run drive:auth`.
+> `.estudio-drive/oauth-client.json` y `bun run drive:auth`.

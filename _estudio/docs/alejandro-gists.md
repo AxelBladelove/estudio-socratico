@@ -13,7 +13,7 @@ Para publicar los ejercicios como Gists, se utiliza un script en Node.js que req
 
 Ejecuta:
 ```bash
-npm run alejandro:gists:publish
+bun run alejandro:gists:publish
 ```
 *Si falla indicando problemas de autenticación, ejecuta `gh auth login` primero.*
 
@@ -26,7 +26,7 @@ Este archivo cuenta con los Gist IDs reales y las raw URLs para la descarga.
 
 Para inyectarlo en el código fuente de la extensión antes de empaquetar el VSIX, ejecuta:
 ```bash
-npm run alejandro:gists:manifest
+bun run alejandro:gists:manifest
 ```
 Este script leerá el manifest privado y creará el archivo `src/generated/alejandro-catalog.ts`. 
 

@@ -5,18 +5,19 @@ setlocal
 set UI_DIR=%~dp0..\ui
 set WWWROOT=%~dp0..\src\EstudioSocratico.Configurator.App\wwwroot
 
-echo [1/3] Installing npm dependencies...
-cd /d "%UI_DIR%"
-call npm ci
+echo [1/3] Installing Bun dependencies...
+cd /d "%~dp0..\..\.."
+call bun ci
 if errorlevel 1 (
-    echo ERROR: npm ci failed
+    echo ERROR: bun ci failed
     exit /b 1
 )
 
 echo [2/3] Building React UI...
-call npm run build
+cd /d "%UI_DIR%"
+call bun run build
 if errorlevel 1 (
-    echo ERROR: npm run build failed
+    echo ERROR: bun run build failed
     exit /b 1
 )
 

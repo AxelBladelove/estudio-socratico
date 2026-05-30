@@ -2,21 +2,21 @@ const vscode = require("vscode");
 const cp = require("child_process");
 const crypto = require("crypto");
 const fs = require("fs");
-const os = require("os");
 const path = require("path");
+const readline = require("readline");
+const {
+  ensureExtensionConfigFiles,
+  getLocalConfigPath,
+  getExampleConfigPath,
+  readExtensionConfig,
+} = require("./src/config");
+const { analyzeExercise, formatAnalysisDryRun } = require("./src/ai/exerciseAnalysis");
+const { describeAiTestGeneration } = require("./src/ai/testGeneration");
 
 let currentPanel;
 let currentProvider;
-const DEFAULT_EXTENSION_CONFIG = {
-  provider: "gemini",
-  apiKey: "",
-  model: "gemini-2.5-flash",
-  features: {
-    translateIntroductions: true,
-    importExercism: true,
-    importAlejandroGists: true,
-  },
-};
+let aiOutputChannel;
+const engineClients = new Map();
 
 function activate(context) {
   currentProvider = new ExerciseViewProvider(context);
@@ -29,6 +29,8 @@ function activate(context) {
     vscode.commands.registerCommand("estudioExercism.testCurrent", () => runForCurrentFile("test-window")),
     vscode.commands.registerCommand("estudioExercism.submitCurrent", () => runForCurrentFile("submit")),
     vscode.commands.registerCommand("estudioExercism.validateCurrent", () => runForCurrentFile("validate-window")),
+    vscode.commands.registerCommand("estudioExercism.analyzeExerciseWithAi", () => analyzeCurrentExerciseWithAi()),
+    vscode.commands.registerCommand("estudioExercism.generateAiLogicTests", () => showAiTestGenerationStub()),
     vscode.window.registerUriHandler({
       handleUri: async (uri) => {
         const route = String(uri.path || "").toLowerCase();
@@ -45,7 +47,12 @@ function activate(context) {
   );
 }
 
-function deactivate() {}
+function deactivate() {
+  for (const client of engineClients.values()) {
+    client.dispose();
+  }
+  engineClients.clear();
+}
 
 function getWorkspaceRoot() {
   const folder = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0];
@@ -55,8 +62,8 @@ function getWorkspaceRoot() {
   return folder.uri.fsPath;
 }
 
-function getManagerPath(root) {
-  return path.join(root, "_estudio", "soporte", "exercism", "manager.ps1");
+function getEnginePath(root) {
+  return path.join(root, "_estudio", "soporte", "engine", "bin", "estudio-engine.exe");
 }
 
 async function compileActiveCFile() {
@@ -101,90 +108,6 @@ function quotePowerShell(value) {
   return `'${String(value).replace(/'/g, "''")}'`;
 }
 
-function getConfigDirectory(root) {
-  return path.join(root, "usuario", "config");
-}
-
-function getLocalConfigPath(root) {
-  return path.join(getConfigDirectory(root), "estudio-socratico.extension.local.json");
-}
-
-function getExampleConfigPath(root) {
-  return path.join(getConfigDirectory(root), "estudio-socratico.extension.example.json");
-}
-
-function getDefaultExtensionConfigText() {
-  return `${JSON.stringify(DEFAULT_EXTENSION_CONFIG, null, 2)}\n`;
-}
-
-function normalizeExtensionConfig(config = {}) {
-  return {
-    ...DEFAULT_EXTENSION_CONFIG,
-    ...config,
-    provider: String(config.provider || DEFAULT_EXTENSION_CONFIG.provider),
-    apiKey: String(config.apiKey || ""),
-    model: String(config.model || DEFAULT_EXTENSION_CONFIG.model),
-    features: {
-      ...DEFAULT_EXTENSION_CONFIG.features,
-      ...(config.features || {}),
-    },
-  };
-}
-
-function writeConfigIfChanged(configPath, config) {
-  const nextText = `${JSON.stringify(config, null, 2)}\n`;
-  const currentText = fs.existsSync(configPath) ? fs.readFileSync(configPath, "utf8") : "";
-  if (currentText !== nextText) {
-    fs.writeFileSync(configPath, nextText, "utf8");
-  }
-}
-
-function migrateExtensionConfigFile(configPath) {
-  let current = {};
-  if (fs.existsSync(configPath)) {
-    try {
-      current = JSON.parse(fs.readFileSync(configPath, "utf8"));
-    } catch {
-      current = {};
-    }
-  }
-  const normalized = normalizeExtensionConfig(current);
-  writeConfigIfChanged(configPath, normalized);
-  return normalized;
-}
-
-function ensureExtensionConfigFiles(root) {
-  const configDir = getConfigDirectory(root);
-  const localConfigPath = getLocalConfigPath(root);
-  const exampleConfigPath = getExampleConfigPath(root);
-  fs.mkdirSync(configDir, { recursive: true });
-  writeConfigIfChanged(exampleConfigPath, DEFAULT_EXTENSION_CONFIG);
-  migrateExtensionConfigFile(localConfigPath);
-  return { localConfigPath, exampleConfigPath };
-}
-
-function readExtensionConfig(root) {
-  const { localConfigPath, exampleConfigPath } = ensureExtensionConfigFiles(root);
-  try {
-    const config = JSON.parse(fs.readFileSync(localConfigPath, "utf8"));
-    return {
-      ...normalizeExtensionConfig(config),
-      paths: {
-        localConfigPath,
-        exampleConfigPath,
-      },
-    };
-  } catch {
-    return {
-      ...DEFAULT_EXTENSION_CONFIG,
-      paths: {
-        localConfigPath,
-        exampleConfigPath,
-      },
-    };
-  }
-}
-
 async function openApiKeyConfig(root) {
   const { localConfigPath } = ensureExtensionConfigFiles(root);
   const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(localConfigPath));
@@ -196,85 +119,147 @@ async function revealApiKeyConfig(root) {
   await vscode.commands.executeCommand("revealFileInOS", vscode.Uri.file(localConfigPath));
 }
 
-function runManager(root, args, options = {}) {
-  return new Promise((resolve, reject) => {
-    const manager = getManagerPath(root);
-    let outFile;
-    const commandArgs = ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", manager, "-RepoRoot", root, ...args];
-    if (options.jsonFile) {
-      outFile = path.join(os.tmpdir(), `estudio-exercism-${Date.now()}-${Math.random().toString(16).slice(2)}.json`);
-      commandArgs.push("-OutFile", outFile);
+function runManagerJson(root, args) {
+  const request = managerArgsToEngineRequest(args);
+  return getEngineClient(root).request(request.method, request.params).then(async (result) => {
+    if ((request.method === "test-window" || request.method === "validate-window") && result?.command) {
+      runEngineCommandInTerminal(result);
     }
-
-    cp.execFile("powershell.exe", commandArgs, { cwd: root, env: options.env || process.env, maxBuffer: 1024 * 1024 * 30 }, (error, stdout, stderr) => {
-      if (outFile && fs.existsSync(outFile)) {
-        try {
-          const text = fs.readFileSync(outFile, "utf8");
-          fs.unlinkSync(outFile);
-          resolve(text.trim());
-          return;
-        } catch (readError) {
-          reject(readError);
-          return;
-        }
-      }
-
-      if (error) {
-        if (stdout && stdout.trim()) {
-          resolve(stdout.trim());
-          return;
-        }
-        reject(new Error((stdout || stderr || error.message || "").trim()));
-        return;
-      }
-      resolve(stdout.trim());
-    });
+    return result;
   });
 }
 
-function getManagerEnvironment(root) {
-  const extensionConfig = readExtensionConfig(root);
-  const env = { ...process.env };
-  if (String(extensionConfig.provider || "gemini").toLowerCase() === "gemini") {
-    if (extensionConfig.apiKey) {
-      env.GEMINI_API_KEY = extensionConfig.apiKey;
+function getEngineClient(root) {
+  const key = path.resolve(root).toLowerCase();
+  let client = engineClients.get(key);
+  if (!client) {
+    client = new EngineClient(root);
+    engineClients.set(key, client);
+  }
+  return client;
+}
+
+class EngineClient {
+  constructor(root) {
+    this.root = root;
+    this.proc = undefined;
+    this.reader = undefined;
+    this.nextId = 1;
+    this.pending = new Map();
+    this.stderr = "";
+  }
+
+  request(method, params = {}) {
+    this.start();
+    const id = this.nextId++;
+    const payload = JSON.stringify({ id, method, params });
+    return new Promise((resolve, reject) => {
+      this.pending.set(id, { resolve, reject });
+      this.proc.stdin.write(`${payload}\n`, "utf8", (error) => {
+        if (error) {
+          this.pending.delete(id);
+          reject(error);
+        }
+      });
+    });
+  }
+
+  start() {
+    if (this.proc && !this.proc.killed) return;
+    const engine = getEnginePath(this.root);
+    if (!fs.existsSync(engine)) {
+      throw new Error(`Falta el daemon Rust: ${engine}`);
     }
-    if (extensionConfig.model) {
-      env.GEMINI_MODEL = extensionConfig.model;
+
+    this.stderr = "";
+    this.proc = cp.spawn(engine, ["daemon", "--repo-root", this.root], {
+      cwd: this.root,
+      stdio: ["pipe", "pipe", "pipe"],
+      windowsHide: true,
+    });
+    this.reader = readline.createInterface({ input: this.proc.stdout });
+    this.reader.on("line", (line) => this.handleLine(line));
+    this.proc.stderr.on("data", (chunk) => {
+      this.stderr += chunk.toString();
+      if (this.stderr.length > 4000) this.stderr = this.stderr.slice(-4000);
+    });
+    this.proc.on("exit", () => {
+      const error = new Error(cleanMessage(this.stderr) || "El daemon Rust se cerro.");
+      for (const { reject } of this.pending.values()) reject(error);
+      this.pending.clear();
+      this.proc = undefined;
+      this.reader = undefined;
+    });
+  }
+
+  handleLine(line) {
+    let message;
+    try {
+      message = JSON.parse(line);
+    } catch {
+      return;
+    }
+    const pending = this.pending.get(message.id);
+    if (!pending) return;
+    this.pending.delete(message.id);
+    if (message.ok === false) {
+      pending.reject(new Error(message.error || "El daemon Rust devolvio error."));
+      return;
+    }
+    pending.resolve(message.result);
+  }
+
+  dispose() {
+    if (this.reader) this.reader.close();
+    if (this.proc) this.proc.kill();
+    this.proc = undefined;
+    this.reader = undefined;
+  }
+}
+
+function managerArgsToEngineRequest(args) {
+  const params = {};
+  let method = "catalog";
+  for (let index = 0; index < args.length; index += 1) {
+    const raw = String(args[index] || "");
+    if (!raw.startsWith("-")) continue;
+    const key = raw.replace(/^-+/, "");
+    const normalized = normalizeManagerArgName(key);
+    const next = args[index + 1];
+    const isFlag = next === undefined || String(next).startsWith("-");
+    const value = isFlag ? true : next;
+    if (!isFlag) index += 1;
+    if (normalized === "action") {
+      method = String(value).toLowerCase();
+    } else {
+      params[normalized] = value;
     }
   }
-  env.ESTUDIO_EXTENSION_CONFIG_PATH = extensionConfig.paths.localConfigPath;
-  env.ESTUDIO_TRANSLATE_INTRODUCTIONS = extensionConfig.features.translateIntroductions ? "1" : "0";
-  env.ESTUDIO_IMPORT_EXERCISM = extensionConfig.features.importExercism ? "1" : "0";
-  env.ESTUDIO_IMPORT_ALEJANDRO_GISTS = extensionConfig.features.importAlejandroGists ? "1" : "0";
-  return env;
+  return { method, params };
 }
 
-function runManagerJson(root, args, options = {}) {
-  return runManager(root, args, { jsonFile: true, env: options.env || getManagerEnvironment(root) }).then(parseJson);
+function normalizeManagerArgName(name) {
+  const map = {
+    Action: "action",
+    Provider: "provider",
+    Slug: "slug",
+    NewStatus: "newStatus",
+    File: "file",
+    ExercisePath: "exercisePath",
+    Force: "force",
+    Json: "json",
+  };
+  return map[name] || name.charAt(0).toLowerCase() + name.slice(1);
 }
 
-function parseJson(text) {
-  const cleaned = String(text || "").replace(/^\uFEFF/, "").trim();
-  const jsonText = extractJson(cleaned);
-  try {
-    return JSON.parse(jsonText);
-  } catch {
-    throw new Error(`El backend no devolvio JSON valido: ${cleaned.slice(0, 1200)}`);
-  }
-}
-
-function extractJson(text) {
-  if (!text) return text;
-  const starts = ["{", "["]
-    .map((char) => ({ char, index: text.indexOf(char) }))
-    .filter((item) => item.index >= 0)
-    .sort((a, b) => a.index - b.index);
-  if (starts.length === 0) return text;
-  const start = starts[0].index;
-  const close = text[start] === "{" ? "}" : "]";
-  const end = text.lastIndexOf(close);
-  return end > start ? text.slice(start, end + 1) : text.slice(start);
+function runEngineCommandInTerminal(result) {
+  const command = result.command || {};
+  const exe = command.exe;
+  const args = Array.isArray(command.args) ? command.args : [];
+  if (!exe) return;
+  const terminal = vscode.window.createTerminal(result.title || "Estudio Ejercicios");
+  terminal.show();
+  terminal.sendText([cmdQuote(exe), ...args.map(cmdQuote)].join(" "));
 }
 
 class ExerciseViewProvider {
@@ -441,12 +426,80 @@ async function importExercise(root, provider, slug) {
       }
 
       vscode.window.showInformationMessage(`Ejercicio importado: ${result.title}`);
+      await analyzeImportedExerciseIfEnabled(root, result.folder);
       if (result.openFile) {
         const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(result.openFile));
         await vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
       }
     },
   );
+}
+
+async function analyzeImportedExerciseIfEnabled(root, exerciseFolder) {
+  const extensionConfig = readExtensionConfig(root);
+  if (!extensionConfig.features?.aiExerciseAnalysis || !exerciseFolder) {
+    return;
+  }
+
+  try {
+    const autoApply =
+      extensionConfig.experimental?.applyHeaderPatchesAutomatically ||
+      extensionConfig.experimental?.appendInstructionHintsAutomatically;
+    const analysis = await analyzeExercise(root, exerciseFolder, extensionConfig, { dryRun: !autoApply });
+    showAiAnalysisOutput(formatAnalysisDryRun(analysis));
+    if (autoApply) {
+      vscode.window.showInformationMessage("Analisis IA experimental completado. Revisa el canal de salida de Estudio Socratico.");
+    } else {
+      vscode.window.showInformationMessage("Analisis IA experimental listo en modo dry-run. No se modificaron archivos.");
+    }
+  } catch (error) {
+    showAiAnalysisOutput(`Analisis IA experimental no disponible.\n\n${cleanMessage(error.message)}`);
+    vscode.window.showWarningMessage("La importacion termino, pero el analisis IA experimental no pudo ejecutarse.");
+  }
+}
+
+async function analyzeCurrentExerciseWithAi() {
+  const root = getWorkspaceRoot();
+  const extensionConfig = readExtensionConfig(root);
+  if (!extensionConfig.features?.aiExerciseAnalysis) {
+    const choice = await vscode.window.showInformationMessage(
+      "El analisis IA experimental esta apagado. Activa features.aiExerciseAnalysis en la config local.",
+      "Abrir config",
+    );
+    if (choice === "Abrir config") {
+      await openApiKeyConfig(root);
+    }
+    return;
+  }
+
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    vscode.window.showWarningMessage("Abre un archivo del ejercicio antes de analizarlo con IA.");
+    return;
+  }
+
+  await vscode.window.withProgress(
+    { location: vscode.ProgressLocation.Notification, title: "Analizando ejercicio con IA (experimental)", cancellable: false },
+    async () => {
+      const analysis = await analyzeExercise(root, editor.document.uri.fsPath, extensionConfig, { dryRun: true });
+      showAiAnalysisOutput(formatAnalysisDryRun(analysis));
+    },
+  );
+}
+
+function showAiTestGenerationStub() {
+  const root = getWorkspaceRoot();
+  const extensionConfig = readExtensionConfig(root);
+  showAiAnalysisOutput(`Estudio Socratico 2.5 - Tests IA experimental\n\n${describeAiTestGeneration(extensionConfig)}`);
+}
+
+function showAiAnalysisOutput(text) {
+  if (!aiOutputChannel) {
+    aiOutputChannel = vscode.window.createOutputChannel("Estudio Socratico IA");
+  }
+  aiOutputChannel.clear();
+  aiOutputChannel.appendLine(text);
+  aiOutputChannel.show(true);
 }
 
 async function submitExercise(root, folder) {
@@ -508,23 +561,17 @@ function runInTerminal(root, action, targetPath) {
   const terminal = vscode.window.createTerminal(terminalName);
   terminal.show();
   terminal.sendText([
-    "powershell",
-    "-NoProfile",
-    "-ExecutionPolicy",
-    "Bypass",
-    "-File",
-    psQuote(getManagerPath(root)),
-    "-RepoRoot",
-    psQuote(root),
-    "-Action",
+    cmdQuote(getEnginePath(root)),
     action,
-    "-ExercisePath",
-    psQuote(targetPath),
+    "--repo-root",
+    cmdQuote(root),
+    "--exercise-path",
+    cmdQuote(targetPath),
   ].join(" "));
 }
 
-function psQuote(value) {
-  return `'${String(value).replace(/'/g, "''")}'`;
+function cmdQuote(value) {
+  return `"${String(value).replace(/"/g, '\\"')}"`;
 }
 
 function cleanMessage(message) {

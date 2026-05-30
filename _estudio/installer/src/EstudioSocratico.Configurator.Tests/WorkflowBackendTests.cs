@@ -652,7 +652,7 @@ public sealed class WorkflowBackendTests
     }
 
     [Fact]
-    public async Task SmokeTest_NonInteractive_DoesNotWaitForKey()
+    public async Task SmokeTest_UsesNonInteractiveModeDuringInstallerValidation()
     {
         var workspace = CreateSmokeWorkspace();
         var paths = new AppPaths(repoRoot: workspace, localAppDataRoot: Path.Combine(workspace, "LocalAppData"));
@@ -664,6 +664,9 @@ public sealed class WorkflowBackendTests
         var build = Assert.Single(runner.Specs, spec => spec.FileName.EndsWith("build.cmd", StringComparison.OrdinalIgnoreCase));
         Assert.Contains("--installer-smoke", build.Arguments);
         Assert.Contains("--non-interactive", build.Arguments);
+        Assert.Equal("1", build.Environment["ESTUDIO_NONINTERACTIVE"]);
+        Assert.Equal("1", build.Environment["ESTUDIO_NON_INTERACTIVE"]);
+        Assert.Equal("1", build.Environment["ESTUDIO_SKIP_PAUSE"]);
     }
 
     [Fact]
@@ -698,14 +701,50 @@ public sealed class WorkflowBackendTests
     }
 
     [Fact]
-    public void SmokeTest_InteractiveTailDoesNotCauseFalseFailure()
+    public async Task SmokeTest_TreatsProcessReturnedZeroAsSuccessEvenIfCommandTimesOutAfterOutput()
+    {
+        var workspace = CreateSmokeWorkspace();
+        var paths = new AppPaths(repoRoot: workspace, localAppDataRoot: Path.Combine(workspace, "LocalAppData"));
+        var runner = new RecordingRunner(spec => RecordingRunner.Result(
+            spec,
+            -1,
+            "[OK] Compilacion exitosa -> Ejecutando probe.exe en esta terminal...\nok\nProcess returned 0 (0x0)\nPress any key to continue.",
+            "Command timed out.",
+            timedOut: true));
+        var engine = new ConfiguratorEngine(paths, runner);
+
+        var summary = await engine.RunSmokeTestAsync(workspace);
+
+        Assert.True(summary.Succeeded);
+        Assert.Equal("passed", summary.CurrentState!.FinalReadiness.SmokeTestStatus);
+    }
+
+    [Fact]
+    public async Task UpdateInstallation_DoesNotFailWhenF9OutputShowsSuccess()
+    {
+        var workspace = CreateSmokeWorkspace();
+        var paths = new AppPaths(repoRoot: workspace, localAppDataRoot: Path.Combine(workspace, "LocalAppData"));
+        var logManager = new LogManager(paths);
+        var runner = new RecordingRunner(spec => RecordingRunner.Result(
+            spec,
+            -1,
+            "[OK] Compilacion exitosa -> Ejecutando probe.exe en esta terminal...\nok\n",
+            "Command timed out.",
+            timedOut: true));
+        var manager = new TelemetryCompatibilityManager(runner, logManager);
+
+        await manager.ValidateBuildFlowAsync(workspace, CancellationToken.None);
+    }
+
+    [Fact]
+    public void SmokeTest_TimeoutAfterSuccessfulProbeOutput_IsStillSuccess()
     {
         var result = new CommandResult
         {
             Spec = new CommandSpec { FileName = "build.cmd" },
             ExitCode = -1,
             TimedOut = true,
-            StandardOutput = "[OK] Compilacion exitosa -> Ejecutando probe.exe en esta terminal...\nok\nProcess returned 0 (0x0)\nPress any key to continue.",
+            StandardOutput = "[OK] Compilacion exitosa -> Ejecutando probe.exe en esta terminal...\nok\n",
             StandardError = "Command timed out."
         };
 
@@ -736,7 +775,7 @@ public sealed class WorkflowBackendTests
         process.StartInfo.ArgumentList.Add("--installer-smoke");
         process.StartInfo.ArgumentList.Add("--non-interactive");
         process.StartInfo.Environment["ESTUDIO_INSTALLER_SMOKE"] = "1";
-        process.StartInfo.Environment["ESTUDIO_NONINTERACTIVE"] = "1";
+        process.StartInfo.Environment["ESTUDIO_NON_INTERACTIVE"] = "1";
         process.StartInfo.Environment["ESTUDIO_SKIP_PAUSE"] = "1";
         process.StartInfo.Environment["ESTUDIO_SKIP_COMMIT"] = "1";
 
@@ -938,13 +977,14 @@ public sealed class WorkflowBackendTests
             return Task.FromResult(handler(spec));
         }
 
-        public static CommandResult Result(CommandSpec spec, int exitCode, string output = "", string error = "") => new()
+        public static CommandResult Result(CommandSpec spec, int exitCode, string output = "", string error = "", bool timedOut = false) => new()
         {
             Spec = spec,
             ExitCode = exitCode,
             StandardOutput = output,
             StandardError = error,
-            Duration = TimeSpan.FromMilliseconds(1)
+            Duration = TimeSpan.FromMilliseconds(1),
+            TimedOut = timedOut
         };
     }
 

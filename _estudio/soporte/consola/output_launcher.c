@@ -345,6 +345,7 @@ int main(int argc, char **argv)
     }
 
     if (env_flag_enabled("ESTUDIO_NONINTERACTIVE") ||
+        env_flag_enabled("ESTUDIO_NON_INTERACTIVE") ||
         env_flag_enabled("ESTUDIO_SKIP_PAUSE") ||
         env_flag_enabled("ESTUDIO_INSTALLER_SMOKE")) {
         non_interactive = 1;

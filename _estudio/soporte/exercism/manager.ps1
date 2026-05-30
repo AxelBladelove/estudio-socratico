@@ -1453,7 +1453,7 @@ function Get-TemplateExerciseMarkdown {
         return (Select-InstructionMarkdown -Markdown ([string]$Exercise.instructionMarkdown))
     }
 
-    throw "El ejercicio '$($Exercise.title)' no tiene instrucciones disponibles. Ejecuta npm run alejandro:gists:manifest para regenerar el catalogo."
+            throw "El ejercicio '$($Exercise.title)' no tiene instrucciones disponibles. Ejecuta bun run alejandro:gists:manifest para regenerar el catalogo."
 }
 
 function Resolve-ExerciseRoot {

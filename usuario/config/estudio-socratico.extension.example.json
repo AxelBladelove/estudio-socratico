@@ -5,6 +5,17 @@
   "features": {
     "translateIntroductions": true,
     "importExercism": true,
-    "importAlejandroGists": true
+    "importAlejandroGists": true,
+    "aiExerciseAnalysis": false,
+    "opencodeIntegration": false,
+    "aiGeneratedTests": false,
+    "autoGitSync": false
+  },
+  "experimental": {
+    "aiExerciseAnalysisProvider": "gemini",
+    "opencodeCommand": "opencode",
+    "preferredFreeModelStrategy": "best-for-c-exercises",
+    "applyHeaderPatchesAutomatically": false,
+    "appendInstructionHintsAutomatically": false
   }
 }

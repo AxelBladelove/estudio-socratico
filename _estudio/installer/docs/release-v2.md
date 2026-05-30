@@ -50,8 +50,8 @@ El workflow de CI/CD configurado en `.github/workflows/release-installer.yml` au
 
 ### Flujo de Ejecución (Jobs)
 1. **Clonado del Repositorio:** Descarga el código en un ejecutor `windows-latest`.
-2. **Setup de Entornos:** Configura .NET 10 y Node.js 20.
-3. **Build Frontend:** Instala dependencias con `npm ci` y compila la interfaz React (`npm run build`). Copia los archivos estáticos al subdirectorio `wwwroot` de la aplicación WinUI.
+2. **Setup de Entornos:** Configura .NET 10 y Bun.
+3. **Build Frontend:** Instala dependencias con `bun ci` y compila la interfaz React (`bun run build`). Copia los archivos estáticos al subdirectorio `wwwroot` de la aplicación WinUI.
 4. **Restauración y Tests:** Ejecuta `dotnet restore` y pasa la suite de pruebas unitarias (`dotnet test`).
 5. **Compilación y Publicación .NET:** Compila la aplicación WinUI (`EstudioSocratico.Configurator.App`) y el worker con privilegios (`EstudioSocratico.Configurator.Elevated`) como aplicaciones self-contained para `win-x64`.
 6. **Compilación WiX:** Compila el paquete MSI y el cargador de arranque Burn Bundle (`Estudio-Socratico-Setup-v*.exe`).

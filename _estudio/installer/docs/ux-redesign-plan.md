@@ -319,7 +319,7 @@ Welcome → Diagnosis → Plan → [GitHub] → [Exercism] → Progress → Comp
 ### Fase 4: Integration & packaging
 1. Add `ui/dist/` copy to publish pipeline.
 2. Update MSI to include `ui/dist/`.
-3. Update CI workflow: `npm ci && npm run build` before dotnet publish.
+3. Update CI workflow: `bun ci && bun run build` before dotnet publish.
 4. Update `.gitignore` for `ui/node_modules/`, `ui/dist/`.
 5. Build and test full pipeline.
 

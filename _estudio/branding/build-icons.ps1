@@ -23,14 +23,27 @@ New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 New-Item -ItemType Directory -Path $tempUserDir -Force | Out-Null
 
 $nodePath = (Get-Command node -ErrorAction Stop).Source
+$bunCommand = Get-Command bun -ErrorAction SilentlyContinue
 $sharpToolDir = Join-Path $env:TEMP "estudio-branding-tools"
 $sharpModulesPath = Join-Path $sharpToolDir "node_modules"
 if (-not (Test-Path (Join-Path $sharpModulesPath "sharp"))) {
     New-Item -ItemType Directory -Force -Path $sharpToolDir | Out-Null
     if (-not (Test-Path (Join-Path $sharpToolDir "package.json"))) {
-        npm init -y --prefix $sharpToolDir | Out-Null
+        @"
+{
+  "private": true,
+  "trustedDependencies": [
+    "sharp"
+  ]
+}
+"@ | Set-Content -LiteralPath (Join-Path $sharpToolDir "package.json") -Encoding utf8
     }
-    npm install --prefix $sharpToolDir sharp@0.33.5 | Out-Null
+    if ($bunCommand) {
+        & $bunCommand.Source add sharp@0.33.5 --cwd $sharpToolDir | Out-Null
+    } else {
+        Write-Warning "Bun no esta disponible; fallback puntual a npm para herramienta temporal de branding."
+        npm install --prefix $sharpToolDir sharp@0.33.5 | Out-Null
+    }
 }
 
 $sharpRenderScriptPath = Join-Path $tempDir "render-svg.cjs"

@@ -34,9 +34,10 @@ Coloca esta carpeta dentro de:
 Luego adapta el script `scripts/build-ui.bat` para ejecutar:
 
 ```bat
+cd /d <repo>
+bun ci
 cd /d _estudio\installer\ui
-npm install
-npm run build
+bun run build
 xcopy /E /I /Y dist ..\src\EstudioSocratico.Configurator.App\wwwroot
 ```
 

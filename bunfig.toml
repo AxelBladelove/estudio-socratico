@@ -1,0 +1,3 @@
+[install]
+# 3 days in seconds; Bun applies this only when resolving new package versions.
+minimumReleaseAge = 259200

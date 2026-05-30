@@ -38,12 +38,12 @@ Cualquier cambio hecho en este JSON sobreescribirá silenciosamente el resultado
 
 ## 7. Actualización de Gists
 
-Después de aplicar los resultados semánticos a los ejercicios locales (con `npm run alejandro:semantic:apply`), los archivos `metadata.json` y `icon.svg` locales cambiarán.
+Después de aplicar los resultados semánticos a los ejercicios locales (con `bun run alejandro:semantic:apply`), los archivos `metadata.json` y `icon.svg` locales cambiarán.
 Debes re-publicar los ejercicios a GitHub ejecutando:
 
 \`\`\`bash
-npm run alejandro:gists:publish
-npm run alejandro:gists:manifest
+bun run alejandro:gists:publish
+bun run alejandro:gists:manifest
 \`\`\`
 
 ## 8. Casos de Baja Confianza

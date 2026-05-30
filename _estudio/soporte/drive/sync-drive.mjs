@@ -98,12 +98,12 @@ function printHelp() {
   console.log(`Estudio Socratico Drive Sync
 
 Uso:
-  npm run drive:auth
-  npm run drive:check
-  npm run drive:generate -- [--provider alejandro] [--allow-fallback]
-  npm run drive:sync -- [--provider alejandro] [--dry-run] [--keep-local-text] [--allow-fallback]
-  npm run drive:generate:alejandro
-  npm run drive:sync:alejandro
+  bun run drive:auth
+  bun run drive:check
+  bun run drive:generate -- [--provider alejandro] [--allow-fallback]
+  bun run drive:sync -- [--provider alejandro] [--dry-run] [--keep-local-text] [--allow-fallback]
+  bun run drive:generate:alejandro
+  bun run drive:sync:alejandro
 
 Credenciales locales:
   .estudio-drive/oauth-client.json
@@ -276,13 +276,13 @@ async function tokenRequest(body) {
 async function getAuthorizedClient() {
   const client = await readOAuthClient();
   if (!existsSync(tokenPath)) {
-    throw new Error("No hay token local de Drive. Ejecuta npm run drive:auth.");
+    throw new Error("No hay token local de Drive. Ejecuta bun run drive:auth.");
   }
 
   let token = await readJson(tokenPath);
   if (!token.access_token || Date.now() > Number(token.expires_at || 0) - 60000) {
     if (!token.refresh_token) {
-      throw new Error("El token local no tiene refresh_token. Ejecuta npm run drive:auth otra vez.");
+      throw new Error("El token local no tiene refresh_token. Ejecuta bun run drive:auth otra vez.");
     }
     const refreshed = await refreshAccessToken(client, token.refresh_token);
     token = {
@@ -503,7 +503,7 @@ async function syncAll(options) {
     console.log("[INFO] Los omitidos no tenian enunciado local.");
     console.log("[INFO] Coloca Markdown en .estudio-drive/source/<provider>/<slug>.md o usa --allow-fallback.");
     if (options.provider === "alejandro" && !options.allowFallback) {
-      console.log("[INFO] Para publicar paquetes provisionales de Alejandro: npm run drive:sync:alejandro");
+      console.log("[INFO] Para publicar paquetes provisionales de Alejandro: bun run drive:sync:alejandro");
     }
   }
   if (!options.keepLocalText && !options.dryRun) {

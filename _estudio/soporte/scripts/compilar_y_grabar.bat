@@ -17,6 +17,7 @@ set "SCRIPT_DIR=%~dp0"
 set "RUN_INLINE=%ESTUDIO_INLINE_RUN%"
 set "INSTALLER_SMOKE=%ESTUDIO_INSTALLER_SMOKE%"
 set "NON_INTERACTIVE=%ESTUDIO_NONINTERACTIVE%"
+if not defined NON_INTERACTIVE set "NON_INTERACTIVE=%ESTUDIO_NON_INTERACTIVE%"
 set "SKIP_PAUSE=%ESTUDIO_SKIP_PAUSE%"
 set "INPUT_PATH="
 
@@ -32,6 +33,7 @@ if /i "%~1"=="--installer-smoke" (
     set "ESTUDIO_INSTALLER_SMOKE=1"
     set "NON_INTERACTIVE=1"
     set "ESTUDIO_NONINTERACTIVE=1"
+    set "ESTUDIO_NON_INTERACTIVE=1"
     set "SKIP_PAUSE=1"
     set "ESTUDIO_SKIP_PAUSE=1"
     set "ESTUDIO_SKIP_COMMIT=1"
@@ -42,6 +44,7 @@ if /i "%~1"=="--installer-smoke" (
 if /i "%~1"=="--non-interactive" (
     set "NON_INTERACTIVE=1"
     set "ESTUDIO_NONINTERACTIVE=1"
+    set "ESTUDIO_NON_INTERACTIVE=1"
     set "SKIP_PAUSE=1"
     set "ESTUDIO_SKIP_PAUSE=1"
     set "RUN_INLINE=1"
@@ -114,7 +117,7 @@ set "OUTPUT_DIR=%RUNTIME_DIR%\builds"
 set "LATEST_EXE_FILE=%RUNTIME_DIR%\latest_exe.txt"
 set "RUN_LOCK_FILE=%RUNTIME_DIR%\run.lock"
 set "CONSOLE_SUPPORT_DIR=%REPO_ROOT%\_estudio\soporte\consola"
-set "EXERCISM_MANAGER=%REPO_ROOT%\_estudio\soporte\exercism\manager.ps1"
+set "ESTUDIO_ENGINE=%REPO_ROOT%\_estudio\soporte\engine\bin\estudio-engine.exe"
 set "BUILD_CONTEXT_SCRIPT=%SCRIPT_DIR%resolve_build_context.ps1"
 set "FINALIZE_SCRIPT=%SCRIPT_DIR%finalizar_intento.bat"
 set "OUTPUT_LAUNCHER_SRC=%CONSOLE_SUPPORT_DIR%\output_launcher.c"
@@ -134,8 +137,8 @@ if not exist "%RUNTIME_DIR%\" mkdir "%RUNTIME_DIR%\"
 if not exist "%OUTPUT_DIR%\" mkdir "%OUTPUT_DIR%\"
 
 set "IS_EXERCISM=0"
-if exist "%EXERCISM_MANAGER%" (
-    for /f "usebackq delims=" %%V in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%EXERCISM_MANAGER%" -Action detect -RepoRoot "%REPO_ROOT%" -File "%ARCHIVO_C%"`) do set "%%V"
+if exist "%ESTUDIO_ENGINE%" (
+    for /f "usebackq delims=" %%V in (`"%ESTUDIO_ENGINE%" detect --repo-root "%REPO_ROOT%" --file "%ARCHIVO_C%"`) do set "%%V"
 )
 
 if "%IS_EXERCISM%"=="1" (
@@ -155,7 +158,7 @@ if "%IS_EXERCISM%"=="1" (
     >> "!RUNNER_PS1!" echo $Host.UI.RawUI.WindowTitle = 'Exercism Tests - Estudio Socratico'
     >> "!RUNNER_PS1!" echo try {
     >> "!RUNNER_PS1!" echo     Set-Location -LiteralPath '%REPO_ROOT%'
-    >> "!RUNNER_PS1!" echo     powershell -NoProfile -ExecutionPolicy Bypass -File '%EXERCISM_MANAGER%' -Action test -RepoRoot '%REPO_ROOT%' -File '%ARCHIVO_C%'
+    >> "!RUNNER_PS1!" echo     ^& '%ESTUDIO_ENGINE%' test --repo-root '%REPO_ROOT%' --file '%ARCHIVO_C%'
     >> "!RUNNER_PS1!" echo     $code = $LASTEXITCODE
     >> "!RUNNER_PS1!" echo     Write-Host ''
     >> "!RUNNER_PS1!" echo     Write-Host ^('Process returned {0} ^(0x{0:X}^)' -f $code^)
@@ -201,7 +204,7 @@ if "%IS_ESTUDIO_VALIDATE%"=="1" (
     >> "!RUNNER_PS1!" echo $Host.UI.RawUI.WindowTitle = 'Validacion - Estudio Socratico'
     >> "!RUNNER_PS1!" echo try {
     >> "!RUNNER_PS1!" echo     Set-Location -LiteralPath '%REPO_ROOT%'
-    >> "!RUNNER_PS1!" echo     powershell -NoProfile -ExecutionPolicy Bypass -File '%EXERCISM_MANAGER%' -Action validate -RepoRoot '%REPO_ROOT%' -File '%ARCHIVO_C%'
+    >> "!RUNNER_PS1!" echo     ^& '%ESTUDIO_ENGINE%' validate --repo-root '%REPO_ROOT%' --file '%ARCHIVO_C%'
     >> "!RUNNER_PS1!" echo     $code = $LASTEXITCODE
     >> "!RUNNER_PS1!" echo     Write-Host ''
     >> "!RUNNER_PS1!" echo     Write-Host ^('Process returned {0} ^(0x{0:X}^)' -f $code^)

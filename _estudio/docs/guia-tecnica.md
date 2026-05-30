@@ -109,8 +109,8 @@ Comandos de mantenedor:
 
 ```powershell
 dotnet restore _estudio/installer/EstudioSocratico.Installer.sln
-npm run installer:test
-npm run installer:build
+bun run installer:test
+bun run installer:build
 ```
 
 El instalador:
@@ -207,10 +207,10 @@ publico.
 Comandos de mantenedor:
 
 ```bat
-npm run drive:auth
-npm run drive:check
-npm run drive:generate
-npm run drive:sync
+bun run drive:auth
+bun run drive:check
+bun run drive:generate
+bun run drive:sync
 ```
 
 Archivos locales ignorados por Git:
@@ -277,10 +277,10 @@ Fuente:
 _estudio/soporte/vscode/estudio-exercism/
 ```
 
-Durante instalacion, `_estudio/installer/src/main/core/vscode.js` ejecuta:
+Durante instalacion, el flujo 2.5 debe usar Bun para la extension:
 
-1. `npm ci` dentro de la extension;
-2. `npx vsce package --no-dependencies --allow-missing-repository --out ...`;
+1. `bun ci` desde la raiz del workspace;
+2. `bun run package` o `bunx --bun @vscode/vsce package --no-dependencies --allow-missing-repository --out ...`;
 3. `code --install-extension _estudio/soporte/runtime/vscode/estudio-exercism.vsix --force`.
 
 La extension aporta comandos:
@@ -403,7 +403,7 @@ Modelo recomendado:
 Para publicar una version del framework:
 
 1. prepara cambios en una rama limpia;
-2. verifica `npm run check` y `npm run installer:build`;
+2. verifica `bun run check` y `bun run installer:build`;
 3. mergea o empuja a `main`;
 4. crea y publica un tag semantico (`v2.0.0`, por ejemplo);
 5. deja que GitHub Actions adjunte `Estudio-Socratico-Setup-v2.0.0-x64.exe`
