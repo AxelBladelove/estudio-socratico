@@ -5,6 +5,7 @@
   "version": "2.0.16",
   "publisher": "estudio-socratico",
   "license": "MIT",
+  "packageManager": "bun@1.3.13",
   "icon": "assets/logo-vscode-extension.png",
   "engines": {
     "vscode": "^1.85.0"
@@ -15,6 +16,8 @@
     "onCommand:estudioExercism.openPanel",
     "onCommand:estudioExercism.openApiKeyConfig",
     "onCommand:estudioExercism.revealApiKeyConfig",
+    "onCommand:estudioExercism.analyzeExerciseWithAi",
+    "onCommand:estudioExercism.generateAiLogicTests",
     "onUri"
   ],
   "categories": [
@@ -51,9 +54,9 @@
       },
       {
         "command": "estudioExercism.openPanel",
-        "title": "Abrir ejercicios",
+        "title": "Open",
         "category": "Estudio Socratico",
-        "icon": "$(book)"
+        "icon": "assets/logo-vscode-activity.svg"
       },
       {
         "command": "estudioExercism.testCurrent",
@@ -80,6 +83,16 @@
         "command": "estudioExercism.revealApiKeyConfig",
         "title": "Revelar configuracion de API Key",
         "category": "Estudio Socratico"
+      },
+      {
+        "command": "estudioExercism.analyzeExerciseWithAi",
+        "title": "Analizar ejercicio con IA (experimental)",
+        "category": "Estudio Socratico"
+      },
+      {
+        "command": "estudioExercism.generateAiLogicTests",
+        "title": "Generar tests de logica con IA (experimental)",
+        "category": "Estudio Socratico"
       }
     ],
     "keybindings": [
@@ -88,11 +101,32 @@
         "key": "f9",
         "when": "editorTextFocus && resourceLangId == c"
       }
-    ]
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "estudioExercism.openPanel",
+          "when": "true",
+          "group": "navigation@98"
+        },
+        {
+          "command": "estudioExercism.testCurrent",
+          "when": "resourceLangId == c",
+          "group": "navigation@99"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "estudioExercism.openPanel",
+          "when": "view.estudioExercism.view",
+          "group": "navigation"
+        }
+      ]
+    }
   },
   "scripts": {
-    "compile": "node --check extension.js",
-    "package": "vsce package --no-dependencies --allow-missing-repository"
+    "compile": "bun scripts/check-syntax.mjs",
+    "package": "bunx --bun @vscode/vsce package --no-dependencies --allow-missing-repository"
   },
   "devDependencies": {
     "@vscode/vsce": "^2.15.0"
