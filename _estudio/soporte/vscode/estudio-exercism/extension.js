@@ -738,7 +738,7 @@ function renderCatalogHtml(catalog, extensionConfig, apiKeyNotice, fundamentals 
           <article class="rootCard" data-view="fundamentals-categories" tabindex="0" role="button"><div class="fallbackIcon">EC</div><div><h2>Ejercicios por categoria</h2><p>Ejercicios puros y combinados con OR/AND.</p></div></article>
           <article class="rootCard" data-view="fundamentals-projects" tabindex="0" role="button"><div class="fallbackIcon">AP</div><div><h2>Asignaciones y proyectos</h2><p>Practica integradora filtrable.</p></div></article>
           <article class="rootCard" data-view="fundamentals-quizzes" tabindex="0" role="button"><div class="fallbackIcon">QT</div><div><h2>Quizzes teoricos</h2><p>Preguntas cortas por concepto.</p></div></article>
-          <article class="rootCard" data-view="fundamentals-route" tabindex="0" role="button"><div class="fallbackIcon">RC</div><div><h2>Ruta C</h2><p>Preview progresivo; vista visual despues.</p></div></article>
+          <article class="rootCard" data-view="fundamentals-route" tabindex="0" role="button"><div class="fallbackIcon">RC</div><div><h2>Ruta C</h2><p>Dashboard visual de modulos y progreso.</p></div></article>
         </div>
       </section>
 
@@ -749,7 +749,6 @@ function renderCatalogHtml(catalog, extensionConfig, apiKeyNotice, fundamentals 
       </section>
 
       <section class="viewSection hidden" data-view-section="fundamentals-route">
-        <div class="subhead"><button data-view="fundamentals">Volver</button><h2>Ruta C</h2></div>
         ${routeHtml}
       </section>
 
@@ -842,17 +841,25 @@ function normalizeFundamentalsItems(items) {
 
 function renderFundamentalsRoute(route) {
   const modules = route.modules || [];
-  const firstActive = modules.find((module) => module.unlocked) || modules[0] || {};
-  return `<section class="routePath routeRoadmap">
-    <div class="routeTabs" aria-label="Modulos de Ruta C">
-      ${modules.map((module) => {
-        const theme = routeTheme(module);
-        return `<button class="routeTab ${module.id === firstActive.id ? "active" : ""}" data-route-target="${escapeHtml(module.id || "")}" style="--route-accent:${theme.accent};--route-glow:${theme.glow};">
-          <span>${escapeHtml(module.title || "Modulo")}</span>
-        </button>`;
-      }).join("")}
+  return `<section class="routeDashboard">
+    <button class="routeBack" data-view="fundamentals" aria-label="Volver a Fundamentos C">← Fundamentos C</button>
+    <header class="routeDashboardHeader">
+      <div class="routeBrandMark">&lt;/&gt;</div>
+      <div>
+        <h1>Estudio Socrático – Ruta C</h1>
+        <p>Ruta visual de Fundamentos C</p>
+      </div>
+    </header>
+    <div class="routeModuleGrid">
+      ${modules.map((module, index) => renderRouteModuleCard(module, index === 0)).join("")}
     </div>
-    ${modules.map((module) => renderRouteModuleCard(module, module.id === firstActive.id)).join("")}
+    <footer class="routeDashboardLegend" aria-label="Estados de Ruta C">
+      <span><i class="legendNode completed">✓</i>Completado</span>
+      <span><i class="legendNode current">&lt;/&gt;</i>Actual</span>
+      <span><i class="legendNode locked">🔒</i>Bloqueado</span>
+      <span><i class="legendNode challenge">★</i>Reto / Especial</span>
+      <span><i class="routeLegendLine"></i>Ruta de aprendizaje</span>
+    </footer>
   </section>`;
 }
 
@@ -866,9 +873,19 @@ function renderRouteModuleCard(module, active) {
   const next = decorated.find((node) => node.routeState === "current") || decorated.find((node) => node.routeState === "available") || decorated[0];
   const defaultDetail = next || decorated[0] || {};
   return `
-    <article class="routeModuleCard ${active ? "active" : "hidden"} ${module.unlocked ? "" : "locked"} theme-${escapeHtml(theme.name)}"
+    <article class="routeModuleCard ${active ? "focused" : ""} ${module.unlocked ? "" : "locked"} theme-${escapeHtml(theme.name)}"
       data-route-module="${escapeHtml(module.id || "")}"
       style="--route-accent:${theme.accent};--route-accent-2:${theme.accent2};--route-glow:${theme.glow};">
+      <div class="routeWindowBar">
+        <span class="windowDot red"></span>
+        <span class="windowDot yellow"></span>
+        <span class="windowDot green"></span>
+        <strong>Estudio Socrático – Ruta C</strong>
+        <div>
+          <button disabled>Progreso</button>
+          <button disabled>Guía</button>
+        </div>
+      </div>
       <header class="routeHero">
         <div>
           <span class="routeEyebrow">Modulo ${escapeHtml(String(module.order || ""))}</span>
@@ -987,11 +1004,12 @@ function snakePath(count) {
 
 function routeTheme(module) {
   const concepts = ((module.concepts || []).join(" ") + " " + (module.title || "")).toLowerCase();
+  if (concepts.includes("control") || concepts.includes("cond") || concepts.includes("loop") || concepts.includes("ciclo")) return { name: "blue", accent: "#1e9bff", accent2: "#1469ff", glow: "rgba(30,155,255,.34)" };
+  if (concepts.includes("function") || concepts.includes("funcion") || concepts.includes("arreglo") || concepts.includes("array")) return { name: "deepblue", accent: "#2f7dff", accent2: "#1b4ed8", glow: "rgba(47,125,255,.32)" };
   if (concepts.includes("string") || concepts.includes("cadena")) return { name: "teal", accent: "#12d6ad", accent2: "#0aa084", glow: "rgba(18,214,173,.36)" };
-  if (concepts.includes("matriz") || concepts.includes("matrix") || concepts.includes("array") || concepts.includes("arreglo")) return { name: "blue", accent: "#1e9bff", accent2: "#1469ff", glow: "rgba(30,155,255,.34)" };
+  if (concepts.includes("matriz") || concepts.includes("matrix")) return { name: "blue", accent: "#1e9bff", accent2: "#1469ff", glow: "rgba(30,155,255,.34)" };
   if (concepts.includes("memoria") || concepts.includes("pointer") || concepts.includes("puntero")) return { name: "orange", accent: "#ff980e", accent2: "#f35c00", glow: "rgba(255,152,14,.34)" };
   if (concepts.includes("struct") || concepts.includes("archivo")) return { name: "purple", accent: "#a970ff", accent2: "#6f3bdc", glow: "rgba(169,112,255,.34)" };
-  if (concepts.includes("cond") || concepts.includes("loop") || concepts.includes("ciclo")) return { name: "orange", accent: "#ffb02e", accent2: "#f06d00", glow: "rgba(255,176,46,.28)" };
   return { name: "teal", accent: "#18c7bd", accent2: "#2f6bff", glow: "rgba(24,199,189,.28)" };
 }
 
@@ -1380,11 +1398,56 @@ function baseHtml(body) {
     .rootCard { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 16px; align-items: center; border: 1px solid var(--border); background: var(--card); border-radius: 8px; padding: 18px; box-shadow: var(--shadow); cursor: pointer; min-height: 112px; }
     .rootCard:hover, .rootCard:focus-visible { border-color: var(--accent); outline: none; background: var(--cardHover); }
     .subhead { display: flex; align-items: center; gap: 12px; margin: 8px 0 14px; }
-    .routePath { display: grid; gap: 14px; }
-    .routeRoadmap { padding: 4px 0 18px; }
-    .routeTabs { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 10px; }
-    .routeTab { flex: 0 0 auto; border-color: color-mix(in srgb, var(--route-accent) 50%, var(--border)); background: color-mix(in srgb, var(--route-accent) 11%, var(--panel)); color: var(--fg); }
-    .routeTab.active { border-color: var(--route-accent); box-shadow: 0 0 20px var(--route-glow); }
+    body.routeDashboardMode {
+      --fg: #f4fbff;
+      --muted: #a7b6c5;
+      --soft: #8595a6;
+      --border: rgba(116, 225, 235, .16);
+      --button: rgba(8, 31, 43, .78);
+      --buttonFg: #f4fbff;
+      --panel: rgba(5, 20, 30, .82);
+      background:
+        radial-gradient(circle at 50% 0%, rgba(33, 223, 213, .10), transparent 36%),
+        linear-gradient(rgba(255,255,255,.028) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.028) 1px, transparent 1px),
+        #06131a;
+      background-size: auto, 32px 32px, 32px 32px, auto;
+    }
+    body.routeDashboardMode .shell { width: min(100%, 1280px); padding: 14px 18px 26px; }
+    body.routeDashboardMode .topbar,
+    body.routeDashboardMode .shell > .notice { display: none; }
+    .routeDashboard {
+      position: relative;
+      min-height: calc(100vh - 28px);
+      padding: 2px 0 18px;
+      color: #f4fbff;
+    }
+    .routeBack {
+      position: sticky;
+      top: 8px;
+      z-index: 5;
+      border-color: rgba(38, 224, 213, .26);
+      background: rgba(5, 24, 33, .74);
+      color: #cceff1;
+      backdrop-filter: blur(10px);
+    }
+    .routeDashboardHeader {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      text-align: center;
+      margin: 0 auto 16px;
+    }
+    .routeDashboardHeader h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.1;
+      color: #f7fbff;
+    }
+    .routeDashboardHeader p { margin: 5px 0 0; color: #8ea1b5; font-size: 14px; }
+    .routeBrandMark { color: #18d7c2; font-weight: 900; font-size: 28px; text-shadow: 0 0 20px rgba(24, 215, 194, .45); }
+    .routeModuleGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
     .routeModuleCard {
       position: relative;
       overflow: hidden;
@@ -1395,7 +1458,36 @@ function baseHtml(body) {
         radial-gradient(circle at 74% 40%, var(--route-glow), transparent 34%),
         linear-gradient(135deg, color-mix(in srgb, var(--route-accent) 10%, #06131a), #07131c 62%, #041017);
       box-shadow: 0 22px 56px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.035);
-      min-height: 540px;
+      min-height: 382px;
+      transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+    }
+    .routeModuleCard:hover,
+    .routeModuleCard.focused {
+      border-color: color-mix(in srgb, var(--route-accent) 70%, white);
+      box-shadow: 0 24px 58px rgba(0,0,0,.34), 0 0 30px var(--route-glow), inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+    .routeModuleCard:hover { transform: translateY(-1px); }
+    .routeWindowBar {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: auto auto auto minmax(0, 1fr) auto;
+      gap: 6px;
+      align-items: center;
+      height: 28px;
+      padding: 0 12px;
+      color: #9badbd;
+      font-size: 11px;
+    }
+    .routeWindowBar strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; font-weight: 650; }
+    .routeWindowBar div { display: flex; gap: 5px; }
+    .routeWindowBar button { padding: 4px 8px; font-size: 9px; text-transform: uppercase; color: #9badbd; border-color: rgba(255,255,255,.08); background: rgba(255,255,255,.03); }
+    .windowDot { width: 8px; height: 8px; border-radius: 999px; display: inline-block; }
+    .windowDot.red { background: #ff625a; }
+    .windowDot.yellow { background: #ffbd2e; }
+    .windowDot.green { background: #27c840; }
+    .routeModuleCard.locked {
+      opacity: .82;
     }
     .routeModuleCard::before {
       content: "";
@@ -1413,19 +1505,19 @@ function baseHtml(body) {
       z-index: 1;
       display: flex;
       justify-content: space-between;
-      gap: 14px;
+      gap: 10px;
       align-items: center;
-      margin: 18px;
-      padding: 18px 20px;
+      margin: 6px 16px 10px;
+      padding: 13px 16px;
       border-radius: 10px;
       background: linear-gradient(135deg, var(--route-accent), var(--route-accent-2));
       color: white;
       box-shadow: 0 12px 34px var(--route-glow);
     }
-    .routeHero h3 { margin: 3px 0 0; color: white; font-size: 24px; }
-    .routeHero p { margin: 5px 0 0; color: rgba(255,255,255,.78); font-size: 13px; }
-    .routeEyebrow { display: block; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; opacity: .86; }
-    .routeGuideButton { border-color: rgba(255,255,255,.36); background: rgba(0,0,0,.16); color: white; }
+    .routeHero h3 { margin: 3px 0 0; color: white; font-size: clamp(17px, 2vw, 21px); }
+    .routeHero p { margin: 4px 0 0; color: rgba(255,255,255,.78); font-size: 12px; }
+    .routeEyebrow { display: block; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; opacity: .86; }
+    .routeGuideButton { border-color: rgba(255,255,255,.36); background: rgba(0,0,0,.16); color: white; padding: 7px 10px; }
     .routeProgress {
       position: relative;
       z-index: 1;
@@ -1433,26 +1525,26 @@ function baseHtml(body) {
       grid-template-columns: auto minmax(120px, 1fr) auto;
       gap: 12px;
       align-items: center;
-      margin: -8px 18px 18px;
-      padding: 10px 14px;
+      margin: 0 16px 12px;
+      padding: 8px 12px;
       border: 1px solid rgba(255,255,255,.08);
       border-radius: 10px;
       background: rgba(0,0,0,.18);
       color: var(--muted);
-      font-size: 12px;
+      font-size: 11px;
     }
     .routeSegments { display: flex; gap: 5px; min-width: 0; }
-    .routeSegments span { height: 7px; flex: 1; border-radius: 999px; background: rgba(255,255,255,.09); }
+    .routeSegments span { height: 6px; flex: 1; border-radius: 999px; background: rgba(255,255,255,.09); }
     .routeSegments span.done, .routeSegments span.current { background: var(--route-accent); box-shadow: 0 0 14px var(--route-glow); }
-    .routeBody { position: relative; z-index: 1; display: grid; grid-template-columns: 190px minmax(180px, 1fr) 210px; gap: 18px; align-items: stretch; padding: 0 18px 18px; }
-    .snakeWrap { position: relative; min-height: 330px; }
+    .routeBody { position: relative; z-index: 1; display: grid; grid-template-columns: 118px minmax(142px, 1fr) 132px; gap: 13px; align-items: stretch; padding: 0 16px 10px; }
+    .snakeWrap { position: relative; min-height: 220px; }
     .snakeLine { position: absolute; inset: 0; width: 100%; height: 100%; }
-    .snakeLine path { fill: none; stroke: color-mix(in srgb, var(--route-accent) 60%, #ffffff); stroke-width: 4; stroke-linecap: round; filter: drop-shadow(0 0 8px var(--route-glow)); opacity: .68; }
+    .snakeLine path { fill: none; stroke: color-mix(in srgb, var(--route-accent) 60%, #ffffff); stroke-width: 4; stroke-linecap: round; filter: drop-shadow(0 0 8px var(--route-glow)); opacity: .7; }
     .snakeNodes { position: relative; min-height: inherit; }
     .snakeNode {
       position: absolute;
-      width: 44px;
-      height: 44px;
+      width: 36px;
+      height: 36px;
       border-radius: 999px;
       display: grid;
       place-items: center;
@@ -1462,9 +1554,10 @@ function baseHtml(body) {
       background: rgba(17,32,43,.94);
       color: var(--muted);
       box-shadow: 0 0 0 6px rgba(255,255,255,.035);
+      font-size: 12px;
     }
-    .snakeNode.left { left: 28px; }
-    .snakeNode.right { right: 28px; }
+    .snakeNode.left { left: 20px; }
+    .snakeNode.right { right: 20px; }
     .snakeNode.completed { background: var(--route-accent); color: white; border-color: color-mix(in srgb, white 45%, var(--route-accent)); box-shadow: 0 0 24px var(--route-glow); }
     .snakeNode.current { background: #f7ffff; color: #08202a; border-color: var(--route-accent); box-shadow: 0 0 0 7px color-mix(in srgb, var(--route-accent) 24%, transparent), 0 0 32px var(--route-accent); animation: routePulse 1.7s ease-in-out infinite; }
     .snakeNode.available { color: white; border-color: var(--route-accent); background: color-mix(in srgb, var(--route-accent) 32%, #13232c); }
@@ -1474,43 +1567,45 @@ function baseHtml(body) {
     .snakeNode.current::after {
       content: "Sigue aqui";
       position: absolute;
-      left: 50px;
+      left: 42px;
       top: 50%;
       transform: translateY(-50%);
       border: 1px solid var(--route-accent);
       border-radius: 999px;
-      padding: 3px 8px;
+      padding: 2px 7px;
       color: var(--route-accent);
       background: rgba(0,0,0,.36);
-      font-size: 10px;
+      font-size: 9px;
       white-space: nowrap;
       font-weight: 800;
     }
     @keyframes routePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
-    .routeNodeList { display: flex; flex-direction: column; justify-content: center; gap: 9px; min-width: 0; }
+    .routeNodeList { display: flex; flex-direction: column; justify-content: center; gap: 7px; min-width: 0; }
     .routeListItem {
       display: grid;
-      grid-template-columns: 28px minmax(0, 1fr);
-      gap: 8px;
+      grid-template-columns: 24px minmax(0, 1fr);
+      gap: 7px;
       align-items: center;
       text-align: left;
       white-space: normal;
       border-color: rgba(255,255,255,.08);
       background: rgba(255,255,255,.035);
       color: var(--fg);
+      padding: 7px 8px;
     }
-    .routeListItem span { grid-row: 1 / span 2; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 999px; background: color-mix(in srgb, var(--route-accent) 20%, #0a1a23); color: var(--route-accent); font-weight: 800; }
+    .routeListItem span { grid-row: 1 / span 2; width: 23px; height: 23px; display: grid; place-items: center; border-radius: 999px; background: color-mix(in srgb, var(--route-accent) 20%, #0a1a23); color: var(--route-accent); font-weight: 800; font-size: 11px; }
     .routeListItem strong, .routeListItem small { overflow: hidden; text-overflow: ellipsis; }
-    .routeListItem small { color: var(--muted); font-size: 11px; }
+    .routeListItem strong { font-size: 12px; }
+    .routeListItem small { color: var(--muted); font-size: 10px; }
     .routeListItem.active { border-color: var(--route-accent); background: color-mix(in srgb, var(--route-accent) 13%, rgba(255,255,255,.04)); }
-    .routeVisual { display: flex; flex-direction: column; justify-content: center; gap: 14px; min-width: 0; }
-    .routeIllustration { width: 100%; min-height: 150px; filter: drop-shadow(0 0 18px var(--route-glow)); }
-    .routeDetail { border: 1px solid rgba(255,255,255,.09); border-radius: 10px; background: rgba(0,0,0,.18); padding: 14px; }
-    .routeDetailState { color: var(--route-accent); font-size: 12px; font-weight: 800; }
-    .routeDetail h4 { margin: 6px 0 0; font-size: 16px; }
-    .routeDetail p { font-size: 13px; margin-top: 8px; }
-    .routeDetailMeta { color: var(--muted); font-size: 12px; margin: 10px 0; }
-    .routeDetail button { border-color: var(--route-accent); color: var(--fg); background: color-mix(in srgb, var(--route-accent) 18%, transparent); }
+    .routeVisual { display: flex; flex-direction: column; justify-content: center; gap: 10px; min-width: 0; }
+    .routeIllustration { width: 100%; min-height: 104px; filter: drop-shadow(0 0 18px var(--route-glow)); }
+    .routeDetail { border: 1px solid rgba(255,255,255,.09); border-radius: 10px; background: rgba(0,0,0,.18); padding: 11px; }
+    .routeDetailState { color: var(--route-accent); font-size: 10px; font-weight: 800; }
+    .routeDetail h4 { margin: 5px 0 0; font-size: 13px; }
+    .routeDetail p { font-size: 11px; margin-top: 6px; max-height: 48px; overflow: hidden; }
+    .routeDetailMeta { color: var(--muted); font-size: 10px; margin: 8px 0; }
+    .routeDetail button { border-color: var(--route-accent); color: var(--fg); background: color-mix(in srgb, var(--route-accent) 18%, transparent); padding: 6px 8px; font-size: 11px; }
     .routeFooter {
       position: relative;
       z-index: 1;
@@ -1519,15 +1614,26 @@ function baseHtml(body) {
       align-items: center;
       gap: 12px;
       flex-wrap: wrap;
-      margin: 0 18px 18px;
-      padding: 12px 14px;
+      margin: 0 16px 16px;
+      padding: 9px 11px;
       border: 1px solid rgba(255,255,255,.08);
       border-radius: 10px;
       background: rgba(0,0,0,.18);
       color: var(--muted);
-      font-size: 13px;
+      font-size: 11px;
     }
     .routeFooter button { border-color: var(--route-accent); color: var(--route-accent); background: rgba(255,255,255,.04); }
+    .routeFooter .routeLegend { display: none; }
+    .routeDashboardLegend {
+      display: flex;
+      justify-content: center;
+      gap: 28px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 28px 0 4px;
+      color: #8ea1b5;
+    }
+    .routeDashboardLegend span { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; }
     .routeLegend { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: center; }
     .routeLegend span { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
     .legendNode { width: 20px; height: 20px; display: grid; place-items: center; border-radius: 999px; font-style: normal; font-size: 10px; font-weight: 900; border: 1px solid rgba(255,255,255,.16); }
@@ -1535,6 +1641,7 @@ function baseHtml(body) {
     .legendNode.current { background: white; color: #08202a; border-color: var(--route-accent); box-shadow: 0 0 12px var(--route-glow); }
     .legendNode.locked { background: #1b2a34; color: #9cabb6; }
     .legendNode.challenge { background: color-mix(in srgb, var(--route-accent) 28%, #13232c); color: white; clip-path: polygon(50% 0%, 62% 30%, 96% 35%, 70% 57%, 79% 91%, 50% 72%, 21% 91%, 30% 57%, 4% 35%, 38% 30%); border-radius: 0; }
+    .routeLegendLine { width: 54px; height: 12px; border-radius: 999px; border: 1px solid rgba(142,161,181,.42); background: repeating-linear-gradient(90deg, rgba(142,161,181,.28) 0 4px, transparent 4px 9px); }
     .routeModule { border: 1px solid var(--border); background: var(--card); border-radius: 8px; padding: 16px; }
     .routeModule.locked, .routeNode.locked { opacity: 0.55; }
     .routeModuleHead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
@@ -1584,6 +1691,10 @@ function baseHtml(body) {
       .cardActions { grid-column: 2; justify-content: flex-start; }
       .rootGrid, .rootGrid.compactRoots { grid-template-columns: 1fr; }
       .rootCard { grid-template-columns: 58px minmax(0, 1fr); }
+      body.routeDashboardMode .shell { padding: 10px; }
+      .routeDashboardHeader { margin-top: 8px; }
+      .routeDashboardHeader h1 { font-size: 22px; }
+      .routeModuleGrid { grid-template-columns: 1fr; }
       .routeHero, .routeFooter, .routeProgress { margin-left: 12px; margin-right: 12px; }
       .routeBody { grid-template-columns: 1fr; padding-left: 12px; padding-right: 12px; }
       .snakeWrap { min-height: 300px; max-width: 240px; margin: 0 auto; width: 100%; }
@@ -1656,10 +1767,6 @@ ${body}
       applyFilters();
       return;
     }
-    if (button?.classList.contains('routeTab')) {
-      showRouteModule(button.dataset.routeTarget);
-      return;
-    }
     if (button?.classList.contains('snakeNode') || button?.classList.contains('routeListItem')) {
       selectRouteNode(button);
       return;
@@ -1673,6 +1780,11 @@ ${body}
         folder: button.dataset.folder,
         status: button.dataset.status
       });
+      return;
+    }
+    const routeModule = event.target.closest('.routeModuleCard');
+    if (routeModule?.dataset.routeModule) {
+      showRouteModule(routeModule.dataset.routeModule);
       return;
     }
     const card = event.target.closest('.exerciseCard');
@@ -1710,6 +1822,7 @@ ${body}
     document.querySelectorAll('.viewSection').forEach((section) => {
       section.classList.toggle('hidden', section.dataset.viewSection !== state.view);
     });
+    document.body.classList.toggle('routeDashboardMode', state.view === 'fundamentals-route');
     setActiveButtons();
     applyFilters();
   }
@@ -1721,8 +1834,7 @@ ${body}
   }
   function showRouteModule(moduleId) {
     if (!moduleId) return;
-    document.querySelectorAll('.routeTab').forEach((button) => button.classList.toggle('active', button.dataset.routeTarget === moduleId));
-    document.querySelectorAll('.routeModuleCard').forEach((card) => card.classList.toggle('hidden', card.dataset.routeModule !== moduleId));
+    document.querySelectorAll('.routeModuleCard').forEach((card) => card.classList.toggle('focused', card.dataset.routeModule === moduleId));
   }
   function selectRouteNode(button) {
     const moduleCard = button.closest('.routeModuleCard');
