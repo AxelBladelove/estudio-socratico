@@ -1,0 +1,36 @@
+{
+  "referenceSkeleton": "assets\\debug\\snake-skeleton-v2.png",
+  "referenceMask": "assets\\debug\\snake-mask-v2.png",
+  "artifacts": {
+    "png": "assets\\debug\\snake-before-after-comparison.png",
+    "svg": "assets\\debug\\snake-before-after-comparison.svg",
+    "json": "assets\\debug\\snake-before-after-report.json",
+    "markdown": "assets\\debug\\snake-before-after-report.md"
+  },
+  "metrics": [
+    {
+      "name": "baseline-v1",
+      "pathToReferenceMeanPx": 19.866,
+      "pathToReferenceP95Px": 49.0,
+      "referenceToPathMeanPx": 6.615,
+      "referenceToPathP95Px": 16.782,
+      "maskIoU": 0.15471,
+      "strokeWidthPx": 14.5,
+      "sampleCount": 1521,
+      "score": -54.824
+    },
+    {
+      "name": "final-v2",
+      "pathToReferenceMeanPx": 17.728,
+      "pathToReferenceP95Px": 49.166,
+      "referenceToPathMeanPx": 0.776,
+      "referenceToPathP95Px": 2.8,
+      "maskIoU": 0.31407,
+      "strokeWidthPx": 12.5,
+      "sampleCount": 8641,
+      "score": -22.844
+    }
+  ],
+  "winner": "final-v2",
+  "finalImprovesBaseline": true
+}
