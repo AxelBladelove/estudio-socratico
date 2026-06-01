@@ -54,6 +54,10 @@ export default function LessonNode({ lesson, calibration }: { lesson: Lesson; ca
         aria-label={`${lesson.title}: ${lesson.subtitle}`}
         onClick={() => console.log(`[lesson] ${lesson.id}`)}
       >
+        <span className="node-material-layer node-contact-glow" aria-hidden="true" />
+        <span className="node-material-layer node-outer-ring" aria-hidden="true" />
+        <span className="node-material-layer node-ray-raise" aria-hidden="true" />
+        <span className="node-material-layer node-inner-shine" aria-hidden="true" />
         {lesson.status === "completed" && (
           <span className="node-icon" style={calibration.style(iconId)} {...calibration.attrs(iconId)}>
             <CheckIcon />

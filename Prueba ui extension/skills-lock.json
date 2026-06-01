@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "skills": {
+    "browser-screenshot-diff": {
+      "source": "ruvnet/ruflo",
+      "sourceType": "github",
+      "skillPath": "plugins/ruflo-browser/skills/browser-screenshot-diff/SKILL.md",
+      "computedHash": "189e578f7ed3f1c37d2bb5c13930b252b6dfb0bb5bd60c11d549e724f668639d"
+    },
+    "design-taste-frontend": {
+      "source": "leonxlnx/taste-skill",
+      "sourceType": "github",
+      "skillPath": "skills/taste-skill/SKILL.md",
+      "computedHash": "899b84384f74f540ea5284d9b2e9234e050998b42eacc805410b518d4226c0b3"
+    },
+    "elite-css-animations": {
+      "source": "rshvr/elite-web-design",
+      "sourceType": "github",
+      "skillPath": "skills/elite-css-animations/SKILL.md",
+      "computedHash": "10de61f344bcd52ee48a94182e417fed0db0d2e41975e22e0fe20a515495c31e"
+    },
+    "pixijs": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "skillPath": "skills/pixijs/SKILL.md",
+      "computedHash": "d5379b5ebe761edeb4e661259a1f3337e0788000c1544e0fb2100f16a6e07cc6"
+    },
+    "react-vite-expert": {
+      "source": "questfortech-investments/claude-code-skills",
+      "sourceType": "github",
+      "skillPath": "react-vite-expert/SKILL.md",
+      "computedHash": "df813e27fae6b3566de7742885239041c2de2e50cfbca11708a16e6e8cf9e65b"
+    },
+    "svg-animations": {
+      "source": "supermemoryai/skills",
+      "sourceType": "github",
+      "skillPath": "svg-animations/SKILL.md",
+      "computedHash": "f25711af04ba7a0f8e662f41cdf707423102eef303dfd3dc7d48d35bb83c7ec4"
+    },
+    "web-quality-audit": {
+      "source": "addyosmani/web-quality-skills",
+      "sourceType": "github",
+      "skillPath": "skills/web-quality-audit/SKILL.md",
+      "computedHash": "10db799d6bff4fc98a4067aa04fdee2e9f34eaca1c42fd4207a89aafe644a6f0"
+    }
+  }
+}

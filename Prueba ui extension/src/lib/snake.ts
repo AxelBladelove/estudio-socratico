@@ -22,29 +22,29 @@ export {
 // Visual stroke calibration config for pixel-accurate styling
 export const SNAKE_CONFIG = {
   // Stroke widths
-  activeBodyWidth: 12.6,
-  lockedBodyWidth: 10.8,
-  activeGlowWidth: 15.5,
+  activeBodyWidth: 12,
+  lockedBodyWidth: 10.6,
+  activeGlowWidth: 15.8,
   lockedGlowWidth: 12.8,
-  highlightWidth: 1.7,
-  shadowWidth: 18.0,
-  smokeWidth: 20.0,
-  sparkleWidth: 2.8,
+  highlightWidth: 1.45,
+  shadowWidth: 16.2,
+  smokeWidth: 16.6,
+  sparkleWidth: 2.2,
 
   // Opacities & Intensities
-  activeBodyOpacity: 0.96,
-  lockedBodyOpacity: 0.78,
-  activeGlowOpacity: 0.1,
+  activeBodyOpacity: 0.98,
+  lockedBodyOpacity: 0.82,
+  activeGlowOpacity: 0.12,
   lockedGlowOpacity: 0.06,
-  highlightOpacity: 0.56,
-  shadowOpacity: 0.54,
-  smokeOpacity: 0.07,
-  sparkleOpacity: 0.5,
+  highlightOpacity: 0.72,
+  shadowOpacity: 0.68,
+  smokeOpacity: 0.028,
+  sparkleOpacity: 0.68,
 
   // Blur deviations
-  glowBlurStdDeviation: 5,
-  shadowBlurStdDeviation: 7,
-  shadowOffsetY: 7,
+  glowBlurStdDeviation: 3.4,
+  shadowBlurStdDeviation: 4.8,
+  shadowOffsetY: 5,
 };
 
 export interface PathPoint {
