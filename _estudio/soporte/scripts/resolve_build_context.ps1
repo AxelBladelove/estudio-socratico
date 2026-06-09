@@ -266,15 +266,14 @@ function Test-RebuildNeeded {
 
 $now = Get-Date
 $slug = Get-UserSlug -RawName $UserSource -Root $RepoRoot
-$gitAuthor = Get-GitAuthor -Root $RepoRoot -Slug $slug
 $userRoot = Resolve-UserDataRoot -Root $RepoRoot -Slug $slug -Create
 $markerFile = Join-Path $userRoot ('logs/' + $BaseName + '/bloque_actual.txt')
 $blockNumber = Get-BlockNumber -MarkerFile $markerFile -Now $now
 $duration = Get-ExerciseDuration -Root $RepoRoot -Slug $slug -ExerciseName $BaseName -Now $now
 
 Write-Output ('USUARIO_SLUG=' + $slug)
-Write-Output ('GIT_AUTHOR_NAME=' + $gitAuthor.Name)
-Write-Output ('GIT_AUTHOR_EMAIL=' + $gitAuthor.Email)
+Write-Output ('GIT_AUTHOR_NAME=' + $slug)
+Write-Output ('GIT_AUTHOR_EMAIL=' + $slug + '@estudio.local')
 Write-Output ('BLOQUE_NUM=' + $blockNumber)
 Write-Output ('TIMESTAMP=' + $now.ToString('yyyy-MM-ddTHH-mm-ss'))
 Write-Output ('DURACION_EJERCICIO=' + $duration)

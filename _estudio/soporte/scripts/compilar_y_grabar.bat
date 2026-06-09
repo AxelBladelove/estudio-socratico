@@ -118,7 +118,7 @@ set "EXERCISM_MANAGER=%REPO_ROOT%\_estudio\soporte\exercism\manager.ps1"
 set "BUILD_CONTEXT_SCRIPT=%SCRIPT_DIR%resolve_build_context.ps1"
 set "FINALIZE_SCRIPT=%SCRIPT_DIR%finalizar_intento.bat"
 set "OUTPUT_LAUNCHER_SRC=%CONSOLE_SUPPORT_DIR%\output_launcher.c"
-set "OUTPUT_LAUNCHER_EXE=%RUNTIME_DIR%\_output.exe"
+set "OUTPUT_LAUNCHER_EXE=%OUTPUT_DIR%\estudio_cb_runner.exe"
 set "USUARIO_CONFIG=%REPO_ROOT%\.estudio_usuario"
 set "ERRORES_TEMPLATE=%REPO_ROOT%\_estudio\errores.template.md"
 set "ERRORES_LEGACY=%REPO_ROOT%\errores.md"
@@ -133,15 +133,37 @@ set "CONIO_OBJ=%RUNTIME_DIR%\conio_support.o"
 if not exist "%RUNTIME_DIR%\" mkdir "%RUNTIME_DIR%\"
 if not exist "%OUTPUT_DIR%\" mkdir "%OUTPUT_DIR%\"
 
+if exist "%RUN_LOCK_FILE%" (
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "$lock=$env:RUN_LOCK_FILE; if(Test-Path -LiteralPath $lock){$raw=(Get-Content -LiteralPath $lock -Raw).Trim(); if($raw -like 'FILE:*'){$runFile=$raw.Substring(5); $active=$false; if(Test-Path -LiteralPath $runFile){$needle=$runFile.ToLowerInvariant(); $active=@(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -and $_.CommandLine.ToLowerInvariant().Contains($needle) }).Count -gt 0}; if(-not $active){Remove-Item -LiteralPath $runFile -Force -ErrorAction SilentlyContinue; Remove-Item -LiteralPath $lock -Force -ErrorAction SilentlyContinue}}}" >nul 2>&1
+)
+
 set "IS_EXERCISM=0"
-if exist "%EXERCISM_MANAGER%" (
+set "EXERCISE_MARKER_ROOT="
+set "SCAN_DIR=%DIR_ARCHIVO:~0,-1%"
+:detect_exercise_marker
+if not "%SCAN_DIR%"=="" (
+    if exist "%SCAN_DIR%\.estudio-exercism.json" set "EXERCISE_MARKER_ROOT=%SCAN_DIR%"
+    if not defined EXERCISE_MARKER_ROOT if exist "%SCAN_DIR%\.exercism\metadata.json" set "EXERCISE_MARKER_ROOT=%SCAN_DIR%"
+    if not defined EXERCISE_MARKER_ROOT if exist "%SCAN_DIR%\.estudio-exercism\support\" set "EXERCISE_MARKER_ROOT=%SCAN_DIR%"
+    if not defined EXERCISE_MARKER_ROOT if exist "%SCAN_DIR%\.estudio-exercism\support\.exercism\metadata.json" set "EXERCISE_MARKER_ROOT=%SCAN_DIR%"
+    if not defined EXERCISE_MARKER_ROOT if exist "%SCAN_DIR%\.estudio-exercism\support\.exercism\config.json" set "EXERCISE_MARKER_ROOT=%SCAN_DIR%"
+    if not defined EXERCISE_MARKER_ROOT (
+        for %%P in ("%SCAN_DIR%\..") do set "PARENT_SCAN_DIR=%%~fP"
+        if /i not "!PARENT_SCAN_DIR!"=="%SCAN_DIR%" if /i not "!PARENT_SCAN_DIR!"=="%REPO_ROOT%\.." (
+            set "SCAN_DIR=!PARENT_SCAN_DIR!"
+            goto detect_exercise_marker
+        )
+    )
+)
+
+if defined EXERCISE_MARKER_ROOT if exist "%EXERCISM_MANAGER%" (
     for /f "usebackq delims=" %%V in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%EXERCISM_MANAGER%" -Action detect -RepoRoot "%REPO_ROOT%" -File "%ARCHIVO_C%"`) do set "%%V"
 )
 
 if "%IS_EXERCISM%"=="1" (
     set "RUN_LOCK_STATE=FREE"
     if exist "%RUN_LOCK_FILE%" (
-        for /f "usebackq delims=" %%L in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$lock=$env:RUN_LOCK_FILE; $state='FREE'; if(Test-Path -LiteralPath $lock){$raw=(Get-Content -LiteralPath $lock -Raw).Trim(); $runPid=0; if([int]::TryParse($raw,[ref]$runPid)){if(Get-Process -Id $runPid -ErrorAction SilentlyContinue){$state='ACTIVE'}else{Remove-Item -LiteralPath $lock -Force -ErrorAction SilentlyContinue; $state='STALE'}}elseif((Get-Item -LiteralPath $lock).LastWriteTime -gt (Get-Date).AddSeconds(-30)){$state='ACTIVE'}else{Remove-Item -LiteralPath $lock -Force -ErrorAction SilentlyContinue; $state='STALE'}}; $state"`) do set "RUN_LOCK_STATE=%%L"
+        for /f "usebackq delims=" %%L in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$lock=$env:RUN_LOCK_FILE; $state='FREE'; if(Test-Path -LiteralPath $lock){$raw=(Get-Content -LiteralPath $lock -Raw).Trim(); $runPid=0; if($raw -like 'FILE:*'){$runFile=$raw.Substring(5); if(Test-Path -LiteralPath $runFile){$state='ACTIVE'}else{Remove-Item -LiteralPath $lock -Force -ErrorAction SilentlyContinue; $state='STALE'}}elseif([int]::TryParse($raw,[ref]$runPid)){if(Get-Process -Id $runPid -ErrorAction SilentlyContinue){$state='ACTIVE'}else{Remove-Item -LiteralPath $lock -Force -ErrorAction SilentlyContinue; $state='STALE'}}elseif((Get-Item -LiteralPath $lock).LastWriteTime -gt (Get-Date).AddSeconds(-30)){$state='ACTIVE'}else{Remove-Item -LiteralPath $lock -Force -ErrorAction SilentlyContinue; $state='STALE'}}; $state"`) do set "RUN_LOCK_STATE=%%L"
     )
     if /i "!RUN_LOCK_STATE!"=="ACTIVE" (
         echo [RUN] Ya hay una ejecucion abierta de este entorno.
@@ -187,7 +209,7 @@ if "%IS_EXERCISM%"=="1" (
 if "%IS_ESTUDIO_VALIDATE%"=="1" (
     set "RUN_LOCK_STATE=FREE"
     if exist "%RUN_LOCK_FILE%" (
-        for /f "usebackq delims=" %%L in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$lock=$env:RUN_LOCK_FILE; $state='FREE'; if(Test-Path -LiteralPath $lock){$raw=(Get-Content -LiteralPath $lock -Raw).Trim(); $runPid=0; if([int]::TryParse($raw,[ref]$runPid)){if(Get-Process -Id $runPid -ErrorAction SilentlyContinue){$state='ACTIVE'}else{Remove-Item -LiteralPath $lock -Force -ErrorAction SilentlyContinue; $state='STALE'}}elseif((Get-Item -LiteralPath $lock).LastWriteTime -gt (Get-Date).AddSeconds(-30)){$state='ACTIVE'}else{Remove-Item -LiteralPath $lock -Force -ErrorAction SilentlyContinue; $state='STALE'}}; $state"`) do set "RUN_LOCK_STATE=%%L"
+        for /f "usebackq delims=" %%L in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$lock=$env:RUN_LOCK_FILE; $state='FREE'; if(Test-Path -LiteralPath $lock){$raw=(Get-Content -LiteralPath $lock -Raw).Trim(); $runPid=0; if($raw -like 'FILE:*'){$runFile=$raw.Substring(5); if(Test-Path -LiteralPath $runFile){$state='ACTIVE'}else{Remove-Item -LiteralPath $lock -Force -ErrorAction SilentlyContinue; $state='STALE'}}elseif([int]::TryParse($raw,[ref]$runPid)){if(Get-Process -Id $runPid -ErrorAction SilentlyContinue){$state='ACTIVE'}else{Remove-Item -LiteralPath $lock -Force -ErrorAction SilentlyContinue; $state='STALE'}}elseif((Get-Item -LiteralPath $lock).LastWriteTime -gt (Get-Date).AddSeconds(-30)){$state='ACTIVE'}else{Remove-Item -LiteralPath $lock -Force -ErrorAction SilentlyContinue; $state='STALE'}}; $state"`) do set "RUN_LOCK_STATE=%%L"
     )
     if /i "!RUN_LOCK_STATE!"=="ACTIVE" (
         echo [RUN] Ya hay una ejecucion abierta de este entorno.
@@ -232,7 +254,7 @@ if "%IS_ESTUDIO_VALIDATE%"=="1" (
 
 set "RUN_LOCK_STATE=FREE"
 if exist "%RUN_LOCK_FILE%" (
-    for /f "usebackq delims=" %%L in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$lock=$env:RUN_LOCK_FILE; $state='FREE'; if(Test-Path -LiteralPath $lock){$raw=(Get-Content -LiteralPath $lock -Raw).Trim(); $runPid=0; if([int]::TryParse($raw,[ref]$runPid)){if(Get-Process -Id $runPid -ErrorAction SilentlyContinue){$state='ACTIVE'}else{Remove-Item -LiteralPath $lock -Force -ErrorAction SilentlyContinue; $state='STALE'}}elseif((Get-Item -LiteralPath $lock).LastWriteTime -gt (Get-Date).AddSeconds(-30)){$state='ACTIVE'}else{Remove-Item -LiteralPath $lock -Force -ErrorAction SilentlyContinue; $state='STALE'}}; $state"`) do set "RUN_LOCK_STATE=%%L"
+    for /f "usebackq delims=" %%L in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$lock=$env:RUN_LOCK_FILE; $state='FREE'; if(Test-Path -LiteralPath $lock){$raw=(Get-Content -LiteralPath $lock -Raw).Trim(); $runPid=0; if($raw -like 'FILE:*'){$runFile=$raw.Substring(5); if(Test-Path -LiteralPath $runFile){$state='ACTIVE'}else{Remove-Item -LiteralPath $lock -Force -ErrorAction SilentlyContinue; $state='STALE'}}elseif([int]::TryParse($raw,[ref]$runPid)){if(Get-Process -Id $runPid -ErrorAction SilentlyContinue){$state='ACTIVE'}else{Remove-Item -LiteralPath $lock -Force -ErrorAction SilentlyContinue; $state='STALE'}}elseif((Get-Item -LiteralPath $lock).LastWriteTime -gt (Get-Date).AddSeconds(-30)){$state='ACTIVE'}else{Remove-Item -LiteralPath $lock -Force -ErrorAction SilentlyContinue; $state='STALE'}}; $state"`) do set "RUN_LOCK_STATE=%%L"
 )
 
 if /i "%RUN_LOCK_STATE%"=="ACTIVE" (
@@ -259,6 +281,11 @@ if not exist "%FINALIZE_SCRIPT%" (
 
 for /f "usebackq delims=" %%V in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%BUILD_CONTEXT_SCRIPT%" -RepoRoot "%REPO_ROOT%" -BaseName "%NOMBRE_BASE%" -UserSource "%USUARIO_FUENTE%" -OutputLauncherSrc "%OUTPUT_LAUNCHER_SRC%" -OutputLauncherExe "%OUTPUT_LAUNCHER_EXE%" -ConioSrc "%CONIO_SRC%" -ConioHeader "%CONIO_HEADER%" -ConioObj "%CONIO_OBJ%"`) do set "%%V"
 
+if "%TIMESTAMP%"=="" (
+    echo [ERROR] No se pudo resolver el contexto de telemetria de Estudio.
+    exit /b 1
+)
+
 set "GIT_COMMIT_NAME=%GIT_AUTHOR_NAME%"
 set "GIT_COMMIT_EMAIL=%GIT_AUTHOR_EMAIL%"
 if not exist "%USUARIO_CONFIG%" > "%USUARIO_CONFIG%" echo %USUARIO_SLUG%
@@ -283,7 +310,7 @@ if not exist "%ERRORES_FILE%" (
 
 set "LOG=%LOGS_ROOT%\%NOMBRE_BASE%\bloque%BLOQUE_NUM%.log"
 
-set "ARCHIVO_EXE=%OUTPUT_DIR%\%NOMBRE_BASE%_%TIMESTAMP%.exe"
+set "ARCHIVO_EXE=%OUTPUT_DIR%\%NOMBRE_BASE%.exe"
 set "COMMIT_MSG=intento_%USUARIO_SLUG%_%TIMESTAMP%_%DURACION_EJERCICIO%_exit0"
 set "REL_ARCHIVO_C=%ARCHIVO_C:%REPO_ROOT%\=%"
 set "REL_LOG=%LOG:%REPO_ROOT%\=%"
@@ -339,12 +366,12 @@ for %%G in ("%GCC_EXE%") do set "GCC_DIR=%%~dpG"
 set "PATH=%GCC_DIR%;%PATH%"
 
 if "%REBUILD_OUTPUT_LAUNCHER%"=="1" (
-    echo [INFO] Compilando launcher local _estudio\soporte\runtime\_output.exe...
-    "%GCC_EXE%" "%OUTPUT_LAUNCHER_SRC%" -o "%OUTPUT_LAUNCHER_EXE%" -std=c99 -Wall -Wextra >nul 2>&1
+    echo [INFO] Compilando runner local estilo Code::Blocks...
+    "%GCC_EXE%" "%OUTPUT_LAUNCHER_SRC%" -o "%OUTPUT_LAUNCHER_EXE%" -std=c99 -O2 -Wall -Wextra >nul 2>&1
     if exist "%OUTPUT_LAUNCHER_EXE%" (
-        echo [OK] Launcher local listo.
+        echo [OK] Runner local listo.
     ) else (
-        echo [ERROR] No se pudo compilar _estudio\soporte\runtime\_output.exe.
+        echo [ERROR] No se pudo compilar el runner local estilo Code::Blocks.
         exit /b 1
     )
 )
@@ -396,26 +423,25 @@ if %EXIT_CODE%==0 (
             set "COMMIT_MSG=intento_%USUARIO_SLUG%_%TIMESTAMP%_%DURACION_EJERCICIO%_exit!RUN_EXIT_CODE!"
         )
     ) else (
-        set "RUNNER_PS1=%RUNTIME_DIR%\run_%TIMESTAMP%.ps1"
+        set "RUNNER_BAT=%RUNTIME_DIR%\run_%TIMESTAMP%.bat"
         > "%RUN_LOCK_FILE%" echo STARTING
-        > "!RUNNER_PS1!" echo $ErrorActionPreference = 'Continue'
-        >> "!RUNNER_PS1!" echo $runExitCode = 1
-        >> "!RUNNER_PS1!" echo try {
-        >> "!RUNNER_PS1!" echo     Set-Location -LiteralPath '%REPO_ROOT%'
-        >> "!RUNNER_PS1!" echo     $program = Start-Process -FilePath '%OUTPUT_LAUNCHER_EXE%' -ArgumentList @^('--run', '%ARCHIVO_EXE%', '--log', '%LOG%'^) -WorkingDirectory '%REPO_ROOT%' -WindowStyle Normal -Wait -PassThru
-        >> "!RUNNER_PS1!" echo     if ^($null -ne $program.ExitCode^) { $runExitCode = $program.ExitCode } else { $runExitCode = 0 }
-        >> "!RUNNER_PS1!" echo     if ^($runExitCode -ne 0^) { Write-Host "[RUN] El programa devolvio codigo $runExitCode." }
-        >> "!RUNNER_PS1!" echo     ^& '%FINALIZE_SCRIPT%' '%REPO_ROOT%' '%ARCHIVO_C%' '%LOG%' '%ERRORES_FILE%' '%GIT_COMMIT_NAME%' '%GIT_COMMIT_EMAIL%' '%COMMIT_MSG%' '%RUN_LOCK_FILE%'
-        >> "!RUNNER_PS1!" echo } finally {
-        >> "!RUNNER_PS1!" echo     Remove-Item -LiteralPath '%RUN_LOCK_FILE%' -Force -ErrorAction SilentlyContinue
-        >> "!RUNNER_PS1!" echo     Remove-Item -LiteralPath $PSCommandPath -Force -ErrorAction SilentlyContinue
-        >> "!RUNNER_PS1!" echo }
-        >> "!RUNNER_PS1!" echo exit $runExitCode
 
-        set "RUNNER_PID="
-        for /f "usebackq delims=" %%P in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$p=Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',$env:RUNNER_PS1) -WindowStyle Hidden -PassThru; $p.Id"`) do set "RUNNER_PID=%%P"
-        if defined RUNNER_PID (
-            > "%RUN_LOCK_FILE%" echo !RUNNER_PID!
+        > "!RUNNER_BAT!" echo @echo off
+        >> "!RUNNER_BAT!" echo setlocal EnableExtensions
+        >> "!RUNNER_BAT!" echo title %NOMBRE_BASE%.exe - Estudio Socratico
+        >> "!RUNNER_BAT!" echo color 07
+        >> "!RUNNER_BAT!" echo chcp 437 ^>nul
+        >> "!RUNNER_BAT!" echo cd /d "%REPO_ROOT%"
+        >> "!RUNNER_BAT!" echo "%OUTPUT_LAUNCHER_EXE%" --run "%ARCHIVO_EXE%" --log "%LOG%"
+        >> "!RUNNER_BAT!" echo set "RUN_EXIT_CODE=%%ERRORLEVEL%%"
+        >> "!RUNNER_BAT!" echo call "%FINALIZE_SCRIPT%" "%REPO_ROOT%" "%ARCHIVO_C%" "%LOG%" "%ERRORES_FILE%" "%GIT_COMMIT_NAME%" "%GIT_COMMIT_EMAIL%" "%COMMIT_MSG%" "%RUN_LOCK_FILE%"
+        >> "!RUNNER_BAT!" echo del "%RUN_LOCK_FILE%" ^>nul 2^>^&1
+        >> "!RUNNER_BAT!" echo del "%%~f0" ^>nul 2^>^&1
+        >> "!RUNNER_BAT!" echo exit /b %%RUN_EXIT_CODE%%
+
+        > "%RUN_LOCK_FILE%" echo FILE:!RUNNER_BAT!
+        start "%NOMBRE_BASE%.exe - Estudio Socratico" cmd.exe /c ""!RUNNER_BAT!""
+        if not errorlevel 1 (
             set "DEFER_COMMIT=1"
             echo [OK] Compilacion exitosa -^> Abriendo %NOMBRE_BASE%.exe en ventana externa estilo Code::Blocks...
             echo [RUN] VS Code queda libre; el intento se grabara al cerrar la ventana externa.

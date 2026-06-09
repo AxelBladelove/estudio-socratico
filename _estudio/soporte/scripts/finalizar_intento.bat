@@ -13,6 +13,17 @@ set "RUN_LOCK_FILE=%~8"
 if "%REPO_ROOT%"=="" exit /b 1
 cd /d "%REPO_ROOT%" || exit /b 1
 
+if "%GIT_COMMIT_NAME%"=="" for /f "usebackq delims=" %%G in (`git config --local --get user.name 2^>nul`) do if not defined GIT_COMMIT_NAME set "GIT_COMMIT_NAME=%%G"
+echo %GIT_COMMIT_EMAIL% | findstr /i /c:"@estudio.local" >nul 2>&1
+if "%GIT_COMMIT_EMAIL%"=="" (
+    for /f "usebackq delims=" %%G in (`git config --local --get user.email 2^>nul`) do if not defined GIT_COMMIT_EMAIL set "GIT_COMMIT_EMAIL=%%G"
+) else if not errorlevel 1 (
+    set "GIT_COMMIT_EMAIL="
+    for /f "usebackq delims=" %%G in (`git config --local --get user.email 2^>nul`) do if not defined GIT_COMMIT_EMAIL set "GIT_COMMIT_EMAIL=%%G"
+)
+if "%GIT_COMMIT_NAME%"=="" set "GIT_COMMIT_NAME=Estudio Socratico"
+if "%GIT_COMMIT_EMAIL%"=="" set "GIT_COMMIT_EMAIL=estudio@estudio.local"
+
 set "REL_ARCHIVO_C=%ARCHIVO_C:%REPO_ROOT%\=%"
 set "REL_LOG=%LOG:%REPO_ROOT%\=%"
 set "REL_ERRORES=%ERRORES_FILE:%REPO_ROOT%\=%"
